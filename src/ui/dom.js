@@ -50,7 +50,11 @@ export function externalLink(resource = {}) {
   try {
     url = new URL(resource.url);
   } catch {
-    return element('span', { className: 'external-link external-link--disabled', text: resource.title ?? '无效资源' });
+    return element('span', {
+      className: 'external-link external-link--disabled',
+      text: resource.title ?? '无效资源',
+      attrs: { 'aria-disabled': 'true' },
+    });
   }
 
   if (url.protocol !== SAFE_PROTOCOL) {
