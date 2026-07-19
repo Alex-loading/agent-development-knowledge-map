@@ -1,0 +1,44 @@
+:root {
+  color-scheme: light;
+
+  --color-paper: #f4efdf;
+  --color-paper-raised: #fbf7e9;
+  --color-paper-deep: #e9dfc8;
+  --color-ink: #1c2822;
+  --color-forest: #123f32;
+  --color-forest-soft: #dce7dc;
+  --color-vermilion: #b33b24;
+  --color-vermilion-soft: #f2d7cd;
+  --color-ochre: #aa7927;
+  --color-ochre-soft: #eee0ba;
+  --color-muted: #68716b;
+  --color-border: #9b9a86;
+  --color-border-soft: #cbc5af;
+  --color-focus: #087d72;
+  --color-disabled: #7d7b6f;
+
+  --font-heading: Georgia, 'Noto Serif CJK SC', 'Songti SC', SimSun, serif;
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+
+  --radius-small: 0.2rem;
+  --radius-medium: 0.45rem;
+  --shadow-paper: 0 1rem 3rem rgb(38 45 36 / 0.09);
+  --shadow-lift: 0 0.35rem 0 rgb(18 63 50 / 0.12);
+
+  --motion-fast: 140ms;
+  --motion-medium: 240ms;
+  --ease-out: cubic-bezier(0.2, 0.75, 0.3, 1);
+
+  --rail-width: 18rem;
+  --reading-width: 78rem;
+}
