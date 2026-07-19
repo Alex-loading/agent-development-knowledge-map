@@ -37,9 +37,9 @@ export function normalizeRoute(hash) {
   return { hash: DEFAULT_HASH, moduleId: 'llm-foundation', view: 'dashboard' };
 }
 
-function storageAdapter() {
+function storageAdapter(windowRef) {
   try {
-    return window.localStorage;
+    return windowRef.localStorage;
   } catch {
     return {
       getItem() { throw new Error('localStorage unavailable'); },
@@ -79,10 +79,15 @@ function renderPlaceholder(root, route) {
   root.removeAttribute('aria-busy');
 }
 
-function startApp() {
-  const store = createProgressStore(storageAdapter());
+export function startApp({
+  windowRef = window,
+  documentRef = document,
+  progressStore,
+} = {}) {
+  const store = progressStore ?? createProgressStore(storageAdapter(windowRef));
   let state = store.load();
   let focusAfterNavigation = false;
+  let focusAfterCompletion = false;
   let lastRenderedHash = null;
   let pendingAnnouncement = '';
 
@@ -93,10 +98,10 @@ function startApp() {
 
   const navigate = (nextHash) => {
     focusAfterNavigation = true;
-    if (window.location.hash === nextHash) {
+    if (windowRef.location.hash === nextHash) {
       render();
     } else {
-      window.location.hash = nextHash;
+      windowRef.location.hash = nextHash;
     }
   };
 
@@ -106,6 +111,9 @@ function startApp() {
     const lesson = llmFoundation.lessons.find((item) => item.id === lessonId);
     if (!lesson || state.completedLessonIds.includes(lessonId)) return;
     const completedState = markLessonComplete(state, lessonId);
+    const allComplete = llmFoundation.lessons.every(({ id }) => (
+      completedState.completedLessonIds.includes(id)
+    ));
     const nextLesson = getNextLesson(llmFoundation.lessons, completedState);
     persistState({
       ...completedState,
@@ -113,7 +121,8 @@ function startApp() {
       currentLessonId: nextLesson?.id ?? lessonId,
       lastVisitedAt: new Date().toISOString(),
     });
-    pendingAnnouncement = `已完成${lesson.title}。${nextLesson && nextLesson.id !== lessonId ? `下一节建议：${nextLesson.title}` : 'LLM 基础主线已全部完成。'}`;
+    pendingAnnouncement = `已完成${lesson.title}。${allComplete ? 'LLM 基础主线已全部完成。' : `下一节建议：${nextLesson?.title ?? '请回到学习主线选择课程'}`}`;
+    focusAfterCompletion = true;
     render();
   };
 
@@ -155,8 +164,8 @@ function startApp() {
   };
 
   function render() {
-    const route = normalizeRoute(window.location.hash);
-    if (window.location.hash !== route.hash) window.history.replaceState(null, '', route.hash);
+    const route = normalizeRoute(windowRef.location.hash);
+    if (windowRef.location.hash !== route.hash) windowRef.history.replaceState(null, '', route.hash);
 
     if (route.view === 'lesson' && lastRenderedHash !== route.hash) {
       persistState({
@@ -182,24 +191,32 @@ function startApp() {
       onViewSelect: (view) => navigate(`#${route.moduleId}/${view}`),
     });
 
-    const root = document.querySelector('#view-root');
-    const live = document.querySelector('#app-live-region');
-    const main = document.querySelector('#app-main');
+    const root = documentRef.querySelector('#view-root');
+    const live = documentRef.querySelector('#app-live-region');
+    const main = documentRef.querySelector('#app-main');
     if (!root || !live || !main) throw new Error('主要内容挂载点不完整');
     if (!renderGuidedView(root, route, summary, live)) renderPlaceholder(root, route);
     const copy = viewPlaceholder(route);
     live.textContent = pendingAnnouncement || `已打开${copy.title}`;
     pendingAnnouncement = '';
-    document.title = `${copy.title} · Agent Learner`;
+    documentRef.title = `${copy.title} · Agent Learner`;
     lastRenderedHash = route.hash;
-    if (focusAfterNavigation) {
+    if (focusAfterNavigation || focusAfterCompletion) {
       main.focus({ preventScroll: true });
       focusAfterNavigation = false;
+      focusAfterCompletion = false;
     }
   }
 
-  window.addEventListener('hashchange', render);
+  windowRef.addEventListener('hashchange', render);
   render();
+
+  return {
+    getState: () => state,
+    navigate,
+    render,
+    teardown: () => windowRef.removeEventListener('hashchange', render),
+  };
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') startApp();
