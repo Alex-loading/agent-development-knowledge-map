@@ -6,12 +6,34 @@ function matches(value, expected) {
   return isInclusive(expected) || value === expected;
 }
 
+function resourcePlatform(item) {
+  if (item.platform) return item.platform;
+
+  if (item.url) {
+    try {
+      const hostname = new URL(item.url).hostname.toLowerCase();
+      if (hostname === 'github.com' || hostname.endsWith('.github.com')) return 'GitHub';
+      if (hostname === 'bilibili.com' || hostname.endsWith('.bilibili.com')) return 'Bilibili';
+      if (
+        hostname === 'youtube.com'
+        || hostname.endsWith('.youtube.com')
+        || hostname === 'youtu.be'
+      ) return 'YouTube';
+    } catch {
+      // Invalid URLs simply cannot contribute platform metadata.
+    }
+  }
+
+  if (/GitHub/i.test(item.type ?? '')) return 'GitHub';
+  if (/Bilibili/i.test(item.type ?? '')) return 'Bilibili';
+  if (/YouTube/i.test(item.type ?? '')) return 'YouTube';
+  return null;
+}
+
 export function filterResources(items, filters = {}) {
   return items.filter((item) =>
     matches(item.language, filters.language)
-    && (isInclusive(filters.platform)
-      || item.platform === filters.platform
-      || item.source === filters.platform)
+    && matches(resourcePlatform(item), filters.platform)
     && matches(item.source, filters.source)
     && matches(item.type, filters.type)
     && matches(item.difficulty, filters.difficulty)

@@ -14,6 +14,7 @@ import {
   getNextLesson,
   getRecentActivity,
 } from '../src/core/view-models.js';
+import { llmFoundation } from '../src/data/llm-foundation.js';
 
 test('resource filters combine with AND and leave source data untouched', () => {
   const resources = [
@@ -58,7 +59,7 @@ test('resource filters combine with AND and leave source data untouched', () => 
   assert.deepEqual(resources, snapshot);
 });
 
-test('resource platform filter matches platform and all defaults are inclusive', () => {
+test('resource platform filter prefers platform metadata and never treats creator source as platform', () => {
   const resources = [
     { id: 'youtube', platform: 'YouTube', source: 'Author' },
     { id: 'source-platform', source: 'YouTube' },
@@ -66,10 +67,24 @@ test('resource platform filter matches platform and all defaults are inclusive',
 
   assert.deepEqual(
     filterResources(resources, { platform: 'YouTube' }).map(({ id }) => id),
-    ['youtube', 'source-platform'],
+    ['youtube'],
   );
   assert.deepEqual(filterResources(resources, { language: 'all' }), resources);
   assert.notEqual(filterResources(resources), resources);
+});
+
+test('resource platform filter recognizes GitHub, Bilibili and YouTube in real content', () => {
+  for (const platform of ['GitHub', 'Bilibili', 'YouTube']) {
+    const results = filterResources(llmFoundation.resources, { platform });
+    assert.ok(results.length > 0, `${platform} 应命中真实资源`);
+    assert.ok(
+      results.every((resource) =>
+        resource.platform === platform
+        || resource.type?.includes(platform)
+        || new URL(resource.url).hostname.toLowerCase().includes(platform.toLowerCase())),
+      `${platform} 不能混入不相关来源`,
+    );
+  }
 });
 
 test('interview filters combine role membership, frequency and mastery status', () => {
@@ -123,12 +138,42 @@ test('context budget reports transparent arithmetic and overflow', () => {
   );
 });
 
+test('context budget rejects negative, non-finite and overflowing numeric budgets', () => {
+  const valid = { system: 1, history: 2, retrieval: 3, output: 4, limit: 20 };
+  for (const [field, value] of [
+    ['system', -1],
+    ['history', Number.NaN],
+    ['retrieval', Number.POSITIVE_INFINITY],
+    ['limit', -1],
+  ]) {
+    assert.throws(() => estimateContextBudget({ ...valid, [field]: value }), RangeError);
+  }
+  assert.throws(
+    () => estimateContextBudget({
+      system: Number.MAX_VALUE,
+      history: Number.MAX_VALUE,
+      retrieval: 0,
+      output: 0,
+      limit: Number.MAX_VALUE,
+    }),
+    RangeError,
+  );
+});
+
 test('attention weights are clamped, normalized and copied', () => {
   const weights = [1, 1, 2];
   assert.deepEqual(normalizeAttention(weights), [0.25, 0.25, 0.5]);
   assert.deepEqual(normalizeAttention([-2, 0]), [0.5, 0.5]);
   assert.deepEqual(normalizeAttention([]), []);
   assert.deepEqual(weights, [1, 1, 2]);
+});
+
+test('attention normalization stays finite for very large weights', () => {
+  const result = normalizeAttention([Number.MAX_VALUE, Number.MAX_VALUE]);
+  assert.ok(result.every(Number.isFinite));
+  assert.ok(Math.abs(result[0] - 0.5) < 1e-12);
+  assert.ok(Math.abs(result[1] - 0.5) < 1e-12);
+  assert.ok(Math.abs(result.reduce((sum, weight) => sum + weight, 0) - 1) < 1e-12);
 });
 
 test('temperature softmax is stable and top-p marks the smallest nucleus prefix', () => {
@@ -159,6 +204,19 @@ test('sampling preserves original order for equal logits and handles invalid con
   );
   assert.deepEqual(result.map(({ token }) => token), ['first', 'second']);
   assert.ok(result.every(({ inNucleus }) => inNucleus));
+});
+
+test('sampling remains finite for extreme logits and tiny positive temperature', () => {
+  const result = sampleDistribution([
+    { token: 'max', logit: Number.MAX_VALUE },
+    { token: 'zero', logit: 0 },
+    { token: 'min', logit: -Number.MAX_VALUE },
+  ], Number.MIN_VALUE, 0.9);
+
+  assert.ok(result.every(({ probability }) => Number.isFinite(probability)));
+  assert.ok(Math.abs(result.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12);
+  assert.equal(result[0].token, 'max');
+  assert.equal(result[0].probability, 1);
 });
 
 test('next lesson is first incomplete, final when complete, and null when empty', () => {
@@ -193,6 +251,27 @@ test('knowledge nodes infer a sequential path when prerequisites are omitted', (
     { id: 'l1', order: 1, title: 'One', status: 'current', prerequisiteIds: [] },
     { id: 'l2', order: 2, title: 'Two', status: 'locked', prerequisiteIds: ['l1'] },
   ]);
+});
+
+test('guided navigation skips locked lessons and selects the first eligible branch', () => {
+  const lessons = [
+    { id: 'a', order: 1, title: 'A', prerequisites: [] },
+    { id: 'b', order: 2, title: 'B', prerequisites: ['c'] },
+    { id: 'c', order: 3, title: 'C', prerequisites: ['a'] },
+  ];
+  const progress = { completedLessonIds: ['a'] };
+
+  assert.deepEqual(getNextLesson(lessons, progress), lessons[2]);
+  assert.deepEqual(buildKnowledgeNodes(lessons, progress), [
+    { id: 'a', order: 1, title: 'A', status: 'complete', prerequisiteIds: [] },
+    { id: 'b', order: 2, title: 'B', status: 'locked', prerequisiteIds: ['c'] },
+    { id: 'c', order: 3, title: 'C', status: 'current', prerequisiteIds: ['a'] },
+  ]);
+});
+
+test('next lesson is null when every incomplete lesson is locked', () => {
+  const lessons = [{ id: 'blocked', title: 'Blocked', prerequisites: ['missing'] }];
+  assert.equal(getNextLesson(lessons, { completedLessonIds: [] }), null);
 });
 
 test('due interview questions prioritize queue order, append reviewing, and de-duplicate', () => {

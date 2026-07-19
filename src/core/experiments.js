@@ -1,9 +1,22 @@
 export function estimateContextBudget({ system, history, retrieval, output, limit }) {
+  const budgets = { system, history, retrieval, output, limit };
+  for (const [name, value] of Object.entries(budgets)) {
+    if (!Number.isFinite(value) || value < 0) {
+      throw new RangeError(`${name} must be a finite, non-negative number`);
+    }
+  }
+
   const used = system + history + retrieval + output;
+  const remaining = limit - used;
+  const percent = limit === 0 ? 0 : Math.round((used / limit) * 100);
+  if (![used, remaining, percent].every(Number.isFinite)) {
+    throw new RangeError('context budget calculation exceeds the numeric range');
+  }
+
   return {
     used,
-    remaining: limit - used,
-    percent: limit === 0 ? 0 : Math.round((used / limit) * 100),
+    remaining,
+    percent,
     overflow: used > limit,
   };
 }
@@ -13,11 +26,12 @@ export function normalizeAttention(weights) {
 
   const clamped = weights.map((weight) =>
     Number.isFinite(weight) ? Math.max(0, weight) : 0);
-  const total = clamped.reduce((sum, weight) => sum + weight, 0);
+  const maximum = clamped.reduce((max, weight) => Math.max(max, weight), 0);
+  if (maximum === 0) return clamped.map(() => 1 / clamped.length);
 
-  return total === 0
-    ? clamped.map(() => 1 / clamped.length)
-    : clamped.map((weight) => weight / total);
+  const scaled = clamped.map((weight) => weight / maximum);
+  const total = scaled.reduce((sum, weight) => sum + weight, 0);
+  return scaled.map((weight) => weight / total);
 }
 
 export function sampleDistribution(candidates, temperature = 1, topP = 1) {
@@ -27,10 +41,16 @@ export function sampleDistribution(candidates, temperature = 1, topP = 1) {
     ? temperature
     : 1;
   const safeTopP = Number.isFinite(topP) ? Math.min(1, Math.max(0, topP)) : 1;
-  const scaledLogits = candidates.map((candidate) =>
-    (Number.isFinite(candidate.logit) ? candidate.logit : 0) / safeTemperature);
-  const maxLogit = Math.max(...scaledLogits);
-  const exponentials = scaledLogits.map((logit) => Math.exp(logit - maxLogit));
+  if (candidates.some(({ logit }) => !Number.isFinite(logit))) {
+    throw new RangeError('candidate logits must be finite numbers');
+  }
+
+  const maxLogit = candidates.reduce(
+    (maximum, candidate) => Math.max(maximum, candidate.logit),
+    -Infinity,
+  );
+  const exponentials = candidates.map((candidate) =>
+    Math.exp((candidate.logit - maxLogit) / safeTemperature));
   const denominator = exponentials.reduce((sum, value) => sum + value, 0);
 
   const sorted = candidates

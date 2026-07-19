@@ -2,30 +2,43 @@ function completedIds(progress) {
   return new Set(progress.completedLessonIds ?? []);
 }
 
+function prerequisiteIdsFor(lessons, index) {
+  const lesson = lessons[index];
+  const explicitPrerequisites = lesson.prerequisites ?? lesson.prerequisiteIds;
+  if (Array.isArray(explicitPrerequisites)) return [...explicitPrerequisites];
+  return index === 0 ? [] : [lessons[index - 1].id];
+}
+
+function isEligible(lessons, index, completed) {
+  return !completed.has(lessons[index].id)
+    && prerequisiteIdsFor(lessons, index).every((id) => completed.has(id));
+}
+
 export function getNextLesson(lessons, progress) {
   if (lessons.length === 0) return null;
 
   const completed = completedIds(progress);
-  const lesson = lessons.find(({ id }) => !completed.has(id)) ?? lessons.at(-1);
+  if (lessons.every(({ id }) => completed.has(id))) return { ...lessons.at(-1) };
+
+  const lesson = lessons.find((_, index) => isEligible(lessons, index, completed));
+  if (!lesson) return null;
   return { ...lesson };
 }
 
 export function buildKnowledgeNodes(lessons, progress) {
   const completed = completedIds(progress);
-  const currentIndex = lessons.findIndex(({ id }) => !completed.has(id));
+  const currentIndex = lessons.findIndex((_, index) => isEligible(lessons, index, completed));
 
   return lessons.map((lesson, index) => {
-    const explicitPrerequisites = lesson.prerequisites ?? lesson.prerequisiteIds;
-    const prerequisiteIds = Array.isArray(explicitPrerequisites)
-      ? [...explicitPrerequisites]
-      : index === 0 ? [] : [lessons[index - 1].id];
+    const prerequisiteIds = prerequisiteIdsFor(lessons, index);
+    const eligible = prerequisiteIds.every((id) => completed.has(id));
 
     let status = 'locked';
     if (completed.has(lesson.id)) {
       status = 'complete';
     } else if (index === currentIndex) {
       status = 'current';
-    } else if (prerequisiteIds.every((id) => completed.has(id))) {
+    } else if (eligible) {
       status = 'available';
     }
 
