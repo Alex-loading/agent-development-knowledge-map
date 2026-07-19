@@ -183,3 +183,93 @@ test('practice views are real renderers with paper-lab responsive component styl
   assert.match(styles, /\.resource-row\s*\{[^}]*grid-template-columns/s);
   assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.resource-row/s);
 });
+
+test('release guide documents operation, architecture, privacy and the extension contract', async () => {
+  const readme = await read('README.md');
+
+  for (const command of ['npm test', 'npm run serve', 'http://localhost:4173']) {
+    assert.ok(readme.includes(command), `README should document ${command}`);
+  }
+  for (const view of ['模块首页', '学习主线', '知识地图', '资源库', '面试高频', '学习进度']) {
+    assert.ok(readme.includes(view), `README should tour the ${view} view`);
+  }
+  for (const lab of ['Token / 上下文预算台', 'Attention 直觉台', '采样参数实验']) {
+    assert.ok(readme.includes(lab), `README should document the ${lab} lab`);
+  }
+  for (const category of ['课程', '资源', '练习', '面试高频']) {
+    assert.match(readme, new RegExp(`必(?:须|需)[^\n]{0,40}${category}|${category}[^\n]{0,40}必(?:须|需)`));
+  }
+  for (const planned of ['Agent 机制', 'Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
+    assert.ok(readme.includes(planned), `README should identify planned module ${planned}`);
+  }
+
+  assert.match(readme, /LLM 基础[^\n]{0,30}(?:完整|完成)/);
+  assert.match(readme, /8\s*节课程/);
+  assert.match(readme, /28\s*(?:份|条)[^\n]{0,20}资源/);
+  assert.match(readme, /24\s*(?:道|条)[^\n]{0,20}面试/);
+  assert.match(readme, /agent-learner:progress:v1/);
+  assert.match(readme, /仅[^\n]{0,30}本地|本地[^\n]{0,30}(?:保存|存储)/);
+  assert.match(readme, /内存[^\n]{0,30}(?:回退|降级)|(?:回退|降级)[^\n]{0,30}内存/);
+  assert.match(readme, /无(?:需|须)[^\n]{0,12}(?:构建|build)|no build/i);
+  assert.match(readme, /data[^\n]{0,50}core[^\n]{0,50}UI[^\n]{0,50}(?:app|storage)/i);
+  assert.match(readme, /原生 ES Modules|native ES modules/i);
+  assert.match(readme, /HTTPS/);
+  assert.match(readme, /verifiedAt/);
+  assert.match(readme, /短视频[^\n]{0,30}(?:补充|核心)/);
+});
+
+test('styles explicitly protect 320px layouts, media and touch interactions', async () => {
+  const styles = await read('styles/app.css');
+
+  assert.match(styles, /\*\s*\{[^}]*box-sizing\s*:\s*border-box/s);
+  assert.match(styles, /overflow-wrap\s*:\s*anywhere/i);
+  assert.match(styles, /(?:img|svg|video|canvas)[^{]*\{[^}]*max-width\s*:\s*100%/is);
+  assert.match(styles, /(?:body|main|section|article|fieldset|\.app-layout)[^{]*\{[^}]*min-width\s*:\s*0/is);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)/i);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*22rem\)/i);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*(?:button|select|input)[^{]*\{[^}]*min-height\s*:\s*(?:2\.75rem|44px)/is);
+  assert.match(styles, /input\[type=["']range["']\][^{]*\{[^}]*max-width\s*:\s*100%/is);
+  assert.match(styles, /prefers-reduced-motion\s*:\s*reduce/i);
+});
+
+test('document release contract is local, descriptive and keyboard reachable', async () => {
+  const [html, tokens, styles] = await Promise.all([
+    read('index.html'),
+    read('styles/tokens.css'),
+    read('styles/app.css'),
+  ]);
+
+  assert.match(html, /<meta\s+name=["']viewport["']\s+content=["']width=device-width, initial-scale=1["']/i);
+  assert.match(html, /<title>[^<]*(?:Agent Learner|LLM)[^<]*<\/title>/i);
+  assert.match(html, /<main[^>]+id=["']app-main["'][^>]+tabindex=["']-1["']/i);
+  assert.match(html, /id=["']app-live-region["'][^>]+aria-live=["']polite["']/i);
+  assert.doesNotMatch(`${html}\n${tokens}\n${styles}`, /(?:@import\s+url|href=["']https?:\/\/[^"']+\.css|url\(["']?https?:\/\/)/i);
+});
+
+test('valid external resources open safely in a new tab', () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement(tag) {
+      return {
+        tagName: tag.toUpperCase(),
+        attributes: {},
+        dataset: {},
+        setAttribute(name, value) { this.attributes[name] = value; },
+        addEventListener() {},
+        append() {},
+      };
+    },
+    createTextNode(text) { return { textContent: text }; },
+  };
+
+  try {
+    const link = externalLink({ title: '官方资料', url: 'https://example.com/guide' });
+    assert.equal(link.tagName, 'A');
+    assert.equal(link.attributes.target, '_blank');
+    assert.equal(link.attributes.rel, 'noopener noreferrer');
+    assert.equal(link.attributes.href, 'https://example.com/guide');
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
+});

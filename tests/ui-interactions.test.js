@@ -622,3 +622,43 @@ test('every configured experiment has a resolvable accessible heading and is int
     assert.notEqual(lab.querySelector(`#${headingId}`), null);
   }
 });
+
+test('all six top-level routes render exactly one h1 and explicit navigation focuses main', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/dashboard'),
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  for (const view of ['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']) {
+    document.querySelector('#module-select').focus();
+    app.navigate(`#llm-foundation/${view}`);
+    app.render();
+    assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, `${view} should render one h1`);
+    assert.equal(document.activeElement.id, 'app-main', `${view} navigation should focus main`);
+  }
+});
+
+test('dashboard progress bars expose accessible names and values', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/dashboard'),
+    progressStore: createStore({
+      ...createDefaultProgress('llm-foundation'),
+      completedLessonIds: ['llm-01'],
+    }),
+  });
+  t.after(app.teardown);
+
+  const progressBars = document.querySelectorAll('progress');
+  assert.equal(progressBars.length, 2);
+  for (const bar of progressBars) {
+    assert.ok(bar.getAttribute('aria-label'));
+    assert.match(bar.getAttribute('aria-valuetext'), /^\d+\s*\/\s*\d+/);
+  }
+});

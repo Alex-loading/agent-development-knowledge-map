@@ -14,7 +14,14 @@ function progressBlock(label, completed, total, percent) {
       element('h3', { text: label }),
       element('strong', { text: `${percent}%` }),
     ]),
-    element('progress', { attrs: { max: total || 1, value: completed } }),
+    element('progress', {
+      attrs: {
+        max: total || 1,
+        value: completed,
+        'aria-label': label,
+        'aria-valuetext': `${completed} / ${total}`,
+      },
+    }),
     element('p', { text: `${completed} / ${total} ${label === '课程完成度' ? '节课程' : '道题已掌握'}` }),
   ]);
 }
