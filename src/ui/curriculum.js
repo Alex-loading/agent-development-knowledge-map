@@ -56,9 +56,9 @@ export function renderCurriculumList(root, { course, progress, onOpenLesson }) {
   root.replaceChildren(
     element('section', { className: 'curriculum-view', attrs: { 'aria-labelledby': 'curriculum-title' } }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 八节主线' }),
+        element('span', { className: 'section-index', text: `${course.title} / ${course.lessons.length} 节主线` }),
         element('h1', { text: '学习主线', attrs: { id: 'curriculum-title' } }),
-        element('p', { text: '按推荐顺序完成八项交付，也可随时打开后续课程探索；“待先修”只是路线建议，不会隐藏内容。' }),
+        element('p', { text: `按推荐顺序完成 ${course.lessons.length} 项交付，也可随时打开后续课程探索；“待先修”只是路线建议，不会隐藏内容。` }),
       ]),
       course.lessons.length
         ? element('ol', { className: 'lesson-ledger' }, course.lessons.map((lesson) => (

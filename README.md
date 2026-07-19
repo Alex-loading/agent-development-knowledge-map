@@ -35,7 +35,7 @@ LLM 基础模块已完成，包含：
 3. **知识地图**：用可用、当前、已完成、待先修等文本状态展示概念路径，状态不只依赖颜色。
 4. **资源库**：按语言、平台、来源、类型、难度和阶段组合筛选 28 份资源。
 5. **面试高频**：先自行口述，再展开参考答案；可筛选岗位与掌握状态，并维护复习队列。
-6. **学习进度**：分别汇总课程与面试记录，可通过二次确认重置本模块进度。
+6. **学习进度**：分别汇总课程与面试记录，可通过二次确认重置当前版本的学习进度。
 
 三项概念实验嵌在对应课程内：
 
@@ -68,7 +68,8 @@ agent-learner:progress:v1
 ```
 
 - 没有账号、分析脚本或网络同步；学习记录不会上传到服务端。
-- 浏览器阻止或损坏 `localStorage` 时，会自动降级为内存回退模式；关闭页面后该次进度会丢失，页面会显示提示。
+- `localStorage` 中的 JSON 损坏或字段无效时，会安全返回默认进度，模式仍保持 `local`；下一次保存会用有效状态覆盖坏数据。
+- 只有读取、写入或删除等存储操作抛出异常、被浏览器阻止或不可用时，才会切换到 `memory` 内存回退模式并显示提示；关闭页面后该次进度会丢失。
 - “重置进度”需要页面内二次确认，并且只删除 `agent-learner:progress:v1`，不会清空同域名下其他应用的数据。
 - 外部学习资料只有在用户主动打开时才会访问第三方站点；有效链接使用 HTTPS、新标签页以及 `noopener noreferrer`。
 
@@ -80,13 +81,13 @@ agent-learner:progress:v1
 data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路由与事件） -> storage（本地持久化）
 ```
 
-- `src/data/` 只保存模块目录、课程、资源与面试题等事实数据。
+- `src/data/` 保存模块目录、课程事实和 `courses.js` 注册表；路由只接受“模块元数据为 active 且课程已经注册”的组合。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数。
 - `src/ui/` 使用安全 DOM API 生成六个视图和课程实验，不使用 `innerHTML` 或内联事件。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
 - `src/core/storage.js` 负责结构校验、`localStorage` 与内存回退。
 
-依赖方向保持单向；数据层不导入 UI，纯逻辑不查询 DOM，通用视图不为某个新模块添加特判。
+`src/app.js` 通过注册表按当前 `moduleId` 取得课程，再把同一个 course 交给通用视图；只有 planned 元数据而未注册的模块不可路由。依赖方向保持单向；数据层不导入 UI，纯逻辑不查询 DOM，通用视图不为某个新模块添加特判。
 
 ## 目录说明
 
@@ -100,11 +101,13 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 │   ├── app.js                 # 路由、事件和应用状态编排
 │   ├── data/
 │   │   ├── modules.js         # 模块目录、状态、先修关系
+│   │   ├── courses.js         # 不可变课程注册表与 getCourse 查询
 │   │   └── llm-foundation.js  # LLM 课程、资源、面试题
 │   ├── core/                  # 无 DOM 的领域逻辑与存储适配器
 │   └── ui/                    # 各视图、课程详情、实验和 DOM 工具
 └── tests/
     ├── data.test.js           # 数据规模、字段和交叉引用
+    ├── course-registry.test.js # 注册表与多模块路由边界
     ├── learning-logic.test.js # 筛选、测验、实验、view-model
     ├── progress.test.js       # 不可变进度领域
     ├── storage.test.js        # 本地保存、损坏恢复、内存回退
@@ -128,7 +131,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 ### Lesson
 
 - `id`、`order`、`title`、`summary`、`durationMinutes`；
-- `prerequisiteLessonIds`：只引用本模块课程 ID；
+- `prerequisites`：可选，只引用本模块课程 ID；省略时 view-model 按课程顺序推导上一节为先修；
 - `objectives`、`concepts`、`explanations`、`keyPoints`；
 - `resourceIds`、`interviewQuestionIds`：必须双向可解析；
 - `exercise`：标题、说明、步骤、交付物，可选已有 `experiment` ID；
@@ -136,7 +139,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 ### Resource
 
-- `id`、`title`、`url`、`source`、`platform`；
+- `id`、`title`、`url`、`source`；`platform` 可选，缺省时由 URL 与类型等字段推导；
 - `language`、`type`、`difficulty`、`stage`；
 - `value`：说明为什么值得学；
 - `verifiedAt`：`YYYY-MM-DD` 核验日期。
@@ -155,18 +158,21 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 进度写入必须走 `src/core/progress.js` 的不可变操作和 `src/core/storage.js` 的存储接口，不要让 UI 直接修改原对象。
 
+当前 `ProgressState` 仍是一个扁平的单记录，而不是按模块分区：汇总时会用当前课程 ID 集合过滤陈旧记录，但重置会清空这个专用键中的整份学习状态。正式开放第二个模块前，应保证 lesson / interview ID 全局唯一，并评估升级 `version`、迁移为按模块保存；注册表和通用路由本身不等于已经完成多模块进度迁移。
+
 ## 添加新模块
 
 新增模块时按以下顺序执行；每一步都应配套测试：
 
-1. 在 `src/data/modules.js` 添加唯一模块 `id`、标题、状态、先修模块与预计时长。开发期间保持 `planned`，内容和测试完整后再切换为 `active`。
-2. 新建模块数据文件，提供有序 lessons。课程 ID、顺序和 `prerequisiteLessonIds` 必须唯一且可解析，先修图不能成环。
+1. 在 `src/data/modules.js` 添加唯一模块 `id`、标题、状态、先修模块与预计时长。开发期间保持 `planned`；只有元数据而没有注册课程时不可路由。
+2. 新建模块数据文件，提供有序 lessons。课程 ID、顺序和可选 `prerequisites` 必须唯一且可解析，先修图不能成环。
 3. 为每节课补齐目标、概念、解释、完成标准和 quiz，形成可验证的**课程**内容。
-4. 添加经过核验的**资源**，填写 HTTPS URL、来源、平台、学习价值与 `verifiedAt`；把 `resourceIds` 连接回课程。
+4. 添加经过核验的**资源**，填写 HTTPS URL、来源、学习价值与 `verifiedAt`；平台可显式填写，也可交给统一规则推导。把 `resourceIds` 连接回课程。
 5. 为每节课设计可执行的**练习**：至少包含步骤和交付物；只有真正需要交互时才复用或新增实验渲染器。
 6. 添加**面试高频**题，包含短答、深挖、误区、追问、岗位、频率与难度；维护 lesson ↔ interview 双向引用。
-7. 为数据约束、筛选/进度等纯逻辑先写失败测试，再实现最小变更。运行全量测试，检查键盘焦点与 320px 布局。
-8. 优先扩展现有通用 dashboard、curriculum、map、resources、interviews、progress 渲染路径；不要在通用视图里按模块 ID 特判。若模型差异确实需要新能力，先更新字段契约与测试。
+7. 在 `src/data/courses.js` 导入课程并加入不可变 registry。路由和六个通用视图会根据 registry 选择课程；未注册模块即使误标为 `active` 也会安全回退。
+8. 为注册表、路由、数据约束、筛选/进度等纯逻辑先写失败测试，再实现最小变更。完成 registry 注册后，最后才把模块状态从 `planned` 改成 `active`。
+9. 运行全量测试，检查键盘焦点与 320px 布局。优先扩展现有通用 dashboard、curriculum、map、resources、interviews、progress 渲染路径；不要在通用视图里按模块 ID 特判。若模型差异确实需要新能力，先更新字段契约与测试。
 
 换言之，每个模块必须交付四类内容：**课程、资源、练习、面试高频**。只有目录卡片不算完成模块。
 

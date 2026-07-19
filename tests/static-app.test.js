@@ -31,7 +31,8 @@ test('index exposes a semantic native-module application shell', async () => {
 
   assert.match(html, /<!doctype html>/i);
   assert.match(html, /<html\s+lang=["']zh-CN["']/i);
-  assert.match(html, /<a[^>]+href=["']#app-main["'][^>]*>/i);
+  assert.match(html, /<a[^>]+id=["']skip-to-main["'][^>]+href=["']#app-main["'][^>]*>/i);
+  assert.match(html, /<a[^>]+id=["']brand-home["'][^>]+href=["']#llm-foundation\/dashboard["'][^>]*>/i);
   assert.match(html, /<nav[^>]+aria-label=["']学习模块["'][^>]*>/i);
   assert.match(html, /<nav[^>]+aria-label=["']学习视图["'][^>]*>/i);
   assert.match(html, /<main[^>]+id=["']app-main["'][^>]*>/i);
@@ -216,6 +217,12 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /HTTPS/);
   assert.match(readme, /verifiedAt/);
   assert.match(readme, /短视频[^\n]{0,30}(?:补充|核心)/);
+  assert.match(readme, /courses\.js/);
+  assert.match(readme, /(?:注册|registry)[^\n]{0,50}(?:active|开放)|(?:active|开放)[^\n]{0,50}(?:注册|registry)/i);
+  assert.match(readme, /(?:损坏|无效)[^\n]{0,50}(?:默认|初始)[^\n]{0,50}local/i);
+  assert.match(readme, /(?:抛出|不可用|阻止)[^\n]{0,50}memory|memory[^\n]{0,50}(?:抛出|不可用|阻止)/i);
+  assert.match(readme, /`prerequisites`/);
+  assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
 test('styles explicitly protect 320px layouts, media and touch interactions', async () => {

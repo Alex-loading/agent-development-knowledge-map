@@ -33,7 +33,7 @@ export function renderProgressView(root, {
   root.replaceChildren(
     element('section', { className: 'progress-view', attrs: { 'aria-labelledby': 'progress-title' } }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 学习账簿' }),
+        element('span', { className: 'section-index', text: `${course.title} / 学习账簿` }),
         element('h1', { text: '学习进度', attrs: { id: 'progress-title' } }),
         element('p', { text: '课程完成、测验结果与面试掌握分别记录；复习队列不会因为“已掌握”而自动消失。' }),
       ]),
@@ -80,14 +80,14 @@ export function renderProgressView(root, {
       ]),
       element('section', { className: 'reset-zone', attrs: { 'aria-labelledby': 'reset-zone-title' } }, [
         element('h2', { text: '重新开始', attrs: { id: 'reset-zone-title' } }),
-        element('p', { text: '需要从零复习时，可以清空本模块的本地学习记录。' }),
+        element('p', { text: '需要从零复习时，可以清空当前版本保存在专用键中的全部学习记录。' }),
         resetConfirmOpen
           ? element('div', { className: 'reset-confirmation' }, [
             element('h3', {
               text: '确认重置学习进度？',
               attrs: { id: 'progress-reset-confirm-title', tabindex: '-1' },
             }),
-            element('p', { text: '只会删除 Agent Learner 的本地课程、测验、面试和复习记录，不会清除其他网站或应用的数据。' }),
+            element('p', { text: '会删除 Agent Learner 当前版本的全部本地课程、测验、面试和复习记录，但不会清除其他网站或应用的数据。' }),
             element('div', { className: 'reset-confirmation__actions' }, [
               button('确认重置', { className: 'destructive-action', events: { click: () => onConfirmReset?.() } }),
               button('取消', { className: 'secondary-action', events: { click: () => onCancelReset?.() } }),

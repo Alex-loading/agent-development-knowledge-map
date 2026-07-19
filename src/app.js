@@ -8,7 +8,7 @@ import {
 } from './core/progress.js';
 import { createProgressStore } from './core/storage.js';
 import { getNextLesson } from './core/view-models.js';
-import { llmFoundation } from './data/llm-foundation.js';
+import { getCourse } from './data/courses.js';
 import { modules } from './data/modules.js';
 import { renderCurriculumList, renderLessonDetail } from './ui/curriculum.js';
 import { renderDashboard } from './ui/dashboard.js';
@@ -19,24 +19,40 @@ import { renderProgressView } from './ui/progress-view.js';
 import { renderResourceLibrary } from './ui/resources.js';
 import { renderShell } from './ui/shell.js';
 
-const DEFAULT_HASH = '#llm-foundation/dashboard';
+const DEFAULT_MODULE_ID = 'llm-foundation';
+const DEFAULT_HASH = `#${DEFAULT_MODULE_ID}/dashboard`;
 const VIEWS = new Set(['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']);
 const VIEW_COPY = {
   dashboard: ['模块首页', '从一条推荐路径开始，也可以随时打开课程、知识地图或面试档案。'],
-  curriculum: ['学习主线', '八节课程将把模型原理、应用实践与验证任务串成一条可执行路线。'],
+  curriculum: ['学习主线', '课程主线将把模型原理、应用实践与验证任务串成一条可执行路线。'],
   map: ['知识地图', '在全局关系中定位概念、前置知识与下一步，避免只记孤立名词。'],
   resources: ['资源库', '按阶段与难度检索经过筛选的 GitHub、官方课程、博客和视频资料。'],
   interviews: ['面试高频', '从三十秒回答进入深挖、误区与追问，并分别记录掌握状态。'],
   progress: ['学习进度', '课程完成度和面试掌握度分开记录，让复习队列保持诚实。'],
 };
 
-export function normalizeRoute(hash) {
+export function resolveRoute(hash, {
+  moduleCatalog = modules,
+  courseResolver = getCourse,
+  defaultModuleId = DEFAULT_MODULE_ID,
+} = {}) {
+  const fallbackModule = moduleCatalog.find((item) => (
+    item.id === defaultModuleId && item.status === 'active' && courseResolver(item.id)
+  )) ?? moduleCatalog.find((item) => item.status === 'active' && courseResolver(item.id));
+  if (!fallbackModule) throw new Error('没有已注册且可学习的课程模块');
+
+  const fallback = {
+    hash: `#${fallbackModule.id}/dashboard`,
+    moduleId: fallbackModule.id,
+    view: 'dashboard',
+  };
   const parts = String(hash ?? '').replace(/^#\/?/, '').split('/').filter(Boolean);
-  const module = modules.find((item) => item.id === parts[0] && item.status === 'active');
-  if (!module) return { hash: DEFAULT_HASH, moduleId: 'llm-foundation', view: 'dashboard' };
+  const module = moduleCatalog.find((item) => item.id === parts[0] && item.status === 'active');
+  const course = module ? courseResolver(module.id) : null;
+  if (!module || !course) return fallback;
 
   if (parts[1] === 'lesson' && parts.length === 3) {
-    const lesson = llmFoundation.lessons.find((item) => item.id === parts[2]);
+    const lesson = (course.lessons ?? []).find((item) => item.id === parts[2]);
     if (lesson) return { hash: `#${module.id}/lesson/${lesson.id}`, moduleId: module.id, view: 'lesson', lessonId: lesson.id };
   }
 
@@ -44,7 +60,11 @@ export function normalizeRoute(hash) {
     return { hash: `#${module.id}/${parts[1]}`, moduleId: module.id, view: parts[1] };
   }
 
-  return { hash: DEFAULT_HASH, moduleId: 'llm-foundation', view: 'dashboard' };
+  return fallback;
+}
+
+export function normalizeRoute(hash) {
+  return resolveRoute(hash);
 }
 
 function storageAdapter(windowRef) {
@@ -59,29 +79,29 @@ function storageAdapter(windowRef) {
   }
 }
 
-function viewPlaceholder(route) {
+function viewPlaceholder(route, course) {
   if (route.view === 'lesson') {
-    const lesson = llmFoundation.lessons.find((item) => item.id === route.lessonId);
+    const lesson = course.lessons.find((item) => item.id === route.lessonId);
     return {
-      index: `课程 ${String(lesson.order).padStart(2, '0')} / ${String(llmFoundation.lessons.length).padStart(2, '0')}`,
+      index: `课程 ${String(lesson.order).padStart(2, '0')} / ${String(course.lessons.length).padStart(2, '0')}`,
       title: lesson.title,
       summary: lesson.summary,
     };
   }
   const [title, summary] = VIEW_COPY[route.view];
-  return { index: 'LLM FOUNDATION / 研究手册', title, summary };
+  return { index: `${course.title} / 研究手册`, title, summary };
 }
 
-function renderPlaceholder(root, route) {
-  const copy = viewPlaceholder(route);
+function renderPlaceholder(root, route, course) {
+  const copy = viewPlaceholder(route, course);
   root.replaceChildren(
     element('section', { className: 'view-placeholder', attrs: { 'aria-labelledby': 'view-title' } }, [
       element('span', { className: 'section-index', text: copy.index }),
       element('h1', { text: copy.title, attrs: { id: 'view-title' } }),
       element('p', { text: copy.summary }),
       element('div', { className: 'placeholder-ledger', attrs: { 'aria-label': '本模块结构' } }, [
-        element('div', {}, [element('strong', { text: '8 节课程' }), element('span', { text: '原理、实践、测验与完成标准' })]),
-        element('div', {}, [element('strong', { text: '24 道面试题' }), element('span', { text: '短答、深挖、误区与追问' })]),
+        element('div', {}, [element('strong', { text: `${course.lessons.length} 节课程` }), element('span', { text: '原理、实践、测验与完成标准' })]),
+        element('div', {}, [element('strong', { text: `${course.interviewQuestions.length} 道面试题` }), element('span', { text: '短答、深挖、误区与追问' })]),
         element('div', {}, [element('strong', { text: '独立进度' }), element('span', { text: '课程完成与面试掌握分开统计' })]),
       ]),
     ]),
@@ -128,23 +148,40 @@ export function startApp({
     }
   };
 
-  const openLesson = (lessonId) => navigate(`#llm-foundation/lesson/${lessonId}`);
+  const skipLink = documentRef.querySelector('#skip-to-main');
+  const brandHome = documentRef.querySelector('#brand-home');
+  const main = documentRef.querySelector('#app-main');
+  if (!skipLink || !brandHome || !main) throw new Error('全局导航挂载点不完整');
 
-  const completeLesson = (lessonId) => {
-    const lesson = llmFoundation.lessons.find((item) => item.id === lessonId);
+  const handleSkipToMain = (event) => {
+    event.preventDefault();
+    main.focus({ preventScroll: true });
+  };
+  const handleBrandHome = (event) => {
+    event.preventDefault();
+    navigate(DEFAULT_HASH);
+  };
+
+  skipLink.addEventListener('click', handleSkipToMain);
+  brandHome.addEventListener('click', handleBrandHome);
+
+  const openLesson = (moduleId, lessonId) => navigate(`#${moduleId}/lesson/${lessonId}`);
+
+  const completeLesson = (course, lessonId) => {
+    const lesson = course.lessons.find((item) => item.id === lessonId);
     if (!lesson || state.completedLessonIds.includes(lessonId)) return;
     const completedState = markLessonComplete(state, lessonId);
-    const allComplete = llmFoundation.lessons.every(({ id }) => (
+    const allComplete = course.lessons.every(({ id }) => (
       completedState.completedLessonIds.includes(id)
     ));
-    const nextLesson = getNextLesson(llmFoundation.lessons, completedState);
+    const nextLesson = getNextLesson(course.lessons, completedState);
     persistState({
       ...completedState,
-      currentModuleId: llmFoundation.id,
+      currentModuleId: course.id,
       currentLessonId: nextLesson?.id ?? lessonId,
       lastVisitedAt: new Date().toISOString(),
     });
-    pendingAnnouncement = `已完成${lesson.title}。${allComplete ? 'LLM 基础主线已全部完成。' : `下一节建议：${nextLesson?.title ?? '请回到学习主线选择课程'}`}`;
+    pendingAnnouncement = `已完成${lesson.title}。${allComplete ? `${course.title}主线已全部完成。` : `下一节建议：${nextLesson?.title ?? '请回到学习主线选择课程'}`}`;
     focusAfterCompletion = true;
     render();
   };
@@ -171,11 +208,11 @@ export function startApp({
     render();
   };
 
-  const updateInterviewStatus = (questionId, status, focusId) => {
+  const updateInterviewStatus = (course, questionId, status, focusId) => {
     const currentStatus = state.interviewStatusById?.[questionId] ?? 'unseen';
     if (currentStatus === status) return;
     persistState(setInterviewStatus(state, questionId, status));
-    const question = llmFoundation.interviewQuestions.find(({ id }) => id === questionId);
+    const question = course.interviewQuestions.find(({ id }) => id === questionId);
     const labels = { unseen: '未掌握', reviewing: '复习中', mastered: '已掌握' };
     pendingAnnouncement = `${question?.question ?? '面试题'}已标记为${labels[status] ?? status}`;
     restoreViewFocusAfterRender(focusId, 'interview-results-summary');
@@ -211,32 +248,33 @@ export function startApp({
     render();
   };
 
-  const confirmReset = () => {
+  const confirmReset = (course) => {
     store.reset();
-    state = resetModuleProgress(state, llmFoundation.id, llmFoundation.lessons[0]?.id ?? 'llm-01');
+    state = resetModuleProgress(state, course.id, course.lessons[0]?.id ?? '');
     viewState.resetConfirmOpen = false;
     pendingAnnouncement = '学习进度已重置';
     restoreViewFocusAfterRender('progress-reset-button');
     render();
   };
 
-  const renderGuidedView = (root, route, summary, live) => {
+  const renderGuidedView = (root, route, course, summary, live) => {
     const shared = {
-      course: llmFoundation,
+      course,
       progress: state,
     };
+    const openCourseLesson = (lessonId) => openLesson(route.moduleId, lessonId);
 
     if (route.view === 'dashboard') {
       renderDashboard(root, {
         ...shared,
         summary,
-        onOpenLesson: openLesson,
+        onOpenLesson: openCourseLesson,
         onNavigate: (view) => navigate(`#${route.moduleId}/${view}`),
       });
       return true;
     }
     if (route.view === 'curriculum') {
-      renderCurriculumList(root, { ...shared, onOpenLesson: openLesson });
+      renderCurriculumList(root, { ...shared, onOpenLesson: openCourseLesson });
       return true;
     }
     if (route.view === 'lesson') {
@@ -244,19 +282,20 @@ export function startApp({
         ...shared,
         lessonId: route.lessonId,
         onBack: () => navigate(`#${route.moduleId}/curriculum`),
-        onCompleteLesson: completeLesson,
+        onCompleteLesson: (lessonId) => completeLesson(course, lessonId),
         onOpenInterviews: () => navigate(`#${route.moduleId}/interviews`),
         onQuizResult: (score, message) => saveQuizResult(route.lessonId, score, message, live),
       });
       return true;
     }
     if (route.view === 'map') {
-      renderKnowledgeMap(root, { ...shared, onOpenLesson: openLesson });
+      renderKnowledgeMap(root, { ...shared, onOpenLesson: openCourseLesson });
       return true;
     }
     if (route.view === 'resources') {
       renderResourceLibrary(root, {
-        resources: llmFoundation.resources,
+        courseTitle: course.title,
+        resources: course.resources,
         filters: viewState.resourceFilters,
         onFiltersChange: updateResourceFilters,
       });
@@ -269,9 +308,9 @@ export function startApp({
         revealedIds: viewState.revealedInterviewIds,
         onFiltersChange: updateInterviewFilters,
         onToggleReveal: toggleInterviewReveal,
-        onSetStatus: updateInterviewStatus,
+        onSetStatus: (questionId, status, focusId) => updateInterviewStatus(course, questionId, status, focusId),
         onToggleReview: updateReviewQueue,
-        onOpenLesson: openLesson,
+        onOpenLesson: openCourseLesson,
       });
       return true;
     }
@@ -283,7 +322,7 @@ export function startApp({
         resetConfirmOpen: viewState.resetConfirmOpen,
         onRequestReset: requestReset,
         onCancelReset: cancelReset,
-        onConfirmReset: confirmReset,
+        onConfirmReset: () => confirmReset(course),
       });
       return true;
     }
@@ -295,6 +334,8 @@ export function startApp({
       ? documentRef.activeElement?.id
       : null;
     const route = normalizeRoute(windowRef.location.hash);
+    const course = getCourse(route.moduleId);
+    if (!course) throw new Error(`课程模块未注册：${route.moduleId}`);
     if (windowRef.location.hash !== route.hash) windowRef.history.replaceState(null, '', route.hash);
 
     if (route.view === 'lesson' && lastRenderedHash !== route.hash) {
@@ -306,15 +347,15 @@ export function startApp({
       });
     }
 
-    const summary = summarizeProgress(state, llmFoundation.lessons, llmFoundation.interviewQuestions);
+    const summary = summarizeProgress(state, course.lessons, course.interviewQuestions);
     renderShell({
       modules,
       activeModuleId: route.moduleId,
       activeView: route.view === 'lesson' ? 'curriculum' : route.view,
       progressSummary: {
         ...summary,
-        lessonTotal: llmFoundation.lessons.length,
-        interviewTotal: llmFoundation.interviewQuestions.length,
+        lessonTotal: course.lessons.length,
+        interviewTotal: course.interviewQuestions.length,
       },
       storageMode: store.mode(),
       onModuleSelect: (moduleId) => navigate(`#${moduleId}/dashboard`),
@@ -323,10 +364,9 @@ export function startApp({
 
     const root = documentRef.querySelector('#view-root');
     const live = documentRef.querySelector('#app-live-region');
-    const main = documentRef.querySelector('#app-main');
-    if (!root || !live || !main) throw new Error('主要内容挂载点不完整');
-    if (!renderGuidedView(root, route, summary, live)) renderPlaceholder(root, route);
-    const copy = viewPlaceholder(route);
+    if (!root || !live) throw new Error('主要内容挂载点不完整');
+    if (!renderGuidedView(root, route, course, summary, live)) renderPlaceholder(root, route, course);
+    const copy = viewPlaceholder(route, course);
     live.textContent = pendingAnnouncement || `已打开${copy.title}`;
     pendingAnnouncement = '';
     documentRef.title = `${copy.title} · Agent Learner`;
@@ -356,7 +396,11 @@ export function startApp({
     getState: () => state,
     navigate,
     render,
-    teardown: () => windowRef.removeEventListener('hashchange', render),
+    teardown: () => {
+      windowRef.removeEventListener('hashchange', render);
+      skipLink.removeEventListener('click', handleSkipToMain);
+      brandHome.removeEventListener('click', handleBrandHome);
+    },
   };
 }
 

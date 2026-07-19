@@ -209,6 +209,10 @@ export function createAppDocument() {
     return node;
   };
 
+  const skipLink = add('a', 'skip-to-main');
+  skipLink.setAttribute('href', '#app-main');
+  const brandHome = add('a', 'brand-home');
+  brandHome.setAttribute('href', '#llm-foundation/dashboard');
   add('div', 'module-list');
   add('select', 'module-select');
   add('div', 'view-tabs');

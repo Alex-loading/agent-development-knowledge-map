@@ -10,6 +10,7 @@ import {
 } from '../src/core/progress.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
+import { renderDashboard } from '../src/ui/dashboard.js';
 import { renderExperiment } from '../src/ui/experiments.js';
 import { renderInterviewPractice } from '../src/ui/interviews.js';
 import { renderResourceLibrary } from '../src/ui/resources.js';
@@ -661,4 +662,88 @@ test('dashboard progress bars expose accessible names and values', (t) => {
     assert.ok(bar.getAttribute('aria-label'));
     assert.match(bar.getAttribute('aria-valuetext'), /^\d+\s*\/\s*\d+/);
   }
+});
+
+test('skip link preserves the active route and view while focusing main exactly once', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const windowRef = createFakeWindow('#llm-foundation/resources');
+  const app = startApp({
+    documentRef: document,
+    windowRef,
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  app.render();
+  app.render();
+  const before = document.querySelector('#view-root').textContent;
+  const skip = document.querySelector('#skip-to-main');
+  assert.equal(skip.listeners.get('click')?.size, 1);
+
+  const event = new FakeEvent('click');
+  skip.dispatchEvent(event);
+
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(windowRef.location.hash, '#llm-foundation/resources');
+  assert.equal(document.querySelector('#view-root').textContent, before);
+  assert.equal(document.activeElement.id, 'app-main');
+
+  app.teardown();
+  assert.equal(skip.listeners.get('click')?.size, 0);
+});
+
+test('brand home uses canonical navigation and focuses main without duplicate handlers', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const windowRef = createFakeWindow('#llm-foundation/interviews');
+  const app = startApp({
+    documentRef: document,
+    windowRef,
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  app.render();
+  app.render();
+  const brand = document.querySelector('#brand-home');
+  assert.equal(brand.listeners.get('click')?.size, 1);
+
+  const event = new FakeEvent('click');
+  brand.dispatchEvent(event);
+  windowRef.dispatchEvent(new FakeEvent('hashchange'));
+
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(windowRef.location.hash, '#llm-foundation/dashboard');
+  assert.equal(document.querySelector('#view-root').querySelector('h1').textContent, 'LLM 基础');
+  assert.equal(document.activeElement.id, 'app-main');
+});
+
+test('dashboard uses semantic empty statuses instead of contradictory progress ranges', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  renderDashboard(root, {
+    course: {
+      id: 'empty-course',
+      title: '空课程',
+      summary: '用于验证空模块。',
+      lessons: [],
+      interviewQuestions: [],
+    },
+    progress: createDefaultProgress('empty-course', ''),
+    summary: {
+      lessonsCompleted: 0,
+      lessonPercent: 0,
+      interviewsMastered: 0,
+      interviewPercent: 0,
+    },
+  });
+
+  assert.equal(root.querySelectorAll('progress').length, 0);
+  assert.ok(root.textContent.includes('暂无课程内容'));
+  assert.ok(root.textContent.includes('暂无面试题'));
+  assert.equal(root.querySelectorAll('[role="status"]').length, 2);
 });

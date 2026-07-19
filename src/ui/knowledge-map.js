@@ -26,7 +26,7 @@ export function renderKnowledgeMap(root, { course, progress, onOpenLesson }) {
   root.replaceChildren(
     element('section', { className: 'knowledge-map-view', attrs: { 'aria-labelledby': 'map-title' } }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 依赖账本' }),
+        element('span', { className: 'section-index', text: `${course.title} / 依赖账本` }),
         element('h1', { text: '知识地图', attrs: { id: 'map-title' } }),
         element('p', { text: '状态表示推荐学习顺序，不是访问限制。“待先修”课程仍可打开查看，适合先建立问题意识再回补前置概念。' }),
       ]),

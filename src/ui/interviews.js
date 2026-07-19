@@ -154,7 +154,7 @@ export function renderInterviewPractice(root, {
   root.replaceChildren(
     element('section', { className: 'interview-practice-view', attrs: { 'aria-labelledby': 'interviews-title' } }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 面试档案' }),
+        element('span', { className: 'section-index', text: `${course.title} / 面试档案` }),
         element('h1', { text: '面试高频', attrs: { id: 'interviews-title' } }),
         element('p', { text: '先口述自己的 30 秒答案，再展开参考内容；深挖、误区与追问共同组成一次完整演练。' }),
       ]),

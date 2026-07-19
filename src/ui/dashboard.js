@@ -9,19 +9,26 @@ const STATUS_LABELS = {
 };
 
 function progressBlock(label, completed, total, percent) {
+  const measure = total === 0
+    ? element('p', {
+      className: 'empty-note progress-block__empty',
+      text: label === '课程完成度' ? '暂无课程内容' : '暂无面试题',
+      attrs: { role: 'status' },
+    })
+    : element('progress', {
+      attrs: {
+        max: total,
+        value: completed,
+        'aria-label': label,
+        'aria-valuetext': `${completed} / ${total}`,
+      },
+    });
   return element('section', { className: 'progress-block', attrs: { 'aria-label': label } }, [
     element('div', { className: 'progress-block__heading' }, [
       element('h3', { text: label }),
       element('strong', { text: `${percent}%` }),
     ]),
-    element('progress', {
-      attrs: {
-        max: total || 1,
-        value: completed,
-        'aria-label': label,
-        'aria-valuetext': `${completed} / ${total}`,
-      },
-    }),
+    measure,
     element('p', { text: `${completed} / ${total} ${label === '课程完成度' ? '节课程' : '道题已掌握'}` }),
   ]);
 }
@@ -52,7 +59,7 @@ function recommendation(course, progress, onOpenLesson) {
       className: 'section-index',
       text: allComplete ? '主线完成 / 回看终章' : `下一站 / 课程 ${String(nextLesson.order).padStart(2, '0')}`,
     }),
-    element('h2', { text: allComplete ? '八节主线已经完成' : nextLesson.title, attrs: { id: 'recommended-title' } }),
+    element('h2', { text: allComplete ? `${course.lessons.length} 节主线已经完成` : nextLesson.title, attrs: { id: 'recommended-title' } }),
     element('p', {
       className: 'recommendation-spread__summary',
       text: allComplete
@@ -75,7 +82,7 @@ function miniPath(course, progress, onOpenLesson) {
   return element('section', { className: 'dashboard-panel mini-path', attrs: { 'aria-labelledby': 'mini-path-title' } }, [
     element('div', { className: 'panel-heading' }, [
       element('span', { className: 'section-index', text: '路径速览' }),
-      element('h2', { text: '八步知识路径', attrs: { id: 'mini-path-title' } }),
+      element('h2', { text: `${course.lessons.length} 步知识路径`, attrs: { id: 'mini-path-title' } }),
     ]),
     element('ol', { className: 'mini-path__list' }, nodes.map((node) => (
       element('li', { className: `mini-path__node status-${node.status}` }, [
@@ -117,7 +124,7 @@ export function renderDashboard(root, {
   root.replaceChildren(
     element('div', { className: 'dashboard-view' }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 模块首页' }),
+        element('span', { className: 'section-index', text: `${course.title} / 模块首页` }),
         element('h1', { text: course.title }),
         element('p', { text: course.summary }),
       ]),

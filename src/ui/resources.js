@@ -54,6 +54,7 @@ function resourceRow(resource) {
 }
 
 export function renderResourceLibrary(root, {
+  courseTitle = '学习模块',
   resources = [],
   filters = {},
   onFiltersChange,
@@ -82,7 +83,7 @@ export function renderResourceLibrary(root, {
   root.replaceChildren(
     element('section', { className: 'resource-library-view', attrs: { 'aria-labelledby': 'resources-title' } }, [
       element('header', { className: 'section-header' }, [
-        element('span', { className: 'section-index', text: 'LLM FOUNDATION / 资料索引' }),
+        element('span', { className: 'section-index', text: `${courseTitle} / 资料索引` }),
         element('h1', { text: '资源库', attrs: { id: 'resources-title' } }),
         element('p', { text: `以资料账簿快速筛选 ${resources.length} 份课程、项目、论文与视频；每条都标注学习价值和最近核验日期。` }),
       ]),
