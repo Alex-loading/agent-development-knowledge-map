@@ -63,19 +63,44 @@ export function resetModuleProgress(_state, moduleId, firstLessonId = 'llm-01') 
   return createDefaultProgress(moduleId, firstLessonId);
 }
 
-export function summarizeProgress(state, lessonTotal, interviewTotal) {
+function progressScope(scope) {
+  if (typeof scope === 'number') {
+    return {
+      total: Number.isFinite(scope) ? Math.max(0, Math.floor(scope)) : 0,
+      validIds: null,
+    };
+  }
+  const entries = Array.isArray(scope) ? scope : scope instanceof Set ? [...scope] : [];
+  const validIds = new Set(entries
+    .map((entry) => (typeof entry === 'string' ? entry : entry?.id))
+    .filter((id) => typeof id === 'string'));
+  return { total: validIds.size, validIds };
+}
+
+export function summarizeProgress(state, lessonScope, interviewScope) {
   const interviewStatusById = state.interviewStatusById && typeof state.interviewStatusById === 'object'
     ? state.interviewStatusById
     : {};
   const completedLessonIds = Array.isArray(state.completedLessonIds) ? state.completedLessonIds : [];
-  const interviewsMastered = Object.values(interviewStatusById)
-    .filter((status) => status === 'mastered').length;
-  const lessonsCompleted = completedLessonIds.length;
+  const lessons = progressScope(lessonScope);
+  const interviews = progressScope(interviewScope);
+  const uniqueCompletedIds = new Set(completedLessonIds);
+  const completedInScope = lessons.validIds
+    ? [...uniqueCompletedIds].filter((id) => lessons.validIds.has(id)).length
+    : uniqueCompletedIds.size;
+  const masteredIds = Object.entries(interviewStatusById)
+    .filter(([, status]) => status === 'mastered')
+    .map(([id]) => id);
+  const masteredInScope = interviews.validIds
+    ? masteredIds.filter((id) => interviews.validIds.has(id)).length
+    : masteredIds.length;
+  const lessonsCompleted = Math.min(completedInScope, lessons.total);
+  const interviewsMastered = Math.min(masteredInScope, interviews.total);
 
   return {
     lessonsCompleted,
-    lessonPercent: lessonTotal === 0 ? 0 : Math.round((lessonsCompleted / lessonTotal) * 100),
+    lessonPercent: lessons.total === 0 ? 0 : Math.round((lessonsCompleted / lessons.total) * 100),
     interviewsMastered,
-    interviewPercent: interviewTotal === 0 ? 0 : Math.round((interviewsMastered / interviewTotal) * 100),
+    interviewPercent: interviews.total === 0 ? 0 : Math.round((interviewsMastered / interviews.total) * 100),
   };
 }

@@ -1,9 +1,26 @@
+export const FILTER_ALL = '__all__';
+const FILTER_EXACT_PREFIX = '__filter_exact__:';
+
 function isInclusive(value) {
-  return value == null || value === 'all';
+  return value == null || value === FILTER_ALL || value === 'all';
+}
+
+function exactValue(value) {
+  if (typeof value === 'string' && value.startsWith(FILTER_EXACT_PREFIX)) {
+    return decodeURIComponent(value.slice(FILTER_EXACT_PREFIX.length));
+  }
+  return value;
+}
+
+export function filterOptionValue(value) {
+  const text = String(value);
+  return text === 'all' || text === FILTER_ALL || text.startsWith(FILTER_EXACT_PREFIX)
+    ? `${FILTER_EXACT_PREFIX}${encodeURIComponent(text)}`
+    : text;
 }
 
 function matches(value, expected) {
-  return isInclusive(expected) || value === expected;
+  return isInclusive(expected) || value === exactValue(expected);
 }
 
 export function resourcePlatform(item) {
@@ -49,7 +66,7 @@ export function filterInterviewQuestions(items, filters = {}, statusById = {}) {
 
   return items.filter((item) => {
     const status = statusById[item.id] ?? 'unseen';
-    return (isInclusive(filters.role) || item.roles?.includes(filters.role))
+    return (isInclusive(filters.role) || item.roles?.includes(exactValue(filters.role)))
       && matches(item.frequency, filters.frequency)
       && matches(item.difficulty, filters.difficulty)
       && matches(status, expectedStatus);

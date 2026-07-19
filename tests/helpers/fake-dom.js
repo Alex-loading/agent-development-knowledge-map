@@ -37,10 +37,15 @@ export class FakeNode {
   }
 
   replaceChildren(...children) {
+    const activeElement = this.ownerDocument?.activeElement;
+    const removesActiveElement = activeElement && this.childNodes.some((child) => (
+      child === activeElement || descendants(child).includes(activeElement)
+    ));
     for (const child of this.childNodes) child.parentNode = null;
     this.childNodes = [];
     this._text = '';
     this.append(...children);
+    if (removesActiveElement) this.ownerDocument.activeElement = this.ownerDocument.body ?? null;
   }
 }
 

@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { filterInterviewQuestions, filterResources } from '../src/core/filters.js';
+import {
+  FILTER_ALL,
+  filterInterviewQuestions,
+  filterResources,
+} from '../src/core/filters.js';
 import { scoreQuiz } from '../src/core/quiz.js';
 import {
   estimateContextBudget,
@@ -70,6 +74,7 @@ test('resource platform filter prefers platform metadata and never treats creato
     ['youtube'],
   );
   assert.deepEqual(filterResources(resources, { language: 'all' }), resources);
+  assert.deepEqual(filterResources(resources, { language: FILTER_ALL }), resources);
   assert.notEqual(filterResources(resources), resources);
 });
 

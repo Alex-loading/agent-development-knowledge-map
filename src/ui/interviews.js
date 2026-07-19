@@ -1,4 +1,8 @@
-import { filterInterviewQuestions } from '../core/filters.js';
+import {
+  FILTER_ALL,
+  filterInterviewQuestions,
+  filterOptionValue,
+} from '../core/filters.js';
 import { button, element } from './dom.js';
 
 const STATUS_LABELS = {
@@ -12,18 +16,18 @@ function distinct(items, getter) {
     .sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }
 
-function filterSelect({ id, label, value = 'all', options, labels = {}, onChange }) {
+function filterSelect({ id, label, value = FILTER_ALL, options, labels = {}, onChange }) {
   const select = element('select', {
     attrs: { id, name: id },
-    events: { change: () => onChange(select.value) },
+    events: { change: () => onChange(select.value, id) },
   }, [
-    element('option', { text: '全部', attrs: { value: 'all' } }),
+    element('option', { text: '全部', attrs: { value: FILTER_ALL } }),
     ...options.map((option) => element('option', {
       text: labels[option] ?? option,
-      attrs: { value: option },
+      attrs: { value: filterOptionValue(option) },
     })),
   ]);
-  select.value = value ?? 'all';
+  select.value = value ?? FILTER_ALL;
   for (const option of select.children) option.selected = option.value === select.value;
   return element('label', { className: 'filter-control', attrs: { for: id } }, [
     element('span', { text: label }),
@@ -82,8 +86,8 @@ function interviewCard({
       ]),
       button(queued ? '移出复习' : '加入复习', {
         className: `review-bookmark${queued ? ' is-queued' : ''}`,
-        attrs: { 'aria-pressed': queued ? 'true' : 'false' },
-        events: { click: () => onToggleReview?.(question.id) },
+        attrs: { id: `interview-review-${question.id}`, 'aria-pressed': queued ? 'true' : 'false' },
+        events: { click: () => onToggleReview?.(question.id, `interview-review-${question.id}`) },
       }),
     ]),
     element('p', {
@@ -94,17 +98,18 @@ function interviewCard({
       element('span', { className: 'status-matrix__current', text: `当前：${STATUS_LABELS[status]}` }),
       element('div', { attrs: { role: 'group', 'aria-label': '掌握状态' } }, Object.entries(STATUS_LABELS).map(([value, label]) => button(label, {
         className: 'status-action',
-        attrs: { 'aria-pressed': status === value ? 'true' : 'false' },
-        events: { click: () => onSetStatus?.(question.id, value) },
+        attrs: { id: `interview-status-${question.id}-${value}`, 'aria-pressed': status === value ? 'true' : 'false' },
+        events: { click: () => onSetStatus?.(question.id, value, `interview-status-${question.id}-${value}`) },
       }))),
     ]),
     button(revealed ? '收起参考回答' : '查看参考回答', {
       className: 'reveal-answer',
       attrs: {
+        id: `interview-reveal-${question.id}`,
         'aria-expanded': revealed ? 'true' : 'false',
         'aria-controls': `answer-${question.id}`,
       },
-      events: { click: () => onToggleReveal?.(question.id) },
+      events: { click: () => onToggleReveal?.(question.id, `interview-reveal-${question.id}`) },
     }),
     revealed ? answerDrawer(question, lesson, onOpenLesson) : null,
   ]);
@@ -122,20 +127,23 @@ export function renderInterviewPractice(root, {
   onOpenLesson,
 }) {
   const questions = course.interviewQuestions ?? [];
+  const validQuestionIds = new Set(questions.map(({ id }) => id));
   const statusById = progress.interviewStatusById ?? {};
-  const reviewQueue = new Set(progress.reviewQueue ?? []);
+  const reviewQueue = new Set((progress.reviewQueue ?? []).filter((id) => validQuestionIds.has(id)));
   const revealed = revealedIds instanceof Set ? revealedIds : new Set(revealedIds ?? []);
+  const canonical = (value) => (value == null || value === 'all' ? FILTER_ALL : value);
   const normalized = {
-    role: filters.role ?? 'all',
-    frequency: filters.frequency ?? 'all',
-    difficulty: filters.difficulty ?? 'all',
-    status: filters.status ?? 'all',
+    role: canonical(filters.role),
+    frequency: canonical(filters.frequency),
+    difficulty: canonical(filters.difficulty),
+    status: canonical(filters.status),
   };
   const visible = filterInterviewQuestions(questions, normalized, statusById);
-  const activeCount = Object.values(normalized).filter((value) => value !== 'all').length;
-  const mastered = Object.values(statusById).filter((status) => status === 'mastered').length;
+  const activeCount = Object.values(normalized).filter((value) => value !== FILTER_ALL).length;
+  const mastered = Object.entries(statusById)
+    .filter(([id, status]) => validQuestionIds.has(id) && status === 'mastered').length;
   const lessonById = new Map(course.lessons.map((lesson) => [lesson.id, lesson]));
-  const updateFilter = (key, value) => onFiltersChange?.({ ...normalized, [key]: value });
+  const updateFilter = (key, value, focusId) => onFiltersChange?.({ ...normalized, [key]: value }, focusId);
   const fields = [
     ['role', '目标岗位', distinct(questions, (question) => question.roles)],
     ['frequency', '频率', distinct(questions, (question) => question.frequency)],
@@ -150,7 +158,7 @@ export function renderInterviewPractice(root, {
         element('h1', { text: '面试高频', attrs: { id: 'interviews-title' } }),
         element('p', { text: '先口述自己的 30 秒答案，再展开参考内容；深挖、误区与追问共同组成一次完整演练。' }),
       ]),
-      element('div', { className: 'interview-summary', attrs: { 'aria-live': 'polite' } }, [
+      element('div', { className: 'interview-summary', attrs: { id: 'interview-results-summary', tabindex: '-1', 'aria-live': 'polite' } }, [
         element('strong', { text: `已掌握 ${mastered} / ${questions.length}` }),
         element('span', { text: `复习队列 ${reviewQueue.size} 题` }),
       ]),
@@ -162,7 +170,7 @@ export function renderInterviewPractice(root, {
           value: normalized[key],
           options,
           labels,
-          onChange: (value) => updateFilter(key, value),
+          onChange: (value, focusId) => updateFilter(key, value, focusId),
         }))),
         element('div', { className: 'filter-ledger__summary' }, [
           element('strong', { text: `显示 ${visible.length} / ${questions.length}` }),
@@ -170,7 +178,8 @@ export function renderInterviewPractice(root, {
           button('重置筛选', {
             className: 'secondary-action',
             disabled: activeCount === 0,
-            events: { click: () => onFiltersChange?.({}) },
+            attrs: { id: 'interview-reset-filters' },
+            events: { click: () => onFiltersChange?.({}, 'interview-reset-filters') },
           }),
         ]),
       ]),
@@ -189,7 +198,10 @@ export function renderInterviewPractice(root, {
         : element('section', { className: 'empty-state interview-empty' }, [
           element('h2', { text: '没有符合当前筛选条件的面试题' }),
           element('p', { text: '重置筛选，或放宽岗位、频率、难度和掌握状态。' }),
-          button('重置筛选', { events: { click: () => onFiltersChange?.({}) } }),
+          button('重置筛选', {
+            attrs: { id: 'interview-empty-reset-filters' },
+            events: { click: () => onFiltersChange?.({}, 'interview-empty-reset-filters') },
+          }),
         ]),
     ]),
   );

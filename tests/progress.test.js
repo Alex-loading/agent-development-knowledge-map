@@ -54,6 +54,47 @@ test('summarizeProgress separately calculates lesson and interview completion', 
   });
 });
 
+test('summarizeProgress de-duplicates and clamps counts when only numeric totals are known', () => {
+  const state = {
+    ...createDefaultProgress('llm-foundation'),
+    completedLessonIds: ['llm-01', 'llm-01', 'stale-a', 'stale-b'],
+    interviewStatusById: {
+      'iq-1': 'mastered',
+      'iq-2': 'mastered',
+      stale: 'mastered',
+    },
+  };
+
+  assert.deepEqual(summarizeProgress(state, 2, 2), {
+    lessonsCompleted: 2,
+    lessonPercent: 100,
+    interviewsMastered: 2,
+    interviewPercent: 100,
+  });
+});
+
+test('summarizeProgress intersects persisted IDs with current lesson and question scopes', () => {
+  const state = {
+    ...createDefaultProgress('llm-foundation'),
+    completedLessonIds: ['llm-01', 'llm-01', 'stale-lesson'],
+    interviewStatusById: {
+      'iq-current': 'mastered',
+      'iq-stale': 'mastered',
+    },
+  };
+
+  assert.deepEqual(summarizeProgress(
+    state,
+    [{ id: 'llm-01' }, { id: 'llm-02' }],
+    ['iq-current', 'iq-other'],
+  ), {
+    lessonsCompleted: 1,
+    lessonPercent: 50,
+    interviewsMastered: 1,
+    interviewPercent: 50,
+  });
+});
+
 test('toggleReviewQueue immutably adds unique questions in order and removes existing ones', () => {
   const initial = {
     ...createDefaultProgress('llm-foundation'),

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { startApp } from '../src/app.js';
+import { FILTER_ALL, filterResources } from '../src/core/filters.js';
 import {
   createDefaultProgress,
   setInterviewStatus,
@@ -79,6 +80,77 @@ test('resource library combines real filters, renders empty state and resets to 
   assert.ok(root.textContent.includes('启用筛选 0 项'));
 });
 
+test('resource copy is data-derived and every rendered platform option matches real resources', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+  const resources = llmFoundation.resources.slice(0, 5);
+
+  renderResourceLibrary(root, { resources, filters: {} });
+
+  assert.ok(root.textContent.includes(`${resources.length} 份课程、项目、论文与视频`));
+  const platformOptions = root.querySelector('#resource-filter-platform').children;
+  assert.equal(platformOptions[0].value, FILTER_ALL);
+  for (const option of platformOptions.slice(1)) {
+    assert.ok(
+      filterResources(resources, { platform: option.value }).length > 0,
+      `平台选项 ${option.textContent} 必须能命中至少一条资料`,
+    );
+  }
+  assert.equal(platformOptions.some((option) => option.textContent === '未知平台'), false);
+});
+
+test('canonical all sentinel keeps a literal all data value selectable in the resource UI', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+  const resources = [
+    { id: 'literal-all', title: 'Literal', url: 'https://github.com/example/literal', source: 'Test', language: 'all', type: '教程', difficulty: '入门', stage: '基础', value: 'Literal value', verifiedAt: '2026-07-20' },
+    { id: 'chinese', title: 'Chinese', url: 'https://github.com/example/chinese', source: 'Test', language: '中文', type: '教程', difficulty: '入门', stage: '基础', value: 'Chinese value', verifiedAt: '2026-07-20' },
+  ];
+  let filters = {};
+  const render = () => renderResourceLibrary(root, {
+    resources,
+    filters,
+    onFiltersChange(next) {
+      filters = next;
+      render();
+    },
+  });
+
+  render();
+  const language = root.querySelector('#resource-filter-language');
+  assert.equal(language.children[0].value, FILTER_ALL);
+  const literalOption = language.children.find((option) => option.textContent === 'all');
+  assert.notEqual(literalOption.value, 'all');
+  dispatchChange(language, literalOption.value);
+  assert.deepEqual(root.querySelectorAll('.resource-row').map((row) => row.textContent.includes('Literal')), [true]);
+});
+
+test('application restores focus after resource filtering and falls back after reset disables its trigger', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/resources'),
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  const platform = document.querySelector('#resource-filter-platform');
+  platform.focus();
+  dispatchChange(platform, 'GitHub');
+  assert.equal(document.activeElement.id, 'resource-filter-platform');
+  assert.notEqual(document.activeElement, platform, '焦点应落在重渲染后的替代控件');
+
+  const reset = document.querySelector('#resource-reset-filters');
+  reset.focus();
+  reset.click();
+  assert.equal(document.activeElement.id, 'resource-results-summary');
+});
+
 test('interview practice keeps answers absent until reveal and preserves filters/reveal through status updates', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -154,19 +226,115 @@ test('application persists interview mastery exactly once and updates shell summ
   app.render();
   app.render();
   const first = llmFoundation.interviewQuestions[0];
-  document.querySelector(`[aria-controls="answer-${first.id}"]`).click();
+  const roleFilter = document.querySelector('#interview-filter-role');
+  roleFilter.focus();
+  dispatchChange(roleFilter, 'Agent 开发');
+  assert.equal(document.activeElement.id, 'interview-filter-role');
+
+  const reveal = document.querySelector(`[aria-controls="answer-${first.id}"]`);
+  reveal.focus();
+  reveal.click();
+  assert.equal(document.activeElement.id, `interview-reveal-${first.id}`);
   assert.ok(document.querySelector('#view-root').textContent.includes(first.shortAnswer));
-  dispatchChange(document.querySelector('#interview-filter-role'), 'Agent 开发');
   assert.equal(document.querySelector('#interview-filter-role').value, 'Agent 开发');
   assert.ok(document.querySelector('#view-root').textContent.includes(first.shortAnswer));
 
-  findButton(document.querySelector('.interview-card'), '已掌握').click();
+  const mastered = document.querySelector(`#interview-status-${first.id}-mastered`);
+  mastered.focus();
+  mastered.click();
 
   assert.equal(store.saves.length, 1);
+  assert.equal(document.activeElement.id, `interview-status-${first.id}-mastered`);
   assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 1 / 24'));
   assert.ok(document.querySelector('#app-live-region').textContent.includes('已标记为已掌握'));
   assert.equal(document.querySelector('#interview-filter-role').value, 'Agent 开发');
   assert.ok(document.querySelector('#view-root').textContent.includes(first.shortAnswer));
+
+  const review = document.querySelector(`#interview-review-${first.id}`);
+  review.focus();
+  review.click();
+  assert.equal(document.activeElement.id, `interview-review-${first.id}`);
+  assert.equal(store.saves.length, 2);
+});
+
+test('interview focus falls back to results summary when a status change removes the active card', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/interviews'),
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  const statusFilter = document.querySelector('#interview-filter-status');
+  statusFilter.focus();
+  dispatchChange(statusFilter, 'unseen');
+  assert.equal(document.activeElement.id, 'interview-filter-status');
+
+  const first = llmFoundation.interviewQuestions[0];
+  const mastered = document.querySelector(`#interview-status-${first.id}-mastered`);
+  mastered.focus();
+  mastered.click();
+
+  assert.equal(document.querySelector(`[data-question-id="${first.id}"]`), null);
+  assert.equal(document.activeElement.id, 'interview-results-summary');
+});
+
+test('passive app render preserves a stable focused practice control', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/interviews'),
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  const filter = document.querySelector('#interview-filter-frequency');
+  filter.focus();
+  app.render();
+
+  assert.equal(document.activeElement.id, 'interview-filter-frequency');
+  assert.notEqual(document.activeElement, filter);
+});
+
+test('interview summaries ignore duplicate and stale mastered/review IDs', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+  const firstId = llmFoundation.interviewQuestions[0].id;
+  renderInterviewPractice(root, {
+    course: llmFoundation,
+    progress: {
+      ...createDefaultProgress('llm-foundation'),
+      interviewStatusById: { [firstId]: 'mastered', stale: 'mastered' },
+      reviewQueue: [firstId, firstId, 'stale'],
+    },
+  });
+
+  assert.ok(root.textContent.includes('已掌握 1 / 24'));
+  assert.ok(root.textContent.includes('复习队列 1 题'));
+});
+
+test('application shell scopes dirty persisted progress to the current course catalog', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const firstQuestionId = llmFoundation.interviewQuestions[0].id;
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/dashboard'),
+    progressStore: createStore({
+      ...createDefaultProgress('llm-foundation'),
+      completedLessonIds: ['llm-01', 'llm-01', 'stale-lesson'],
+      interviewStatusById: { [firstQuestionId]: 'mastered', stale: 'mastered' },
+    }),
+  });
+  t.after(app.teardown);
+
+  assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 1 / 8'));
+  assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 1 / 24'));
 });
 
 test('quiz callback receives a serializable score while visible feedback remains in the lesson', (t) => {
