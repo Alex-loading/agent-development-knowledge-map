@@ -1,6 +1,7 @@
 import { scoreQuiz } from '../core/quiz.js';
 import { buildKnowledgeNodes, getNextLesson } from '../core/view-models.js';
 import { button, element, externalLink } from './dom.js';
+import { renderExperiment } from './experiments.js';
 
 const STATUS_LABELS = {
   complete: '已完成',
@@ -100,11 +101,7 @@ function exerciseSection(lesson) {
       element('p', { text: exercise.deliverable ?? '记录过程与结论。' }),
     ]),
     exercise.experiment
-      ? element('div', { className: 'experiment-placeholder' }, [
-        element('strong', { text: '交互实验将在本页下方开放' }),
-        element('p', { text: '当前先按练习步骤记录假设；实验面板将在下一阶段接入。' }),
-        button('实验面板即将开放', { disabled: true, attrs: { 'aria-label': '交互实验尚未开放' } }),
-      ])
+      ? renderExperiment(exercise.experiment)
       : null,
   ]);
 }

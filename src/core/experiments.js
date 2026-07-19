@@ -34,13 +34,20 @@ export function normalizeAttention(weights) {
   return scaled.map((weight) => weight / total);
 }
 
+export const MIN_TEMPERATURE = 0.05;
+export const MAX_TEMPERATURE = 2;
+export const MIN_TOP_P = 0.05;
+export const MAX_TOP_P = 1;
+
 export function sampleDistribution(candidates, temperature = 1, topP = 1) {
   if (candidates.length === 0) return [];
 
-  const safeTemperature = Number.isFinite(temperature) && temperature > 0
-    ? temperature
+  const safeTemperature = Number.isFinite(temperature)
+    ? Math.min(MAX_TEMPERATURE, Math.max(MIN_TEMPERATURE, temperature))
     : 1;
-  const safeTopP = Number.isFinite(topP) ? Math.min(1, Math.max(0, topP)) : 1;
+  const safeTopP = Number.isFinite(topP)
+    ? Math.min(MAX_TOP_P, Math.max(MIN_TOP_P, topP))
+    : 1;
   if (candidates.some(({ logit }) => !Number.isFinite(logit))) {
     throw new RangeError('candidate logits must be finite numbers');
   }

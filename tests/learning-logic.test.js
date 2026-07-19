@@ -188,6 +188,16 @@ test('attention normalization stays finite for very large weights', () => {
   assert.ok(Math.abs(result.reduce((sum, weight) => sum + weight, 0) - 1) < 1e-12);
 });
 
+test('attention clamps negative scores and gives an equal distribution to every-zero input', () => {
+  const clamped = normalizeAttention([-4, 2, -1, 6]);
+  const allZero = normalizeAttention([0, -3, 0, Number.NaN]);
+
+  assert.deepEqual(clamped, [0, 0.25, 0, 0.75]);
+  assert.deepEqual(allZero, [0.25, 0.25, 0.25, 0.25]);
+  assert.ok(Math.abs(clamped.reduce((sum, weight) => sum + weight, 0) - 1) < 1e-12);
+  assert.ok(Math.abs(allZero.reduce((sum, weight) => sum + weight, 0) - 1) < 1e-12);
+});
+
 test('temperature softmax is stable and top-p marks the smallest nucleus prefix', () => {
   const candidates = [
     { token: 'A', logit: 2 },
@@ -229,6 +239,55 @@ test('sampling remains finite for extreme logits and tiny positive temperature',
   assert.ok(Math.abs(result.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12);
   assert.equal(result[0].token, 'max');
   assert.equal(result[0].probability, 1);
+});
+
+test('sampling clamps temperature to the inclusive teaching range', () => {
+  const candidates = [
+    { token: 'A', logit: 2 },
+    { token: 'B', logit: 1 },
+    { token: 'C', logit: 0 },
+  ];
+
+  assert.deepEqual(
+    sampleDistribution(candidates, -100, 1),
+    sampleDistribution(candidates, 0.05, 1),
+  );
+  assert.deepEqual(
+    sampleDistribution(candidates, 100, 1),
+    sampleDistribution(candidates, 2, 1),
+  );
+});
+
+test('sampling clamps top-p to the inclusive teaching range', () => {
+  const candidates = Array.from({ length: 40 }, (_, index) => ({
+    token: `T${index}`,
+    logit: 1,
+  }));
+  const nucleusSize = (items) => items.filter(({ inNucleus }) => inNucleus).length;
+
+  assert.equal(
+    nucleusSize(sampleDistribution(candidates, 1, -3)),
+    nucleusSize(sampleDistribution(candidates, 1, 0.05)),
+  );
+  assert.equal(nucleusSize(sampleDistribution(candidates, 1, 0.05)), 2);
+  assert.equal(
+    nucleusSize(sampleDistribution(candidates, 1, 3)),
+    nucleusSize(sampleDistribution(candidates, 1, 1)),
+  );
+  assert.equal(nucleusSize(sampleDistribution(candidates, 1, 1)), 40);
+});
+
+test('sampling keeps equal-logit input order and normalized finite probabilities at finite extremes', () => {
+  const candidates = [
+    { token: 'first', logit: Number.MAX_VALUE },
+    { token: 'second', logit: Number.MAX_VALUE },
+    { token: 'third', logit: -Number.MAX_VALUE },
+  ];
+  const result = sampleDistribution(candidates, 0.05, 1);
+
+  assert.deepEqual(result.map(({ token }) => token), ['first', 'second', 'third']);
+  assert.ok(result.every(({ probability }) => Number.isFinite(probability)));
+  assert.ok(Math.abs(result.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12);
 });
 
 test('next lesson is first incomplete, final when complete, and null when empty', () => {

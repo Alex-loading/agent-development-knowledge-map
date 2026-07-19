@@ -10,6 +10,7 @@ import {
 } from '../src/core/progress.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
+import { renderExperiment } from '../src/ui/experiments.js';
 import { renderInterviewPractice } from '../src/ui/interviews.js';
 import { renderResourceLibrary } from '../src/ui/resources.js';
 import {
@@ -425,4 +426,153 @@ test('progress reset requires in-page confirmation, resets once and restores mea
   assert.equal(store.saves.length, 0, '重置后不得立即把默认状态写回');
   assert.equal(document.activeElement.id, 'progress-reset-button');
   assert.ok(document.querySelector('#app-live-region').textContent.includes('学习进度已重置'));
+});
+
+test('token budget lab recomputes overflow live and reset restores the teaching defaults', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  renderLessonDetail(root, {
+    course: llmFoundation,
+    lessonId: 'llm-03',
+    progress: createDefaultProgress('llm-foundation'),
+  });
+
+  const lab = root.querySelector('.token-budget-lab');
+  const status = lab.querySelector('#token-budget-status');
+  const initialStatus = status.textContent;
+  assert.ok(initialStatus.includes('溢出：否'));
+  assert.ok(lab.textContent.includes('不是真实 tokenizer'));
+
+  const history = lab.querySelector('#token-budget-history');
+  history.value = '4000';
+  history.dispatchEvent(new FakeEvent('input'));
+  assert.ok(status.textContent.includes('已用 6100 / 4096'));
+  assert.ok(status.textContent.includes('超出 2004'));
+  assert.ok(status.textContent.includes('溢出：是'));
+
+  findButton(lab, '重置预算实验').click();
+  assert.equal(history.value, '1200');
+  assert.equal(status.textContent, initialStatus);
+});
+
+test('attention lab changes query and similarity while keeping displayed weights normalized', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  const lab = renderExperiment('attention');
+  root.append(lab);
+  const query = lab.querySelector('#attention-query-2');
+  query.click();
+  assert.equal(query.getAttribute('aria-pressed'), 'true');
+  assert.equal(lab.querySelector('#attention-query-0').getAttribute('aria-pressed'), 'false');
+
+  const summary = lab.querySelector('#attention-summary');
+  const summaryAfterQuery = summary.textContent;
+  const slider = lab.querySelector('#attention-score-4');
+  slider.value = '10';
+  slider.dispatchEvent(new FakeEvent('input'));
+  assert.notEqual(summary.textContent, summaryAfterQuery);
+  assert.ok(summary.textContent.includes('权重最高'));
+  assert.ok(summary.textContent.includes('省略了学习得到的投影'));
+
+  const total = lab.querySelectorAll('.attention-percent')
+    .reduce((sum, output) => sum + Number.parseFloat(output.textContent), 0);
+  assert.ok(Math.abs(total - 100) <= 0.2, `显示权重合计应约为 100%，实际为 ${total}`);
+
+  findButton(lab, '重置注意力实验').click();
+  assert.equal(lab.querySelector('#attention-query-0').getAttribute('aria-pressed'), 'true');
+});
+
+test('sampling lab controls and presets update parameters and nucleus membership before reset', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  const lab = renderExperiment('sampling');
+  root.append(lab);
+  const temperature = lab.querySelector('#sampling-temperature');
+  const topP = lab.querySelector('#sampling-top-p');
+  const initialMembership = lab.querySelectorAll('.sampling-row')
+    .map((row) => row.dataset.inNucleus);
+
+  temperature.value = '2';
+  temperature.dispatchEvent(new FakeEvent('input'));
+  topP.value = '0.05';
+  topP.dispatchEvent(new FakeEvent('input'));
+  assert.equal(lab.querySelector('#sampling-temperature-value').textContent, '2.00');
+  assert.equal(lab.querySelector('#sampling-top-p-value').textContent, '0.05');
+  assert.ok(lab.textContent.includes('排除候选核'));
+
+  findButton(lab, '稳定答案预设').click();
+  assert.equal(temperature.value, '0.2');
+  assert.equal(topP.value, '0.75');
+  const stableMembership = lab.querySelectorAll('.sampling-row')
+    .map((row) => row.dataset.inNucleus);
+
+  findButton(lab, '创意写作预设').click();
+  assert.equal(temperature.value, '1.2');
+  assert.equal(topP.value, '0.95');
+  const creativeMembership = lab.querySelectorAll('.sampling-row')
+    .map((row) => row.dataset.inNucleus);
+  assert.notDeepEqual(creativeMembership, stableMembership);
+  assert.notDeepEqual(creativeMembership, initialMembership);
+  assert.ok(lab.querySelector('#sampling-summary').textContent.includes('不保证'));
+
+  findButton(lab, '重置采样实验').click();
+  assert.equal(temperature.value, '1');
+  assert.equal(topP.value, '0.9');
+});
+
+test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  const unavailable = renderExperiment('not-configured');
+  assert.equal(unavailable.getAttribute('role'), 'status');
+  assert.ok(unavailable.textContent.includes('暂不可用'));
+
+  const options = {
+    course: llmFoundation,
+    lessonId: 'llm-03',
+    progress: createDefaultProgress('llm-foundation'),
+  };
+  renderLessonDetail(root, options);
+  renderLessonDetail(root, options);
+  assert.equal(root.querySelectorAll('.experiment-lab').length, 1);
+
+  const history = root.querySelector('#token-budget-history');
+  history.value = '1400';
+  history.dispatchEvent(new FakeEvent('input'));
+  assert.equal(root.querySelector('#token-budget-status').textContent.match(/已用/g)?.length, 1);
+});
+
+test('every configured experiment has a resolvable accessible heading and is integrated in its lesson', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  for (const [lessonId, experimentId] of [
+    ['llm-03', 'token-budget'],
+    ['llm-04', 'attention'],
+    ['llm-06', 'sampling'],
+  ]) {
+    renderLessonDetail(root, {
+      course: llmFoundation,
+      lessonId,
+      progress: createDefaultProgress('llm-foundation'),
+    });
+    const lab = root.querySelector(`.${experimentId === 'token-budget' ? 'token-budget' : experimentId}-lab`);
+    const headingId = lab.getAttribute('aria-labelledby');
+    assert.ok(headingId);
+    assert.notEqual(lab.querySelector(`#${headingId}`), null);
+  }
 });
