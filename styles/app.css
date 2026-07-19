@@ -1044,6 +1044,38 @@ button:disabled {
   gap: var(--space-2);
 }
 
+.attention-mask-control {
+  display: grid;
+  grid-template-columns: auto auto minmax(12rem, 1fr);
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  background: rgb(255 253 247 / 0.78);
+}
+
+.attention-mask-control input {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--color-vermilion);
+}
+
+.attention-mask-control label {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--color-forest);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.attention-mask-control span {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
 .attention-token {
   min-width: 2.75rem;
   border-color: var(--color-border);
@@ -1072,6 +1104,27 @@ button:disabled {
   min-width: 0;
   border-bottom: 1px solid var(--color-border-soft);
   padding-bottom: var(--space-2);
+}
+
+.attention-row {
+  grid-template-columns: minmax(4.5rem, 0.65fr) minmax(6rem, 1fr) 3.5rem minmax(4.5rem, auto);
+}
+
+.attention-eligibility {
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.attention-eligibility.is-eligible::before {
+  content: "✓ ";
+}
+
+.attention-eligibility.is-masked {
+  color: var(--color-vermilion);
+}
+
+.attention-eligibility.is-masked::before {
+  content: "— ";
 }
 
 .experiment-result-row__token {
@@ -1805,6 +1858,19 @@ button:disabled {
   .experiment-result-row,
   .sampling-row {
     grid-template-columns: minmax(4.5rem, 0.75fr) minmax(6rem, 1fr) auto;
+  }
+
+  .attention-mask-control {
+    grid-template-columns: auto 1fr;
+  }
+
+  .attention-mask-control span {
+    grid-column: 1 / -1;
+  }
+
+  .attention-row .attention-eligibility {
+    grid-column: 1 / -1;
+    text-align: left;
   }
 
   .sampling-row .nucleus-status {

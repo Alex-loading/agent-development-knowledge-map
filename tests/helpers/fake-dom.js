@@ -127,7 +127,10 @@ export class FakeElement extends FakeNode {
     const stringValue = String(value);
     this.attributes.set(name, stringValue);
     if (name === 'class') this.className = stringValue;
-    if (['name', 'type', 'value'].includes(name)) this[name] = stringValue;
+    if (['name', 'type'].includes(name)) this[name] = stringValue;
+    if (name === 'value') {
+      this.value = this.tagName === 'PROGRESS' ? Number(stringValue) : stringValue;
+    }
     if (name === 'required') this.required = true;
   }
 

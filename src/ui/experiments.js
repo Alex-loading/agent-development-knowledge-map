@@ -30,6 +30,15 @@ const ATTENTION_PRESETS = [
   [4, 2, 7, 6, 8],
 ];
 
+function normalizeEligibleAttention(scores, queryIndex, causalMaskEnabled) {
+  const eligibleIndices = scores
+    .map((_score, index) => index)
+    .filter((index) => !causalMaskEnabled || index <= queryIndex);
+  const eligibleWeights = normalizeAttention(eligibleIndices.map((index) => scores[index]));
+  const weightByIndex = new Map(eligibleIndices.map((index, position) => [index, eligibleWeights[position]]));
+  return scores.map((_score, index) => weightByIndex.get(index) ?? 0);
+}
+
 const SAMPLING_CANDIDATES = [
   { token: '巴黎', logit: 3.6 },
   { token: '法国首都', logit: 2.4 },
@@ -148,19 +157,21 @@ export function renderTokenBudgetExperiment() {
 
 export function renderAttentionExperiment() {
   let queryIndex = 0;
+  let causalMaskEnabled = false;
   let scores = [...ATTENTION_PRESETS[queryIndex]];
   const queryButtons = [];
   const sliders = [];
   const scoreValues = [];
   const percentages = [];
   const bars = [];
+  const eligibilityLabels = [];
   const summary = element('p', {
     className: 'experiment-summary',
     attrs: { id: 'attention-summary', 'aria-live': 'polite', 'aria-atomic': 'true' },
   });
 
   function update() {
-    const weights = normalizeAttention(scores);
+    const weights = normalizeEligibleAttention(scores, queryIndex, causalMaskEnabled);
     queryButtons.forEach((queryButton, index) => {
       queryButton.setAttribute('aria-pressed', index === queryIndex ? 'true' : 'false');
     });
@@ -171,6 +182,9 @@ export function renderAttentionExperiment() {
       percentages[index].textContent = `${percent.toFixed(1)}%`;
       bars[index].value = percent;
       bars[index].setAttribute('value', percent);
+      const masked = causalMaskEnabled && index > queryIndex;
+      eligibilityLabels[index].textContent = masked ? '已屏蔽' : '可参与';
+      eligibilityLabels[index].className = `attention-eligibility ${masked ? 'is-masked' : 'is-eligible'}`;
     });
 
     const maximum = Math.max(...weights);
@@ -178,7 +192,10 @@ export function renderAttentionExperiment() {
       .filter((_token, index) => Math.abs(weights[index] - maximum) < 1e-12)
       .map((token) => `「${token}」`)
       .join('、');
-    summary.textContent = `当前 Query「${ATTENTION_TOKENS[queryIndex]}」把权重最高地分给 ${strongest}，可把它理解为按权重读取相关位置。这个教学模型省略了学习得到的投影、掩码、多头机制和 Value 向量数学。`;
+    const maskExplanation = causalMaskEnabled
+      ? '因果 decoder 掩码已开启，当前位置不能读取未来 token。'
+      : '因果掩码已关闭，所有位置都可参与这次教学计算。';
+    summary.textContent = `当前 Query「${ATTENTION_TOKENS[queryIndex]}」把权重最高地分给 ${strongest}，可把它理解为按权重读取相关位置。${maskExplanation}本面板省略了学习得到的投影与完整多头 Value 更新，仍不是完整的学习注意力。`;
   }
 
   const queryPicker = element('div', {
@@ -199,6 +216,29 @@ export function renderAttentionExperiment() {
     queryButtons.push(queryButton);
     return queryButton;
   }));
+
+  const causalMask = element('input', {
+    attrs: {
+      id: 'attention-causal-mask',
+      type: 'checkbox',
+      'aria-describedby': 'attention-causal-mask-note',
+    },
+    events: {
+      change: () => {
+        causalMaskEnabled = causalMask.checked;
+        update();
+      },
+    },
+  });
+  causalMask.checked = causalMaskEnabled;
+  const maskControl = element('div', { className: 'attention-mask-control' }, [
+    causalMask,
+    element('label', { text: '因果掩码', attrs: { for: 'attention-causal-mask' } }),
+    element('span', {
+      text: '开启后，当前 Query 不能读取它右侧的未来 token。',
+      attrs: { id: 'attention-causal-mask-note' },
+    }),
+  ]);
 
   const scoreControls = element('div', { className: 'experiment-controls attention-controls' }, ATTENTION_TOKENS.map((token, index) => {
     const value = element('output', {
@@ -238,15 +278,18 @@ export function renderAttentionExperiment() {
     element('h4', { text: '归一化权重' }),
     ...ATTENTION_TOKENS.map((token, index) => {
       const percent = element('output', { className: 'attention-percent', text: '0.0%' });
+      const eligibility = element('strong', { className: 'attention-eligibility', text: '可参与' });
       const bar = element('progress', {
         attrs: { max: 100, value: 0, 'aria-label': `token ${token} 的注意力百分比` },
       });
       percentages.push(percent);
       bars.push(bar);
+      eligibilityLabels.push(eligibility);
       return element('div', { className: 'experiment-result-row attention-row' }, [
         element('span', { className: 'experiment-result-row__token', text: token }),
         bar,
         percent,
+        eligibility,
       ]);
     }),
   ]);
@@ -258,9 +301,10 @@ export function renderAttentionExperiment() {
     labHeader('02', 'attention-title', 'Attention 直觉台', '先选 Query token，再改变它与各位置的教学关联分。'),
     element('p', {
       className: 'experiment-caveat',
-      text: '滑杆表示教学用的相似度 / 关联分，不是模型真实学习到的 QK 矩阵。',
+      text: '本面板使用非负手工分数并进行线性归一化；真实注意力会计算缩放点积并应用 softmax(QKᵀ / √dₖ + mask)，再跨多个头读取 Value 向量。',
     }),
     element('div', {}, [element('h4', { text: '当前 Query token' }), queryPicker]),
+    maskControl,
     element('div', { className: 'experiment-grid' }, [scoreControls, weightRows]),
     summary,
     button('重置注意力实验', {
@@ -268,6 +312,8 @@ export function renderAttentionExperiment() {
       events: {
         click: () => {
           queryIndex = 0;
+          causalMaskEnabled = false;
+          causalMask.checked = false;
           scores = [...ATTENTION_PRESETS[0]];
           update();
         },

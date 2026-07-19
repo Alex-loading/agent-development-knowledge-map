@@ -39,6 +39,12 @@ export const MAX_TEMPERATURE = 2;
 export const MIN_TOP_P = 0.05;
 export const MAX_TOP_P = 1;
 
+function cumulativeReachedThreshold(cumulative, threshold, additionCount) {
+  const scale = Math.max(Math.abs(cumulative), Math.abs(threshold), Number.MIN_VALUE);
+  const roundingTolerance = Number.EPSILON * scale * Math.max(2, additionCount);
+  return cumulative >= threshold || threshold - cumulative <= roundingTolerance;
+}
+
 export function sampleDistribution(candidates, temperature = 1, topP = 1) {
   if (candidates.length === 0) return [];
 
@@ -72,7 +78,9 @@ export function sampleDistribution(candidates, temperature = 1, topP = 1) {
 
   let cumulative = 0;
   return sorted.map(({ originalIndex, ...candidate }, index) => {
-    const inNucleus = index === 0 || cumulative < safeTopP;
+    const inNucleus = safeTopP === MAX_TOP_P
+      || index === 0
+      || !cumulativeReachedThreshold(cumulative, safeTopP, index);
     cumulative += candidate.probability;
     return { ...candidate, inNucleus };
   });

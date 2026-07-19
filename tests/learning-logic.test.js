@@ -290,6 +290,29 @@ test('sampling keeps equal-logit input order and normalized finite probabilities
   assert.ok(Math.abs(result.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12);
 });
 
+test('top-p stops at a cumulative boundary without admitting the next tied candidate', () => {
+  const result = sampleDistribution([
+    { token: 'first', logit: Math.log(0.6) },
+    { token: 'second', logit: Math.log(0.2) },
+    { token: 'third', logit: Math.log(0.2) },
+  ], 1, 0.8);
+
+  assert.deepEqual(result.map(({ token }) => token), ['first', 'second', 'third']);
+  assert.deepEqual(result.map(({ inNucleus }) => inNucleus), [true, true, false]);
+});
+
+test('top-p one includes zero-probability candidates produced by finite-logit underflow', () => {
+  const result = sampleDistribution([
+    { token: 'dominant', logit: Number.MAX_VALUE },
+    { token: 'underflow-one', logit: 0 },
+    { token: 'underflow-two', logit: -Number.MAX_VALUE },
+  ], 0.05, 1);
+
+  assert.ok(result.every(({ probability }) => Number.isFinite(probability)));
+  assert.ok(result.slice(1).every(({ probability }) => probability === 0));
+  assert.deepEqual(result.map(({ inNucleus }) => inNucleus), [true, true, true]);
+});
+
 test('next lesson is first incomplete, final when complete, and null when empty', () => {
   const lessons = [{ id: 'l1', title: 'One' }, { id: 'l2', title: 'Two' }];
   const next = getNextLesson(lessons, { completedLessonIds: ['l1'] });

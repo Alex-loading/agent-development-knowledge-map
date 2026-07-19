@@ -488,6 +488,52 @@ test('attention lab changes query and similarity while keeping displayed weights
   assert.equal(lab.querySelector('#attention-query-0').getAttribute('aria-pressed'), 'true');
 });
 
+test('attention lab explains linear teaching weights and applies a causal mask without future leakage', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('attention');
+  document.body.append(lab);
+
+  assert.ok(lab.textContent.includes('非负手工分数并进行线性归一化'));
+  assert.ok(lab.textContent.includes('softmax(QKᵀ / √dₖ + mask)'));
+  assert.ok(lab.textContent.includes('Value 向量'));
+
+  lab.querySelector('#attention-query-2').click();
+  const causalMask = lab.querySelector('#attention-causal-mask');
+  causalMask.checked = true;
+  causalMask.dispatchEvent(new FakeEvent('change'));
+
+  let rows = lab.querySelectorAll('.attention-row');
+  for (const row of rows.slice(3)) {
+    assert.ok(row.textContent.includes('已屏蔽'));
+    assert.equal(row.querySelector('.attention-percent').textContent, '0.0%');
+    assert.equal(row.querySelector('progress').value, 0);
+  }
+  assert.ok(lab.querySelector('#attention-summary').textContent.includes('不能读取未来 token'));
+
+  for (const index of [0, 1, 2]) {
+    const slider = lab.querySelector(`#attention-score-${index}`);
+    slider.value = '0';
+    slider.dispatchEvent(new FakeEvent('input'));
+  }
+  rows = lab.querySelectorAll('.attention-row');
+  assert.deepEqual(
+    rows.map((row) => row.querySelector('.attention-percent').textContent),
+    ['33.3%', '33.3%', '33.3%', '0.0%', '0.0%'],
+  );
+
+  causalMask.checked = false;
+  causalMask.dispatchEvent(new FakeEvent('change'));
+  assert.equal(lab.querySelectorAll('.attention-row').some((row) => row.textContent.includes('已屏蔽')), false);
+
+  causalMask.checked = true;
+  causalMask.dispatchEvent(new FakeEvent('change'));
+  findButton(lab, '重置注意力实验').click();
+  assert.equal(causalMask.checked, false);
+  assert.equal(lab.querySelector('#attention-query-0').getAttribute('aria-pressed'), 'true');
+  assert.equal(lab.querySelectorAll('.attention-row').some((row) => row.textContent.includes('已屏蔽')), false);
+});
+
 test('sampling lab controls and presets update parameters and nucleus membership before reset', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
