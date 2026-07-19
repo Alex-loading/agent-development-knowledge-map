@@ -4,8 +4,11 @@ import assert from 'node:assert/strict';
 import {
   createDefaultProgress,
   markLessonComplete,
+  recordQuizResult,
+  resetModuleProgress,
   setInterviewStatus,
   summarizeProgress,
+  toggleReviewQueue,
 } from '../src/core/progress.js';
 
 test('createDefaultProgress returns the initial LLM foundation state', () => {
@@ -49,4 +52,86 @@ test('summarizeProgress separately calculates lesson and interview completion', 
     interviewsMastered: 1,
     interviewPercent: 25,
   });
+});
+
+test('toggleReviewQueue immutably adds unique questions in order and removes existing ones', () => {
+  const initial = {
+    ...createDefaultProgress('llm-foundation'),
+    reviewQueue: ['iq-1', 'iq-1'],
+  };
+  const snapshot = structuredClone(initial);
+
+  const added = toggleReviewQueue(initial, 'iq-2');
+  const removed = toggleReviewQueue(added, 'iq-1');
+
+  assert.deepEqual(added.reviewQueue, ['iq-1', 'iq-2']);
+  assert.deepEqual(removed.reviewQueue, ['iq-2']);
+  assert.notEqual(added, initial);
+  assert.notEqual(added.reviewQueue, initial.reviewQueue);
+  assert.deepEqual(initial, snapshot);
+});
+
+test('recordQuizResult stores a defensive result copy by lesson id without mutating input', () => {
+  const initial = createDefaultProgress('llm-foundation');
+  const result = {
+    correct: 1,
+    total: 2,
+    percent: 50,
+    results: [{ correct: true, explanation: '解释' }],
+    completedAt: '2026-07-20T10:00:00.000Z',
+  };
+
+  const updated = recordQuizResult(initial, 'llm-03', result);
+  result.results[0].correct = false;
+
+  assert.deepEqual(updated.quizResults['llm-03'], {
+    correct: 1,
+    total: 2,
+    percent: 50,
+    results: [{ correct: true, explanation: '解释' }],
+    completedAt: '2026-07-20T10:00:00.000Z',
+  });
+  assert.deepEqual(initial.quizResults, {});
+  assert.notEqual(updated.quizResults, initial.quizResults);
+});
+
+test('progress operations defend missing collections and preserve unrelated fields without mutating input', () => {
+  const state = {
+    ...createDefaultProgress('llm-foundation'),
+    completedLessonIds: undefined,
+    quizResults: undefined,
+    interviewStatusById: undefined,
+    reviewQueue: undefined,
+    unrelatedApplicationState: { theme: 'paper' },
+  };
+  const snapshot = structuredClone(state);
+
+  const completed = markLessonComplete(state, 'llm-01');
+  const interviewed = setInterviewStatus(completed, 'iq-1', 'reviewing');
+  const queued = toggleReviewQueue(interviewed, 'iq-1');
+  const quizzed = recordQuizResult(queued, 'llm-01', {
+    correct: 0, total: 1, percent: 0, results: [],
+  });
+
+  assert.deepEqual(quizzed.completedLessonIds, ['llm-01']);
+  assert.deepEqual(quizzed.interviewStatusById, { 'iq-1': 'reviewing' });
+  assert.deepEqual(quizzed.reviewQueue, ['iq-1']);
+  assert.deepEqual(quizzed.quizResults['llm-01'].results, []);
+  assert.deepEqual(quizzed.unrelatedApplicationState, { theme: 'paper' });
+  assert.deepEqual(state, snapshot);
+});
+
+test('resetModuleProgress returns the exact clean module state', () => {
+  const dirty = {
+    ...createDefaultProgress('another-module', 'old-lesson'),
+    completedLessonIds: ['old-lesson'],
+    quizResults: { 'old-lesson': { correct: 1, total: 1 } },
+    reviewQueue: ['iq-1'],
+    unrelatedApplicationState: true,
+  };
+
+  assert.deepEqual(
+    resetModuleProgress(dirty, 'llm-foundation', 'llm-02'),
+    createDefaultProgress('llm-foundation', 'llm-02'),
+  );
 });

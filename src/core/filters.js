@@ -6,12 +6,12 @@ function matches(value, expected) {
   return isInclusive(expected) || value === expected;
 }
 
-function resourcePlatform(item) {
+export function resourcePlatform(item) {
   if (item.platform) return item.platform;
 
   if (item.url) {
     try {
-      const hostname = new URL(item.url).hostname.toLowerCase();
+      const hostname = new URL(item.url).hostname.toLowerCase().replace(/^www\./, '');
       if (hostname === 'github.com' || hostname.endsWith('.github.com')) return 'GitHub';
       if (hostname === 'bilibili.com' || hostname.endsWith('.bilibili.com')) return 'Bilibili';
       if (
@@ -19,6 +19,10 @@ function resourcePlatform(item) {
         || hostname.endsWith('.youtube.com')
         || hostname === 'youtu.be'
       ) return 'YouTube';
+      if (hostname === 'huggingface.co') return 'Hugging Face';
+      if (hostname === '3blue1brown.com') return '3Blue1Brown';
+      if (hostname === 'arxiv.org') return 'arXiv';
+      return hostname;
     } catch {
       // Invalid URLs simply cannot contribute platform metadata.
     }

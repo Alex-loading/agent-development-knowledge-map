@@ -158,3 +158,28 @@ test('application integrates the dashboard, curriculum and knowledge-map rendere
   assert.match(app, /renderCurriculum(?:List|Lesson)\s*\(/);
   assert.match(app, /renderKnowledgeMap\s*\(/);
 });
+
+test('practice views are real renderers with paper-lab responsive component styles', async () => {
+  const [app, styles] = await Promise.all([
+    read('src/app.js'),
+    read('styles/app.css'),
+  ]);
+
+  for (const modulePath of ['./ui/resources.js', './ui/interviews.js', './ui/progress-view.js']) {
+    assert.ok(app.includes(`from '${modulePath}'`), `app should import ${modulePath}`);
+  }
+  for (const selector of [
+    '.filter-ledger',
+    '.resource-row',
+    '.interview-card',
+    '.answer-drawer',
+    '.status-matrix',
+    '.progress-ledger',
+    '.reset-confirmation',
+    '.destructive-action',
+  ]) {
+    assert.ok(styles.includes(selector), `missing paper-lab component style ${selector}`);
+  }
+  assert.match(styles, /\.resource-row\s*\{[^}]*grid-template-columns/s);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.resource-row/s);
+});

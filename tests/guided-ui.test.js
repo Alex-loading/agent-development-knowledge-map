@@ -39,7 +39,7 @@ test('lesson detail renders real teaching content and quiz interaction once afte
     course: llmFoundation,
     lessonId: 'llm-01',
     progress,
-    onQuizResult: (message) => announcements.push(message),
+    onQuizResult: (score, message) => announcements.push({ score, message }),
   };
 
   renderLessonDetail(root, options);
@@ -61,7 +61,15 @@ test('lesson detail renders real teaching content and quiz interaction once afte
   for (const question of llmFoundation.lessons[0].quiz) {
     assert.ok(root.textContent.includes(question.explanation));
   }
-  assert.deepEqual(announcements, ['测验完成：答对 2 / 2 题，得分 100%']);
+  assert.deepEqual(announcements, [{
+    score: {
+      correct: 2,
+      total: 2,
+      percent: 100,
+      results: llmFoundation.lessons[0].quiz.map(({ explanation }) => ({ correct: true, explanation })),
+    },
+    message: '测验完成：答对 2 / 2 题，得分 100%',
+  }]);
 });
 
 test('completion persists immutable progress, updates recommendation, announces and restores focus', (t) => {

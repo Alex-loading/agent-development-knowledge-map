@@ -87,6 +87,13 @@ test('resource platform filter recognizes GitHub, Bilibili and YouTube in real c
   }
 });
 
+test('every derived resource platform option can filter the same real data', () => {
+  for (const platform of ['Hugging Face', '3Blue1Brown', 'arXiv']) {
+    const results = filterResources(llmFoundation.resources, { platform });
+    assert.ok(results.length > 0, `${platform} 派生平台选项不应产生空筛选`);
+  }
+});
+
 test('interview filters combine role membership, frequency and mastery status', () => {
   const questions = [
     { id: 'q1', roles: ['Agent 开发', '后端工程'], frequency: '高', difficulty: '基础' },

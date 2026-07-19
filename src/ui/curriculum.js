@@ -139,7 +139,7 @@ function quizSection(lesson, onQuizResult) {
             element('p', { text: result.explanation }),
           ]))),
         );
-        onQuizResult?.(`测验完成：答对 ${score.correct} / ${score.total} 题，得分 ${score.percent}%`);
+        onQuizResult?.(score, `测验完成：答对 ${score.correct} / ${score.total} 题，得分 ${score.percent}%`);
       },
     },
   }, [

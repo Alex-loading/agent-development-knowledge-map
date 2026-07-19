@@ -54,3 +54,20 @@ test('falls back to memory when storage throws', () => {
   assert.equal(store.load().currentLessonId, 'llm-03');
   assert.equal(store.mode(), 'memory');
 });
+
+test('reset removes only the Agent Learner progress key', () => {
+  const values = new Map([
+    ['agent-learner:progress:v1', JSON.stringify(createDefaultProgress('llm-foundation'))],
+    ['unrelated:application:key', 'keep-me'],
+  ]);
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  };
+
+  createProgressStore(storage).reset();
+
+  assert.equal(values.has('agent-learner:progress:v1'), false);
+  assert.equal(values.get('unrelated:application:key'), 'keep-me');
+});

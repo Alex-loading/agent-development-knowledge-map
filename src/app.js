@@ -1,4 +1,11 @@
-import { markLessonComplete, summarizeProgress } from './core/progress.js';
+import {
+  markLessonComplete,
+  recordQuizResult,
+  resetModuleProgress,
+  setInterviewStatus,
+  summarizeProgress,
+  toggleReviewQueue,
+} from './core/progress.js';
 import { createProgressStore } from './core/storage.js';
 import { getNextLesson } from './core/view-models.js';
 import { llmFoundation } from './data/llm-foundation.js';
@@ -6,7 +13,10 @@ import { modules } from './data/modules.js';
 import { renderCurriculumList, renderLessonDetail } from './ui/curriculum.js';
 import { renderDashboard } from './ui/dashboard.js';
 import { element } from './ui/dom.js';
+import { renderInterviewPractice } from './ui/interviews.js';
 import { renderKnowledgeMap } from './ui/knowledge-map.js';
+import { renderProgressView } from './ui/progress-view.js';
+import { renderResourceLibrary } from './ui/resources.js';
 import { renderShell } from './ui/shell.js';
 
 const DEFAULT_HASH = '#llm-foundation/dashboard';
@@ -90,6 +100,13 @@ export function startApp({
   let focusAfterCompletion = false;
   let lastRenderedHash = null;
   let pendingAnnouncement = '';
+  let pendingViewFocusId = null;
+  const viewState = {
+    resourceFilters: {},
+    interviewFilters: {},
+    revealedInterviewIds: new Set(),
+    resetConfirmOpen: false,
+  };
 
   const persistState = (nextState) => {
     state = nextState;
@@ -126,6 +143,72 @@ export function startApp({
     render();
   };
 
+  const updateResourceFilters = (filters) => {
+    viewState.resourceFilters = { ...filters };
+    render();
+  };
+
+  const updateInterviewFilters = (filters) => {
+    viewState.interviewFilters = { ...filters };
+    render();
+  };
+
+  const toggleInterviewReveal = (questionId) => {
+    if (viewState.revealedInterviewIds.has(questionId)) {
+      viewState.revealedInterviewIds.delete(questionId);
+    } else {
+      viewState.revealedInterviewIds.add(questionId);
+    }
+    render();
+  };
+
+  const updateInterviewStatus = (questionId, status) => {
+    const currentStatus = state.interviewStatusById?.[questionId] ?? 'unseen';
+    if (currentStatus === status) return;
+    persistState(setInterviewStatus(state, questionId, status));
+    const question = llmFoundation.interviewQuestions.find(({ id }) => id === questionId);
+    const labels = { unseen: '未掌握', reviewing: '复习中', mastered: '已掌握' };
+    pendingAnnouncement = `${question?.question ?? '面试题'}已标记为${labels[status] ?? status}`;
+    render();
+  };
+
+  const updateReviewQueue = (questionId) => {
+    const wasQueued = state.reviewQueue?.includes(questionId);
+    persistState(toggleReviewQueue(state, questionId));
+    pendingAnnouncement = wasQueued ? '已移出复习队列' : '已加入复习队列';
+    render();
+  };
+
+  const saveQuizResult = (lessonId, score, message, live) => {
+    persistState(recordQuizResult(state, lessonId, {
+      ...score,
+      results: score.results?.map((result) => ({ ...result })) ?? [],
+      completedAt: new Date().toISOString(),
+    }));
+    live.textContent = message;
+  };
+
+  const requestReset = () => {
+    viewState.resetConfirmOpen = true;
+    pendingViewFocusId = 'progress-reset-confirm-title';
+    render();
+  };
+
+  const cancelReset = () => {
+    viewState.resetConfirmOpen = false;
+    pendingViewFocusId = 'progress-reset-button';
+    render();
+  };
+
+  const confirmReset = () => {
+    store.reset();
+    state = resetModuleProgress(state, llmFoundation.id, llmFoundation.lessons[0]?.id ?? 'llm-01');
+    viewState.resetConfirmOpen = false;
+    pendingAnnouncement = '学习进度已重置';
+    pendingViewFocusId = 'progress-reset-button';
+    render();
+  };
+
   const renderGuidedView = (root, route, summary, live) => {
     const shared = {
       course: llmFoundation,
@@ -152,12 +235,45 @@ export function startApp({
         onBack: () => navigate(`#${route.moduleId}/curriculum`),
         onCompleteLesson: completeLesson,
         onOpenInterviews: () => navigate(`#${route.moduleId}/interviews`),
-        onQuizResult: (message) => { live.textContent = message; },
+        onQuizResult: (score, message) => saveQuizResult(route.lessonId, score, message, live),
       });
       return true;
     }
     if (route.view === 'map') {
       renderKnowledgeMap(root, { ...shared, onOpenLesson: openLesson });
+      return true;
+    }
+    if (route.view === 'resources') {
+      renderResourceLibrary(root, {
+        resources: llmFoundation.resources,
+        filters: viewState.resourceFilters,
+        onFiltersChange: updateResourceFilters,
+      });
+      return true;
+    }
+    if (route.view === 'interviews') {
+      renderInterviewPractice(root, {
+        ...shared,
+        filters: viewState.interviewFilters,
+        revealedIds: viewState.revealedInterviewIds,
+        onFiltersChange: updateInterviewFilters,
+        onToggleReveal: toggleInterviewReveal,
+        onSetStatus: updateInterviewStatus,
+        onToggleReview: updateReviewQueue,
+        onOpenLesson: openLesson,
+      });
+      return true;
+    }
+    if (route.view === 'progress') {
+      renderProgressView(root, {
+        ...shared,
+        summary,
+        storageMode: store.mode(),
+        resetConfirmOpen: viewState.resetConfirmOpen,
+        onRequestReset: requestReset,
+        onCancelReset: cancelReset,
+        onConfirmReset: confirmReset,
+      });
       return true;
     }
     return false;
@@ -201,7 +317,10 @@ export function startApp({
     pendingAnnouncement = '';
     documentRef.title = `${copy.title} · Agent Learner`;
     lastRenderedHash = route.hash;
-    if (focusAfterNavigation || focusAfterCompletion) {
+    if (pendingViewFocusId) {
+      documentRef.querySelector(`#${pendingViewFocusId}`)?.focus({ preventScroll: true });
+      pendingViewFocusId = null;
+    } else if (focusAfterNavigation || focusAfterCompletion) {
       main.focus({ preventScroll: true });
       focusAfterNavigation = false;
       focusAfterCompletion = false;
