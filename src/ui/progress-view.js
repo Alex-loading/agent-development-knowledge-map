@@ -12,6 +12,24 @@ function namedList(items, emptyMessage, className) {
     : element('p', { className: 'empty-note', text: emptyMessage });
 }
 
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isRenderableQuizResult(value) {
+  return isRecord(value)
+    && Number.isFinite(value.correct)
+    && Number.isFinite(value.total)
+    && Number.isFinite(value.percent)
+    && Array.isArray(value.results)
+    && value.results.every((result) => (
+      isRecord(result)
+      && typeof result.correct === 'boolean'
+      && typeof result.explanation === 'string'
+    ))
+    && (value.completedAt === undefined || typeof value.completedAt === 'string');
+}
+
 export function renderProgressView(root, {
   course,
   progress,
@@ -24,11 +42,17 @@ export function renderProgressView(root, {
 }) {
   const lessonById = new Map(course.lessons.map((lesson) => [lesson.id, lesson]));
   const questionById = new Map(course.interviewQuestions.map((question) => [question.id, question]));
-  const completedLessons = (progress.completedLessonIds ?? [])
-    .map((id) => lessonById.get(id)?.title ?? id);
-  const quizEntries = Object.entries(progress.quizResults ?? {});
-  const reviewQuestions = (progress.reviewQueue ?? [])
-    .map((id) => questionById.get(id)?.question ?? id);
+  const completedLessonIds = Array.isArray(progress.completedLessonIds) ? progress.completedLessonIds : [];
+  const completedLessons = [...new Set(completedLessonIds)]
+    .filter((id) => typeof id === 'string' && lessonById.has(id))
+    .map((id) => lessonById.get(id).title);
+  const quizResults = isRecord(progress.quizResults) ? progress.quizResults : {};
+  const quizEntries = Object.entries(quizResults)
+    .filter(([lessonId, result]) => lessonById.has(lessonId) && isRenderableQuizResult(result));
+  const reviewQueue = Array.isArray(progress.reviewQueue) ? progress.reviewQueue : [];
+  const reviewQuestions = [...new Set(reviewQueue)]
+    .filter((id) => typeof id === 'string' && questionById.has(id))
+    .map((id) => questionById.get(id).question);
 
   root.replaceChildren(
     element('section', { className: 'progress-view', attrs: { 'aria-labelledby': 'progress-title' } }, [
@@ -58,7 +82,7 @@ export function renderProgressView(root, {
           element('h2', { text: '测验记录' }),
           quizEntries.length
             ? element('ul', { className: 'quiz-result-ledger' }, quizEntries.map(([lessonId, result]) => element('li', {}, [
-              element('strong', { text: lessonById.get(lessonId)?.title ?? lessonId }),
+              element('strong', { text: lessonById.get(lessonId).title }),
               element('span', { text: `${result.correct ?? 0} / ${result.total ?? 0} · ${result.percent ?? 0}%` }),
               result.completedAt ? element('time', { text: formatVisit(result.completedAt), attrs: { datetime: result.completedAt } }) : null,
             ])))

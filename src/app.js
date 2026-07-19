@@ -129,9 +129,15 @@ export function startApp({
     resetConfirmOpen: false,
   };
 
+  const syncStorageNotice = () => {
+    const storageNotice = documentRef.querySelector('#storage-notice');
+    if (storageNotice) storageNotice.hidden = store.mode() !== 'memory';
+  };
+
   const persistState = (nextState) => {
     state = nextState;
     store.save(state);
+    syncStorageNotice();
   };
 
   const restoreViewFocusAfterRender = (focusId, fallbackId) => {

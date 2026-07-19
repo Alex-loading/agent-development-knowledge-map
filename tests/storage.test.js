@@ -14,7 +14,18 @@ test('persists and reloads valid progress', () => {
   const store = createProgressStore(storage);
   const state = {
     ...createDefaultProgress('llm-foundation'),
-    completedLessonIds: ['llm-01'],
+    completedLessonIds: ['llm-01', 'stale-lesson'],
+    quizResults: {
+      'llm-01': {
+        correct: 1,
+        total: 2,
+        percent: 50,
+        results: [{ correct: true, explanation: '有效解释', selectedIndex: 1 }],
+        completedAt: '2026-07-20T10:00:00.000Z',
+      },
+    },
+    interviewStatusById: { 'stale-question': 'reviewing' },
+    reviewQueue: ['stale-question'],
   };
 
   store.save(state);
@@ -31,6 +42,32 @@ test('returns defaults for corrupt storage', () => {
   const store = createProgressStore(storage);
 
   assert.deepEqual(store.load(), createDefaultProgress('llm-foundation'));
+});
+
+test('returns exact defaults for structurally invalid nested progress records', () => {
+  const invalidStates = [
+    { quizResults: { 'llm-01': null } },
+    { completedLessonIds: ['llm-01', 2] },
+    { reviewQueue: ['iq-llm-01-1', null] },
+    { quizResults: { 'llm-01': { correct: 1, total: 2, percent: 50, results: null } } },
+    { quizResults: { 'llm-01': { correct: 1, total: 2, percent: 50, results: [{ correct: 'yes', explanation: '错误类型' }] } } },
+    { quizResults: { 'llm-01': { correct: 1, total: 2, percent: 50, results: [{ correct: true, explanation: 42 }] } } },
+    { quizResults: { 'llm-01': { correct: 1, total: 2, percent: 50, results: [], completedAt: 1 } } },
+    { interviewStatusById: { 'iq-llm-01-1': 'unknown' } },
+  ];
+  const defaults = createDefaultProgress('llm-foundation');
+
+  for (const invalid of invalidStates) {
+    const storage = {
+      getItem: () => JSON.stringify({ ...defaults, ...invalid }),
+      setItem() {},
+      removeItem() {},
+    };
+    const store = createProgressStore(storage);
+
+    assert.deepEqual(store.load(), defaults);
+    assert.equal(store.mode(), 'local');
+  }
 });
 
 test('falls back to memory when storage throws', () => {

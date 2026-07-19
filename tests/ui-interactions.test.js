@@ -13,6 +13,7 @@ import { renderLessonDetail } from '../src/ui/curriculum.js';
 import { renderDashboard } from '../src/ui/dashboard.js';
 import { renderExperiment } from '../src/ui/experiments.js';
 import { renderInterviewPractice } from '../src/ui/interviews.js';
+import { renderProgressView } from '../src/ui/progress-view.js';
 import { renderResourceLibrary } from '../src/ui/resources.js';
 import {
   FakeDocument,
@@ -392,6 +393,91 @@ test('application persists quiz once without rerendering away feedback', (t) => 
   assert.match(app.getState().quizResults['llm-01'].completedAt, /^\d{4}-\d{2}-\d{2}T/);
   assert.ok(document.querySelector('.quiz-results').textContent.includes('得分 2 / 2（100%）'));
   assert.ok(document.querySelector('#app-live-region').textContent.includes('测验完成'));
+});
+
+test('quiz save failure reveals memory notice without rerendering feedback or losing focus', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  let mode = 'local';
+  let stored = createDefaultProgress('llm-foundation');
+  const store = {
+    load: () => structuredClone(stored),
+    save(next) {
+      stored = structuredClone(next);
+      if (next.quizResults?.['llm-01']) mode = 'memory';
+    },
+    reset() {},
+    mode: () => mode,
+  };
+  const app = startApp({
+    documentRef: document,
+    windowRef: createFakeWindow('#llm-foundation/lesson/llm-01'),
+    progressStore: store,
+  });
+  t.after(app.teardown);
+  const rootBefore = document.querySelector('#view-root');
+  const formBefore = document.querySelector('.quiz-form');
+  let focusedAnswer;
+  for (const question of llmFoundation.lessons[0].quiz) {
+    const answer = formBefore.querySelector(`input[name="${question.id}"][value="${question.answerIndex}"]`);
+    answer.checked = true;
+    focusedAnswer = answer;
+  }
+  focusedAnswer.focus();
+  assert.equal(document.querySelector('#storage-notice').hidden, true);
+
+  formBefore.dispatchEvent(new FakeEvent('submit'));
+
+  assert.equal(mode, 'memory');
+  assert.equal(document.querySelector('#storage-notice').hidden, false);
+  assert.equal(document.querySelector('#view-root'), rootBefore);
+  assert.equal(document.querySelector('.quiz-form'), formBefore);
+  assert.equal(document.activeElement, focusedAnswer);
+  assert.ok(document.querySelector('.quiz-results').textContent.includes('得分 2 / 2（100%）'));
+});
+
+test('progress view filters stale duplicate and malformed records to the current course', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+  const questionId = llmFoundation.interviewQuestions[0].id;
+  const validQuiz = {
+    correct: 1,
+    total: 2,
+    percent: 50,
+    results: [{ correct: true, explanation: '有效解释' }],
+  };
+  const render = (quizResults) => renderProgressView(root, {
+    course: llmFoundation,
+    progress: {
+      ...createDefaultProgress('llm-foundation'),
+      completedLessonIds: ['llm-01', 'llm-01', 'stale-lesson'],
+      quizResults,
+      reviewQueue: [questionId, questionId, 'stale-question'],
+    },
+    summary: {
+      lessonsCompleted: 1,
+      lessonPercent: 13,
+      interviewsMastered: 0,
+      interviewPercent: 0,
+    },
+  });
+
+  assert.doesNotThrow(() => render({
+    'llm-01': validQuiz,
+    'llm-02': null,
+    'stale-lesson': validQuiz,
+  }));
+  assert.equal(root.querySelectorAll('.completed-lesson-list li').length, 1);
+  assert.equal(root.querySelectorAll('.quiz-result-ledger li').length, 1);
+  assert.equal(root.querySelectorAll('.review-queue-list li').length, 1);
+  assert.equal(root.textContent.includes('stale-lesson'), false);
+  assert.equal(root.textContent.includes('stale-question'), false);
+
+  assert.doesNotThrow(() => render({ 'llm-01': null, 'stale-lesson': validQuiz }));
+  assert.equal(root.querySelector('.quiz-result-ledger'), null);
+  assert.ok(root.textContent.includes('尚无测验记录'));
 });
 
 test('progress reset requires in-page confirmation, resets once and restores meaningful focus', (t) => {

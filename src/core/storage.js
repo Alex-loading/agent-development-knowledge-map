@@ -14,15 +14,35 @@ function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isValidQuizResult(value) {
+  return isRecord(value)
+    && Number.isFinite(value.correct)
+    && Number.isFinite(value.total)
+    && Number.isFinite(value.percent)
+    && Array.isArray(value.results)
+    && value.results.every((result) => (
+      isRecord(result)
+      && typeof result.correct === 'boolean'
+      && typeof result.explanation === 'string'
+    ))
+    && (value.completedAt === undefined || typeof value.completedAt === 'string');
+}
+
 function isValidProgress(value) {
   return isRecord(value)
     && value.version === PROGRESS_VERSION
     && typeof value.currentModuleId === 'string'
     && typeof value.currentLessonId === 'string'
     && Array.isArray(value.completedLessonIds)
+    && value.completedLessonIds.every((id) => typeof id === 'string')
     && isRecord(value.quizResults)
+    && Object.values(value.quizResults).every(isValidQuizResult)
     && isRecord(value.interviewStatusById)
+    && Object.values(value.interviewStatusById).every((status) => (
+      status === 'unseen' || status === 'reviewing' || status === 'mastered'
+    ))
     && Array.isArray(value.reviewQueue)
+    && value.reviewQueue.every((id) => typeof id === 'string')
     && (value.lastVisitedAt === null || typeof value.lastVisitedAt === 'string');
 }
 
