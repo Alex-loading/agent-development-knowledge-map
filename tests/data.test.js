@@ -13,10 +13,15 @@ function assertUnique(values, label) {
 }
 
 test('module catalog starts with an active LLM module and exposes planned dependencies', () => {
+  const moduleIds = new Set(modules.map((module) => module.id));
   assert.equal(modules[0].id, 'llm-foundation');
   assert.equal(modules[0].status, 'active');
   assert.ok(modules.slice(1).every((module) => module.status === 'planned'));
   assert.ok(modules.every((module) => Array.isArray(module.prerequisites)));
+  assert.ok(
+    modules.every((module) => module.prerequisites.every((id) => moduleIds.has(id))),
+    '模块先修项必须指向已知模块',
+  );
   assert.ok(modules.every((module) => Number.isFinite(module.estimatedHours)));
   assert.ok(
     modules.every(
@@ -27,6 +32,28 @@ test('module catalog starts with an active LLM module and exposes planned depend
         ),
     ),
   );
+});
+
+test('module content promises are isolated and prerequisite graph is acyclic', () => {
+  assert.equal(
+    new Set(modules.map((module) => module.promisedContent)).size,
+    modules.length,
+    '模块不能共享同一个可变 promisedContent 数组',
+  );
+  assert.ok(modules.every((module) => Object.isFrozen(module.promisedContent)));
+
+  const byId = new Map(modules.map((module) => [module.id, module]));
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (id) => {
+    if (visited.has(id)) return;
+    assert.ok(!visiting.has(id), `模块依赖不能成环：${id}`);
+    visiting.add(id);
+    for (const prerequisiteId of byId.get(id).prerequisites) visit(prerequisiteId);
+    visiting.delete(id);
+    visited.add(id);
+  };
+  modules.forEach((module) => visit(module.id));
 });
 
 test('LLM foundation contains exactly eight ordered lessons', () => {
@@ -85,6 +112,9 @@ test('lesson resource and interview references resolve in both directions', () =
   const interviewIds = new Set(
     llmFoundation.interviewQuestions.map((question) => question.id),
   );
+  const interviewsById = new Map(
+    llmFoundation.interviewQuestions.map((question) => [question.id, question]),
+  );
   const referencedInterviewIds = new Set(
     llmFoundation.lessons.flatMap((lesson) => lesson.interviewQuestionIds),
   );
@@ -94,6 +124,12 @@ test('lesson resource and interview references resolve in both directions', () =
     assert.ok(lesson.resourceIds.every((id) => resourceIds.has(id)), lesson.id);
     assert.ok(lesson.interviewQuestionIds.length >= 3, lesson.id);
     assert.ok(lesson.interviewQuestionIds.every((id) => interviewIds.has(id)), lesson.id);
+    assert.ok(
+      lesson.interviewQuestionIds.every(
+        (id) => interviewsById.get(id).lessonId === lesson.id,
+      ),
+      `${lesson.id}: 面试题必须归属引用它的课时`,
+    );
   }
   assert.ok(
     llmFoundation.interviewQuestions.every((question) => referencedInterviewIds.has(question.id)),
@@ -113,6 +149,34 @@ test('resources are curated HTTPS entries with verification metadata', () => {
     for (const field of ['source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
+  }
+});
+
+test('curated resources include verified video, eval and security primary sources', () => {
+  const byId = new Map(llmFoundation.resources.map((resource) => [resource.id, resource]));
+  const karpathyYoutube = byId.get('res-karpathy-build-gpt');
+  assert.ok(
+    llmFoundation.resources.some((resource) => resource.type.includes('YouTube')),
+    '资源库至少包含一项可筛选的 YouTube 资源',
+  );
+  assert.ok(karpathyYoutube, '必须保留 Karpathy 官方 Build GPT 视频');
+  assert.equal(karpathyYoutube.url, 'https://www.youtube.com/watch?v=kCc8FmEb1nY');
+  assert.equal(karpathyYoutube.source, 'Andrej Karpathy');
+  assert.match(karpathyYoutube.type, /YouTube/);
+  assert.equal(karpathyYoutube.platform, 'YouTube');
+  assert.equal(karpathyYoutube.verifiedAt, '2026-07-15');
+  assert.ok(
+    ['llm-03', 'llm-04'].some((lessonId) =>
+      llmFoundation.lessons
+        .find((lesson) => lesson.id === lessonId)
+        .resourceIds.includes(karpathyYoutube.id),
+    ),
+  );
+
+  const lessonEight = llmFoundation.lessons.find((lesson) => lesson.id === 'llm-08');
+  for (const resourceId of ['res-openai-evals', 'res-owasp-prompt-injection']) {
+    assert.ok(byId.has(resourceId), resourceId);
+    assert.ok(lessonEight.resourceIds.includes(resourceId), resourceId);
   }
 });
 

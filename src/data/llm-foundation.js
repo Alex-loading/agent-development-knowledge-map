@@ -7,11 +7,13 @@ const resources = [
   { id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: VERIFIED_AT },
   { id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: VERIFIED_AT },
   { id: 'res-karpathy', title: 'Neural Networks: Zero to Hero', url: 'https://github.com/karpathy/nn-zero-to-hero', source: 'Andrej Karpathy', language: '英文', type: 'GitHub + 视频', difficulty: '进阶', stage: '原理实作', value: '从反向传播手写到 tokenizer 与 GPT，代码和直觉紧密对应。', verifiedAt: VERIFIED_AT },
+  { id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: VERIFIED_AT },
   { id: 'res-rasbt', title: 'LLMs from Scratch', url: 'https://github.com/rasbt/LLMs-from-scratch', source: 'Sebastian Raschka', language: '英文', type: 'GitHub 教材', difficulty: '进阶', stage: '模型实作', value: '逐章实现数据处理、Attention、GPT、预训练、微调与 LoRA。', verifiedAt: VERIFIED_AT },
   { id: 'res-happy-llm', title: 'Happy-LLM：从零开始构建大模型', url: 'https://github.com/datawhalechina/happy-llm', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '入门到进阶', stage: '中文主线', value: '中文系统讲解 NLP、Transformer、训练、微调并提供动手实现。', verifiedAt: VERIFIED_AT },
   { id: 'res-llm-universe', title: 'LLM Universe：动手学大模型应用开发', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: 'GitHub 课程', difficulty: '入门', stage: '应用开发', value: '面向 Python 开发者讲 API、Prompt、RAG、评估和应用落地。', verifiedAt: VERIFIED_AT },
   { id: 'res-hello-agents', title: 'Hello-Agents：从零开始构建智能体', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '进阶', stage: 'Agent 衔接', value: '在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。', verifiedAt: VERIFIED_AT },
   { id: 'res-openai-cookbook', title: 'OpenAI Cookbook', url: 'https://github.com/openai/openai-cookbook', source: 'OpenAI', language: '英文', type: 'GitHub 示例', difficulty: '入门到进阶', stage: '应用实践', value: '官方 API 示例与指南，适合核对结构化输出、评测和生产实践。', verifiedAt: VERIFIED_AT },
+  { id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: VERIFIED_AT },
   { id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: VERIFIED_AT },
   { id: 'res-tiktoken', title: 'tiktoken', url: 'https://github.com/openai/tiktoken', source: 'OpenAI', language: '英文', type: 'GitHub 工具', difficulty: '进阶', stage: 'Token 实验', value: '实际观察 BPE tokenizer 的编码、解码和 token 预算。', verifiedAt: VERIFIED_AT },
   { id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: VERIFIED_AT },
@@ -24,7 +26,8 @@ const resources = [
   { id: 'res-3b1b-attention', title: 'Attention in transformers, step-by-step', url: 'https://www.3blue1brown.com/lessons/attention/', source: '3Blue1Brown', language: '英文', type: '视频图文', difficulty: '进阶', stage: 'Attention 直觉', value: '逐步可视化 Q、K、V 与信息更新，适合配合交互实验。', verifiedAt: VERIFIED_AT },
   { id: 'res-attention-paper', title: 'Attention Is All You Need', url: 'https://arxiv.org/abs/1706.03762', source: 'Vaswani 等', language: '英文', type: '论文', difficulty: '深挖', stage: '架构原典', value: 'Transformer 原始论文，适合在具备直觉后核对公式与架构动机。', verifiedAt: VERIFIED_AT },
   { id: 'res-limu-transformer', title: 'Transformer《动手学深度学习 v2》', url: 'https://www.bilibili.com/video/BV1Kq4y1H7FL/', source: '跟李沐学AI', language: '中文', type: 'Bilibili 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '从架构讲解进入多头注意力与 Transformer 代码，适合配合 D2L 教材。', verifiedAt: VERIFIED_AT },
-  { id: 'res-wangmutou-transformer', title: '从编解码和词嵌入理解 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用长篇可视化讲解串联词嵌入、位置、Attention 与 Transformer。', verifiedAt: VERIFIED_AT },
+  { id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: VERIFIED_AT },
+  { id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: VERIFIED_AT },
   { id: 'res-zomi-bili', title: '大模型整体架构与全流程介绍', url: 'https://www.bilibili.com/video/BV1a34y137zi/', source: 'ZOMI酱', language: '中文', type: 'Bilibili 视频', difficulty: '入门到进阶', stage: '全局补充', value: '从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。', verifiedAt: VERIFIED_AT },
 ];
 
@@ -82,7 +85,7 @@ const lessons = [
       { heading: '文本不是直接进入模型', body: 'Tokenizer 按词表与合并规则把文本编码为 token ID；token 可能是词、子词、标点或字节片段，并不等同于自然语言中的“一个词”。Embedding 表把离散 ID 映射为连续向量，训练过程让可用于预测的相似性和关系体现在向量空间中。模型仍需位置相关信息来区分相同 token 在不同顺序中的作用。', keyPoints: ['字符数、单词数与 token 数不能简单画等号', 'Embedding 是可学习表示，不是字典释义'] },
       { heading: '上下文是一项有限预算', body: '上下文窗口容纳系统指令、历史消息、检索材料、工具结果和待生成内容，超出限制会报错或触发截断策略。即便没有超限，堆入无关或互相冲突的信息也可能稀释有效信号。应用要记录各部分 token 用量，给输出留余量，并根据任务采用摘要、检索、分段或状态化存储，而不是把全部历史无条件拼接。', keyPoints: ['窗口上限不等于有效利用能力', '预算设计同时影响质量、成本和延迟'] },
     ],
-    resourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-3b1b-transformer', 'res-wangmutou-transformer'],
+    resourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-3b1b-transformer', 'res-wangmutou-transformer', 'res-karpathy-build-gpt'],
     exercise: { title: 'Token 与上下文预算实验', brief: '比较中英文、代码和重复历史的 token 数，设计一个不超预算的客服 Agent 输入。', steps: ['用 tokenizer 记录同义中英文句子、JSON 和代码片段的 token 数', '给定窗口预算，分别分配系统指令、历史、检索、用户输入和输出额度', '人为加入无关长文并比较模型回答，再写出截断或摘要策略'], deliverable: '一张预算表、三组 token 计数和一段说明质量变化原因的实验结论。', experiment: 'token-budget' },
     quiz: [
       quiz('quiz-llm-03-1', '关于 token 的说法哪项正确？', ['一个 token 永远等于一个汉字', 'token 边界由 tokenizer 规则决定', 'token 与 embedding 是同一个对象', '所有模型共享完全相同的词表'], 1, '不同 tokenizer 的词表与编码规则不同，同一文本的 token 划分和数量都可能变化。'),
@@ -100,7 +103,7 @@ const lessons = [
       { heading: 'Attention 是按内容读取信息', body: '每个位置的表示分别投影为 Query、Key 和 Value。Query 与其他位置的 Key 计算匹配分数，经过缩放和 softmax 形成权重，再对对应 Value 加权求和，得到当前位置要读取的信息。因果语言模型还使用掩码，阻止当前位置看到未来 token。Q、K、V 不是固定语义标签，而是训练学到的读取机制。', keyPoints: ['Q 与 K 决定读取权重，V 提供被汇总的信息', '因果掩码保证下一 token 训练与生成一致'] },
       { heading: 'Transformer 是可堆叠的表示更新器', body: '多个注意力头可在不同投影子空间学习不同关系，拼接后共同更新表示。残差连接保留旧表示并提供稳定梯度路径，归一化控制数值尺度，逐位置前馈网络对每个 token 的特征做非线性变换。Decoder-only 模型重复这些模块，最后把当前位置表示映射到词表 logits，因此输出源于多层信息混合而非检索一句存好的文本。', keyPoints: ['多头提供多组可学习的信息读取方式', '残差、归一化和前馈层都是完整 Transformer 的关键部分'] },
     ],
-    resourceIds: ['res-3b1b-attention', 'res-karpathy', 'res-rasbt', 'res-attention-paper', 'res-happy-llm', 'res-limu-transformer', 'res-wangmutou-transformer'],
+    resourceIds: ['res-3b1b-attention', 'res-karpathy', 'res-karpathy-build-gpt', 'res-rasbt', 'res-attention-paper', 'res-happy-llm', 'res-limu-transformer', 'res-wangmutou-transformer'],
     exercise: { title: '操纵 Attention 直觉实验', brief: '改变一个短句中的 Query-Key 相似度与掩码，观察权重和输出表示如何变化。', steps: ['在交互面板选择某个 token，记录它对其他位置的注意权重', '提高一个 Key 的匹配分数并解释对应 Value 对输出的影响', '打开因果掩码，说明哪些连接被禁止及其训练意义'], deliverable: '两张权重对比记录，以及一段从输入表示到更新表示的信息流解释。', experiment: 'attention' },
     quiz: [
       quiz('quiz-llm-04-1', 'Self-Attention 中最终被加权汇总的是什么？', ['Query 向量', 'Key 向量', 'Value 向量', '损失函数'], 2, 'Query 与 Key 产生权重，权重用于对 Value 加权汇总，从其他位置读取信息。'),
@@ -172,7 +175,7 @@ const lessons = [
       { heading: '错误不是一个开关能消除', body: 'LLM 根据条件概率生成连贯 token，并不内置事实数据库或真值验证器，因此可能在缺少证据时给出流畅但错误的回答。采样、服务差异和模糊输入带来非确定性；无关历史、错误检索或冲突规则造成上下文污染。缓解需要按失败类型组合检索证据、引用、工具计算、拒答、结构校验和人工复核，而不是宣称某个提示能“彻底消除幻觉”。', keyPoints: ['先给失败分类，再选择控制措施', '语言流畅度不能作为事实正确性的代理指标'] },
       { heading: '用评测和边界管理系统', body: '离线评测应从真实任务与失败日志构建版本化样本，分别测任务质量、证据忠实度、格式、安全和延迟成本；线上监控关注分布变化、异常率与用户反馈。Prompt injection 的本质是不可信内容试图改变控制流，防御必须延伸到最小工具权限、参数校验、敏感动作确认和输出隔离。最终要把准确率、尾延迟、token 成本与风险共同放进发布门槛。', keyPoints: ['评测集要覆盖正常、边界、对抗和回归样例', '模型提示不是安全边界，权限与执行控制必须由系统保证'] },
     ],
-    resourceIds: ['res-anthropic-agents', 'res-openai-cookbook', 'res-ms-genai', 'res-hf-agents', 'res-llm-universe'],
+    resourceIds: ['res-anthropic-agents', 'res-openai-cookbook', 'res-openai-evals', 'res-owasp-prompt-injection', 'res-ms-genai', 'res-hf-agents', 'res-llm-universe'],
     exercise: { title: 'LLM 功能测试清单', brief: '为“读取知识库并起草退款答复”的功能建立发布前检查表。', steps: ['收集正常、信息不足、冲突材料、超长上下文和对抗指令样例', '为正确性、忠实度、格式、安全、成本和 P95 延迟定义指标与阈值', '列出工具最小权限、高风险操作确认、日志脱敏和失败降级方案'], deliverable: '一份至少 15 条用例、含指标与责任人的发布检查表。' },
     quiz: [
       quiz('quiz-llm-08-1', '以下哪项最能构成 Prompt Injection 的系统性防线？', ['只在提示里写“不要被攻击”', '最小权限、输入标记、参数校验和敏感动作确认', '无限扩大上下文', '隐藏所有错误'], 1, '提示可辅助模型识别风险，但真正的安全边界来自权限、验证、隔离和人工控制。'),

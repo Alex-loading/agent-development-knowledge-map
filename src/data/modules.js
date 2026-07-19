@@ -1,4 +1,5 @@
-const promisedContent = ['课程', '资源', '练习', '面试高频'];
+const createPromisedContent = () =>
+  Object.freeze(['课程', '资源', '练习', '面试高频']);
 
 export const modules = [
   {
@@ -8,7 +9,7 @@ export const modules = [
     summary: '从神经网络、Transformer 到推理、安全，建立 Agent 开发所需的大模型心智模型。',
     prerequisites: [],
     estimatedHours: 14,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'agent-mechanism',
@@ -17,7 +18,7 @@ export const modules = [
     summary: '理解模型、工具、记忆与控制循环如何组合成可行动的智能体。',
     prerequisites: ['llm-foundation'],
     estimatedHours: 12,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'agent-harness',
@@ -26,7 +27,7 @@ export const modules = [
     summary: '搭建指令、工具权限、运行时、状态管理与人工确认组成的可靠执行框架。',
     prerequisites: ['agent-mechanism'],
     estimatedHours: 14,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'context-rag-memory',
@@ -35,7 +36,7 @@ export const modules = [
     summary: '系统掌握检索、上下文工程、短长期记忆及其质量与成本权衡。',
     prerequisites: ['llm-foundation', 'agent-mechanism'],
     estimatedHours: 16,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'backend-engineering',
@@ -44,7 +45,7 @@ export const modules = [
     summary: '把原型升级为具备并发、流式输出、缓存、队列和容错能力的服务。',
     prerequisites: ['agent-harness'],
     estimatedHours: 18,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'evals-observability-security',
@@ -53,7 +54,7 @@ export const modules = [
     summary: '用数据集、追踪、分级指标和威胁模型持续验证智能体系统。',
     prerequisites: ['agent-harness', 'context-rag-memory'],
     estimatedHours: 16,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'multi-agent-mcp',
@@ -62,7 +63,7 @@ export const modules = [
     summary: '学习任务分解、协作拓扑、上下文隔离，以及标准化工具与资源接入。',
     prerequisites: ['backend-engineering', 'evals-observability-security'],
     estimatedHours: 16,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
   {
     id: 'career-delivery',
@@ -71,6 +72,6 @@ export const modules = [
     summary: '以端到端作品、架构表达、故障复盘和面试训练完成能力闭环。',
     prerequisites: ['backend-engineering', 'evals-observability-security'],
     estimatedHours: 12,
-    promisedContent,
+    promisedContent: createPromisedContent(),
   },
 ];
