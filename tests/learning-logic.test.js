@@ -269,6 +269,36 @@ test('guided navigation skips locked lessons and selects the first eligible bran
   ]);
 });
 
+test('next lesson chooses the first eligible incomplete lesson and returns final lesson after completion', () => {
+  const lessons = [
+    { id: 'a', order: 1, title: 'A', prerequisites: [] },
+    { id: 'b', order: 2, title: 'B', prerequisites: ['missing'] },
+    { id: 'c', order: 3, title: 'C', prerequisites: ['a'] },
+    { id: 'd', order: 4, title: 'D', prerequisites: ['a'] },
+  ];
+
+  assert.deepEqual(getNextLesson(lessons, { completedLessonIds: ['a'] }), lessons[2]);
+  assert.deepEqual(
+    getNextLesson(lessons, { completedLessonIds: lessons.map(({ id }) => id) }),
+    lessons[3],
+  );
+});
+
+test('knowledge nodes return fresh records and fresh prerequisite arrays on every build', () => {
+  const lessons = [
+    { id: 'a', order: 1, title: 'A', prerequisites: [] },
+    { id: 'b', order: 2, title: 'B', prerequisites: ['a'] },
+  ];
+  const first = buildKnowledgeNodes(lessons, { completedLessonIds: [] });
+  const second = buildKnowledgeNodes(lessons, { completedLessonIds: [] });
+
+  first.forEach((node, index) => {
+    assert.notEqual(node, second[index]);
+    assert.notEqual(node.prerequisiteIds, second[index].prerequisiteIds);
+    assert.notEqual(node.prerequisiteIds, lessons[index].prerequisites);
+  });
+});
+
 test('next lesson is null when every incomplete lesson is locked', () => {
   const lessons = [{ id: 'blocked', title: 'Blocked', prerequisites: ['missing'] }];
   assert.equal(getNextLesson(lessons, { completedLessonIds: [] }), null);

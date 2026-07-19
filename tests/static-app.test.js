@@ -147,3 +147,14 @@ test('application modules avoid unsafe HTML rendering and inline handlers', asyn
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /setAttribute\(['"]on/i);
 });
+
+test('application integrates the dashboard, curriculum and knowledge-map renderers', async () => {
+  const app = await read('src/app.js');
+
+  assert.match(app, /from ['"]\.\/ui\/dashboard\.js['"]/);
+  assert.match(app, /from ['"]\.\/ui\/curriculum\.js['"]/);
+  assert.match(app, /from ['"]\.\/ui\/knowledge-map\.js['"]/);
+  assert.match(app, /renderDashboard\s*\(/);
+  assert.match(app, /renderCurriculum(?:List|Lesson)\s*\(/);
+  assert.match(app, /renderKnowledgeMap\s*\(/);
+});

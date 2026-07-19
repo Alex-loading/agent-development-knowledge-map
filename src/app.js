@@ -1,8 +1,12 @@
-import { summarizeProgress } from './core/progress.js';
+import { markLessonComplete, summarizeProgress } from './core/progress.js';
 import { createProgressStore } from './core/storage.js';
+import { getNextLesson } from './core/view-models.js';
 import { llmFoundation } from './data/llm-foundation.js';
 import { modules } from './data/modules.js';
+import { renderCurriculumList, renderLessonDetail } from './ui/curriculum.js';
+import { renderDashboard } from './ui/dashboard.js';
 import { element } from './ui/dom.js';
+import { renderKnowledgeMap } from './ui/knowledge-map.js';
 import { renderShell } from './ui/shell.js';
 
 const DEFAULT_HASH = '#llm-foundation/dashboard';
@@ -77,8 +81,15 @@ function renderPlaceholder(root, route) {
 
 function startApp() {
   const store = createProgressStore(storageAdapter());
-  const state = store.load();
+  let state = store.load();
   let focusAfterNavigation = false;
+  let lastRenderedHash = null;
+  let pendingAnnouncement = '';
+
+  const persistState = (nextState) => {
+    state = nextState;
+    store.save(state);
+  };
 
   const navigate = (nextHash) => {
     focusAfterNavigation = true;
@@ -89,9 +100,72 @@ function startApp() {
     }
   };
 
-  const render = () => {
+  const openLesson = (lessonId) => navigate(`#llm-foundation/lesson/${lessonId}`);
+
+  const completeLesson = (lessonId) => {
+    const lesson = llmFoundation.lessons.find((item) => item.id === lessonId);
+    if (!lesson || state.completedLessonIds.includes(lessonId)) return;
+    const completedState = markLessonComplete(state, lessonId);
+    const nextLesson = getNextLesson(llmFoundation.lessons, completedState);
+    persistState({
+      ...completedState,
+      currentModuleId: llmFoundation.id,
+      currentLessonId: nextLesson?.id ?? lessonId,
+      lastVisitedAt: new Date().toISOString(),
+    });
+    pendingAnnouncement = `已完成${lesson.title}。${nextLesson && nextLesson.id !== lessonId ? `下一节建议：${nextLesson.title}` : 'LLM 基础主线已全部完成。'}`;
+    render();
+  };
+
+  const renderGuidedView = (root, route, summary, live) => {
+    const shared = {
+      course: llmFoundation,
+      progress: state,
+    };
+
+    if (route.view === 'dashboard') {
+      renderDashboard(root, {
+        ...shared,
+        summary,
+        onOpenLesson: openLesson,
+        onNavigate: (view) => navigate(`#${route.moduleId}/${view}`),
+      });
+      return true;
+    }
+    if (route.view === 'curriculum') {
+      renderCurriculumList(root, { ...shared, onOpenLesson: openLesson });
+      return true;
+    }
+    if (route.view === 'lesson') {
+      renderLessonDetail(root, {
+        ...shared,
+        lessonId: route.lessonId,
+        onBack: () => navigate(`#${route.moduleId}/curriculum`),
+        onCompleteLesson: completeLesson,
+        onOpenInterviews: () => navigate(`#${route.moduleId}/interviews`),
+        onQuizResult: (message) => { live.textContent = message; },
+      });
+      return true;
+    }
+    if (route.view === 'map') {
+      renderKnowledgeMap(root, { ...shared, onOpenLesson: openLesson });
+      return true;
+    }
+    return false;
+  };
+
+  function render() {
     const route = normalizeRoute(window.location.hash);
     if (window.location.hash !== route.hash) window.history.replaceState(null, '', route.hash);
+
+    if (route.view === 'lesson' && lastRenderedHash !== route.hash) {
+      persistState({
+        ...state,
+        currentModuleId: route.moduleId,
+        currentLessonId: route.lessonId,
+        lastVisitedAt: new Date().toISOString(),
+      });
+    }
 
     const summary = summarizeProgress(state, llmFoundation.lessons.length, llmFoundation.interviewQuestions.length);
     renderShell({
@@ -112,14 +186,17 @@ function startApp() {
     const live = document.querySelector('#app-live-region');
     const main = document.querySelector('#app-main');
     if (!root || !live || !main) throw new Error('主要内容挂载点不完整');
-    renderPlaceholder(root, route);
-    live.textContent = `已打开${viewPlaceholder(route).title}`;
-    document.title = `${viewPlaceholder(route).title} · Agent Learner`;
+    if (!renderGuidedView(root, route, summary, live)) renderPlaceholder(root, route);
+    const copy = viewPlaceholder(route);
+    live.textContent = pendingAnnouncement || `已打开${copy.title}`;
+    pendingAnnouncement = '';
+    document.title = `${copy.title} · Agent Learner`;
+    lastRenderedHash = route.hash;
     if (focusAfterNavigation) {
       main.focus({ preventScroll: true });
       focusAfterNavigation = false;
     }
-  };
+  }
 
   window.addEventListener('hashchange', render);
   render();
