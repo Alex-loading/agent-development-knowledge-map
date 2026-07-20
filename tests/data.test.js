@@ -7,6 +7,15 @@ import { llmFoundation } from '../src/data/llm-foundation.js';
 const expectedLessonIds = Array.from({ length: 8 }, (_, index) =>
   `llm-${String(index + 1).padStart(2, '0')}`,
 );
+const llm01VerifiedResourceIds = new Set([
+  'res-ms-ai',
+  'res-ms-genai',
+  'res-hf-llm',
+  'res-zomi-bili',
+  'res-ms-agents',
+  'res-hello-agents',
+  'res-openai-agents',
+]);
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
@@ -286,7 +295,11 @@ test('resources are curated HTTPS entries with verification metadata', () => {
   assert.ok(llmFoundation.resources.length <= 30);
   for (const resource of llmFoundation.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-15', resource.id);
+    assert.equal(
+      resource.verifiedAt,
+      llm01VerifiedResourceIds.has(resource.id) ? '2026-07-21' : '2026-07-15',
+      resource.id,
+    );
     for (const field of ['source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
