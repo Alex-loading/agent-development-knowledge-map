@@ -308,6 +308,15 @@ test('planResume fails when retry budget is exhausted and manually reviews unsaf
   assert.equal(planResume(resumeInput({ errorKind: 'unknown' })).decision, 'manual');
 });
 
+test('planResume rejects blank idempotency keys instead of retrying writes', () => {
+  for (const idempotencyKey of ['', '   ']) {
+    assert.throws(() => planResume(resumeInput({
+      callKind: 'write',
+      idempotencyKey,
+    })), RangeError);
+  }
+});
+
 test('planResume validates enums, booleans, keys, and all numeric inputs', () => {
   const valid = resumeInput();
   assert.throws(() => planResume(null), TypeError);

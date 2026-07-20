@@ -215,6 +215,9 @@ export function planResume(input) {
   if (input.idempotencyKey !== null && typeof input.idempotencyKey !== 'string') {
     throw new TypeError('input.idempotencyKey must be a string or null');
   }
+  if (typeof input.idempotencyKey === 'string' && input.idempotencyKey.trim().length === 0) {
+    throw new RangeError('input.idempotencyKey must not be blank');
+  }
   assertEnum(input.idempotencyRecord, IDEMPOTENCY_RECORDS, 'input.idempotencyRecord');
   assertEnum(input.remoteEvidence, REMOTE_EVIDENCE, 'input.remoteEvidence');
   assertNonNegativeInteger(input.attemptsUsed, 'input.attemptsUsed');
