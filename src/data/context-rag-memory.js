@@ -215,62 +215,9 @@ const lessons = [
   }),
 ];
 
-const interviewIdentityByQuestion = new Map([
-  ['prompt context、conversation state、corpus、checkpoint、长期记忆有什么区别？', ['iq-context-01-1', 'context-01']],
-  ['Context engineering 与 prompt engineering 有何区别？', ['iq-context-01-2', 'context-01']],
-  ['一条知识如何从源文档进入模型上下文？', ['iq-context-01-3', 'context-01']],
-  ['如何管理有限 context window？', ['iq-context-02-1', 'context-02']],
-  ['滑窗、摘要和 retrieval 应怎么选？', ['iq-context-02-2', 'context-02']],
-  ['Context 越长效果一定越好吗？', ['iq-context-02-3', 'context-02']],
-  ['Transcript、conversation state、summary 的区别？', ['iq-context-03-1', 'context-03']],
-  ['如何安全压缩长会话？', ['iq-context-03-2', 'context-03']],
-  ['用户修改了先前事实，状态如何更新？', ['iq-context-03-3', 'context-03']],
-  ['如何设计 chunking？', ['iq-context-04-1', 'context-04']],
-  ['Corpus 如何处理版本和失效？', ['iq-context-04-2', 'context-04']],
-  ['source document、retrieval unit、citation unit 有何不同？', ['iq-context-04-3', 'context-04']],
-  ['Sparse、dense、hybrid retrieval 怎么选？', ['iq-context-05-1', 'context-05']],
-  ['top-k、threshold 和 metadata filter 如何配合？', ['iq-context-05-2', 'context-05']],
-  ['Query rewrite 有什么价值和风险？', ['iq-context-05-3', 'context-05']],
-  ['为什么需要 reranker？', ['iq-context-06-1', 'context-06']],
-  ['为什么需要去重和多样性？', ['iq-context-06-2', 'context-06']],
-  ['RAG 中有引用为什么仍会答错？', ['iq-context-06-3', 'context-06']],
-  ['什么是长期记忆，什么时候写？', ['iq-context-07-1', 'context-07']],
-  ['Semantic、episodic、procedural memory 怎么理解？', ['iq-context-07-2', 'context-07']],
-  ['如何处理冲突、过期和删除？', ['iq-context-07-3', 'context-07']],
-  ['RAG 答错时如何诊断？', ['iq-context-08-1', 'context-08']],
-  ['RAG、fine-tuning 和长期记忆如何选？', ['iq-context-08-2', 'context-08']],
-  ['请设计上下文、RAG 与记忆架构。', ['iq-context-08-3', 'context-08']],
-]);
-
-const interviewSpecs = [
-  [1, 'prompt context、conversation state、corpus、checkpoint、长期记忆有什么区别？', 'prompt context 是本轮可见输入，state 是当前会话状态，corpus 是外部知识源，checkpoint 是 run 恢复点，长期记忆是跨会话且经治理的信息。', ['五者用作用域、生命周期、所有者和是否直接投影来区分。', 'checkpoint 不等于长期记忆，corpus 和 memory 也都不会自动进入 prompt。'], '把所有持久数据都叫记忆，并假设模型随时能看见。', '请为五类对象各举一个不应直接进入 prompt 的字段。', '高', '基础', ['Agent 开发', 'AI 应用', '后端工程']],
-  [1, 'Context engineering 与 prompt engineering 有何区别？', 'Prompt engineering 主要优化指令表达；context engineering 管理来源发现、状态、检索、记忆、预算、排序、压缩与失效的完整系统。', ['同一提示词在不同证据选择和排序下会得到不同质量。', '上下文工程需要可观测的 manifest，而不只是最终拼接字符串。'], '认为 context engineering 只是把 prompt 写得更长。', '哪些上下文选择应由宿主确定而不是交给模型猜测？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [1, '一条知识如何从源文档进入模型上下文？', '源文档经解析、版本化、切分、索引、查询召回、过滤、重排、去重和预算打包后，作为带来源的证据投影进入本轮上下文。', ['每一步都应保留 document、version、span 和排除原因。', '进入上下文后仍需检查生成是否忠实使用证据。'], '认为创建向量索引后全部文档已经进入模型窗口。', '如何证明答案中的一个数字来自哪个源版本和 span？', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']],
-  [2, '如何管理有限 context window？', '先预留输出，纳入硬约束与当前请求，再按分层预算、优先级、相关性和时效选择状态、证据与记忆，并记录排除原因。', ['Required 项超限应显式失败，不可静默截断。', '应以任务质量和可追溯性评估预算，而不只追求填满窗口。'], '把窗口填得越满视为上下文管理越成功。', '证据预算与会话状态预算冲突时如何制定策略？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [2, '滑窗、摘要和 retrieval 应怎么选？', '滑窗保留最近原话，摘要压缩连续叙事，retrieval 按需找回远处细节；实际系统可组合，并保留 transcript 作为证据底座。', ['硬约束和用户纠正不应仅依赖可能遗漏它们的摘要。', '选择取决于时间局部性、精确措辞需求和可回取性。'], '认为一种策略可以无损替代另外两种。', '法律措辞必须逐字保留时你会怎样组合三者？', '高', '进阶', ['Agent 开发', 'AI 应用']],
-  [2, 'Context 越长效果一定越好吗？', '不一定；无关、重复、冲突和位置不利的信息会稀释有效证据、增加成本，模型也未必同等利用窗口各位置内容。', ['窗口容量只是上限，不是有效上下文质量指标。', '应通过受控评测比较选择策略，而非外推单篇研究结果。'], '认为支持更大窗口就可以取消检索、压缩和排序。', '怎样设计实验判断更多上下文是在帮助还是干扰？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [3, 'Transcript、conversation state、summary 的区别？', 'Transcript 是原始消息序列，state 是归并后的当前事实与约束，summary 是为节省预算生成的有损叙述。', ['State 应能指回来源事件并表达 supersession。', 'Summary 不能作为唯一审计记录，也不能无条件覆盖 transcript。'], '把摘要当成无损且唯一的会话真相。', '三者不一致时应如何确定当前有效值？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [3, '如何安全压缩长会话？', '先提取硬约束、当前事实、纠正链、未决承诺、失败和来源指针，再生成明确标注不确定性的摘要并保留可回取 transcript。', ['压缩应版本化，能比较前后遗漏和冲突。', '高风险事实可保留结构化状态或原文 span，而不是只留摘要。'], '只让模型自由总结后删除全部历史。', '如何检测摘要遗漏了用户的否定条件？', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']],
-  [3, '用户修改了先前事实，状态如何更新？', '把新事实写成当前有效值，用 supersedes 关联旧事实，保留双方来源与时间，并让后续摘要和记忆投影停止使用旧值。', ['冲突不能靠覆盖写隐藏，诊断仍需要历史证据。', '显式当前输入应优先于旧状态或长期记忆。'], '删除旧消息导致无法解释状态为什么变化。', '多个来源同时声称最新值时如何决胜？', '高', '进阶', ['Agent 开发', 'AI 应用']],
-  [4, '如何设计 chunking？', '按文档结构和回答所需语义选择边界与大小，适度 overlap，并让每个 chunk 继承标题、版本、权限、语言和 source span。', ['过小会丢上下文，过大会降低定位精度并浪费预算。', 'Retrieval unit 与 citation unit 可不同，但必须可映射。'], '只按固定字符数切分且不保留标题和版本。', '表格、代码和 FAQ 各自适合怎样的边界？', '高', '进阶', ['Agent 开发', 'AI 应用']],
-  [4, 'Corpus 如何处理版本和失效？', '源文档保留稳定 ID 与版本，chunk 继承有效期和状态；发布新版本时旧版停止进入默认检索，但仍可按审计策略回溯。', ['索引重建必须与源版本和权限变更协调。', '删除或撤权要传播到 chunk、缓存与服务索引。'], '只更新数据库正文却保留旧向量继续召回。', '索引更新失败时怎样防止新旧版本混答？', '高', '进阶', ['Agent 开发', '后端工程']],
-  [4, 'source document、retrieval unit、citation unit 有何不同？', 'Source document 是治理与版本载体，retrieval unit 是候选召回粒度，citation unit 是能精确支持主张的原文范围。', ['三者可以一对多，关键是保留稳定映射。', 'Citation unit 通常需要比检索 chunk 更精确地定位 span。'], '把一个向量记录同时当作完整源文档和精确引用。', '合并相邻 chunk 后引用范围应如何保存？', '中', '基础', ['Agent 开发', 'AI 应用']],
-  [5, 'Sparse、dense、hybrid retrieval 怎么选？', '精确词和编号偏 sparse，语义改写可用 dense，异构查询常用 hybrid；最终选择应以真实语料和查询集评测。', ['Dense 不一定优于 sparse，领域与语言会改变表现。', 'Hybrid 融合需要处理分数尺度或使用基于名次的方法。'], '默认把 dense 当作所有查询的最优方案。', '怎样构建覆盖编号、同义改写和多语言的评测集？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [5, 'top-k、threshold 和 metadata filter 如何配合？', '先用 metadata filter 限制合法候选，再按相关性 threshold 去除弱匹配，最后用 top-k 控制进入后续阶段的数量。', ['次序变化会让结果语义不同，应在 trace 中记录。', 'Top-k 不是最终上下文数量，后面还有重排与预算打包。'], '无结果时只盲目提高 top-k，不检查过滤和阈值。', '权限 filter 与版本 filter 应在哪一层强制？', '高', '进阶', ['Agent 开发', '后端工程']],
-  [5, 'Query rewrite 有什么价值和风险？', '改写可补全缩写、拆分复合问题和生成同义表达，但也可能加入未表达假设、偏离意图或放大敏感信息。', ['保留原查询、改写版本和每次候选便于比较。', '高风险检索可要求约束模板或用户确认。'], '认为改写后的查询必然比原查询更准确。', '怎样评估 rewrite 提升了召回却损害了精度？', '中', '深挖', ['Agent 开发', 'AI 应用']],
-  [6, '为什么需要 reranker？', '首阶段检索以高召回和低成本产生候选，reranker 用更强的查询—文档交互信号改善有限候选的最终顺序。', ['Reranker 不能找回首阶段完全漏掉的文档。', '重排质量与延迟、候选数和领域数据有关。'], '认为 reranker 能修复不存在于候选集的事实。', '候选数扩大时如何权衡 rerank 成本与召回？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [6, '为什么需要去重和多样性？', '重叠 chunk 和同文档旧版本会重复占用预算；去重与多样性选择让有限证据覆盖更多独立来源、方面和冲突观点。', ['去重键应包含 document、version 和 span 语义。', '多样性不能牺牲关键高相关证据，需要明确目标。'], '认为 top-ranked 列表天然没有重复且覆盖全面。', '相邻片段既重复又互补时怎样合并？', '中', '进阶', ['Agent 开发', 'AI 应用']],
-  [6, 'RAG 中有引用为什么仍会答错？', '引用只给出回源线索；检索内容可能过期或无关，模型也可能曲解证据、把一个引用挂到不被支持的 claim 上或遗漏反例。', ['需分别检查检索相关性、citation correctness、completeness 和生成忠实性。', '格式正确的链接不等于语义支持关系成立。'], '看到引用标记就把答案视为已验证事实。', '如何逐句建立 claim-to-span 核对表？', '高', '深挖', ['Agent 开发', 'AI 应用']],
-  [7, '什么是长期记忆，什么时候写？', '长期记忆是跨会话、绑定主体和作用域、经准入策略保存并可治理的信息；稳定且未来有用的显式偏好比一次闲聊更适合写入。', ['写入判断考虑意图、稳定性、敏感性、来源、置信度和 TTL。', '不是每条 transcript 都应自动成为永久记忆。'], '把完整聊天历史等同于长期记忆库。', '一次性行程与长期饮食禁忌应分别怎样处理？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [7, 'Semantic、episodic、procedural memory 怎么理解？', 'Semantic/profile 表达相对稳定事实，episodic 表达带时间的经历，procedural 表达可复用流程；它们是应用建模标签。', ['同一信息可因产品目的落入不同类别，需写清使用规则。', '这些标签不证明底层模型具有人类式记忆机制。'], '把论文分类名当作模型内部能力的确定事实。', '用户偏好和一次成功工作流分别属于哪类？', '中', '进阶', ['Agent 开发', 'AI 应用']],
-  [7, '如何处理冲突、过期和删除？', '新值用 supersedes 关联旧值，TTL 或有效期控制召回，删除事件立即阻止投影，并把传播范围覆盖索引、缓存与服务层。', ['当前显式输入应优先于可能陈旧或冲突的长期记忆投影。', '删除语义要说明逻辑不可召回与物理备份清理的边界。'], '覆盖写或软删除后仍让旧记录参与召回。', '怎样证明删除后旧偏好不再出现在 prompt？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']],
-  [8, 'RAG 答错时如何诊断？', '沿 source、chunk、candidate、filter、rank、evidence packet、prompt、memory 和 answer 逐层找出信息消失、过期、冲突或被曲解的位置。', ['每层需要稳定 ID、版本和排除原因才能反证。', '不要用一个端到端分数掩盖检索与生成的不同故障。'], '一遇到错误就改 prompt 或无界扩大 top-k。', '给出语料中存在但未出现在答案里的排查顺序。', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']],
-  [8, 'RAG、fine-tuning 和长期记忆如何选？', '动态外部知识优先 RAG，稳定行为模式可考虑 fine-tuning，主体相关且需跨会话治理的信息适合长期记忆；三者可组合。', ['选择取决于变化频率、可追溯性、主体作用域和更新成本。', 'Fine-tuning 不适合作为频繁更新事实的唯一数据库。'], '认为三者互斥，或用训练参数保存所有最新事实。', '企业政策与个人偏好应如何分别建模？', '高', '基础', ['Agent 开发', 'AI 应用']],
-  [8, '请设计上下文、RAG 与记忆架构。', '设计应分离会话状态、版本化 corpus、检索管线和长期记忆，通过有来源、预算有界的投影汇入 prompt，并保留端到端 trace。', ['说明写入、更新、过期、删除、权限、引用和失败降级。', '验收要分别覆盖召回、证据支持、生成忠实性和记忆生命周期。'], '只画向量数据库到模型的一条线，没有状态、版本或治理。', '当旧记忆与最新政策证据冲突时如何决胜并记录？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']],
-];
-
-const interviewQuestions = interviewSpecs.map(([
-  ,
+function interviewSpec(
+  id,
+  lessonId,
   question,
   shortAnswer,
   deepDive,
@@ -279,8 +226,7 @@ const interviewQuestions = interviewSpecs.map(([
   frequency,
   difficulty,
   roles,
-]) => {
-  const [id, lessonId] = interviewIdentityByQuestion.get(question);
+) {
   return {
     id,
     lessonId,
@@ -293,7 +239,51 @@ const interviewQuestions = interviewSpecs.map(([
     difficulty,
     roles,
   };
-});
+}
+
+const interviewSpecs = [
+  interviewSpec('iq-context-01-1', 'context-01', 'prompt context、conversation state、corpus、checkpoint、长期记忆有什么区别？', 'prompt context 是本轮可见输入，state 是当前会话状态，corpus 是外部知识源，checkpoint 是 run 恢复点，长期记忆是跨会话且经治理的信息。', ['五者用作用域、生命周期、所有者和是否直接投影来区分。', 'checkpoint 不等于长期记忆，corpus 和 memory 也都不会自动进入 prompt。'], '把所有持久数据都叫记忆，并假设模型随时能看见。', '请为五类对象各举一个不应直接进入 prompt 的字段。', '高', '基础', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-01-2', 'context-01', 'Context engineering 与 prompt engineering 有何区别？', 'Prompt engineering 主要优化指令表达；context engineering 管理来源发现、状态、检索、记忆、预算、排序、压缩与失效的完整系统。', ['同一提示词在不同证据选择和排序下会得到不同质量。', '上下文工程需要可观测的 manifest，而不只是最终拼接字符串。'], '认为 context engineering 只是把 prompt 写得更长。', '哪些上下文选择应由宿主确定而不是交给模型猜测？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-01-3', 'context-01', '一条知识如何从源文档进入模型上下文？', '源文档经解析、版本化、切分、索引、查询召回、过滤、重排、去重和预算打包后，作为带来源的证据投影进入本轮上下文。', ['每一步都应保留 document、version、span 和排除原因。', '进入上下文后仍需检查生成是否忠实使用证据。'], '认为创建向量索引后全部文档已经进入模型窗口。', '如何证明答案中的一个数字来自哪个源版本和 span？', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-02-1', 'context-02', '如何管理有限 context window？', '先预留输出，纳入硬约束与当前请求，再按分层预算、优先级、相关性和时效选择状态、证据与记忆，并记录排除原因。', ['Required 项超限应显式失败，不可静默截断。', '应以任务质量和可追溯性评估预算，而不只追求填满窗口。'], '把窗口填得越满视为上下文管理越成功。', '证据预算与会话状态预算冲突时如何制定策略？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-02-2', 'context-02', '滑窗、摘要和 retrieval 应怎么选？', '滑窗保留最近原话，摘要压缩连续叙事，retrieval 按需找回远处细节；实际系统可组合，并保留 transcript 作为证据底座。', ['硬约束和用户纠正不应仅依赖可能遗漏它们的摘要。', '选择取决于时间局部性、精确措辞需求和可回取性。'], '认为一种策略可以无损替代另外两种。', '法律措辞必须逐字保留时你会怎样组合三者？', '高', '进阶', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-02-3', 'context-02', 'Context 越长效果一定越好吗？', '不一定；无关、重复、冲突和位置不利的信息会稀释有效证据、增加成本，模型也未必同等利用窗口各位置内容。', ['窗口容量只是上限，不是有效上下文质量指标。', '应通过受控评测比较选择策略，而非外推单篇研究结果。'], '认为支持更大窗口就可以取消检索、压缩和排序。', '怎样设计实验判断更多上下文是在帮助还是干扰？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-03-1', 'context-03', 'Transcript、conversation state、summary 的区别？', 'Transcript 是原始消息序列，state 是归并后的当前事实与约束，summary 是为节省预算生成的有损叙述。', ['State 应能指回来源事件并表达 supersession。', 'Summary 不能作为唯一审计记录，也不能无条件覆盖 transcript。'], '把摘要当成无损且唯一的会话真相。', '三者不一致时应如何确定当前有效值？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-03-2', 'context-03', '如何安全压缩长会话？', '先提取硬约束、当前事实、纠正链、未决承诺、失败和来源指针，再生成明确标注不确定性的摘要并保留可回取 transcript。', ['压缩应版本化，能比较前后遗漏和冲突。', '高风险事实可保留结构化状态或原文 span，而不是只留摘要。'], '只让模型自由总结后删除全部历史。', '如何检测摘要遗漏了用户的否定条件？', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-03-3', 'context-03', '用户修改了先前事实，状态如何更新？', '把新事实写成当前有效值，用 supersedes 关联旧事实，保留双方来源与时间，并让后续摘要和记忆投影停止使用旧值。', ['冲突不能靠覆盖写隐藏，诊断仍需要历史证据。', '显式当前输入应优先于旧状态或长期记忆。'], '删除旧消息导致无法解释状态为什么变化。', '多个来源同时声称最新值时如何决胜？', '高', '进阶', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-04-1', 'context-04', '如何设计 chunking？', '按文档结构和回答所需语义选择边界与大小，适度 overlap，并让每个 chunk 继承标题、版本、权限、语言和 source span。', ['过小会丢上下文，过大会降低定位精度并浪费预算。', 'Retrieval unit 与 citation unit 可不同，但必须可映射。'], '只按固定字符数切分且不保留标题和版本。', '表格、代码和 FAQ 各自适合怎样的边界？', '高', '进阶', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-04-2', 'context-04', 'Corpus 如何处理版本和失效？', '源文档保留稳定 ID 与版本，chunk 继承有效期和状态；发布新版本时旧版停止进入默认检索，但仍可按审计策略回溯。', ['索引重建必须与源版本和权限变更协调。', '删除或撤权要传播到 chunk、缓存与服务索引。'], '只更新数据库正文却保留旧向量继续召回。', '索引更新失败时怎样防止新旧版本混答？', '高', '进阶', ['Agent 开发', '后端工程']),
+  interviewSpec('iq-context-04-3', 'context-04', 'source document、retrieval unit、citation unit 有何不同？', 'Source document 是治理与版本载体，retrieval unit 是候选召回粒度，citation unit 是能精确支持主张的原文范围。', ['三者可以一对多，关键是保留稳定映射。', 'Citation unit 通常需要比检索 chunk 更精确地定位 span。'], '把一个向量记录同时当作完整源文档和精确引用。', '合并相邻 chunk 后引用范围应如何保存？', '中', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-05-1', 'context-05', 'Sparse、dense、hybrid retrieval 怎么选？', '精确词和编号偏 sparse，语义改写可用 dense，异构查询常用 hybrid；最终选择应以真实语料和查询集评测。', ['Dense 不一定优于 sparse，领域与语言会改变表现。', 'Hybrid 融合需要处理分数尺度或使用基于名次的方法。'], '默认把 dense 当作所有查询的最优方案。', '怎样构建覆盖编号、同义改写和多语言的评测集？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-05-2', 'context-05', 'top-k、threshold 和 metadata filter 如何配合？', '先用 metadata filter 限制合法候选，再按相关性 threshold 去除弱匹配，最后用 top-k 控制进入后续阶段的数量。', ['次序变化会让结果语义不同，应在 trace 中记录。', 'Top-k 不是最终上下文数量，后面还有重排与预算打包。'], '无结果时只盲目提高 top-k，不检查过滤和阈值。', '权限 filter 与版本 filter 应在哪一层强制？', '高', '进阶', ['Agent 开发', '后端工程']),
+  interviewSpec('iq-context-05-3', 'context-05', 'Query rewrite 有什么价值和风险？', '改写可补全缩写、拆分复合问题和生成同义表达，但也可能加入未表达假设、偏离意图或放大敏感信息。', ['保留原查询、改写版本和每次候选便于比较。', '高风险检索可要求约束模板或用户确认。'], '认为改写后的查询必然比原查询更准确。', '怎样评估 rewrite 提升了召回却损害了精度？', '中', '深挖', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-06-1', 'context-06', '为什么需要 reranker？', '首阶段检索以高召回和低成本产生候选，reranker 用更强的查询—文档交互信号改善有限候选的最终顺序。', ['Reranker 不能找回首阶段完全漏掉的文档。', '重排质量与延迟、候选数和领域数据有关。'], '认为 reranker 能修复不存在于候选集的事实。', '候选数扩大时如何权衡 rerank 成本与召回？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-06-2', 'context-06', '为什么需要去重和多样性？', '重叠 chunk 和同文档旧版本会重复占用预算；去重与多样性选择让有限证据覆盖更多独立来源、方面和冲突观点。', ['去重键应包含 document、version 和 span 语义。', '多样性不能牺牲关键高相关证据，需要明确目标。'], '认为 top-ranked 列表天然没有重复且覆盖全面。', '相邻片段既重复又互补时怎样合并？', '中', '进阶', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-06-3', 'context-06', 'RAG 中有引用为什么仍会答错？', '引用只给出回源线索；检索内容可能过期或无关，模型也可能曲解证据、把一个引用挂到不被支持的 claim 上或遗漏反例。', ['需分别检查检索相关性、citation correctness、completeness 和生成忠实性。', '格式正确的链接不等于语义支持关系成立。'], '看到引用标记就把答案视为已验证事实。', '如何逐句建立 claim-to-span 核对表？', '高', '深挖', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-07-1', 'context-07', '什么是长期记忆，什么时候写？', '长期记忆是跨会话、绑定主体和作用域、经准入策略保存并可治理的信息；稳定且未来有用的显式偏好比一次闲聊更适合写入。', ['写入判断考虑意图、稳定性、敏感性、来源、置信度和 TTL。', '不是每条 transcript 都应自动成为永久记忆。'], '把完整聊天历史等同于长期记忆库。', '一次性行程与长期饮食禁忌应分别怎样处理？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-07-2', 'context-07', 'Semantic、episodic、procedural memory 怎么理解？', 'Semantic/profile 表达相对稳定事实，episodic 表达带时间的经历，procedural 表达可复用流程；它们是应用建模标签。', ['同一信息可因产品目的落入不同类别，需写清使用规则。', '这些标签不证明底层模型具有人类式记忆机制。'], '把论文分类名当作模型内部能力的确定事实。', '用户偏好和一次成功工作流分别属于哪类？', '中', '进阶', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-07-3', 'context-07', '如何处理冲突、过期和删除？', '新值用 supersedes 关联旧值，TTL 或有效期控制召回，删除事件立即阻止投影，并把传播范围覆盖索引、缓存与服务层。', ['当前显式输入应优先于可能陈旧或冲突的长期记忆投影。', '删除语义要说明逻辑不可召回与物理备份清理的边界。'], '覆盖写或软删除后仍让旧记录参与召回。', '怎样证明删除后旧偏好不再出现在 prompt？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-08-1', 'context-08', 'RAG 答错时如何诊断？', '沿 source、chunk、candidate、filter、rank、evidence packet、prompt、memory 和 answer 逐层找出信息消失、过期、冲突或被曲解的位置。', ['每层需要稳定 ID、版本和排除原因才能反证。', '不要用一个端到端分数掩盖检索与生成的不同故障。'], '一遇到错误就改 prompt 或无界扩大 top-k。', '给出语料中存在但未出现在答案里的排查顺序。', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-08-2', 'context-08', 'RAG、fine-tuning 和长期记忆如何选？', '动态外部知识优先 RAG，稳定行为模式可考虑 fine-tuning，主体相关且需跨会话治理的信息适合长期记忆；三者可组合。', ['选择取决于变化频率、可追溯性、主体作用域和更新成本。', 'Fine-tuning 不适合作为频繁更新事实的唯一数据库。'], '认为三者互斥，或用训练参数保存所有最新事实。', '企业政策与个人偏好应如何分别建模？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-08-3', 'context-08', '请设计上下文、RAG 与记忆架构。', '设计应分离会话状态、版本化 corpus、检索管线和长期记忆，通过有来源、预算有界的投影汇入 prompt，并保留端到端 trace。', ['说明写入、更新、过期、删除、权限、引用和失败降级。', '验收要分别覆盖召回、证据支持、生成忠实性和记忆生命周期。'], '只画向量数据库到模型的一条线，没有状态、版本或治理。', '当旧记忆与最新政策证据冲突时如何决胜并记录？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
+];
+
+export function createContextInterviewQuestion(spec) {
+  return {
+    id: spec.id,
+    lessonId: spec.lessonId,
+    question: spec.question,
+    shortAnswer: spec.shortAnswer,
+    deepDive: [...spec.deepDive],
+    misconceptions: [...spec.misconceptions],
+    followUps: [...spec.followUps],
+    frequency: spec.frequency,
+    difficulty: spec.difficulty,
+    roles: [...spec.roles],
+  };
+}
+
+const interviewQuestions = interviewSpecs.map(createContextInterviewQuestion);
 
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;

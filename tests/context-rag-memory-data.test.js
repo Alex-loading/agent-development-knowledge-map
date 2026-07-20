@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { contextRagMemory } from '../src/data/context-rag-memory.js';
+import {
+  contextRagMemory,
+  createContextInterviewQuestion,
+} from '../src/data/context-rag-memory.js';
 
 const lessonIds = Array.from({ length: 8 }, (_, index) =>
   `context-${String(index + 1).padStart(2, '0')}`,
@@ -236,6 +239,19 @@ test('interview bank contains exactly three complete qualitative questions for e
     assert.ok(item.roles.length >= 1, item.id);
     assert.ok(item.roles.every((role) => validRoles.has(role)), `${item.id}: roles`);
   }
+});
+
+test('editing interview copy preserves its declared identity and ownership', () => {
+  const original = structuredClone(contextRagMemory.interviewQuestions[0]);
+  const revised = createContextInterviewQuestion({
+    ...original,
+    question: '请重新说明五类上下文对象的边界。',
+  });
+
+  assert.equal(revised.id, original.id);
+  assert.equal(revised.lessonId, original.lessonId);
+  assert.equal(revised.question, '请重新说明五类上下文对象的边界。');
+  assert.notEqual(revised.question, original.question);
 });
 
 test('quiz identifiers are stable within and owned by their lessons', () => {
