@@ -2,6 +2,7 @@ import { scoreQuiz } from '../core/quiz.js';
 import { buildKnowledgeNodes, getNextLesson } from '../core/view-models.js';
 import { button, element, externalLink } from './dom.js';
 import { renderExperiment } from './experiments.js';
+import { renderKnowledgeNote } from './knowledge-note.js';
 
 const STATUS_LABELS = {
   complete: '已完成',
@@ -17,6 +18,17 @@ function statusForLesson(course, progress, lessonId) {
 function list(items, className) {
   if (!items?.length) return element('p', { className: 'empty-note', text: '本节暂无条目。' });
   return element('ul', { className }, items.map((item) => element('li', { text: item })));
+}
+
+function renderLegacyExplanations(lesson) {
+  return element('div', { className: 'lesson-explanations' }, lesson.explanations?.length
+    ? lesson.explanations.map((explanation, index) => element('section', { className: 'lesson-section explanation-section' }, [
+      element('span', { className: 'section-index', text: `原理札记 ${String(index + 1).padStart(2, '0')}` }),
+      element('h2', { text: explanation.heading }),
+      element('p', { text: explanation.body }),
+      list(explanation.keyPoints, 'key-point-list'),
+    ]))
+    : [element('p', { className: 'empty-note', text: '本节原理讲解正在整理。' })]);
 }
 
 function curriculumItem(lesson, node, recommendedId, onOpenLesson) {
@@ -224,14 +236,9 @@ export function renderLessonDetail(root, {
         element('div', {}, [element('h2', { text: '学习目标' }), list(lesson.objectives, 'check-list')]),
         element('div', {}, [element('h2', { text: '核心概念' }), list(lesson.concepts, 'concept-list')]),
       ]),
-      ...(lesson.explanations?.length
-        ? lesson.explanations.map((explanation, index) => element('section', { className: 'lesson-section explanation-section' }, [
-          element('span', { className: 'section-index', text: `原理札记 ${String(index + 1).padStart(2, '0')}` }),
-          element('h2', { text: explanation.heading }),
-          element('p', { text: explanation.body }),
-          list(explanation.keyPoints, 'key-point-list'),
-        ]))
-        : [element('p', { className: 'empty-note', text: '本节原理讲解正在整理。' })]),
+      lesson.knowledgeNote
+        ? renderKnowledgeNote(course, lesson)
+        : renderLegacyExplanations(lesson),
       resourceSection(course, lesson),
       exerciseSection(lesson),
       quizSection(lesson, onQuizResult),
