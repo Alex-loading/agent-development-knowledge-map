@@ -2,7 +2,9 @@
 
 Return pure JavaScript-compatible data. Do not return HTML strings, DOM nodes, Markdown embedded as HTML, or executable callbacks.
 
-## Contract
+## Formal publishable contract
+
+Use this shape only when each `sourceId` is a genuine project resource ID present in both the lesson evidence map and project registry, with attributable provenance and accessible supporting material.
 
 ```js
 const learningArtifact = {
@@ -51,7 +53,7 @@ const learningArtifact = {
 
 ### `evidence`
 
-Use an object map keyed by resource ID, exactly as shown in the example. Create one evidence entry for every resource associated with the lesson. Each entry must include:
+Use an object map keyed by genuine project resource ID, exactly as shown in the example. Never key this map with an invented course-field ID or a path such as `lesson.explanations[0]`. Create one evidence entry for every genuine resource associated with the lesson. Each entry must include:
 
 - `authority`: exactly `official`, `academic`, `expert`, or `community`.
 - `role`: exactly `core`, `cross-check`, or `extension`.
@@ -59,6 +61,34 @@ Use an object map keyed by resource ID, exactly as shown in the example. Create 
 - `limitations`: non-empty string stating inaccessible content, unsupported claims, scope, version, or transfer limits. Use `无已知限制` only after checking; never omit the field.
 
 Add `verifiedAt` beside the evidence fields when a claim depends on current implementation semantics. The example omits it because it is conditional.
+
+## Blocked isolated or outline-only contract
+
+When a project registry or valid external resource evidence is unavailable, do not emit the formal `knowledgeNote` and `evidence` shape. Return a clearly blocked draft shape instead:
+
+```js
+const blockedDraft = {
+  status: 'blocked',
+  publicationReady: false,
+  outline: ['按主题组织的大纲'],
+  draftSections: [{
+    id: 'draft-section-id',
+    title: '草稿标题',
+    paragraphs: ['仅由课程字段允许的草稿内容'],
+    courseFieldBasis: ['lesson.explanations[0]'],
+  }],
+  coverageMatrix: [{
+    outcome: '学习产出',
+    courseFieldBasis: ['lesson.objectives[0]'],
+    resourceEvidenceStatus: 'gap',
+  }],
+  candidateSourceIds: ['res-example'],
+  brokenReferenceCount: null,
+  tests: { status: 'not applicable', reason: '隔离且未产生项目变更' },
+};
+```
+
+`courseFieldBasis` is traceability to supplied curriculum input, not citation or evidence. Candidate source IDs must be genuine IDs from supplied resource metadata, remain separate from draft sections, and must not appear in a formal evidence map until provenance, body access, and registry resolution are established.
 
 ## Integrity checks
 
@@ -68,3 +98,4 @@ Add `verifiedAt` beside the evidence fields when a claim depends on current impl
 4. Ensure all text fields are plain text and contain no HTML tags.
 5. Reject duplicate section IDs, empty arrays required above, unknown enum values, and unreferenced `core` evidence.
 6. When the project resource registry is unavailable in an isolated or outline-only task, label proposed resource IDs as candidates, record that registry validation was not applicable, and do not publish or claim that any ID is resolvable.
+7. Reject any course-field path, synthetic `course-fields-*` identifier, unknown/internal provenance, or unattributed prose in the formal `evidence` map or `knowledgeNote.sections[*].sourceIds`.

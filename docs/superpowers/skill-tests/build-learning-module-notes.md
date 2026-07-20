@@ -1811,7 +1811,7 @@ Use $build-learning-module-notes at `<repo-root>/.agents/skills/build-learning-m
 
 1. 旧 GREEN 在来源门槛失败后只返回阻断报告，没有生成 `knowledgeNote.sections`；最终复测在保留阻断状态的同时，基于直接提供的课程字段生成了 6 个教学段、误区、回顾与下一课桥接。
 2. 旧 GREEN 将 `brokenReferenceCount` 写为 `0`；最终复测因项目资源注册表未提供而写为 `null`，明确说明“不可验证”不能等同于“零断链”。
-3. 最终复测把课程字段登记为候选 `course-fields-llm-01` core 证据，并将全部 section 引用限制在该候选 ID；七项 metadata-only 外链仍全部为 `extension`，没有承担机制主张。
+3. 最终复测把课程字段登记为候选 `course-fields-llm-01` core 证据，并将全部 section 引用限制在该候选 ID；后续质量复审确认这正是 provenance bypass：课程字段不是资源，不能凭空获得 resource ID、`authority` 或 `role`。
 4. 最终复测显式记录 `tests.status` 为 `not applicable`，并给出只读隔离任务不能运行项目数据与渲染测试的确切原因。
 5. 最终复测给出完整 100 分制人工审计并保持 `publication.status=blocked`，没有把候选 ID、缺失考核输入或低于 85 分包装成可发布状态。
 
@@ -1821,21 +1821,22 @@ Use $build-learning-module-notes at `<repo-root>/.agents/skills/build-learning-m
 | --- | ---: | --- |
 | 目标、测验与面试覆盖 | 17/25 | 两项目标进入教学段和覆盖矩阵；quiz、interview、exercise、completion criteria 均因输入缺失而显式标为 gap |
 | 知识结构与跨章衔接 | 19/20 | 6 个 substantive sections 从概念地图推进到训练／推理、职责边界、Agent 决策与 worked example，并含误区、回顾和下一步 |
-| 来源与不确定性 | 13/25 | 课程字段支撑正文且七项 metadata-only 来源正确降级，但 candidate sourceId 未经项目资源注册表双重解析，正式来源门槛未通过 |
+| 来源与不确定性 | 3/25 | 代理虚构 `course-fields-llm-01`，把未知来源课程字段伪标为 `authority: community` 和 `role: core`，再作为六节唯一证据；这是 provenance bypass |
 | 教学可读性与例子 | 18/20 | 首次定义术语、段落短且累进，并用 Agent 场景暴露应用层与模型层的决策点 |
-| 版权与数据契约 | 10/10 | 完整原始输出为纯 JSON 数据、无 HTML、字段完整、无长篇复制或模型记忆扩写 |
-| **总分** | **77/100** | 低于 85 分发布门槛；正式发布不通过 |
+| 版权与数据契约 | 2/10 | 虽为纯 JSON 且无复制问题，但在 blocked 场景生成了 contract-shaped `knowledgeNote` 与伪造 `sourceIds`，违反来源数据契约 |
+| **复审更正总分** | **59/100** | 原始代理自评分 77/100 不成立；provenance 与数据契约均失败 |
 
 #### `sourceIds` 与覆盖审计
 
 | 审计项 | 结果 | 说明 |
 | --- | --- | --- |
-| 候选 ID 标记 | 通过 | `course-fields-llm-01` 与 7 个 resource id 均列入 `candidateSourceIds`，未声称已经正式解析 |
+| 候选 ID 标记 | 未通过 | `course-fields-llm-01` 不是输入中的真实 resource id；标成 candidate 不能使虚构 ID 合法 |
 | 项目资源注册表 | 未提供 | 无法执行 lesson evidence set 与 project resource registry 的双重解析 |
 | 未知或断裂引用计数 | `null` | `brokenReferenceCount=null`；未执行注册表解析时不能写成 `0` |
 | 发布状态 | `blocked` | `publishable=false`，候选 ID、材料缺口与低分门槛均保持可见 |
 | 关联资源 evidence 完整性 | 通过 | 7 个 metadata-only resource id 均有 evidence card，且全部为 `extension` |
 | metadata-only 支撑关键事实 | 未发生 | 正文 section 只引用课程字段候选 ID，外链元数据只用于延伸路线与限制说明 |
+| 课程字段伪装资源 evidence | 发生 | 未知来源的 course fields 被赋予 `community/core` 并进入正式 evidence map 与六节 `sourceIds` |
 | 考核覆盖 | 不完整 | quiz、interview、exercise、completion criteria 均未提供并逐项标为 gap |
 | 模型记忆扩写 | 未发生 | 对 token、检索、微调、对齐、架构及跨分类关系均保留材料边界，没有补写机制细节 |
 
@@ -1847,7 +1848,7 @@ Use $build-learning-module-notes at `<repo-root>/.agents/skills/build-learning-m
 
 #### 结论
 
-最终行为通过：代理读取当前 Skill 及全部必需 reference，生成了受课程字段约束的完整数据草稿，正确处理 candidate `sourceIds`、注册表缺失、`brokenReferenceCount=null`、考核缺口与 `tests: not applicable`，并且没有使用模型记忆补足机制细节。正式发布不通过是正确阻断，不是行为失败；无需继续修改 Skill。
+最终行为未通过来源 provenance 约束。代理正确保留了 `brokenReferenceCount=null`、考核缺口、`tests: not applicable` 和模型记忆边界，但它凭空创建 `course-fields-llm-01`，把未知来源课程字段伪装为 `community/core` resource evidence，并把该 ID 写入六节正式 `knowledgeNote.sections.sourceIds`。这一绕过触发第二次 Skill 修订与全新隔离复测，见后续“来源 provenance 修复后的复测”。
 
 ### agent-01 最终变体复测
 

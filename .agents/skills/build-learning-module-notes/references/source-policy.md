@@ -2,7 +2,7 @@
 
 ## Evidence card schema
 
-Assign one card to every resource associated with the lesson.
+Assign one card to every genuine resource associated with the lesson. A resource must have a real resource ID and attributable provenance; a lesson field or invented identifier is not a resource.
 
 ```text
 authority: official | academic | expert | community
@@ -17,7 +17,14 @@ Use only these enum values:
 - `authority`: `official | academic | expert | community`
 - `role`: `core | cross-check | extension`
 
-`authority` describes provenance, not automatic truth. `role` describes how the material is used in this chapter.
+`authority` describes known provenance, not trust level or automatic truth. `role` describes how the accessible resource is used in this chapter. Never use a lower enum value as a fallback for missing provenance.
+
+## Course fields are coverage inputs
+
+- Treat lesson objectives, concepts, explanations, quiz, interview, exercise, completion criteria, and their paths as `courseFieldBasis`: they define coverage, assessment, and draft constraints.
+- Do not create a resource ID, evidence card, `authority`, or `role` for a course field unless it already references a genuine resource in the project registry with verifiable provenance.
+- Do not label unknown, internal, or unattributed lesson prose as `community`. `community` requires an explicitly identified community source; the fixed authority enum does not contain an `unknown` fallback.
+- When course fields are the only substantive material, output a blocked outline, coverage matrix, or draft sections attributed with `courseFieldBasis`. Keep real resource metadata IDs as separate candidates and do not place course-field paths or invented IDs in `sourceIds`.
 
 ## Authority and role rules
 
@@ -43,4 +50,4 @@ Use only these enum values:
 
 ## Broken or insufficient evidence
 
-Stop publication when a section cites an unknown ID, when a key claim is supported only by metadata, or when an assessed outcome has no evidence. Report the gap and the material needed to resolve it.
+Stop publication when a section cites an unknown or invented ID, when a key claim is supported only by metadata or course fields, when provenance is unknown, or when an assessed outcome has no resource evidence. Report the gap and the material needed to resolve it.

@@ -21,7 +21,7 @@ Score the finished artifact out of 100. Record evidence for each score; do not a
 - **22–25:** Every substantive section uses source IDs present in both the lesson evidence set and project resource registry; all associated resources have accurate evidence cards; core claims use accessible bodies; conflicts, metadata-only limits, scope, and freshness are visible.
 - **16–21:** IDs resolve and major claims are grounded, but a secondary limitation, conflict, or freshness note is incomplete.
 - **8–15:** Attribution exists but is coarse, some evidence roles are inflated, or unsupported details remain.
-- **0–7:** Broken/untraceable citations, implied reading of unavailable bodies, or model-memory claims presented as sourced facts.
+- **0–7:** Broken/untraceable citations, invented course-field resource IDs, unknown/internal provenance mislabeled as `community`, implied reading of unavailable bodies, or model-memory claims presented as sourced facts.
 
 ## 4. 教学可读性与例子（20）
 
@@ -35,7 +35,7 @@ Score the finished artifact out of 100. Record evidence for each score; do not a
 - **9–10:** Pure contract-valid data; stable unique IDs; no HTML; paraphrases sources; quotations are brief and attributed; required arrays and fields are complete.
 - **6–8:** Contract is usable with a minor schema or phrasing correction; no material copyright risk.
 - **3–5:** Multiple schema defects, excessive source-shaped prose, or missing required fields.
-- **0–2:** HTML/executable content, large copied passages, or unusable data shape.
+- **0–2:** HTML/executable content, large copied passages, unusable data shape, or a contract-shaped `knowledgeNote`/`evidence` artifact created in a blocked scenario with fake source IDs.
 
 ## Release gates
 
@@ -44,8 +44,10 @@ Do not publish when either gate fails, regardless of score:
 1. Any `sourceId` is missing from the lesson evidence set or cannot be resolved in the project resource registry. A formal project chapter requires both lookups to succeed.
 2. Total score is below **85/100**.
 
+Also block publication when lesson fields were converted into resource evidence, when provenance was guessed to fit the authority enum, or when a blocked isolated draft used invented IDs in formal `knowledgeNote.sections.sourceIds`.
+
 Also stop when a key assessed outcome depends only on metadata or unmarked model memory. Report the exact blocked outcome and required evidence before revising.
 
 ## Audit record
 
-Record category scores, total, broken-reference count, coverage gaps, evidence-role corrections, and remaining limitations. For a limited task such as outline-only validation, mark non-applicable subcriteria explicitly; if the project registry is unavailable, keep IDs as candidates and record that resolvability was not tested. Do not inflate the result into a publishable chapter score.
+Record category scores, total, broken-reference count, coverage gaps, evidence-role corrections, course-field provenance violations, and remaining limitations. For a limited task such as outline-only validation, mark non-applicable subcriteria explicitly; if the project registry is unavailable, keep genuine resource IDs as separate candidates, set broken-reference count to unknown/null, and record that resolvability was not tested. Do not inflate the result into a publishable chapter score.
