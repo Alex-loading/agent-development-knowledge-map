@@ -163,7 +163,7 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
-test('application preserves independent resource filters for Harness and the preceding module', (t) => {
+test('application preserves independent resource filters across all three active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#agent-harness/resources');
@@ -187,13 +187,24 @@ test('application preserves independent resource filters for Harness and the pre
   const agentCount = document.querySelectorAll('.resource-row').length;
   assert.ok(agentCount > 0 && agentCount < agentMechanism.resources.length);
 
-  navigateTo(app, windowRef, '#agent-harness/resources');
-  assert.equal(document.querySelector('#resource-filter-stage').value, 'Runner 基础');
-  assert.equal(document.querySelectorAll('.resource-row').length, harnessCount);
+  navigateTo(app, windowRef, '#llm-foundation/resources');
+  assert.equal(document.querySelectorAll('.resource-row').length, llmFoundation.resources.length);
+  assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
 
-  navigateTo(app, windowRef, '#agent-mechanism/resources');
-  assert.equal(document.querySelector('#resource-filter-stage').value, '机制总览');
-  assert.equal(document.querySelectorAll('.resource-row').length, agentCount);
+  dispatchChange(document.querySelector('#resource-filter-stage'), 'Token 实验');
+  const llmCount = document.querySelectorAll('.resource-row').length;
+  assert.ok(llmCount > 0 && llmCount < llmFoundation.resources.length);
+
+  const expectedStates = [
+    ['agent-harness', 'Runner 基础', harnessCount],
+    ['agent-mechanism', '机制总览', agentCount],
+    ['llm-foundation', 'Token 实验', llmCount],
+  ];
+  for (const [moduleId, stage, count] of [...expectedStates, ...expectedStates]) {
+    navigateTo(app, windowRef, `#${moduleId}/resources`);
+    assert.equal(document.querySelector('#resource-filter-stage').value, stage, moduleId);
+    assert.equal(document.querySelectorAll('.resource-row').length, count, moduleId);
+  }
 });
 
 test('module-scoped temporary state safely stores a __proto__ module ID', async () => {
@@ -323,7 +334,7 @@ test('application persists interview mastery exactly once and updates shell summ
   assert.equal(store.saves.length, 2);
 });
 
-test('application preserves independent interview filters and revealed answers for Harness and the preceding module', (t) => {
+test('application preserves independent interview filters and revealed answers across all three active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#agent-harness/interviews');
@@ -334,53 +345,51 @@ test('application preserves independent interview filters and revealed answers f
   });
   t.after(app.teardown);
 
-  assert.equal(document.querySelectorAll('.interview-card').length, 24);
-  dispatchChange(document.querySelector('#interview-filter-role'), '后端工程');
-  dispatchChange(document.querySelector('#interview-filter-frequency'), '中');
-  dispatchChange(document.querySelector('#interview-filter-status'), 'unseen');
-  const harnessCount = document.querySelectorAll('.interview-card').length;
-  assert.ok(harnessCount > 0 && harnessCount < agentHarness.interviewQuestions.length);
-  const harnessQuestionId = agentHarness.interviewQuestions.find((question) => (
-    question.roles.includes('后端工程') && question.frequency === '中'
-  )).id;
-  assert.notEqual(document.querySelector(`[data-question-id="${harnessQuestionId}"]`), null);
-  document.querySelector(`#interview-reveal-${harnessQuestionId}`).click();
-  assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
+  const configureCurrentModule = (course, filters) => {
+    for (const [name, value] of Object.entries(filters)) {
+      dispatchChange(document.querySelector(`#interview-filter-${name}`), value);
+    }
+    const count = document.querySelectorAll('.interview-card').length;
+    assert.ok(count > 0 && count < course.interviewQuestions.length, course.id);
+    const question = course.interviewQuestions.find((candidate) => (
+      candidate.roles.includes(filters.role)
+      && candidate.frequency === filters.frequency
+      && candidate.difficulty === filters.difficulty
+    ));
+    assert.ok(question, `${course.id} should contain a question matching its filters`);
+    assert.notEqual(document.querySelector(`[data-question-id="${question.id}"]`), null);
+    document.querySelector(`#interview-reveal-${question.id}`).click();
+    assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
+    return { course, filters, count, questionId: question.id };
+  };
+  const configurations = [
+    [agentHarness, { role: '后端工程', frequency: '中', difficulty: '深挖', status: 'unseen' }],
+    [agentMechanism, { role: 'AI 应用', frequency: '高', difficulty: '进阶', status: 'unseen' }],
+    [llmFoundation, { role: 'Agent 开发', frequency: '高', difficulty: '基础', status: 'unseen' }],
+  ];
+  const states = [];
 
-  navigateTo(app, windowRef, '#agent-mechanism/interviews');
-  assert.equal(document.querySelectorAll('.interview-card').length, agentMechanism.interviewQuestions.length);
-  assert.equal(document.querySelector('#interview-filter-role').value, FILTER_ALL);
-  assert.equal(document.querySelector('#interview-filter-frequency').value, FILTER_ALL);
-  assert.equal(document.querySelector('#interview-filter-status').value, FILTER_ALL);
-  assert.equal(document.querySelectorAll('.answer-drawer').length, 0);
+  for (const [index, [course, filters]] of configurations.entries()) {
+    if (index > 0) navigateTo(app, windowRef, `#${course.id}/interviews`);
+    assert.equal(document.querySelectorAll('.interview-card').length, course.interviewQuestions.length);
+    for (const name of Object.keys(filters)) {
+      assert.equal(document.querySelector(`#interview-filter-${name}`).value, FILTER_ALL);
+    }
+    assert.equal(document.querySelectorAll('.answer-drawer').length, 0);
+    states.push(configureCurrentModule(course, filters));
+  }
 
-  dispatchChange(document.querySelector('#interview-filter-role'), 'AI 应用');
-  dispatchChange(document.querySelector('#interview-filter-frequency'), '高');
-  dispatchChange(document.querySelector('#interview-filter-status'), 'unseen');
-  const agentCount = document.querySelectorAll('.interview-card').length;
-  assert.ok(agentCount > 0 && agentCount < agentMechanism.interviewQuestions.length);
-  const agentQuestionId = agentMechanism.interviewQuestions.find((question) => (
-    question.roles.includes('AI 应用') && question.frequency === '高'
-  )).id;
-  assert.notEqual(document.querySelector(`[data-question-id="${agentQuestionId}"]`), null);
-  document.querySelector(`#interview-reveal-${agentQuestionId}`).click();
-  assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
-
-  navigateTo(app, windowRef, '#agent-harness/interviews');
-  assert.equal(document.querySelector('#interview-filter-role').value, '后端工程');
-  assert.equal(document.querySelector('#interview-filter-frequency').value, '中');
-  assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
-  assert.equal(document.querySelectorAll('.interview-card').length, harnessCount);
-  assert.equal(document.querySelector(`#interview-reveal-${harnessQuestionId}`).getAttribute('aria-expanded'), 'true');
-  assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`), null);
-
-  navigateTo(app, windowRef, '#agent-mechanism/interviews');
-  assert.equal(document.querySelector('#interview-filter-role').value, 'AI 应用');
-  assert.equal(document.querySelector('#interview-filter-frequency').value, '高');
-  assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
-  assert.equal(document.querySelectorAll('.interview-card').length, agentCount);
-  assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`).getAttribute('aria-expanded'), 'true');
-  assert.equal(document.querySelector(`#interview-reveal-${harnessQuestionId}`), null);
+  for (const { course, filters, count, questionId } of [...states, ...states]) {
+    navigateTo(app, windowRef, `#${course.id}/interviews`);
+    for (const [name, value] of Object.entries(filters)) {
+      assert.equal(document.querySelector(`#interview-filter-${name}`).value, value, course.id);
+    }
+    assert.equal(document.querySelectorAll('.interview-card').length, count, course.id);
+    assert.equal(document.querySelector(`#interview-reveal-${questionId}`).getAttribute('aria-expanded'), 'true');
+    for (const other of states.filter((state) => state.course.id !== course.id)) {
+      assert.equal(document.querySelector(`#interview-reveal-${other.questionId}`), null);
+    }
+  }
 });
 
 test('interview focus falls back to results summary when a status change removes the active card', (t) => {
@@ -444,30 +453,56 @@ test('interview summaries ignore duplicate and stale mastered/review IDs', (t) =
   assert.ok(root.textContent.includes('复习队列 1 题'));
 });
 
-test('application shell scopes dirty persisted progress to the current Harness catalog', (t) => {
+test('application progress scopes lesson, interview and quiz state across all three active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const harnessQuestionId = agentHarness.interviewQuestions[0].id;
-  const agentQuestionId = agentMechanism.interviewQuestions[0].id;
-  const llmQuestionId = llmFoundation.interviewQuestions[0].id;
+  const courses = [agentHarness, agentMechanism, llmFoundation];
+  const expected = courses.map((course, index) => ({
+    course,
+    count: index + 1,
+    lessons: course.lessons.slice(0, index + 1),
+    questions: course.interviewQuestions.slice(0, index + 1),
+  }));
+  const completedLessonIds = expected.flatMap(({ lessons }) => lessons.map(({ id }) => id));
+  const interviewStatusById = Object.fromEntries(expected.flatMap(({ questions }) => (
+    questions.map(({ id }) => [id, 'mastered'])
+  )));
+  const quizResults = Object.fromEntries(expected.flatMap(({ lessons }) => lessons.map(({ id }) => [
+    id,
+    { correct: 1, total: 2, percent: 50, results: [] },
+  ])));
+  const windowRef = createFakeWindow('#agent-harness/progress');
   const app = startApp({
     documentRef: document,
-    windowRef: createFakeWindow('#agent-harness/dashboard'),
+    windowRef,
     progressStore: createStore({
       ...createDefaultProgress('llm-foundation'),
-      completedLessonIds: ['llm-01', 'agent-01', 'harness-01', 'harness-01', 'stale-lesson'],
-      interviewStatusById: {
-        [llmQuestionId]: 'mastered',
-        [agentQuestionId]: 'mastered',
-        [harnessQuestionId]: 'mastered',
-        stale: 'mastered',
-      },
+      completedLessonIds: [...completedLessonIds, 'stale-lesson'],
+      interviewStatusById: { ...interviewStatusById, stale: 'mastered' },
+      quizResults: { ...quizResults, stale: { correct: 1, total: 1, percent: 100, results: [] } },
     }),
   });
   t.after(app.teardown);
 
-  assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 1 / 8'));
-  assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 1 / 24'));
+  for (const { course, count, lessons } of [...expected, ...expected]) {
+    navigateTo(app, windowRef, `#${course.id}/progress`);
+    assert.ok(document.querySelector('#progress-summary').textContent.includes(`课程 ${count} / 8`), course.id);
+    assert.ok(document.querySelector('#progress-summary').textContent.includes(`面试 ${count} / 24`), course.id);
+    const root = document.querySelector('#view-root');
+    assert.deepEqual(
+      root.querySelectorAll('.progress-ledger__summary strong').map(({ textContent }) => textContent),
+      [`${count} / 8`, `${count} / 24`],
+      course.id,
+    );
+    const completedList = root.querySelector('.completed-lesson-list');
+    const quizLedger = root.querySelector('.quiz-result-ledger');
+    assert.equal(completedList.querySelectorAll('li').length, count, course.id);
+    assert.equal(quizLedger.querySelectorAll('li').length, count, course.id);
+    for (const lesson of lessons) {
+      assert.ok(completedList.textContent.includes(lesson.title), lesson.id);
+      assert.ok(quizLedger.textContent.includes(lesson.title), lesson.id);
+    }
+  }
 });
 
 test('quiz callback receives a serializable score while visible feedback remains in the lesson', (t) => {
