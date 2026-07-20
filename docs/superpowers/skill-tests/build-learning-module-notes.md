@@ -8514,6 +8514,14 @@ verifiedAt：2026-07-15
   - `<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md`
 - 第一次内容运行没有任何其他文件读取、网络访问或文件写入。
 
+## BEHAVIOR REGRESSION：可读取证据与 blocked 项目测试保真
+
+可复现 fixtures 由 commit `2147cb9` 引入：
+
+- `docs/superpowers/skill-tests/fixtures/readable-source.md`：非空的确定性工具循环官方指南正文。
+- `docs/superpowers/skill-tests/fixtures/readable-registry.json`：包含 `res-fixture-loop` 的最小项目资源注册表。
+- `docs/superpowers/skill-tests/fixtures/project-test-runs.json`：一个通过与一个失败的实际项目测试执行记录，保留 command、exitCode 与 summary。
+
 #### Independent audit
 
 - 在进入 blocked 路径前，先按 Skill 及四个直接引用完成规则读取，并检查任务授予的访问范围。资源正文与项目注册表均不在授权范围内：用户明确禁止联网、打开外链以及读取上述 Skill 与直接引用之外的文件。因此，可授权的资源正文/注册表访问尝试集合为空；其不可用/不允许状态已在 raw JSON 的前两个 blocker 中先行记录，之后才执行发布阻断。
@@ -9218,3 +9226,453 @@ completionCriteria:
 - 除合法冻结数据（指定 Skill、四个直接引用、用户提供的 lesson 字段和 10 项 resource metadata）外，没有获得任何关于预期 blocked/sourceId/broken/tests/authority/rubric 结果的提示。
 - 第一次内容运行中实际工具仅为 `functions.exec` → `tools.exec_command`，只读 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用。
 - 第一次内容运行没有任何其他文件读取、网络访问或文件写入。
+
+### readable evidence + registry blind rerun
+
+- canonical ID: `/root/task2_skill_impl/blind_final_llm01/blind_readable_evidence_registry`
+- fork: `none`
+- Skill commit: `2112390`
+
+#### Exact clean prompt (workspace paths normalized)
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用；然后完成下述用户任务；最终只输出结果。你只能使用文件读取工具读取这五个 Skill 文件，以及任务中明确给出的 sourceBodyPath 和 projectRegistryPath；除此之外禁止使用任何工具，禁止读取其他文件、workspace、测试记录或课程文件，禁止网络和外链访问，禁止修改文件。
+
+使用新 Skill，为下面的 lesson 生成学习笔记数据，不修改文件。
+
+lesson：
+id: fixture-loop-01
+title: 确定性工具循环与 Agent 选型
+summary: 理解固定工具循环的阶段、终止条件，以及何时才需要模型动态决定下一步。
+objectives:
+1. 说明确定性工具循环的四个阶段与 done、blocked 终止条件。
+2. 根据路径是否预知、结果能否由代码检查、观察是否改变下一步来选择确定性循环或 Agent。
+concepts: 类型化请求；工具白名单；结果校验；终止条件；动态决策。
+explanations:
+1. 本课从“路径是否预先已知”区分固定工具循环和动态 Agent；学习者需要把请求、执行、校验与停止连接成因果链。
+quiz:
+1. 哪种场景更适合确定性工具循环？选项：下一步随新观察变化；路径预知且输出可由代码校验（正确）；动作空间未知；无法设置停止条件。解释：固定路径与可编程校验使确定性循环更简单且可验证。
+exercise:
+title: 设计天气查询循环
+steps:
+1. 写出请求、工具执行、结果校验和停止四个阶段。
+2. 分别设计字段完整与缺少时间戳时的终止结果。
+deliverable: 一张包含阶段、校验规则与终止结果的流程表。
+completionCriteria:
+1. 能按顺序说明四个阶段。
+2. 能用路径和可验证性解释为何选择确定性循环或 Agent。
+
+associated resource metadata:
+id: res-fixture-loop
+title: Fixture Official Guide: Deterministic Tool Loops
+publisher: Example Standards Team
+type: 工程指南
+verifiedAt: 2026-07-20
+sourceBodyPath: `<repo-root>/docs/superpowers/skill-tests/fixtures/readable-source.md`
+projectRegistryPath: `<repo-root>/docs/superpowers/skill-tests/fixtures/readable-registry.json`
+```
+
+#### FIRST raw JSON (verbatim)
+
+```json
+{
+  "knowledgeNote": {
+    "readingMinutes": 24,
+    "introduction": "本章解决一个基础选型问题：任务应该由宿主程序按固定路径运行，还是交给模型根据观察动态决定下一步？学习前只需理解“请求—工具—结果”的基本关系。完成后，你将能说明确定性工具循环的四个阶段与两种终止结果，并用路径、可校验性和观察的影响判断是否需要 Agent。",
+    "sections": [
+      {
+        "id": "selection-starts-with-route",
+        "title": "先问路径是否已经知道",
+        "paragraphs": [
+          "确定性工具循环适用于执行路线预先已知、每个输出都能由代码检查的任务。这里的“确定性”指宿主程序预先控制工具执行路径和停止决定，而不是声称工具每次都会返回相同内容。",
+          "可以把它理解为一条设有检查点的固定通道：请求按既定顺序经过执行与校验，最后只能进入 done 或 blocked。这个比喻只描述控制路径；它不代表工具调用必然成功。",
+          "相反，模型主导的 Agent 适用于新观察会改变下一步动作，并且这种灵活性能够产生可衡量价值的场景。聊天界面或单次工具调用本身，并不足以让系统成为 Agent。"
+        ],
+        "keyPoints": [
+          "路径预知且输出可由代码检查时，优先考虑确定性循环。",
+          "观察会改变下一步且动态性有价值时，才考虑模型主导的 Agent。",
+          "是否有聊天界面或工具调用不是 Agent 的判定标准。"
+        ],
+        "callout": {
+          "kind": "intuition",
+          "title": "固定通道与动态岔路",
+          "body": "固定通道由程序预设路线和检查点；动态岔路则需要模型根据新观察选择下一步。类比仅说明控制方式，不涉及性能保证。"
+        },
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "id": "four-stage-loop",
+        "title": "把四个阶段连成因果链",
+        "paragraphs": [
+          "第一阶段是接受类型化请求。类型化请求是具有预先约定数据形态的输入；在天气查询中，请求需要提供城市。",
+          "第二阶段是执行一个白名单工具。工具白名单是宿主程序明确批准的工具集合；确定性循环只能调用其中允许的工具，模型即使参与准备参数，也不能绕过白名单。",
+          "第三阶段是结果校验。宿主程序依据显式结构规则检查工具结果；天气查询需要检查温度和时间戳是否存在。",
+          "第四阶段是停止。校验通过时返回 done，校验失败且无法形成合格结果时返回 blocked。请求、执行、校验和停止因此构成一条完整的因果链。"
+        ],
+        "keyPoints": [
+          "四阶段顺序是：类型化请求、白名单工具执行、显式结果校验、停止。",
+          "每个阶段都为下一阶段提供输入或约束。",
+          "模型不能绕过工具白名单或结果校验器。"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "id": "termination-owned-by-host",
+        "title": "由宿主程序决定 done 或 blocked",
+        "paragraphs": [
+          "done 表示工具结果已经通过显式结构校验，可以作为循环的合格终止结果。它不是“工具调用已经发生”的同义词；执行之后仍必须校验。",
+          "blocked 表示结果未满足规定的校验条件。天气工具若返回温度却缺少时间戳，循环应停止为 blocked，而不能补写一个未经工具返回的时间戳。",
+          "工具执行权和停止决定权都属于宿主程序。这个边界让白名单、校验规则和终止条件能够由代码落实，也让失败结果保持可见。"
+        ],
+        "keyPoints": [
+          "工具执行完成不等于 done。",
+          "校验通过才进入 done，校验失败可进入 blocked。",
+          "缺失字段不能通过臆造数据补齐。"
+        ],
+        "callout": {
+          "kind": "boundary",
+          "title": "模型的权限边界",
+          "body": "模型可以准备参数，但不能越过白名单、跳过结果校验或替宿主程序改变停止决定。"
+        },
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "id": "deterministic-or-agent",
+        "title": "用三个问题完成选型",
+        "paragraphs": [
+          "先问路径是否预知。如果从请求到工具、校验和停止的路线可以提前写明，确定性循环具有成立的第一个条件；如果必须看到新观察后才能选择动作，路径就不是固定的。",
+          "再问输出能否由代码检查。显式结构规则能够判定合格与否时，固定循环可以可靠地产生 done 或 blocked；本课的温度和时间戳检查就是这种可编程校验。",
+          "最后问观察是否会改变下一步，以及这种灵活性是否产生可衡量价值。只有两者都成立时，才有理由选择模型主导的 Agent。因此，“路径预知且输出可由代码校验”是测验中更适合确定性工具循环的场景。"
+        ],
+        "keyPoints": [
+          "选型依次检查路径、可校验性和观察对下一步的影响。",
+          "固定路径与可编程校验使确定性循环简单且可验证。",
+          "动态决策需要观察改变下一步，并带来可衡量价值。"
+        ],
+        "callout": {
+          "kind": "example",
+          "title": "快速判断",
+          "body": "路径预知、结果可校验：确定性循环。观察改变下一步且动态性有可衡量价值：模型主导的 Agent。"
+        },
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "id": "weather-loop-exercise",
+        "title": "完成天气查询流程表",
+        "paragraphs": [
+          "天气查询循环的四阶段流程是：请求阶段接受城市；执行阶段调用唯一获准的天气工具；校验阶段检查温度与时间戳；停止阶段依据校验结果返回 done 或 blocked。",
+          "字段完整的终止行可以写为：校验规则为“温度存在且时间戳存在”，校验结果为通过，终止结果为 done。这个结果来自工具输出通过规则，而不是仅仅因为工具调用成功。",
+          "缺少时间戳的终止行可以写为：校验规则仍为“温度存在且时间戳存在”，校验结果为失败，终止结果为 blocked；处理要求是不臆造时间戳。",
+          "最终交付物应是一张包含阶段、输入或动作、校验规则与终止结果的流程表。逐行检查四阶段顺序及两个终止分支，即可验证练习是否完成。"
+        ],
+        "keyPoints": [
+          "天气示例必须包含请求、执行、校验、停止四行或四个连续阶段。",
+          "字段完整对应 done，缺少时间戳对应 blocked。",
+          "流程表需要明确写出校验规则和终止结果。"
+        ],
+        "callout": {
+          "kind": "example",
+          "title": "流程表内容",
+          "body": "请求：城市；执行：获准的天气工具；校验：温度与时间戳均存在；停止：通过为 done，缺少时间戳为 blocked。"
+        },
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      }
+    ],
+    "misconceptions": [
+      {
+        "claim": "只要系统调用了工具，它就是 Agent。",
+        "correction": "工具调用本身不能决定系统类型；关键在于下一步是否需要模型根据新观察动态选择。"
+      },
+      {
+        "claim": "天气工具返回了温度，就可以直接结束为 done。",
+        "correction": "结果还必须通过显式校验；若规定需要温度和时间戳，缺少时间戳就应返回 blocked。"
+      },
+      {
+        "claim": "模型可以为了让流程成功而补写缺失字段。",
+        "correction": "模型不能绕过结果校验；缺失时间戳时应保留失败并停止为 blocked。"
+      },
+      {
+        "claim": "动态 Agent 总比固定循环更强，因此应默认使用 Agent。",
+        "correction": "只有观察会改变下一步且这种灵活性产生可衡量价值时，模型主导的 Agent 才符合本课的选择规则。"
+      }
+    ],
+    "recap": [
+      "确定性工具循环依次接受类型化请求、执行白名单工具、校验结果并停止。",
+      "校验通过返回 done；结果不满足规则时返回 blocked，不能臆造缺失值。",
+      "宿主程序拥有工具执行权和停止决定权，模型不能绕过白名单或校验器。",
+      "路径预知且输出可由代码检查时选择确定性循环；观察改变下一步且动态性有可衡量价值时再选择 Agent。",
+      "天气流程表应同时展示四个阶段、字段校验规则以及 done 和 blocked 两种终止结果。"
+    ],
+    "nextStep": "下一步可以把这套三个问题应用到包含多个候选动作的任务中，继续判断哪些步骤仍能固定编排，哪些步骤确实需要依据观察进行动态决策。"
+  },
+  "evidence": {
+    "res-fixture-loop": {
+      "authority": "official",
+      "role": "core",
+      "coverage": [
+        "确定性工具循环的四个阶段",
+        "done 与 blocked 终止条件",
+        "宿主程序、模型、白名单和校验器的权限边界",
+        "确定性循环与模型主导 Agent 的选择规则",
+        "天气查询循环及缺少时间戳时的处理"
+      ],
+      "limitations": "该指南仅定义 fixture 中的工具循环与选型规则，不支持任何模型或框架的性能结论。",
+      "verifiedAt": "2026-07-20"
+    }
+  },
+  "coverageAudit": {
+    "coverageMatrix": [
+      {
+        "outcome": "说明确定性工具循环的四个阶段与 done、blocked 终止条件。",
+        "courseFieldBasis": [
+          "lesson.objectives[0]",
+          "lesson.concepts",
+          "lesson.explanations[0]",
+          "lesson.completionCriteria[0]"
+        ],
+        "resourceEvidenceStatus": "covered",
+        "sectionIds": [
+          "four-stage-loop",
+          "termination-owned-by-host"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "outcome": "根据路径、可验证性和观察对下一步的影响选择确定性循环或 Agent。",
+        "courseFieldBasis": [
+          "lesson.objectives[1]",
+          "lesson.concepts",
+          "lesson.explanations[0]",
+          "lesson.completionCriteria[1]"
+        ],
+        "resourceEvidenceStatus": "covered",
+        "sectionIds": [
+          "selection-starts-with-route",
+          "deterministic-or-agent"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "outcome": "回答更适合确定性工具循环的测验场景并解释原因。",
+        "courseFieldBasis": [
+          "lesson.quiz[0]"
+        ],
+        "resourceEvidenceStatus": "covered",
+        "sectionIds": [
+          "deterministic-or-agent"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "outcome": "写出天气查询的请求、工具执行、结果校验和停止四个阶段。",
+        "courseFieldBasis": [
+          "lesson.exercise.steps[0]",
+          "lesson.exercise.deliverable"
+        ],
+        "resourceEvidenceStatus": "covered",
+        "sectionIds": [
+          "weather-loop-exercise"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      },
+      {
+        "outcome": "设计字段完整与缺少时间戳时的终止结果。",
+        "courseFieldBasis": [
+          "lesson.exercise.steps[1]",
+          "lesson.exercise.deliverable"
+        ],
+        "resourceEvidenceStatus": "covered",
+        "sectionIds": [
+          "weather-loop-exercise"
+        ],
+        "sourceIds": [
+          "res-fixture-loop"
+        ]
+      }
+    ],
+    "brokenReferenceCount": 0,
+    "coverageGaps": [],
+    "evidenceRoleCorrections": [],
+    "courseFieldProvenanceViolations": [],
+    "registryResolution": {
+      "status": "passed",
+      "resolvedSourceIds": [
+        "res-fixture-loop"
+      ]
+    }
+  },
+  "tests": {
+    "status": "not applicable",
+    "reason": "本任务是隔离的只读笔记生成，未修改项目数据或渲染代码，因此没有适用的项目测试命令。"
+  },
+  "qualityAudit": {
+    "scores": {
+      "目标、测验与面试覆盖": {
+        "score": 25,
+        "evidence": "两个目标、测验判断、两项练习步骤、交付物和两项完成标准均映射到实质章节；本课未提供面试题。"
+      },
+      "知识结构与跨章衔接": {
+        "score": 20,
+        "evidence": "五个章节按先修与直觉、四阶段机制、终止边界、工程选型、具体练习推进，并包含误区、回顾和下一步。"
+      },
+      "来源与不确定性": {
+        "score": 25,
+        "evidence": "所有实质章节均引用已在课程证据集与项目注册表中解析的 res-fixture-loop；证据卡保留版本日期与性能结论边界。"
+      },
+      "教学可读性与例子": {
+        "score": 20,
+        "evidence": "关键术语首次出现时得到解释，天气示例给出完整与缺少时间戳的两个可操作分支，误区均附因果纠正。"
+      },
+      "版权与数据契约": {
+        "score": 10,
+        "evidence": "结果为无 HTML 的纯数据，章节 ID 唯一稳定，来源内容经过中文转述，必需字段和测试审计完整。"
+      }
+    },
+    "total": 100,
+    "releaseGates": {
+      "sourceIdsResolvable": "passed",
+      "minimumScore": "passed",
+      "publicationReady": true
+    },
+    "brokenReferenceCount": 0,
+    "remainingLimitations": [
+      "唯一关联指南只覆盖 fixture 工具循环与选型规则，不能据此推断任何模型或框架的性能。"
+    ]
+  }
+}
+```
+
+#### Ordered access JSON
+
+```json
+{
+  "toolCalls": [
+    {
+      "order": 1,
+      "tool": "functions.exec",
+      "nestedCalls": ["tools.exec_command"]
+    },
+    {
+      "order": 2,
+      "tool": "functions.exec",
+      "nestedCalls": [
+        "tools.exec_command",
+        "tools.exec_command",
+        "tools.exec_command",
+        "tools.exec_command"
+      ]
+    },
+    {
+      "order": 3,
+      "tool": "functions.exec",
+      "nestedCalls": [
+        "tools.exec_command",
+        "tools.exec_command"
+      ]
+    }
+  ],
+  "readFiles": [
+    "<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md",
+    "<repo-root>/docs/superpowers/skill-tests/fixtures/readable-source.md",
+    "<repo-root>/docs/superpowers/skill-tests/fixtures/readable-registry.json"
+  ]
+}
+```
+
+#### Independent audit
+
+- Access order is correct: the Skill and its four direct references were read first, followed by the authorized non-empty source body and the authorized non-empty project registry, all before the publication decision.
+- The result uses the formal `knowledgeNote` contract rather than a blocked draft.
+- `res-fixture-loop` is represented as `authority: official` and `role: core` only after the accessible body and registry were read.
+- Every substantive section has exactly the resolvable `sourceIds` value `res-fixture-loop`.
+- Registry resolution is `passed`, `brokenReferenceCount` is `0`, and `publicationReady` is `true`.
+- `tests.status` is `not applicable` only because the first run was isolated, read-only, and made no project data or rendering change.
+- The old pre-access evidence gate could not pass this case: blocking before attempting the authorized body and registry reads would have skipped available core evidence and successful registry validation.
+
+#### Prompt leakage audit
+
+- The prompt supplies paths and permissions only as task inputs and access constraints.
+- It contains no expected formal-versus-blocked outcome hint.
+- Although the genuine resource ID appears in associated-resource metadata, the prompt contains no expected `sourceId` placement or resolution outcome hint.
+- The registry path is supplied as an input, but the prompt contains no expected registry success/failure outcome.
+- The prompt contains no expected independent-audit result, leakage-audit result, score, release-gate result, or broken-reference count.
+
+#### Executable semantic-audit notes
+
+Run the following with this Markdown file as the sole argument. It extracts this subsection's two JSON fences, parses both, and performs the exact semantic assertions listed in code.
+
+```js
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+
+const markdown = fs.readFileSync(process.argv[2], 'utf8');
+const marker = '### readable evidence + registry blind rerun';
+const start = markdown.lastIndexOf(marker);
+assert.notEqual(start, -1, 'blind-rerun subsection must exist');
+const subsection = markdown.slice(start);
+
+const rawMatch = subsection.match(/#### FIRST raw JSON \(verbatim\)\n\n```json\n([\s\S]*?)\n```/);
+const accessMatch = subsection.match(/#### Ordered access JSON\n\n```json\n([\s\S]*?)\n```/);
+assert.ok(rawMatch, 'FIRST raw JSON fence must exist');
+assert.ok(accessMatch, 'ordered access JSON fence must exist');
+
+const raw = JSON.parse(rawMatch[1]);
+const access = JSON.parse(accessMatch[1]);
+
+const expectedReads = [
+  '<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md',
+  '<repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md',
+  '<repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md',
+  '<repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md',
+  '<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md',
+  '<repo-root>/docs/superpowers/skill-tests/fixtures/readable-source.md',
+  '<repo-root>/docs/superpowers/skill-tests/fixtures/readable-registry.json'
+];
+
+assert.deepEqual(access.readFiles, expectedReads, 'read order must be Skill + four refs, then body + registry');
+assert.deepEqual(access.toolCalls.map((call) => call.order), [1, 2, 3]);
+assert.deepEqual(access.toolCalls.map((call) => call.nestedCalls.length), [1, 4, 2]);
+assert.ok(raw.knowledgeNote && !raw.status, 'formal knowledgeNote must be emitted, not blockedDraft');
+assert.equal(raw.evidence['res-fixture-loop'].authority, 'official');
+assert.equal(raw.evidence['res-fixture-loop'].role, 'core');
+assert.ok(raw.knowledgeNote.sections.length >= 4 && raw.knowledgeNote.sections.length <= 7);
+assert.ok(raw.knowledgeNote.sections.every((section) =>
+  Array.isArray(section.sourceIds) &&
+  section.sourceIds.length === 1 &&
+  section.sourceIds[0] === 'res-fixture-loop'
+));
+assert.equal(raw.coverageAudit.registryResolution.status, 'passed');
+assert.equal(raw.coverageAudit.brokenReferenceCount, 0);
+assert.equal(raw.qualityAudit.brokenReferenceCount, 0);
+assert.equal(raw.qualityAudit.releaseGates.publicationReady, true);
+assert.equal(raw.tests.status, 'not applicable');
+assert.match(raw.tests.reason, /隔离的只读笔记生成/);
+assert.equal(raw.qualityAudit.releaseGates.sourceIdsResolvable, 'passed');
+assert.equal(raw.qualityAudit.releaseGates.minimumScore, 'passed');
+```
+
+- Raw JSON parse: `passed`.
+- Access JSON parse: `passed`.
+- Exact assertions: ordered seven-file access; three outer calls with nested counts 1/4/2; formal rather than blocked artifact; official/core evidence; 4–7 sections; every section cites only `res-fixture-loop`; registry passed; both broken-reference counts zero; publication ready; tests N/A for the isolated read-only run; both release gates passed.
