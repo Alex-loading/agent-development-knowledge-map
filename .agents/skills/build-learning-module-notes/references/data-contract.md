@@ -31,6 +31,11 @@ const learningArtifact = {
       limitations: '该资料不能证明或未覆盖的边界',
     },
   },
+  tests: {
+    status: 'passed',
+    commands: ['npm test'],
+    results: [{ command: 'npm test', exitCode: 0, summary: '全部测试通过' }],
+  },
 };
 ```
 
@@ -62,7 +67,7 @@ Use an object map keyed by genuine project resource ID, exactly as shown in the 
 
 Add `verifiedAt` beside the evidence fields when a claim depends on current implementation semantics. The example omits it because it is conditional.
 
-## Blocked isolated or outline-only contract
+## Blocked or draft contract
 
 When a project registry or valid external resource evidence is unavailable, do not emit the formal `knowledgeNote` and `evidence` shape. Return a clearly blocked draft shape instead:
 
@@ -94,7 +99,17 @@ const blockedDraft = {
 
 Candidate metadata records in this blocked shape must not carry the formal `authority` enum. Keep their supplied publisher/source/type fields verbatim and use `authorityStatus: 'unresolved'` until provenance is validated against accessible material and the project registry.
 
-`brokenReferenceCount: null` and the complete `tests` object are mandatory in every blocked artifact. A request such as “only output the outline, source-role cards, and coverage matrix” does not waive this audit. When those are the only permitted top-level items, include an explicit audit object containing both fields inside the coverage-matrix result rather than omitting them or claiming a test ran.
+`brokenReferenceCount` and the complete `tests` object are mandatory in every blocked artifact. Use an integer when registry resolution ran and `null` only when it did not. A request such as “only output the outline, source-role cards, and coverage matrix” does not waive this audit. When those are the only permitted top-level items, include an explicit audit object containing both fields inside the coverage-matrix result rather than omitting them or claiming a test ran.
+
+## Test audit contract
+
+Every formal or blocked artifact must include `tests`. Test status and publication status are independent:
+
+- `status: 'passed'`: applicable project data/rendering/regression tests ran successfully. Require non-empty `commands` and `results`; each result records at least the command, exit code, and concise outcome.
+- `status: 'failed'`: at least one applicable command ran and failed. Require non-empty `commands` and `results`, preserve the failed command and exit code, and do not hide the failure because publication is already blocked.
+- `status: 'not applicable'`: permitted only for a truly isolated, read-only, or outline-only task where project tests do not apply. Require a non-empty `reason`; do not imply that any command ran.
+
+A blocked project artifact may therefore carry `tests.status: 'passed'` or `'failed'`. Evidence insufficiency blocks publication; it does not rewrite executed test results as not applicable.
 
 ## Integrity checks
 
@@ -105,5 +120,5 @@ Candidate metadata records in this blocked shape must not carry the formal `auth
 5. Reject duplicate section IDs, empty arrays required above, unknown enum values, and unreferenced `core` evidence.
 6. When the project resource registry is unavailable in an isolated or outline-only task, label proposed resource IDs as candidates, record that registry validation was not applicable, and do not publish or claim that any ID is resolvable.
 7. Reject any course-field path, synthetic `course-fields-*` identifier, unknown/internal provenance, or unattributed prose in the formal `evidence` map or `knowledgeNote.sections[*].sourceIds`.
-8. Reject a blocked or outline-only artifact that omits `brokenReferenceCount: null`, omits `tests.status: 'not applicable'`, or fails to state why project tests did not apply.
+8. Reject any artifact without a valid test audit. For `passed` or `failed`, require commands and results. For `not applicable`, require a reason and verify that the task was truly isolated/read-only/outline-only. Do not require `not applicable` merely because the artifact is blocked.
 9. Reject a polished plain-text note produced without accessible core evidence or registry validation, even if it ends with a source limitation. Require the blocked contract and failed release audit instead.
