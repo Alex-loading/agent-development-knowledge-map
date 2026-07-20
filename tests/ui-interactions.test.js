@@ -1224,6 +1224,172 @@ test('queue backpressure lab reports exact tick flow, advances age and resets in
   assert.equal(document.activeElement, tick);
 });
 
+function assertContextLabAccessibility(lab, resultId) {
+  const headingId = lab.getAttribute('aria-labelledby');
+  assert.ok(headingId);
+  assert.notEqual(lab.querySelector(`#${headingId}`), null);
+
+  const result = lab.querySelector(`#${resultId}`);
+  assert.notEqual(result, null);
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  const resultHeadingId = result.getAttribute('aria-labelledby');
+  assert.ok(resultHeadingId);
+  assert.notEqual(lab.querySelector(`#${resultHeadingId}`), null);
+
+  for (const control of lab.querySelectorAll('input').concat(lab.querySelectorAll('select'))) {
+    assert.ok(control.id, `${control.tagName} control should have an id`);
+    assert.notEqual(lab.querySelector(`label[for="${control.id}"]`), null, control.id);
+  }
+}
+
+test('context router experiment assembles fixed projections live and resets budget with focus', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('context-router');
+  document.body.append(lab);
+
+  assertContextLabAccessibility(lab, 'context-router-result');
+  assert.ok(lab.className.includes('context-router-lab'));
+  assert.ok(lab.textContent.includes('固定教学条目'));
+  assert.ok(lab.textContent.includes('不接收真实敏感内容'));
+  assert.notEqual(lab.querySelector('.context-manifest__included'), null);
+  assert.notEqual(lab.querySelector('.context-manifest__excluded'), null);
+
+  const strategy = lab.querySelector('#context-router-strategy');
+  const inputLimit = lab.querySelector('#context-router-input-limit');
+  const outputReserve = lab.querySelector('#context-router-output-reserve');
+  const result = lab.querySelector('#context-router-result');
+  const initial = result.textContent;
+
+  strategy.focus();
+  dispatchChange(strategy, 'evidence-first');
+  assert.equal(document.activeElement, strategy);
+  assert.notEqual(result.textContent, initial);
+  assert.ok(result.textContent.includes('evidence-first'));
+
+  inputLimit.value = '400';
+  inputLimit.dispatchEvent(new FakeEvent('input'));
+  outputReserve.value = '300';
+  outputReserve.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'unassemblable');
+  assert.ok(result.textContent.includes('required-budget-exceeded'));
+
+  lab.querySelector('#context-router-reset').click();
+  assert.equal(strategy.value, 'recent-first');
+  assert.equal(inputLimit.value, '1600');
+  assert.equal(outputReserve.value, '400');
+  assert.equal(result.dataset.status, 'ready');
+  assert.equal(document.activeElement, strategy);
+});
+
+test('hybrid retrieval experiment filters and packs ranked teaching evidence before reset', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('hybrid-retrieval');
+  document.body.append(lab);
+
+  assertContextLabAccessibility(lab, 'hybrid-retrieval-result');
+  assert.ok(lab.className.includes('hybrid-retrieval-lab'));
+  assert.ok(lab.textContent.includes('教学分数'));
+  for (const selector of [
+    '.retrieval-trace', '.retrieval-ranking', '.retrieval-packed', '.retrieval-citations',
+  ]) assert.notEqual(lab.querySelector(selector), null, selector);
+
+  const query = lab.querySelector('#hybrid-query-preset');
+  const department = lab.querySelector('#hybrid-department');
+  const language = lab.querySelector('#hybrid-language');
+  const latest = lab.querySelector('#hybrid-latest-version');
+  const alpha = lab.querySelector('#hybrid-alpha');
+  const topK = lab.querySelector('#hybrid-top-k');
+  const threshold = lab.querySelector('#hybrid-threshold');
+  const dedupe = lab.querySelector('#hybrid-dedupe');
+  const budget = lab.querySelector('#hybrid-budget');
+  const result = lab.querySelector('#hybrid-retrieval-result');
+  const initial = result.textContent;
+
+  department.focus();
+  dispatchChange(department, 'engineering');
+  assert.equal(document.activeElement, department);
+  assert.notEqual(result.textContent, initial);
+  assert.ok(result.textContent.includes('metadata-filtered'));
+
+  dispatchChange(query, 'memory-preference');
+  dispatchChange(language, 'zh');
+  latest.checked = false;
+  latest.dispatchEvent(new FakeEvent('change'));
+  alpha.value = '0.25';
+  alpha.dispatchEvent(new FakeEvent('input'));
+  topK.value = '2';
+  topK.dispatchEvent(new FakeEvent('input'));
+  threshold.value = '0.1';
+  threshold.dispatchEvent(new FakeEvent('input'));
+  dedupe.checked = false;
+  dedupe.dispatchEvent(new FakeEvent('change'));
+  budget.value = '180';
+  budget.dispatchEvent(new FakeEvent('input'));
+  assert.ok(result.textContent.includes('packed evidence'));
+  assert.ok(result.textContent.includes('citation manifest'));
+
+  lab.querySelector('#hybrid-retrieval-reset').click();
+  assert.equal(query.value, 'refund-policy');
+  assert.equal(department.value, 'all');
+  assert.equal(language.value, 'all');
+  assert.equal(latest.checked, true);
+  assert.equal(alpha.value, '0.6');
+  assert.equal(topK.value, '4');
+  assert.equal(threshold.value, '0.2');
+  assert.equal(dedupe.checked, true);
+  assert.equal(budget.value, '520');
+  assert.equal(document.activeElement, query);
+});
+
+test('memory lifecycle experiment applies preset events and keeps recall subject scoped', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('memory-lifecycle');
+  document.body.append(lab);
+
+  assertContextLabAccessibility(lab, 'memory-lifecycle-result');
+  assert.ok(lab.className.includes('memory-lifecycle-lab'));
+  assert.ok(lab.textContent.includes('逻辑时钟'));
+  assert.ok(lab.textContent.includes('非真实隐私存储'));
+  for (const eventType of ['observe', 'explicit-save', 'correct', 'delete', 'advance-time']) {
+    assert.notEqual(lab.querySelector(`#memory-event-${eventType}`), null, eventType);
+  }
+
+  const result = lab.querySelector('#memory-lifecycle-result');
+  const observe = lab.querySelector('#memory-event-observe');
+  observe.focus();
+  observe.click();
+  assert.equal(document.activeElement, observe);
+  assert.equal(result.dataset.action, 'store');
+  assert.ok(result.textContent.includes('active records'));
+
+  lab.querySelector('#memory-event-explicit-save').click();
+  lab.querySelector('#memory-event-correct').click();
+  assert.equal(result.dataset.action, 'supersede');
+  assert.ok(result.textContent.includes('superseded records'));
+
+  lab.querySelector('#memory-event-advance-time').click();
+  assert.ok(result.textContent.includes('expired records'));
+  lab.querySelector('#memory-event-delete').click();
+  assert.equal(result.dataset.action, 'delete');
+  assert.ok(result.textContent.includes('deleted records'));
+
+  const subject = lab.querySelector('#memory-recall-subject');
+  const recallBefore = lab.querySelector('.memory-recall').textContent;
+  dispatchChange(subject, 'learner-b');
+  assert.notEqual(lab.querySelector('.memory-recall').textContent, recallBefore);
+  assert.ok(lab.querySelector('.memory-recall').textContent.includes('learner-b'));
+
+  lab.querySelector('#memory-lifecycle-reset').click();
+  assert.equal(subject.value, 'learner-a');
+  assert.equal(result.dataset.action, 'idle');
+  assert.ok(result.textContent.includes('active records：无'));
+  assert.equal(document.activeElement, observe);
+});
+
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
