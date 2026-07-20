@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { startApp } from '../src/app.js';
 import { FILTER_ALL, filterResources } from '../src/core/filters.js';
@@ -191,6 +192,27 @@ test('application preserves independent resource filters for each course module'
   navigateTo(app, windowRef, '#agent-mechanism/resources');
   assert.equal(document.querySelector('#resource-filter-stage').value, '机制总览');
   assert.equal(document.querySelectorAll('.resource-row').length, agentCount);
+});
+
+test('module-scoped temporary state safely stores a __proto__ module ID', async () => {
+  const appModule = await import('../src/app.js');
+  assert.equal(typeof appModule.createModuleViewState, 'function');
+  const viewState = appModule.createModuleViewState();
+  const values = {
+    resourceFiltersByModule: { platform: 'GitHub' },
+    interviewFiltersByModule: { role: 'Agent 开发' },
+    revealedInterviewIdsByModule: new Set(['iq-synthetic-01']),
+  };
+
+  for (const [stateName, value] of Object.entries(values)) {
+    const dictionary = viewState[stateName];
+    dictionary.__proto__ = value;
+    assert.equal(Object.hasOwn(dictionary, '__proto__'), true, stateName);
+    assert.equal(dictionary.__proto__, value, stateName);
+  }
+
+  const appSource = await readFile(new URL('../src/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /const viewState\s*=\s*createModuleViewState\(\)/);
 });
 
 test('interview practice keeps answers absent until reveal and preserves filters/reveal through status updates', (t) => {
@@ -796,6 +818,23 @@ test('Agent decision live regions contain a semantically valid definition list',
   }
 });
 
+test('loop and plan labs visibly state their deterministic teaching boundaries', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+
+  for (const experimentId of ['agent-loop', 'plan-recovery']) {
+    const lab = renderExperiment(experimentId);
+    document.body.append(lab);
+    const caveat = lab.querySelector('.experiment-caveat');
+    assert.notEqual(caveat, null, experimentId);
+    assert.ok(caveat.textContent.includes('确定性教学模拟'), experimentId);
+    assert.ok(caveat.textContent.includes('不调用真实模型'), experimentId);
+    assert.ok(caveat.textContent.includes('不调用第三方 API'), experimentId);
+  }
+  const planCaveat = document.querySelector('.plan-recovery-lab .experiment-caveat');
+  assert.match(planCaveat.textContent, /不(?:模拟|证明)[^。]*真实模型[^。]*规划能力/);
+});
+
 test('Agent loop lab exposes core decisions, invalid input and a focused reset state', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -843,7 +882,7 @@ test('Agent loop lab exposes core decisions, invalid input and a focused reset s
   assert.equal(document.activeElement, goalSatisfied);
 });
 
-test('tool contract lab validates all four presets and resets to a focused ready invocation', (t) => {
+test('tool contract lab validates all five presets and resets to a focused ready invocation', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const lab = renderExperiment('tool-contract');
@@ -853,6 +892,7 @@ test('tool contract lab validates all four presets and resets to a focused ready
   const result = lab.querySelector('#tool-contract-result');
   const invocation = lab.querySelector('#tool-contract-invocation');
   assert.equal(preset.value, 'valid-low');
+  assert.equal(preset.children.length, 5);
   assert.equal(result.dataset.status, 'ready');
   assert.ok(invocation.textContent.includes('search_docs'));
 
@@ -865,6 +905,12 @@ test('tool contract lab validates all four presets and resets to a focused ready
   assert.equal(result.dataset.status, 'invalid');
   assert.ok(result.textContent.includes('字段 "scope" 必须是以下值之一: docs, code'));
   assert.equal(result.querySelectorAll('ul li').length, 1);
+
+  dispatchChange(preset, 'extra-field');
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('不允许额外字段 "debug"'));
+  assert.equal(result.querySelectorAll('ul li').length, 1);
+  assert.ok(invocation.textContent.includes('"debug"'));
 
   dispatchChange(preset, 'high-risk');
   assert.equal(result.dataset.status, 'approval-required');

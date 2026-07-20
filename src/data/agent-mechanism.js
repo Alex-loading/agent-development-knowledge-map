@@ -86,7 +86,7 @@ const lessons = [
       { heading: '结果回填形成闭环', body: '工具应职责单一，参数名明确，使用必填、类型、枚举和范围减少歧义，并返回 success、data、error code、可重试性和证据引用等结构。执行后的 tool result 必须按调用关联带回模型或控制器，成为新的 observation；否则模型不知道动作成功、失败还是返回空结果，容易凭先验编造后续状态。回填后仍需更新工作状态并重新判断完成或下一动作。', keyPoints: ['工具返回既服务程序判断，也为模型提供环境新证据', '错误要可分类，才能选择重试、修参、换工具或终止'] },
     ],
     resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
-    exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查缺参、枚举和高风险调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、四类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
+    exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查合法、缺参、枚举、额外字段和高风险五类调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举、额外字段和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、五类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
     quiz: [
       quiz('quiz-agent-03-1', '模型生成合法 JSON 工具调用后，应用下一步应做什么？', ['直接视为已执行', '校验 schema、业务规则、权限与风险后再执行', '让模型假装返回结果', '把所有权限交给模型'], 1, '合法 JSON 只满足语法层，宿主仍要完成参数、业务、权限和副作用校验。'),
       quiz('quiz-agent-03-2', '为什么工具结果必须关联原调用并回填？', ['只为界面更美观', '让模型获得动作后的真实观察并决定下一步', '减少工具权限', '代替所有错误处理'], 1, 'Agent 的后续决策依赖环境变化；没有关联回填，模型无法可靠知道动作结果。'),
@@ -357,11 +357,17 @@ const interviewQuestions = [
   },
 ];
 
-export const agentMechanism = {
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
+  return Object.freeze(value);
+}
+
+export const agentMechanism = deepFreeze({
   id: 'agent-mechanism',
   title: 'Agent 机制',
   summary: '从目标、状态、动作、观察到终止条件，理解单 Agent 如何把模型能力组织成可验证的行动闭环。',
   lessons,
   resources,
   interviewQuestions,
-};
+});

@@ -31,6 +31,15 @@ const VIEW_COPY = {
   progress: ['学习进度', '课程完成度和面试掌握度分开记录，让复习队列保持诚实。'],
 };
 
+export function createModuleViewState() {
+  return {
+    resourceFiltersByModule: Object.create(null),
+    interviewFiltersByModule: Object.create(null),
+    revealedInterviewIdsByModule: Object.create(null),
+    resetConfirmOpen: false,
+  };
+}
+
 export function resolveRoute(hash, {
   moduleCatalog = modules,
   courseResolver = getCourse,
@@ -122,12 +131,7 @@ export function startApp({
   let pendingAnnouncement = '';
   let pendingViewFocusId = null;
   let pendingViewFallbackId = null;
-  const viewState = {
-    resourceFiltersByModule: {},
-    interviewFiltersByModule: {},
-    revealedInterviewIdsByModule: {},
-    resetConfirmOpen: false,
-  };
+  const viewState = createModuleViewState();
 
   const getModuleFilters = (filtersByModule, moduleId) => {
     if (!Object.hasOwn(filtersByModule, moduleId)) filtersByModule[moduleId] = {};

@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { resourcePlatform } from '../src/core/filters.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 const expectedLessonIds = Array.from({ length: 8 }, (_, index) =>
   `agent-${String(index + 1).padStart(2, '0')}`,
@@ -125,6 +128,59 @@ test('only the three specified lessons expose interactive experiments', () => {
     if (!['agent-03', 'agent-04', 'agent-05'].includes(lesson.id)) {
       assert.equal(lesson.exercise.experiment, undefined, lesson.id);
     }
+  }
+});
+
+test('Agent course data is deeply frozen against representative mutations', () => {
+  const lesson = agentMechanism.lessons[2];
+  const explanation = lesson.explanations[0];
+  const quizItem = lesson.quiz[0];
+  const resource = agentMechanism.resources[0];
+  const interview = agentMechanism.interviewQuestions[0];
+  const representativeValues = [
+    agentMechanism,
+    agentMechanism.lessons,
+    agentMechanism.resources,
+    agentMechanism.interviewQuestions,
+    lesson,
+    lesson.objectives,
+    lesson.explanations,
+    explanation,
+    explanation.keyPoints,
+    lesson.exercise,
+    lesson.exercise.steps,
+    lesson.quiz,
+    quizItem,
+    quizItem.choices,
+    resource,
+    interview,
+    interview.deepDive,
+  ];
+  for (const value of representativeValues) assert.equal(Object.isFrozen(value), true);
+
+  const snapshot = structuredClone(agentMechanism);
+  assert.throws(() => { agentMechanism.title = '被篡改'; }, TypeError);
+  assert.throws(() => { agentMechanism.lessons.push(lesson); }, TypeError);
+  assert.throws(() => { lesson.exercise.steps[0] = '被篡改'; }, TypeError);
+  assert.throws(() => { quizItem.choices.push('被篡改'); }, TypeError);
+  assert.throws(() => { resource.title = '被篡改'; }, TypeError);
+  assert.throws(() => { interview.deepDive.pop(); }, TypeError);
+  assert.deepEqual(agentMechanism, snapshot);
+});
+
+test('tool contract exercise and release guide publish the same five validation scenarios', async () => {
+  const lesson = agentMechanism.lessons.find(({ id }) => id === 'agent-03');
+  const exerciseCopy = `${lesson.exercise.brief} ${lesson.exercise.steps.join(' ')} ${lesson.exercise.deliverable}`;
+  const readme = await read('README.md');
+  const guideLine = readme.split('\n').find((line) => line.includes('`tool-contract`')) ?? '';
+
+  for (const copy of [exerciseCopy, guideLine]) {
+    assert.match(copy, /五类/);
+    assert.match(copy, /合法/);
+    assert.match(copy, /缺(?:少|参)/);
+    assert.match(copy, /枚举/);
+    assert.match(copy, /额外字段/);
+    assert.match(copy, /高风险|审批/);
   }
 });
 

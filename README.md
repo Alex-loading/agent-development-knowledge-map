@@ -60,7 +60,7 @@ Agent 机制是一条从控制权判断到综合设计的八节单 Agent 主线�
 
 三项交互实验直接调用课程的纯逻辑，不在 UI 中复制判定规则：
 
-- `agent-03` / `tool-contract`：**工具契约检查台**，比较合法低风险、缺少必填项、非法枚举和高风险审批调用；
+- `agent-03` / `tool-contract`：**工具契约检查台**，比较合法低风险、缺少必填项、非法枚举、额外字段和高风险审批五类调用；
 - `agent-04` / `agent-loop`：**Agent Loop 决策台**，观察完成、阻塞、继续和预算耗尽的优先级；
 - `agent-05` / `plan-recovery`：**计划恢复棋盘**，触发 retry、switch-action、replace-step、replan 与 blocked。
 

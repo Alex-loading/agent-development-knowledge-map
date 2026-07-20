@@ -53,6 +53,10 @@ const TOOL_PRESETS = Object.freeze({
     name: 'search_docs',
     args: Object.freeze({ query: 'Agent 工具调用', scope: 'web' }),
   }),
+  'extra-field': Object.freeze({
+    name: 'search_docs',
+    args: Object.freeze({ query: 'Agent 工具调用', scope: 'docs', debug: true }),
+  }),
   'high-risk': Object.freeze({
     name: 'delete_index',
     args: Object.freeze({ confirm: true }),
@@ -203,6 +207,10 @@ export function renderAgentLoopExperiment() {
     attrs: { 'aria-labelledby': 'agent-loop-title' },
   }, [
     agentLabHeader('01', 'agent-loop-title', 'Agent Loop 决策台', '改变完成证据、阻塞信号与步骤预算，观察循环应继续还是终止。'),
+    element('p', {
+      className: 'experiment-caveat',
+      text: '本台是确定性教学模拟，只运行本地决策规则；不调用真实模型，也不调用第三方 API。',
+    }),
     element('div', { className: 'experiment-grid' }, [
       element('div', { className: 'experiment-controls agent-controls' }, [
         element('div', { className: 'agent-check-control' }, [
@@ -269,6 +277,7 @@ export function renderToolContractExperiment() {
       { value: 'valid-low', label: '合法低风险调用' },
       { value: 'missing-required', label: '缺少必填 query' },
       { value: 'invalid-enum', label: 'scope 枚举无效' },
+      { value: 'extra-field', label: '包含未声明 debug 字段' },
       { value: 'high-risk', label: '高风险删除调用' },
     ],
     update,
@@ -279,7 +288,7 @@ export function renderToolContractExperiment() {
     className: 'experiment-lab tool-contract-lab',
     attrs: { 'aria-labelledby': 'tool-contract-title' },
   }, [
-    agentLabHeader('02', 'tool-contract-title', '工具契约检查台', '切换四个调用提案，让宿主校验器决定可执行、拒绝或请求审批。'),
+    agentLabHeader('02', 'tool-contract-title', '工具契约检查台', '切换五个调用提案，让宿主校验器决定可执行、拒绝或请求审批。'),
     element('p', {
       className: 'experiment-caveat',
       text: '结构化调用只是动作提案；即使 schema 合法，高风险工具也不能自动执行。',
@@ -378,6 +387,10 @@ export function renderPlanRecoveryExperiment() {
     attrs: { 'aria-labelledby': 'plan-recovery-title' },
   }, [
     agentLabHeader('03', 'plan-recovery-title', '计划恢复棋盘', '注入执行观察并切换策略，比较重试、换动作、替换步骤、重规划和阻塞。'),
+    element('p', {
+      className: 'experiment-caveat',
+      text: '本台是确定性教学模拟，只运行本地决策表；不调用真实模型，也不调用第三方 API。它不模拟真实模型的规划能力，也不能证明模型会按此方式规划。',
+    }),
     element('div', { className: 'experiment-grid' }, [
       element('div', { className: 'experiment-controls agent-controls' }, [
         strategyControl.control,
