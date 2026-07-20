@@ -11417,7 +11417,7 @@ const fs = require('node:fs');
 
 const markdown = fs.readFileSync('docs/superpowers/skill-tests/build-learning-module-notes.md', 'utf8');
 const heading = '## FINAL BEHAVIOR：全新 fork-none 代理保留真实项目测试结果';
-const section = markdown.slice(markdown.lastIndexOf(heading));
+const section = markdown.slice(markdown.indexOf(heading));
 const jsonBlocks = [...section.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) => match[1]);
 assert.equal(jsonBlocks.length, 2);
 
