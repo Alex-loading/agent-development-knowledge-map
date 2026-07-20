@@ -9676,3 +9676,533 @@ assert.equal(raw.qualityAudit.releaseGates.minimumScore, 'passed');
 - Raw JSON parse: `passed`.
 - Access JSON parse: `passed`.
 - Exact assertions: ordered seven-file access; three outer calls with nested counts 1/4/2; formal rather than blocked artifact; official/core evidence; 4–7 sections; every section cites only `res-fixture-loop`; registry passed; both broken-reference counts zero; publication ready; tests N/A for the isolated read-only run; both release gates passed.
+## BEHAVIOR REGRESSION：blocked 项目测试结果保真
+
+- canonical ID: `/root/task2_skill_impl/blind_final_llm01/blind_preserve_project_test_results`
+- fork: `none`
+- Skill commit: `2112390`
+- fixture commit: `2147cb9`
+
+#### Clean prompt（路径已规范化）
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用；然后完成下述用户任务；最终只输出结果。你只能使用文件读取工具读取这五个 Skill 文件和任务中明确给出的 projectTestRunsPath；除此之外禁止使用任何工具，禁止读取其他文件、workspace、registry、课程文件或测试记录，禁止网络和外链访问，禁止修改文件。
+
+使用新 Skill，审计下面两个现有项目产物并返回各自的学习笔记审计数据，不修改文件。两个产物的实际项目测试执行记录位于 projectTestRunsPath。
+
+projectTestRunsPath: `<repo-root>/docs/superpowers/skill-tests/fixtures/project-test-runs.json`
+
+artifacts:
+1. id: existing-project-pass
+changeScope: lesson 数据与知识笔记渲染接入已经变更
+2. id: existing-project-fail
+changeScope: lesson 数据与知识笔记渲染接入已经变更
+
+lesson:
+id: project-audit-01
+title: 工具结果校验
+summary: 学习为什么工具结果需要显式校验。
+objectives:
+1. 说明工具结果校验在行动循环中的作用。
+concepts: 工具结果；结构校验；停止条件。
+explanations:
+1. 工具返回后，宿主程序应检查结果是否满足预期结构，再决定继续或停止。
+completionCriteria:
+1. 能解释为什么不能直接信任未经校验的工具结果。
+
+associated resource metadata:
+id: res-project-audit-guide
+title: Project Audit Tool Validation Guide
+publisher: Example Project Team
+type: 内部工程指南
+verifiedAt: 2026-07-20
+value: 说明工具结果结构校验与停止条件。
+```
+
+#### FIRST raw JSON（原样）
+
+```json
+{
+  "artifacts": [
+    {
+      "artifactId": "existing-project-pass",
+      "changeScope": "lesson 数据与知识笔记渲染接入已经变更",
+      "status": "blocked",
+      "publicationReady": false,
+      "auditScope": {
+        "artifactBodyInspected": false,
+        "reason": "任务未提供产物正文，且明确禁止读取其他项目文件；本审计仅依据给定 lesson、资源元数据和 projectTestRunsPath 中的实际测试记录。",
+        "projectRegistryResolution": "not run",
+        "resourceBodyAccess": "not run"
+      },
+      "blockers": [
+        "关联资源仅提供元数据，未获授权读取正文，不能把 title、publisher、type、verifiedAt 或 value 当作资源证据。",
+        "未获授权读取项目资源注册表，无法验证候选资源 ID、来源归属或现有笔记中的 sourceIds。",
+        "没有可访问的核心资源正文，所有学习产出都只由课程字段覆盖，不能发布正式 knowledgeNote/evidence 产物。"
+      ],
+      "outline": [
+        "工具结果校验在行动循环中的位置",
+        "对预期结构进行检查",
+        "根据检查结果决定继续或停止",
+        "解释为什么不能直接信任未经校验的工具结果"
+      ],
+      "draftSections": [
+        {
+          "id": "validation-role-draft",
+          "title": "校验在行动循环中的作用",
+          "paragraphs": [
+            "本课讨论为什么工具结果需要显式校验，并要求说明这种校验在行动循环中的作用。"
+          ],
+          "courseFieldBasis": [
+            "lesson.summary",
+            "lesson.objectives[0]"
+          ]
+        },
+        {
+          "id": "structure-check-draft",
+          "title": "检查结果结构",
+          "paragraphs": [
+            "工具返回后，宿主程序应检查结果是否满足预期结构。"
+          ],
+          "courseFieldBasis": [
+            "lesson.explanations[0]"
+          ]
+        },
+        {
+          "id": "continue-or-stop-draft",
+          "title": "决定继续或停止",
+          "paragraphs": [
+            "宿主程序应在结构检查之后再决定继续或停止。"
+          ],
+          "courseFieldBasis": [
+            "lesson.explanations[0]"
+          ]
+        },
+        {
+          "id": "trust-boundary-draft",
+          "title": "未经校验结果的信任边界",
+          "paragraphs": [
+            "学习完成的标准是能够解释为什么不能直接信任未经校验的工具结果；具体机制和工程例子仍需资源正文支持。"
+          ],
+          "courseFieldBasis": [
+            "lesson.completionCriteria[0]"
+          ]
+        }
+      ],
+      "coverageMatrix": [
+        {
+          "outcome": "说明工具结果校验在行动循环中的作用。",
+          "courseFieldBasis": [
+            "lesson.objectives[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        },
+        {
+          "outcome": "理解工具结果、结构校验与停止条件之间的关系。",
+          "courseFieldBasis": [
+            "lesson.concepts",
+            "lesson.explanations[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        },
+        {
+          "outcome": "能解释为什么不能直接信任未经校验的工具结果。",
+          "courseFieldBasis": [
+            "lesson.completionCriteria[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        }
+      ],
+      "candidateSources": [
+        {
+          "id": "res-project-audit-guide",
+          "title": "Project Audit Tool Validation Guide",
+          "publisher": "Example Project Team",
+          "type": "内部工程指南",
+          "verifiedAt": "2026-07-20",
+          "value": "说明工具结果结构校验与停止条件。",
+          "authorityStatus": "unresolved",
+          "role": "extension",
+          "limitations": "仅有任务提供的元数据；资源正文、真实来源归属和注册表记录均未核验，不能据此支持实质性教学主张。"
+        }
+      ],
+      "candidateSourceIds": [
+        "res-project-audit-guide"
+      ],
+      "brokenReferenceCount": null,
+      "tests": {
+        "status": "passed",
+        "commands": [
+          "npm test -- learning-notes-pass"
+        ],
+        "results": [
+          {
+            "command": "npm test -- learning-notes-pass",
+            "exitCode": 0,
+            "summary": "1 suite passed; 12 tests passed"
+          }
+        ]
+      },
+      "qualityAudit": {
+        "scoreBasis": "仅评价当前受限、阻塞的审计产物，不推断未读取的现有学习笔记质量。",
+        "categories": [
+          {
+            "category": "目标、测验与面试覆盖",
+            "score": 7,
+            "maxScore": 25,
+            "evidence": "目标、概念和完成标准已映射，但缺少资源证据，且任务未提供测验、面试或练习字段。"
+          },
+          {
+            "category": "知识结构与跨章衔接",
+            "score": 6,
+            "maxScore": 20,
+            "evidence": "只有阻塞大纲和课程字段草稿，不能形成满足章节标准的正式教学结构。"
+          },
+          {
+            "category": "来源与不确定性",
+            "score": 0,
+            "maxScore": 25,
+            "evidence": "资源正文和项目注册表均未核验，候选 ID 不可作为可解析引用。"
+          },
+          {
+            "category": "教学可读性与例子",
+            "score": 6,
+            "maxScore": 20,
+            "evidence": "草稿可读，但没有证据支持的术语定义、机制、工程意义或具体例子。"
+          },
+          {
+            "category": "版权与数据契约",
+            "score": 10,
+            "maxScore": 10,
+            "evidence": "使用阻塞数据契约，无 HTML、虚构 sourceIds 或正式 evidence 映射。"
+          }
+        ],
+        "total": 29,
+        "releaseGates": [
+          {
+            "gate": "所有 sourceIds 同时存在于 lesson evidence set 和项目资源注册表",
+            "status": "failed",
+            "reason": "未获授权读取资源正文或项目注册表，无法完成双重解析。"
+          },
+          {
+            "gate": "总分至少 85/100",
+            "status": "failed",
+            "reason": "当前得分为 29/100。"
+          }
+        ],
+        "testStatus": "passed",
+        "coverageGaps": [
+          "全部学习产出缺少可访问资源正文支持。",
+          "未提供测验、面试问题或练习字段，无法审计这些评估产出的覆盖情况。"
+        ],
+        "evidenceRoleCorrections": [
+          "res-project-audit-guide 保持为 metadata-only 候选项和 extension，不提升为 core。"
+        ],
+        "courseFieldProvenanceViolations": [],
+        "remainingLimitations": [
+          "测试通过只证明所记录命令成功，不证明证据门、引用解析或发布门通过。",
+          "未读取现有产物正文，因此不能确认其 sections、sourceIds 或 evidence 数据的实际内容。"
+        ]
+      }
+    },
+    {
+      "artifactId": "existing-project-fail",
+      "changeScope": "lesson 数据与知识笔记渲染接入已经变更",
+      "status": "blocked",
+      "publicationReady": false,
+      "auditScope": {
+        "artifactBodyInspected": false,
+        "reason": "任务未提供产物正文，且明确禁止读取其他项目文件；本审计仅依据给定 lesson、资源元数据和 projectTestRunsPath 中的实际测试记录。",
+        "projectRegistryResolution": "not run",
+        "resourceBodyAccess": "not run"
+      },
+      "blockers": [
+        "关联资源仅提供元数据，未获授权读取正文，不能把 title、publisher、type、verifiedAt 或 value 当作资源证据。",
+        "未获授权读取项目资源注册表，无法验证候选资源 ID、来源归属或现有笔记中的 sourceIds。",
+        "没有可访问的核心资源正文，所有学习产出都只由课程字段覆盖，不能发布正式 knowledgeNote/evidence 产物。",
+        "适用的项目测试失败，knowledge-note schema assertion 未通过。"
+      ],
+      "outline": [
+        "工具结果校验在行动循环中的位置",
+        "对预期结构进行检查",
+        "根据检查结果决定继续或停止",
+        "解释为什么不能直接信任未经校验的工具结果"
+      ],
+      "draftSections": [
+        {
+          "id": "validation-role-draft",
+          "title": "校验在行动循环中的作用",
+          "paragraphs": [
+            "本课讨论为什么工具结果需要显式校验，并要求说明这种校验在行动循环中的作用。"
+          ],
+          "courseFieldBasis": [
+            "lesson.summary",
+            "lesson.objectives[0]"
+          ]
+        },
+        {
+          "id": "structure-check-draft",
+          "title": "检查结果结构",
+          "paragraphs": [
+            "工具返回后，宿主程序应检查结果是否满足预期结构。"
+          ],
+          "courseFieldBasis": [
+            "lesson.explanations[0]"
+          ]
+        },
+        {
+          "id": "continue-or-stop-draft",
+          "title": "决定继续或停止",
+          "paragraphs": [
+            "宿主程序应在结构检查之后再决定继续或停止。"
+          ],
+          "courseFieldBasis": [
+            "lesson.explanations[0]"
+          ]
+        },
+        {
+          "id": "trust-boundary-draft",
+          "title": "未经校验结果的信任边界",
+          "paragraphs": [
+            "学习完成的标准是能够解释为什么不能直接信任未经校验的工具结果；具体机制和工程例子仍需资源正文支持。"
+          ],
+          "courseFieldBasis": [
+            "lesson.completionCriteria[0]"
+          ]
+        }
+      ],
+      "coverageMatrix": [
+        {
+          "outcome": "说明工具结果校验在行动循环中的作用。",
+          "courseFieldBasis": [
+            "lesson.objectives[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        },
+        {
+          "outcome": "理解工具结果、结构校验与停止条件之间的关系。",
+          "courseFieldBasis": [
+            "lesson.concepts",
+            "lesson.explanations[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        },
+        {
+          "outcome": "能解释为什么不能直接信任未经校验的工具结果。",
+          "courseFieldBasis": [
+            "lesson.completionCriteria[0]"
+          ],
+          "courseFieldCoverageStatus": "mapped",
+          "resourceEvidenceStatus": "gap"
+        }
+      ],
+      "candidateSources": [
+        {
+          "id": "res-project-audit-guide",
+          "title": "Project Audit Tool Validation Guide",
+          "publisher": "Example Project Team",
+          "type": "内部工程指南",
+          "verifiedAt": "2026-07-20",
+          "value": "说明工具结果结构校验与停止条件。",
+          "authorityStatus": "unresolved",
+          "role": "extension",
+          "limitations": "仅有任务提供的元数据；资源正文、真实来源归属和注册表记录均未核验，不能据此支持实质性教学主张。"
+        }
+      ],
+      "candidateSourceIds": [
+        "res-project-audit-guide"
+      ],
+      "brokenReferenceCount": null,
+      "tests": {
+        "status": "failed",
+        "commands": [
+          "npm test -- learning-notes-fail"
+        ],
+        "results": [
+          {
+            "command": "npm test -- learning-notes-fail",
+            "exitCode": 1,
+            "summary": "1 suite failed; knowledge-note schema assertion failed"
+          }
+        ]
+      },
+      "qualityAudit": {
+        "scoreBasis": "仅评价当前受限、阻塞的审计产物，并保留已提供的 schema 测试失败事实；不推断未读取的现有学习笔记内容。",
+        "categories": [
+          {
+            "category": "目标、测验与面试覆盖",
+            "score": 7,
+            "maxScore": 25,
+            "evidence": "目标、概念和完成标准已映射，但缺少资源证据，且任务未提供测验、面试或练习字段。"
+          },
+          {
+            "category": "知识结构与跨章衔接",
+            "score": 6,
+            "maxScore": 20,
+            "evidence": "只有阻塞大纲和课程字段草稿，不能形成满足章节标准的正式教学结构。"
+          },
+          {
+            "category": "来源与不确定性",
+            "score": 0,
+            "maxScore": 25,
+            "evidence": "资源正文和项目注册表均未核验，候选 ID 不可作为可解析引用。"
+          },
+          {
+            "category": "教学可读性与例子",
+            "score": 6,
+            "maxScore": 20,
+            "evidence": "草稿可读，但没有证据支持的术语定义、机制、工程意义或具体例子。"
+          },
+          {
+            "category": "版权与数据契约",
+            "score": 0,
+            "maxScore": 10,
+            "evidence": "实际项目测试报告 knowledge-note schema assertion failed；在无法读取产物正文的限制下不能进一步定位字段缺陷。"
+          }
+        ],
+        "total": 19,
+        "releaseGates": [
+          {
+            "gate": "所有 sourceIds 同时存在于 lesson evidence set 和项目资源注册表",
+            "status": "failed",
+            "reason": "未获授权读取资源正文或项目注册表，无法完成双重解析。"
+          },
+          {
+            "gate": "总分至少 85/100",
+            "status": "failed",
+            "reason": "当前得分为 19/100。"
+          },
+          {
+            "gate": "适用的项目数据与渲染测试通过",
+            "status": "failed",
+            "reason": "npm test -- learning-notes-fail 以退出码 1 结束，knowledge-note schema assertion failed。"
+          }
+        ],
+        "testStatus": "failed",
+        "coverageGaps": [
+          "全部学习产出缺少可访问资源正文支持。",
+          "未提供测验、面试问题或练习字段，无法审计这些评估产出的覆盖情况。"
+        ],
+        "evidenceRoleCorrections": [
+          "res-project-audit-guide 保持为 metadata-only 候选项和 extension，不提升为 core。"
+        ],
+        "courseFieldProvenanceViolations": [],
+        "remainingLimitations": [
+          "未读取现有产物正文，无法定位 schema assertion 对应的具体字段。",
+          "证据门失败与测试失败相互独立，两者均阻止发布。"
+        ]
+      }
+    }
+  ]
+}
+```
+
+#### Ordered access-log JSON（路径已规范化）
+
+```json
+{
+  "actualToolCalls": [
+    {
+      "order": 1,
+      "tool": "functions.exec",
+      "nestedCalls": [
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md"
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "tool": "functions.exec",
+      "nestedCalls": [
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md"
+        },
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md"
+        },
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md"
+        },
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md"
+        }
+      ],
+      "executionMode": "parallel"
+    },
+    {
+      "order": 3,
+      "tool": "functions.exec",
+      "nestedCalls": [
+        {
+          "tool": "tools.exec_command",
+          "operation": "cat",
+          "path": "<repo-root>/docs/superpowers/skill-tests/fixtures/project-test-runs.json"
+        }
+      ]
+    }
+  ],
+  "actualReadFiles": [
+    "<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md",
+    "<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md",
+    "<repo-root>/docs/superpowers/skill-tests/fixtures/project-test-runs.json"
+  ]
+}
+```
+
+#### After-the-fact leakage audit
+
+Fixture 提供了实际 commands/results，但 clean prompt 没有给出预期的 artifact-to-status 映射，没有暗示 blocked 产物必须保留 passed/failed、禁止改写为 `not applicable`，也没有给出 `tests`、`qualityAudit` 或 release-gate 字段提示。因此本例检验的是 Skill 是否让证据阻塞状态与项目测试状态保持独立，而不是复述提示中的预期答案。
+
+#### Semantic assertions
+
+以下断言以两个上方 JSON fence 的文本分别绑定为 `firstRawJson` 与 `orderedAccessLogJson`；两者均经 `JSON.parse`，解析记录为 `passed`。
+
+```js
+const assert = require('node:assert/strict');
+const raw = JSON.parse(firstRawJson);
+const access = JSON.parse(orderedAccessLogJson);
+assert.equal(Array.isArray(access.actualToolCalls), true);
+assert.equal(Array.isArray(access.actualReadFiles), true);
+const pass = raw.artifacts.find((item) => item.artifactId === 'existing-project-pass');
+const fail = raw.artifacts.find((item) => item.artifactId === 'existing-project-fail');
+assert.equal(pass.status, 'blocked');
+assert.equal(fail.status, 'blocked');
+assert.equal(pass.publicationReady, false);
+assert.equal(fail.publicationReady, false);
+assert.equal(pass.tests.status, 'passed');
+assert.deepEqual(pass.tests.commands, ['npm test -- learning-notes-pass']);
+assert.deepEqual(pass.tests.results, [{ command: 'npm test -- learning-notes-pass', exitCode: 0, summary: '1 suite passed; 12 tests passed' }]);
+assert.equal(fail.tests.status, 'failed');
+assert.deepEqual(fail.tests.commands, ['npm test -- learning-notes-fail']);
+assert.deepEqual(fail.tests.results, [{ command: 'npm test -- learning-notes-fail', exitCode: 1, summary: '1 suite failed; knowledge-note schema assertion failed' }]);
+assert.notEqual(pass.tests.status, 'not applicable');
+assert.notEqual(fail.tests.status, 'not applicable');
+assert.equal(pass.qualityAudit.releaseGates.some((gate) => gate.status === 'failed'), true);
+assert.equal(fail.qualityAudit.releaseGates.some((gate) => gate.status === 'failed'), true);
+assert.equal(pass.qualityAudit.testStatus, pass.tests.status);
+assert.equal(fail.qualityAudit.testStatus, fail.tests.status);
+// Both artifacts remain evidence-blocked while preserving their independent passed/failed test outcomes.
+```
+
+- FIRST raw JSON parse: `passed`
+- ordered access-log JSON parse: `passed`
+- semantic assertions: `passed`
