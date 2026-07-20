@@ -250,6 +250,13 @@ Agent 开发通常属于应用开发一侧。一个稳妥的起点，是先可�
 
 ## Skill 结构验证记录
 
+本记录将执行时的本机绝对路径规范化为环境无关占位符；这项脱敏只改变路径呈现，不改变命令、隔离条件或代理输出语义：
+
+- `<repo-root>`：当前 Agent Learner 项目的仓库根目录。
+- `<CODEX_SKILLS_ROOT>`：包含 `.system/skill-creator` 的 Codex Skills 根目录。
+- `<bundled-python>`：当前工作区提供的 bundled Python 可执行文件。
+- `<temporary-yaml-shim-dir>`：为单次验证创建并在进程外不依赖的临时兼容模块目录。
+
 ### 脚手架界面字段调整
 
 按计划原样运行官方 `init_skill.py` 时，目录和 `SKILL.md` 模板已经创建，但脚手架在生成 `agents/openai.yaml` 前拒绝了原短描述：
@@ -265,13 +272,13 @@ Agent 开发通常属于应用开发一侧。一个稳妥的起点，是先可�
 直接用系统 Python 运行官方验证器：
 
 ```bash
-/usr/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+/usr/bin/python3 <CODEX_SKILLS_ROOT>/.system/skill-creator/scripts/quick_validate.py <repo-root>/.agents/skills/build-learning-module-notes
 ```
 
 以及用工作区 bundled Python 运行同一未修改的验证器：
 
 ```bash
-/Users/octopus/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+<bundled-python> <CODEX_SKILLS_ROOT>/.system/skill-creator/scripts/quick_validate.py <repo-root>/.agents/skills/build-learning-module-notes
 ```
 
 两次都在导入验证器依赖时失败，实际错误均为：
@@ -282,12 +289,12 @@ ModuleNotFoundError: No module named 'yaml'
 
 这不是 Skill 校验失败，而是两个现有 Python 环境都没有 PyYAML。验证期间没有联网、没有安装依赖、没有修改官方 `quick_validate.py`，也没有把兼容代码写入仓库。
 
-为实际执行官方验证器剩余逻辑，在 `/private/tmp` 下建立临时目录，并只向该进程的 `PYTHONPATH` 注入一个最小只读 `yaml.py` 兼容模块。它仅实现本 Skill 当前两字段、扁平 `key: scalar` frontmatter 所需的 `safe_load` 和 `YAMLError`；它不支持嵌套对象、列表、锚点、标签或一般 YAML 语法，不能替代 PyYAML，也没有修改被验证文件。可复现方式如下：
+为实际执行官方验证器剩余逻辑，在系统临时空间建立 `<temporary-yaml-shim-dir>`，并只向该进程的 `PYTHONPATH` 注入一个最小只读 `yaml.py` 兼容模块。它仅实现本 Skill 当前两字段、扁平 `key: scalar` frontmatter 所需的 `safe_load` 和 `YAMLError`；它不支持嵌套对象、列表、锚点、标签或一般 YAML 语法，不能替代 PyYAML，也没有修改被验证文件。可复现方式如下；执行时先把三个路径占位符替换为当前环境对应值：
 
 ```bash
-SKILL_YAML_COMPAT_DIR="$(mktemp -d)"
+SKILL_YAML_COMPAT_DIR="<temporary-yaml-shim-dir>"
 # 将下方兼容模块代码保存为 "$SKILL_YAML_COMPAT_DIR/yaml.py"
-env PYTHONPATH="$SKILL_YAML_COMPAT_DIR" /usr/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+env PYTHONPATH="$SKILL_YAML_COMPAT_DIR" /usr/bin/python3 <CODEX_SKILLS_ROOT>/.system/skill-creator/scripts/quick_validate.py <repo-root>/.agents/skills/build-learning-module-notes
 ```
 
 兼容模块的完整代码为：
@@ -333,10 +340,10 @@ Skill is valid!
 - 测试代理身份：`/root/task2_skill_impl/green_llm01`
 - `fork_turns=none`
 - 隔离条件：只允许读取新 Skill 目录；禁止读取任何课程文件、测试记录、计划或其他 workspace 文件；禁止网络和外链；禁止修改文件。
-- Skill wrapper（逐字记录）：
+- Skill wrapper（除路径占位符规范化外逐字记录）：
 
 ```text
-Use $build-learning-module-notes at `/Users/octopus/codes/Agent-learner/agent-development-knowledge-map/.worktrees/llm-knowledge-note-pilot/.agents/skills/build-learning-module-notes` to handle this real content task. Read that SKILL.md and every reference it requires before acting. You may use filesystem tools only to read that Skill directory; do not read any course file, test record, plan, or other workspace file, and do not modify files. Do not browse or open external links. Return only your complete raw result.
+Use $build-learning-module-notes at `<repo-root>/.agents/skills/build-learning-module-notes` to handle this real content task. Read that SKILL.md and every reference it requires before acting. You may use filesystem tools only to read that Skill directory; do not read any course file, test record, plan, or other workspace file, and do not modify files. Do not browse or open external links. Return only your complete raw result.
 ```
 
 - 内联课程输入：本文件「基线冻结」代码块的全部 `objectives`、`concepts`、`explanations` 和 7 项 resource metadata 原文逐字嵌入。
@@ -591,10 +598,10 @@ Use $build-learning-module-notes at `/Users/octopus/codes/Agent-learner/agent-de
 - 权限边界：只读新 Skill 目录；禁止读取课程文件、测试记录、计划或其他 workspace 文件；禁止网络、外链和 openai-docs；初始任务禁止修改文件。
 - 实际读取：新 Skill 的 `SKILL.md` 及其要求的 `source-policy.md`、`chapter-standard.md`、`data-contract.md`、`quality-rubric.md`。
 
-### 完整精确 prompt/input
+### 完整精确 prompt/input（路径占位符规范化）
 
 ```text
-Use $build-learning-module-notes at `/Users/octopus/codes/Agent-learner/agent-development-knowledge-map/.worktrees/llm-knowledge-note-pilot/.agents/skills/build-learning-module-notes` to handle this real content task. Read that SKILL.md and every reference it requires before acting. You may use filesystem tools only to read that Skill directory; do not read course files, test records, plans, or other workspace files, and do not modify files. Do not browse, use openai-docs, or open external links. Return only your complete raw result.
+Use $build-learning-module-notes at `<repo-root>/.agents/skills/build-learning-module-notes` to handle this real content task. Read that SKILL.md and every reference it requires before acting. You may use filesystem tools only to read that Skill directory; do not read course files, test records, plans, or other workspace files, and do not modify files. Do not browse, use openai-docs, or open external links. Return only your complete raw result.
 
 基于下面唯一允许使用的 agent-01 课程数据，只输出三项内容：教学大纲、全部来源的 evidence 角色卡、覆盖矩阵。不要生成完整知识正文，不要修改课程文件。明确列出材料缺口，不要声称读过任何外链正文。
 

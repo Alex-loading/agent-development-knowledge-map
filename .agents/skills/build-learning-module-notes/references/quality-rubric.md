@@ -18,7 +18,7 @@ Score the finished artifact out of 100. Record evidence for each score; do not a
 
 ## 3. 来源与不确定性（25）
 
-- **22–25:** Every substantive section has resolvable source IDs; all associated resources have accurate evidence cards; core claims use accessible bodies; conflicts, metadata-only limits, scope, and freshness are visible.
+- **22–25:** Every substantive section uses source IDs present in both the lesson evidence set and project resource registry; all associated resources have accurate evidence cards; core claims use accessible bodies; conflicts, metadata-only limits, scope, and freshness are visible.
 - **16–21:** IDs resolve and major claims are grounded, but a secondary limitation, conflict, or freshness note is incomplete.
 - **8–15:** Attribution exists but is coarse, some evidence roles are inflated, or unsupported details remain.
 - **0–7:** Broken/untraceable citations, implied reading of unavailable bodies, or model-memory claims presented as sourced facts.
@@ -41,11 +41,11 @@ Score the finished artifact out of 100. Record evidence for each score; do not a
 
 Do not publish when either gate fails, regardless of score:
 
-1. Any `sourceId` is missing from the evidence set or cannot be resolved in the project resource registry.
+1. Any `sourceId` is missing from the lesson evidence set or cannot be resolved in the project resource registry. A formal project chapter requires both lookups to succeed.
 2. Total score is below **85/100**.
 
 Also stop when a key assessed outcome depends only on metadata or unmarked model memory. Report the exact blocked outcome and required evidence before revising.
 
 ## Audit record
 
-Record category scores, total, broken-reference count, coverage gaps, evidence-role corrections, and remaining limitations. For a limited task such as outline-only validation, mark non-applicable subcriteria explicitly; do not inflate the result into a publishable chapter score.
+Record category scores, total, broken-reference count, coverage gaps, evidence-role corrections, and remaining limitations. For a limited task such as outline-only validation, mark non-applicable subcriteria explicitly; if the project registry is unavailable, keep IDs as candidates and record that resolvability was not tested. Do not inflate the result into a publishable chapter score.
