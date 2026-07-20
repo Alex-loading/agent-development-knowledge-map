@@ -185,6 +185,37 @@ test('practice views are real renderers with paper-lab responsive component styl
   assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.resource-row/s);
 });
 
+test('Agent experiment renderers are isolated, safely registered and responsively styled', async () => {
+  const [experiments, agentExperiments, styles] = await Promise.all([
+    read('src/ui/experiments.js'),
+    read('src/ui/agent-experiments.js'),
+    read('styles/app.css'),
+  ]);
+
+  assert.match(agentExperiments, /from ['"]\.\.\/core\/agent-mechanism\.js['"]/);
+  for (const coreFunction of ['decideLoopOutcome', 'validateToolInvocation', 'decidePlanRecovery']) {
+    assert.match(agentExperiments, new RegExp(`\\b${coreFunction}\\s*\\(`));
+  }
+  for (const renderer of ['renderAgentLoopExperiment', 'renderToolContractExperiment', 'renderPlanRecoveryExperiment']) {
+    assert.match(agentExperiments, new RegExp(`export function ${renderer}\\b`));
+  }
+  assert.match(agentExperiments, /export const agentExperimentRenderers\s*=\s*Object\.freeze\s*\(\s*\{/);
+  for (const id of ['agent-loop', 'tool-contract', 'plan-recovery']) {
+    assert.match(agentExperiments, new RegExp(`['"]${id}['"]\\s*:`));
+  }
+  assert.match(experiments, /import\s*\{\s*agentExperimentRenderers\s*\}\s*from ['"]\.\/agent-experiments\.js['"]/);
+  assert.match(experiments, /Object\.freeze\s*\(\s*\{[\s\S]*\.\.\.agentExperimentRenderers[\s\S]*\}\s*\)/);
+  assert.doesNotMatch(`${experiments}\n${agentExperiments}`, /\.innerHTML\s*=|insertAdjacentHTML|setAttribute\(['"]on/i);
+
+  for (const selector of ['.agent-status-stamp', '.agent-decision-ledger', '.tool-invocation', '.tool-error-list']) {
+    assert.ok(styles.includes(selector), `missing Agent lab style ${selector}`);
+  }
+  assert.match(styles, /\.agent-status-stamp\[data-status="(?:ready|continue)"\][^{]*\{[^}]*--stamp-color:\s*var\(--color-forest\)/s);
+  assert.match(styles, /\.agent-status-stamp\[data-status="(?:invalid|blocked)"\][^{]*\{[^}]*--stamp-color:\s*var\(--color-vermilion\)/s);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.agent-control-input[^{]*\{[^}]*width:\s*100%/s);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*22rem\)[\s\S]*\.agent-decision-ledger/s);
+});
+
 test('release guide documents operation, architecture, privacy and the extension contract', async () => {
   const readme = await read('README.md');
 

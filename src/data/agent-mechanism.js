@@ -86,8 +86,7 @@ const lessons = [
       { heading: '结果回填形成闭环', body: '工具应职责单一，参数名明确，使用必填、类型、枚举和范围减少歧义，并返回 success、data、error code、可重试性和证据引用等结构。执行后的 tool result 必须按调用关联带回模型或控制器，成为新的 observation；否则模型不知道动作成功、失败还是返回空结果，容易凭先验编造后续状态。回填后仍需更新工作状态并重新判断完成或下一动作。', keyPoints: ['工具返回既服务程序判断，也为模型提供环境新证据', '错误要可分类，才能选择重试、修参、换工具或终止'] },
     ],
     resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
-    exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查缺参、枚举和高风险调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、四类调用结果和一份执行边界说明。' },
-    experimentId: 'tool-contract',
+    exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查缺参、枚举和高风险调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、四类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
     quiz: [
       quiz('quiz-agent-03-1', '模型生成合法 JSON 工具调用后，应用下一步应做什么？', ['直接视为已执行', '校验 schema、业务规则、权限与风险后再执行', '让模型假装返回结果', '把所有权限交给模型'], 1, '合法 JSON 只满足语法层，宿主仍要完成参数、业务、权限和副作用校验。'),
       quiz('quiz-agent-03-2', '为什么工具结果必须关联原调用并回填？', ['只为界面更美观', '让模型获得动作后的真实观察并决定下一步', '减少工具权限', '代替所有错误处理'], 1, 'Agent 的后续决策依赖环境变化；没有关联回填，模型无法可靠知道动作结果。'),
@@ -105,8 +104,7 @@ const lessons = [
       { heading: 'ReAct 让推理与环境反馈交错', body: '普通 chain-of-thought 描述模型内部生成的推理文本，并不要求系统执行动作或取得新证据；ReAct 则把任务相关的推理摘要、结构化 action 和环境 observation 交错组织，让下一步能根据真实反馈调整。产品日志应记录可观察决策摘要、工具参数和结果，而不是索取或暴露隐藏推理。若状态不变却重复同一调用，通常说明缺少进展检测、错误分类或停止预算。', keyPoints: ['ReAct 的关键是行动后吸收 observation，不是展示长篇思维过程', '重复动作、状态无进展和预算耗尽都应触发停止或恢复策略'] },
     ],
     resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
-    exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。' },
-    experimentId: 'agent-loop',
+    exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。', experiment: 'agent-loop' },
     quiz: [
       quiz('quiz-agent-04-1', '最小 Agent loop 中，工具执行后必须先做什么再进入下一轮？', ['删除原始目标', '把结果记录为 observation 并更新状态', '自动扩大预算', '重新加载模型参数'], 1, '环境结果必须先进入事件日志和工作状态，下一轮决策才能建立在新证据上。'),
       quiz('quiz-agent-04-2', 'Agent 连续以同一参数调用失败工具，最缺少哪类机制？', ['更长的角色设定', '进展检测、错误分类与停止预算', '更多聊天寒暄', '隐藏全部工具结果'], 1, '重复且无状态进展说明循环没有识别失败模式或执行明确的恢复与终止规则。'),
@@ -124,8 +122,7 @@ const lessons = [
       { heading: '好分解必须可执行和可验证', body: '合理子任务应产生明确产物，依赖关系可排序，粒度足以由一个工具或短循环完成，并在边界设置验证点；“研究一下”“处理数据”这类动作无法判断进展。计划只是基于当前 belief 的假设，新约束、空结果、权限变化或关键步骤失败后，应依据 observation 替换步骤、调整依赖或整体重规划，而不是永远服从初始文本。重规划也要受次数和成本预算限制。', keyPoints: ['用产物、依赖、动作和验收标准检查分解质量', '新证据优先于旧计划，同时必须限制重规划震荡'] },
     ],
     resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper'],
-    exercise: { title: '计划与重规划棋盘', brief: '为供应商研究任务分别设计 reactive、plan-and-execute 与混合策略，并注入数据源故障。', steps: ['为三种策略列出动作、产物、依赖、验证点和预算，说明各自适用条件', '在实验中注入空结果、超时和新约束，决定重试、换动作、替换步骤、重规划或阻塞'], deliverable: '三份策略草图和一份基于 observation 的计划修订记录。' },
-    experimentId: 'plan-recovery',
+    exercise: { title: '计划与重规划棋盘', brief: '为供应商研究任务分别设计 reactive、plan-and-execute 与混合策略，并注入数据源故障。', steps: ['为三种策略列出动作、产物、依赖、验证点和预算，说明各自适用条件', '在实验中注入空结果、超时和新约束，决定重试、换动作、替换步骤、重规划或阻塞'], deliverable: '三份策略草图和一份基于 observation 的计划修订记录。', experiment: 'plan-recovery' },
     quiz: [
       quiz('quiz-agent-05-1', '哪种情况更适合先规划后执行？', ['只有一步且环境快速变化', '多个有明确依赖和中间产物的步骤', '没有任何可验证结果', '动作空间只有一个固定函数'], 1, '有依赖的长任务受益于里程碑和验证点；极短或变化频繁的任务通常更适合 reactive。'),
       quiz('quiz-agent-05-2', '新约束与初始计划冲突时应怎么做？', ['忽略新约束', '依据新 observation 修订或重建计划并重新验证', '无限重启相同步骤', '把旧计划称为完成证据'], 1, '计划是基于旧信息的行动假设，新约束应进入状态并触发受预算约束的重规划。'),

@@ -3,6 +3,7 @@ import {
   normalizeAttention,
   sampleDistribution,
 } from '../core/experiments.js';
+import { agentExperimentRenderers } from './agent-experiments.js';
 import { button, element } from './dom.js';
 
 const BUDGET_DEFAULTS = Object.freeze({
@@ -48,6 +49,13 @@ const SAMPLING_CANDIDATES = [
 ];
 
 const SAMPLING_DEFAULTS = Object.freeze({ temperature: 1, topP: 0.9 });
+
+const experimentRenderers = Object.freeze({
+  'token-budget': renderTokenBudgetExperiment,
+  attention: renderAttentionExperiment,
+  sampling: renderSamplingExperiment,
+  ...agentExperimentRenderers,
+});
 
 function labHeader(index, id, title, description) {
   return element('header', { className: 'experiment-lab__header' }, [
@@ -429,12 +437,7 @@ export function renderSamplingExperiment() {
 }
 
 export function renderExperiment(experimentId) {
-  const renderers = {
-    'token-budget': renderTokenBudgetExperiment,
-    attention: renderAttentionExperiment,
-    sampling: renderSamplingExperiment,
-  };
-  const renderer = renderers[experimentId];
+  const renderer = experimentRenderers[experimentId];
   if (renderer) return renderer();
 
   return element('section', {

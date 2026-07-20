@@ -1081,6 +1081,169 @@ button:disabled {
   color: var(--color-vermilion);
 }
 
+.agent-controls,
+.agent-decision-ledger,
+.tool-invocation-display,
+.tool-invocation,
+.tool-error-list {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.agent-check-control {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--color-border-soft);
+  padding-bottom: var(--space-2);
+}
+
+.agent-check-control label {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--color-forest);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.agent-checkbox {
+  width: 1.35rem;
+  height: 1.35rem;
+  accent-color: var(--color-vermilion);
+}
+
+.agent-control-input {
+  width: min(100%, 24rem);
+  min-width: 0;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink);
+  background: var(--color-paper-raised);
+  font: inherit;
+}
+
+.agent-control-input:focus-visible,
+.agent-checkbox:focus-visible,
+.tool-invocation:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.agent-decision-ledger {
+  --stamp-color: var(--color-ochre);
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--stamp-color);
+  border-left-width: 0.45rem;
+  background: var(--color-paper-raised);
+}
+
+.agent-status-stamp__label {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin: var(--space-3);
+  border: 2px solid var(--stamp-color);
+  padding: 0.2rem 0.55rem;
+  color: var(--stamp-color);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  transform: rotate(-1deg);
+}
+
+.agent-status-stamp[data-status="ready"],
+.agent-status-stamp[data-status="continue"],
+.agent-status-stamp[data-status="done"] {
+  --stamp-color: var(--color-forest);
+}
+
+.agent-status-stamp[data-status="approval-required"],
+.agent-status-stamp[data-status="retry"],
+.agent-status-stamp[data-status="switch-action"],
+.agent-status-stamp[data-status="replace-step"],
+.agent-status-stamp[data-status="replan"] {
+  --stamp-color: var(--color-ochre);
+}
+
+.agent-status-stamp[data-status="invalid"],
+.agent-status-stamp[data-status="blocked"],
+.agent-status-stamp[data-status="budget-exhausted"] {
+  --stamp-color: var(--color-vermilion);
+}
+
+.agent-decision-ledger__entry {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.agent-decision-ledger__entry dt,
+.agent-decision-ledger__entry dd {
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.agent-decision-ledger__entry dt {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.agent-decision-ledger__entry dd {
+  border-left: 1px solid var(--color-border-soft);
+  font-weight: 600;
+}
+
+div.agent-decision-ledger {
+  display: block;
+  padding: var(--space-3);
+}
+
+div.agent-decision-ledger .agent-status-stamp__label {
+  display: block;
+  margin: 0 0 var(--space-3);
+}
+
+div.agent-decision-ledger p {
+  margin-bottom: 0;
+}
+
+.tool-invocation-display {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tool-invocation {
+  max-width: 100%;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  padding: var(--space-3);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-forest);
+  background: var(--color-forest-soft);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.tool-error-list {
+  margin-block: var(--space-3) 0;
+  padding-left: var(--space-5);
+  color: var(--color-vermilion);
+}
+
 .attention-query-picker,
 .experiment-presets {
   display: flex;
@@ -1935,6 +2098,10 @@ button:disabled {
     width: 100%;
   }
 
+  .agent-control-input {
+    width: 100%;
+  }
+
   .filter-ledger__summary button {
     width: 100%;
     margin-left: 0;
@@ -2011,6 +2178,19 @@ button:disabled {
   .sampling-percent {
     grid-row: 1;
     grid-column: 2;
+  }
+
+  .agent-decision-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .agent-decision-ledger__entry {
+    display: block;
+  }
+
+  .agent-decision-ledger__entry dd {
+    border-top: 1px dashed var(--color-border-soft);
+    border-left: 0;
   }
 }
 

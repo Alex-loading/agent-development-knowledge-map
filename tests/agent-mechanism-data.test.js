@@ -113,13 +113,19 @@ test('Agent mechanism contains eight ordered complete lessons', () => {
 
 test('only the three specified lessons expose interactive experiments', () => {
   const experiments = agentMechanism.lessons
-    .filter((lesson) => lesson.experimentId)
-    .map(({ id, experimentId }) => [id, experimentId]);
+    .filter((lesson) => lesson.exercise.experiment)
+    .map((lesson) => [lesson.id, lesson.exercise.experiment]);
   assert.deepEqual(experiments, [
     ['agent-03', 'tool-contract'],
     ['agent-04', 'agent-loop'],
     ['agent-05', 'plan-recovery'],
   ]);
+  for (const lesson of agentMechanism.lessons) {
+    assert.equal(Object.hasOwn(lesson, 'experimentId'), false, lesson.id);
+    if (!['agent-03', 'agent-04', 'agent-05'].includes(lesson.id)) {
+      assert.equal(lesson.exercise.experiment, undefined, lesson.id);
+    }
+  }
 });
 
 test('every quiz item has a valid answer and explanation', () => {

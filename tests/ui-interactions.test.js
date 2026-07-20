@@ -9,6 +9,7 @@ import {
   toggleReviewQueue,
 } from '../src/core/progress.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { courseRegistry } from '../src/data/courses.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
 import { renderDashboard } from '../src/ui/dashboard.js';
@@ -759,6 +760,124 @@ test('sampling lab controls and presets update parameters and nucleus membership
   assert.equal(topP.value, '0.9');
 });
 
+test('Agent loop lab exposes core decisions, invalid input and a focused reset state', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('agent-loop');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#agent-loop-result');
+  const goalSatisfied = lab.querySelector('#agent-loop-goal-satisfied');
+  const blocked = lab.querySelector('#agent-loop-blocked');
+  const stepsUsed = lab.querySelector('#agent-loop-steps-used');
+  const maxSteps = lab.querySelector('#agent-loop-max-steps');
+  assert.equal(result.dataset.status, 'continue');
+  assert.ok(result.textContent.includes('继续执行：是'));
+
+  goalSatisfied.checked = true;
+  goalSatisfied.dispatchEvent(new FakeEvent('change'));
+  blocked.checked = true;
+  blocked.dispatchEvent(new FakeEvent('change'));
+  assert.equal(result.dataset.status, 'done');
+  assert.ok(result.textContent.includes('完成证据'));
+
+  goalSatisfied.checked = false;
+  goalSatisfied.dispatchEvent(new FakeEvent('change'));
+  assert.equal(result.dataset.status, 'blocked');
+  assert.ok(result.textContent.includes('人工介入'));
+
+  blocked.checked = false;
+  blocked.dispatchEvent(new FakeEvent('change'));
+  stepsUsed.value = '5';
+  stepsUsed.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'budget-exhausted');
+  assert.ok(result.textContent.includes('最大步骤预算'));
+
+  maxSteps.value = '';
+  maxSteps.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('必须是有限正整数'));
+
+  findButton(lab, '重置循环实验').click();
+  assert.equal(goalSatisfied.checked, false);
+  assert.equal(blocked.checked, false);
+  assert.equal(stepsUsed.value, '2');
+  assert.equal(maxSteps.value, '5');
+  assert.equal(result.dataset.status, 'continue');
+  assert.equal(document.activeElement, goalSatisfied);
+});
+
+test('tool contract lab validates all four presets and resets to a focused ready invocation', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('tool-contract');
+  document.body.append(lab);
+
+  const preset = lab.querySelector('#tool-contract-preset');
+  const result = lab.querySelector('#tool-contract-result');
+  const invocation = lab.querySelector('#tool-contract-invocation');
+  assert.equal(preset.value, 'valid-low');
+  assert.equal(result.dataset.status, 'ready');
+  assert.ok(invocation.textContent.includes('search_docs'));
+
+  dispatchChange(preset, 'missing-required');
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('缺少必填字段 "query"'));
+  assert.equal(result.querySelectorAll('ul li').length, 1);
+
+  dispatchChange(preset, 'invalid-enum');
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('字段 "scope" 必须是以下值之一: docs, code'));
+  assert.equal(result.querySelectorAll('ul li').length, 1);
+
+  dispatchChange(preset, 'high-risk');
+  assert.equal(result.dataset.status, 'approval-required');
+  assert.ok(result.textContent.includes('需要人工审批'));
+  assert.ok(invocation.textContent.includes('delete_index'));
+
+  findButton(lab, '重置工具契约实验').click();
+  assert.equal(preset.value, 'valid-low');
+  assert.equal(result.dataset.status, 'ready');
+  assert.equal(document.activeElement, preset);
+});
+
+test('plan recovery lab reaches every recovery branch, handles invalid numbers and resets focus', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('plan-recovery');
+  document.body.append(lab);
+
+  const strategy = lab.querySelector('#plan-recovery-strategy');
+  const observation = lab.querySelector('#plan-recovery-observation');
+  const retriesUsed = lab.querySelector('#plan-recovery-retries-used');
+  const maxRetries = lab.querySelector('#plan-recovery-max-retries');
+  const result = lab.querySelector('#plan-recovery-result');
+  assert.equal(result.dataset.status, 'retry');
+
+  dispatchChange(observation, 'empty-result');
+  assert.equal(result.dataset.status, 'replace-step');
+  dispatchChange(strategy, 'reactive');
+  assert.equal(result.dataset.status, 'switch-action');
+  dispatchChange(observation, 'new-constraint');
+  assert.equal(result.dataset.status, 'replan');
+  dispatchChange(strategy, 'fixed');
+  dispatchChange(observation, 'empty-result');
+  assert.equal(result.dataset.status, 'blocked');
+
+  retriesUsed.value = '';
+  retriesUsed.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('必须是有限非负整数'));
+
+  findButton(lab, '重置计划恢复实验').click();
+  assert.equal(strategy.value, 'hybrid');
+  assert.equal(observation.value, 'timeout');
+  assert.equal(retriesUsed.value, '0');
+  assert.equal(maxRetries.value, '2');
+  assert.equal(result.dataset.status, 'retry');
+  assert.equal(document.activeElement, strategy);
+});
+
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -790,20 +909,27 @@ test('every configured experiment has a resolvable accessible heading and is int
   const root = document.createElement('div');
   document.body.append(root);
 
-  for (const [lessonId, experimentId] of [
-    ['llm-03', 'token-budget'],
-    ['llm-04', 'attention'],
-    ['llm-06', 'sampling'],
-  ]) {
+  const configured = Object.values(courseRegistry).flatMap((course) => course.lessons
+    .filter((lesson) => lesson.exercise.experiment)
+    .map((lesson) => ({ course, lesson, experimentId: lesson.exercise.experiment })));
+  assert.equal(configured.length, 6);
+
+  for (const { course, lesson, experimentId } of configured) {
+    const resolved = renderExperiment(experimentId);
+    const resolvedHeadingId = resolved.getAttribute('aria-labelledby');
+    assert.ok(resolvedHeadingId, experimentId);
+    assert.notEqual(resolved.querySelector(`#${resolvedHeadingId}`), null, experimentId);
+
     renderLessonDetail(root, {
-      course: llmFoundation,
-      lessonId,
-      progress: createDefaultProgress('llm-foundation'),
+      course,
+      lessonId: lesson.id,
+      progress: createDefaultProgress(course.id),
     });
-    const lab = root.querySelector(`.${experimentId === 'token-budget' ? 'token-budget' : experimentId}-lab`);
+    assert.equal(root.querySelectorAll('.experiment-lab').length, 1, experimentId);
+    const lab = root.querySelector('.experiment-lab');
     const headingId = lab.getAttribute('aria-labelledby');
-    assert.ok(headingId);
-    assert.notEqual(lab.querySelector(`#${headingId}`), null);
+    assert.ok(headingId, experimentId);
+    assert.notEqual(lab.querySelector(`#${headingId}`), null, experimentId);
   }
 });
 
