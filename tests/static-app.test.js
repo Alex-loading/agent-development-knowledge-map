@@ -32,13 +32,28 @@ function markdownSection(markdown, heading) {
   return markdown.slice(contentStart, nextHeading === -1 ? markdown.length : nextHeading);
 }
 
-async function readJavaScriptTree(directory = new URL('../src/', import.meta.url)) {
+function markdownParagraphContaining(markdown, marker) {
+  const paragraph = markdown.split(/\n\s*\n/).find((candidate) => candidate.includes(marker));
+  assert.ok(paragraph, 'README should contain paragraph ' + marker);
+  return paragraph;
+}
+
+function findUnsafeDomPatterns(source) {
+  return [
+    ['HTML sink', /\.innerHTML\s*=|insertAdjacentHTML/],
+    ['inline handler attribute', /setAttribute\(['"]on/i],
+    ['DOM0 handler assignment', /\.\s*on[a-z]+\s*=/i],
+  ].filter(([, pattern]) => pattern.test(source)).map(([label]) => label);
+}
+
+async function readJavaScriptTree(directory, relativeDirectory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const contents = await Promise.all(entries.map(async (entry) => {
     const path = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, directory);
-    if (entry.isDirectory()) return readJavaScriptTree(path);
+    const relativePath = `${relativeDirectory}/${entry.name}`;
+    if (entry.isDirectory()) return readJavaScriptTree(path, relativePath);
     if (!entry.name.endsWith('.js')) return [];
-    return [await readFile(path, 'utf8')];
+    return [{ path: relativePath, source: await readFile(path, 'utf8') }];
   }));
   return contents.flat();
 }
@@ -170,11 +185,11 @@ test('malformed and non-HTTPS external resources are non-clickable and disabled'
 });
 
 test('application modules avoid unsafe HTML rendering, inline handlers and course hardcoding', async () => {
-  const [dom, shell, app, allApplicationSources, ...genericViews] = await Promise.all([
+  const [dom, shell, app, uiApplicationFiles, ...genericViews] = await Promise.all([
     read('src/ui/dom.js'),
     read('src/ui/shell.js'),
     read('src/app.js'),
-    readJavaScriptTree(),
+    readJavaScriptTree(new URL('../src/ui/', import.meta.url), 'src/ui'),
     read('src/ui/dashboard.js'),
     read('src/ui/curriculum.js'),
     read('src/ui/knowledge-map.js'),
@@ -192,7 +207,13 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
   assert.match(app, /addEventListener\(['"]hashchange['"]/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /setAttribute\(['"]on/i);
-  assert.doesNotMatch(allApplicationSources.join('\n'), /\.innerHTML\s*=|insertAdjacentHTML|setAttribute\(['"]on/i);
+  for (const file of [{ path: 'src/app.js', source: app }, ...uiApplicationFiles]) {
+    assert.deepEqual(
+      findUnsafeDomPatterns(file.source),
+      [],
+      `${file.path} should avoid unsafe HTML sinks and inline or DOM0 handlers`,
+    );
+  }
   for (const module of modules) {
     assert.doesNotMatch(
       genericViewSource,
@@ -205,6 +226,20 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
       `generic views should not hardcode module title ${module.title}`,
     );
   }
+});
+
+test('DOM safety scanner catches unsafe rendering and DOM0 handler assignment mutations', () => {
+  const mutation = `
+    region.innerHTML = unsafeMarkup;
+    region.setAttribute('onclick', unsafeHandler);
+    button.onclick = unsafeHandler;
+  `;
+
+  assert.deepEqual(findUnsafeDomPatterns(mutation), [
+    'HTML sink',
+    'inline handler attribute',
+    'DOM0 handler assignment',
+  ]);
 });
 
 test('application integrates the dashboard, curriculum and knowledge-map renderers', async () => {
@@ -462,16 +497,19 @@ test('release guide records multi-module state isolation and evidence labels as 
 test('release guide marks complete modules active and derives every planned module from the catalog', async () => {
   const readme = await read('README.md');
   const boundary = markdownSection(readme, '模块路线图与边界');
+  const harnessBoundary = markdownParagraphContaining(boundary, '**Agent Harness**');
+  const contextBoundary = markdownParagraphContaining(boundary, '**上下文、RAG 与记忆**');
   const activeModules = modules.filter((module) => module.status === 'active');
   const plannedModules = modules.filter((module) => module.status === 'planned');
 
-  assert.match(boundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
-  assert.match(boundary, /上下文、RAG 与记忆[^\n]{0,220}(?:active|已开放)/i);
+  assert.match(harnessBoundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
+  assert.match(contextBoundary, /上下文、RAG 与记忆[^\n]{0,220}(?:active|已开放)/i);
   for (const scope of ['宿主 Runner', 'Run State', 'Event Log', 'Checkpoint', '权限', '人工审批', 'Sandbox', 'Budget', 'Timeout', 'Retry', 'Cancel', '幂等', 'Resume', '并发', '队列', '背压', 'Blocked', 'HITL', 'Handoff', '运行产物']) {
-    assert.match(boundary, new RegExp(scope, 'i'), `README should define Harness scope: ${scope}`);
+    assert.match(harnessBoundary, new RegExp(scope, 'i'), `README should define Harness scope: ${scope}`);
   }
-  for (const later of ['RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
-    assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
+  assert.match(harnessBoundary, /不提前覆盖[^。]{0,80}RAG[^。]{0,30}长期记忆/i);
+  for (const later of ['完整后端服务', '系统化评测治理', '多 Agent 协议']) {
+    assert.match(harnessBoundary, new RegExp(later, 'i'), `README should keep ${later} outside Harness`);
   }
   assert.match(
     boundary,
