@@ -29,7 +29,7 @@ const expectedResourceUrls = new Map([
   ['res-agent-dlai-agentic', 'https://www.deeplearning.ai/courses/agentic-ai'],
   ['res-agent-lilian-weng', 'https://lilianweng.github.io/posts/2023-06-23-agent/'],
   ['res-agent-lihongyi', 'https://www.youtube.com/watch?v=M2Yg1kwPpts'],
-  ['res-agent-datawhale-bili', 'https://www.bilibili.com/video/BV1Sb421E74u/'],
+  ['res-agent-datawhale-bili', 'https://www.bilibili.com/video/BV17i421Y7L6/'],
   ['res-agent-disney-planner-bili', 'https://www.bilibili.com/video/BV1ix4y117zo/'],
   ['res-agent-ms-tool-video', 'https://www.youtube.com/watch?v=vieRiPRx-gI'],
   ['res-agent-ms-plan-video', 'https://www.youtube.com/watch?v=kPfJ2BrBCMY'],
@@ -154,7 +154,29 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
   const byId = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
   assert.equal(resourcePlatform(byId.get('res-agent-hf-course')), 'GitHub');
   assert.equal(resourcePlatform(byId.get('res-agent-lihongyi')), 'YouTube');
-  assert.equal(resourcePlatform(byId.get('res-agent-datawhale-bili')), 'Bilibili');
+  const datawhaleAgentLesson = byId.get('res-agent-datawhale-bili');
+  assert.equal(resourcePlatform(datawhaleAgentLesson), 'Bilibili');
+  assert.equal(datawhaleAgentLesson.url, 'https://www.bilibili.com/video/BV17i421Y7L6/');
+  assert.match(datawhaleAgentLesson.title, /Agent|大模型智能体/);
+  assert.equal(datawhaleAgentLesson.source, '二次元的Datawhale');
+
+  const lihongyiAgentLesson = byId.get('res-agent-lihongyi');
+  assert.equal(
+    lihongyiAgentLesson.title,
+    '【生成式AI時代下的機器學習(2025)】第二講：一堂課搞懂 AI Agent 的原理 (AI如何透過經驗調整行為、使用工具和做計劃)',
+  );
+  assert.equal(lihongyiAgentLesson.source, 'Hung-yi Lee');
+
+  const disneyPlanner = byId.get('res-agent-disney-planner-bili');
+  assert.equal(disneyPlanner.title, '【AI智能体】十分钟手搓迪士尼排队规划Agent');
+  assert.equal(disneyPlanner.source, '同济子豪兄');
+
+  const microsoftToolLesson = byId.get('res-agent-ms-tool-video');
+  assert.equal(microsoftToolLesson.title, 'What Is the Agent Tool Use Design Pattern?');
+  assert.equal(microsoftToolLesson.source, 'Microsoft Developer');
+  const microsoftPlanLesson = byId.get('res-agent-ms-plan-video');
+  assert.equal(microsoftPlanLesson.title, 'What Is the AI Agent Planning Design Pattern?');
+  assert.equal(microsoftPlanLesson.source, 'Microsoft Developer');
   assert.equal(resourcePlatform(byId.get('res-agent-react-paper')), 'arXiv');
   assert.equal(resourcePlatform(byId.get('res-agent-douyin-claude-code')), '抖音');
   assert.match(byId.get('res-agent-douyin-claude-code').value, /仅作.*实作补充.*不作为机制事实依据/);
