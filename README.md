@@ -14,6 +14,8 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 三个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余五个目录模块仍未开放，范围见“模块路线图与边界”。
 
+LLM 基础第一课当前试点以**知识笔记作为主教材**：学习者可以先完成站内长文，再把外部资料作为证据、补充与深挖入口。这个试点目前只覆盖 `llm-01`；其他课程和模块仍由原有 `explanations` 渲染讲解，作为通用 fallback，不能据此宣称所有课程已经完成知识笔记改造。
+
 ## 功能导览
 
 站点有六个一级视图：
@@ -141,7 +143,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 ```
 
 - `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
-- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js` 与 `src/data/agent-harness.js` 分别保存三个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。
+- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js` 与 `src/data/agent-harness.js` 分别保存三个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册；LLM 第一课的知识笔记试点单独保存在 `src/data/llm-foundation-notes.js`。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，均不查询 DOM。
 - `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js` 与 `src/ui/harness-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
@@ -163,6 +165,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 │   │   ├── modules.js         # 模块目录、状态、先修关系
 │   │   ├── courses.js         # 不可变课程注册表与 getCourse 查询
 │   │   ├── llm-foundation.js  # LLM 课程、资源、面试题
+│   │   ├── llm-foundation-notes.js # LLM 第一课知识笔记试点
 │   │   ├── agent-mechanism.js # Agent 课程、资源、面试题
 │   │   └── agent-harness.js   # Harness 课程、资源、面试题
 │   ├── core/                  # 无 DOM 的领域逻辑与存储适配器
@@ -199,6 +202,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - `id`、`order`、`title`、`summary`、`durationMinutes`；
 - `prerequisites`：可选，只引用本模块课程 ID；省略时 view-model 按课程顺序推导上一节为先修；
 - `objectives`、`concepts`、`explanations`、`keyPoints`；
+- `knowledgeNote`：可选的站内长文主教材，包含 `readingMinutes`、`introduction`、`sections`、`misconceptions`、`recap` 与 `nextStep`；每个 section 由 `id`、`title`、`paragraphs`、`keyPoints`、可选 `callout` 和 `sourceIds` 组成。未提供时继续使用 `explanations`；
 - `resourceIds`、`interviewQuestionIds`：必须双向可解析；
 - `exercise`：标题、说明、步骤、交付物，可选已有 `experiment` ID；
 - `quiz` 与 `completionCriteria`：保证学习者能验证理解与完成状态。
@@ -209,6 +213,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - `language`、`type`、`difficulty`、`stage`；
 - `value`：展示“学习价值”，说明为什么值得学以及证据适用边界；
 - `verifiedAt`：`YYYY-MM-DD` 核验日期。
+- `evidence`：知识笔记使用的可选来源卡，简要记录 `authority`、`role`、`coverage`、`limitations` 与 `verifiedAt`；它描述来源能证明什么、不能外推什么，不替代正文核验。
 
 ### Interview question
 
@@ -234,6 +239,17 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - 临时 revealed 展开状态保存在 `revealedInterviewIdsByModule`，以 `moduleId` 隔离。
 
 `ProgressState` 仍是一个专用键内的扁平记录；上述全局 ID、按当前课程过滤与模块级临时 UI 状态共同保证三个已开放模块不会互相污染。
+
+## 知识笔记复用流程
+
+LLM 第一课的当前试点见 `src/data/llm-foundation-notes.js`；可复用的项目 Skill 位于 `.agents/skills/build-learning-module-notes/`。后续课程或模块可以沿用这套协议与工具，但每次仍必须重新核验目标课程、资源注册表和每一份来源正文，不能把当前试点的证据判断直接复制到新主题。
+
+制作或重做知识笔记时，先调用 `$build-learning-module-notes` Skill，再按以下顺序推进：
+
+1. 读取目标 lesson、测验、面试题、练习、完成标准及关联资源，逐来源访问正文并建立来源卡；访问失败、版本限制和证据冲突必须保留。
+2. 在写正文前画出知识依赖图与覆盖矩阵，把目标、quiz、面试、练习和完成标准映射到需要讲清的知识与来源证据，再按主题综合，而不是按链接顺序批量拼接摘要。
+3. 为可发布章节绑定项目注册表中真实可解析的 `sourceIds`，并记录来源的角色、覆盖范围与限制。资源 metadata、课程字段和模型记忆只能帮助规划覆盖面，不能支撑关键事实或伪装成已读证据。
+4. 使用 Skill 的质量量表审查完整性、可学性、证据与边界；只有达到 **85/100** 且没有断裂引用，才接入 data、通用 UI 与 static tests。未达门槛时保留为阻塞报告或待核验提纲，不发布看似完整的主教材。
 
 ## 添加新模块
 
