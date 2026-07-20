@@ -83,7 +83,10 @@ function assertUnique(values, label) {
 test('Agent Harness exposes eight ordered substantive lessons and sixteen quizzes', () => {
   assert.equal(agentHarness.id, 'agent-harness');
   assert.equal(agentHarness.title, 'Agent Harness');
-  assert.ok(agentHarness.summary.length >= 20);
+  assert.equal(
+    agentHarness.summary,
+    '把 Agent loop 放进可约束、可暂停、可恢复并能安全处理副作用的宿主执行系统。',
+  );
   assert.deepEqual(agentHarness.lessons.map(({ id }) => id), lessonIds);
   assert.deepEqual(agentHarness.lessons.map(({ order }) => order), [1, 2, 3, 4, 5, 6, 7, 8]);
   assert.deepEqual(agentHarness.lessons.map(({ title }) => title), lessonTitles);
@@ -127,6 +130,26 @@ test('Agent Harness exposes eight ordered substantive lessons and sixteen quizze
   }
 });
 
+test('the lifecycle lesson uses the complete normative run state vocabulary', () => {
+  const lifecycleLesson = agentHarness.lessons[0];
+  const lifecycleCopy = JSON.stringify(lifecycleLesson.explanations);
+  const requiredStates = [
+    'created',
+    'queued',
+    'running',
+    'awaiting_approval',
+    'retry_wait',
+    'blocked',
+    'succeeded',
+    'failed',
+    'cancelled',
+    'timed_out',
+  ];
+
+  for (const state of requiredStates) assert.match(lifecycleCopy, new RegExp(`\\b${state}\\b`), state);
+  assert.doesNotMatch(lifecycleCopy, /\b(?:paused|completed)\b/);
+});
+
 test('only lessons one, six and seven map the specified experiments', () => {
   assert.deepEqual(
     agentHarness.lessons
@@ -151,6 +174,67 @@ test('resources are the exact 28 verified HTTPS entries with complete metadata',
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
     if (resource.type.includes('视频')) assert.ok(resource.platform, `${resource.id}: platform`);
+  }
+});
+
+test('every resource states both its learning use and the evidence boundary for its source class', () => {
+  const byId = new Map(agentHarness.resources.map((resource) => [resource.id, resource]));
+  for (const resource of agentHarness.resources) {
+    assert.match(resource.value, /学习用途[：:]/, `${resource.id}: learning use`);
+    assert.match(resource.value, /证据边界[：:]/, `${resource.id}: evidence boundary`);
+  }
+
+  for (const id of [
+    'res-harness-openai-running',
+    'res-harness-openai-hitl',
+    'res-harness-openai-tools',
+    'res-harness-openai-run-state',
+  ]) {
+    assert.match(byId.get(id).value, /当前.*SDK.*实现语义.*不(?:是|代表).*跨框架标准/i, id);
+  }
+  for (const id of [
+    'res-harness-langgraph-persistence',
+    'res-harness-langgraph-interrupts',
+    'res-harness-langgraph-fault-tolerance',
+  ]) {
+    assert.match(byId.get(id).value, /具体.*(?:checkpoint|replay).*语义.*不可外推/i, id);
+  }
+  for (const id of [
+    'res-harness-temporal-execution',
+    'res-harness-temporal-event',
+    'res-harness-temporal-retry',
+    'res-harness-azure-durable',
+  ]) {
+    assert.match(byId.get(id).value, /不保证.*外部副作用.*exactly-once/i, id);
+  }
+  for (const id of [
+    'res-harness-aws-idempotent',
+    'res-harness-aws-timeouts',
+    'res-harness-sre-cascading',
+    'res-harness-sre-overload',
+  ]) {
+    assert.match(byId.get(id).value, /工程经验.*不(?:是|构成).*普适定律/, id);
+  }
+  for (const id of [
+    'res-harness-gvisor',
+    'res-harness-docker-seccomp',
+    'res-harness-docker-resources',
+    'res-harness-docker-rootless',
+    'res-harness-firecracker',
+    'res-harness-nist-tool-use',
+    'res-harness-owasp-agency',
+  ]) {
+    assert.match(byId.get(id).value, /(?:机制边界|安全原则).*不证明.*具体配置.*绝对安全/, id);
+  }
+  for (const id of [
+    'res-harness-agent-learning-hub',
+    'res-harness-agentscope-runtime',
+    'res-harness-smolagents-code',
+    'res-harness-hello-agents-framework',
+    'res-harness-bilibili',
+    'res-harness-douyin',
+  ]) {
+    assert.match(byId.get(id).value, /(?:学习导航|演示).*不承担.*可靠性.*安全性.*结论/, id);
   }
 });
 
@@ -224,33 +308,46 @@ test('all lesson, resource, quiz and interview identifiers are globally unique',
   assertUnique([...lessons, ...resources, ...quizzes, ...interviews], 'global ids');
 });
 
-test('Agent Harness data is deeply frozen at top-level and representative nested values', () => {
-  const lesson = agentHarness.lessons[0];
-  const values = [
-    agentHarness,
-    agentHarness.lessons,
-    lesson,
-    lesson.objectives,
-    lesson.explanations,
-    lesson.explanations[0],
-    lesson.explanations[0].keyPoints,
-    lesson.exercise,
-    lesson.exercise.steps,
-    lesson.quiz,
-    lesson.quiz[0],
-    lesson.quiz[0].choices,
-    agentHarness.resources,
-    agentHarness.resources[0],
-    agentHarness.interviewQuestions,
-    agentHarness.interviewQuestions[0],
-    agentHarness.interviewQuestions[0].deepDive,
-  ];
-  for (const value of values) assert.equal(Object.isFrozen(value), true);
-
+test('Agent Harness recursively freezes every lesson, resource and interview value', () => {
   const snapshot = structuredClone(agentHarness);
+  const visited = new Set();
+  const assertDeepFrozen = (value, path) => {
+    if (value === null || typeof value !== 'object' || visited.has(value)) return;
+    visited.add(value);
+    assert.equal(Object.isFrozen(value), true, path);
+    for (const [key, nested] of Object.entries(value)) assertDeepFrozen(nested, `${path}.${key}`);
+  };
+
+  assertDeepFrozen(agentHarness, 'agentHarness');
   assert.throws(() => { agentHarness.title = 'changed'; }, TypeError);
-  assert.throws(() => { lesson.exercise.steps.push('changed'); }, TypeError);
-  assert.throws(() => { agentHarness.resources[0].title = 'changed'; }, TypeError);
-  assert.throws(() => { agentHarness.interviewQuestions[0].deepDive.pop(); }, TypeError);
+  assert.throws(() => { agentHarness.lessons.push({}); }, TypeError);
+  assert.throws(() => { agentHarness.resources.push({}); }, TypeError);
+  assert.throws(() => { agentHarness.interviewQuestions.push({}); }, TypeError);
+
+  for (const lesson of agentHarness.lessons) {
+    assert.throws(() => { lesson.title = 'changed'; }, TypeError, lesson.id);
+    for (const field of ['objectives', 'concepts', 'explanations', 'resourceIds', 'quiz', 'interviewQuestionIds', 'completionCriteria']) {
+      assert.throws(() => { lesson[field].push('changed'); }, TypeError, `${lesson.id}.${field}`);
+    }
+    assert.throws(() => { lesson.exercise.title = 'changed'; }, TypeError, `${lesson.id}.exercise`);
+    assert.throws(() => { lesson.exercise.steps.push('changed'); }, TypeError, `${lesson.id}.exercise.steps`);
+    for (const explanation of lesson.explanations) {
+      assert.throws(() => { explanation.body = 'changed'; }, TypeError, `${lesson.id}.explanation`);
+      assert.throws(() => { explanation.keyPoints.push('changed'); }, TypeError, `${lesson.id}.keyPoints`);
+    }
+    for (const item of lesson.quiz) {
+      assert.throws(() => { item.prompt = 'changed'; }, TypeError, item.id);
+      assert.throws(() => { item.choices.push('changed'); }, TypeError, `${item.id}.choices`);
+    }
+  }
+  for (const resource of agentHarness.resources) {
+    assert.throws(() => { resource.value = 'changed'; }, TypeError, resource.id);
+  }
+  for (const item of agentHarness.interviewQuestions) {
+    assert.throws(() => { item.shortAnswer = 'changed'; }, TypeError, item.id);
+    for (const field of ['deepDive', 'misconceptions', 'followUps', 'roles']) {
+      assert.throws(() => { item[field].push('changed'); }, TypeError, `${item.id}.${field}`);
+    }
+  }
   assert.deepEqual(agentHarness, snapshot);
 });
