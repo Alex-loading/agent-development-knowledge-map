@@ -19,6 +19,8 @@ Use only these enum values:
 
 `authority` describes known provenance, not trust level or automatic truth. `role` describes how the accessible resource is used in this chapter. Never use a lower enum value as a fallback for missing provenance.
 
+The enum belongs to validated evidence cards. In a blocked task where a resource body and registry cannot be checked, keep the item in a separate candidate list with `authorityStatus: unresolved`; preserve publisher, source, and type only as supplied metadata. Do not infer `official`, `academic`, `expert`, or `community` from a publisher name, title, URL, or metadata type label—even one containing words such as “官方”, “大学”, “专家”, or “社区”.
+
 ## Course fields are coverage inputs
 
 - Treat lesson objectives, concepts, explanations, quiz, interview, exercise, completion criteria, and their paths as `courseFieldBasis`: they define coverage, assessment, and draft constraints.
@@ -33,6 +35,7 @@ Use only these enum values:
 3. Use `core` only when the accessible body directly supports a central learning outcome. Use `cross-check` when it independently corroborates, scopes, or challenges a claim. Use `extension` for optional depth, metadata-only links, inaccessible bodies, or adjacent topics.
 4. Treat model memory as navigation help only. Model memory is not a citable source. Delete mechanism details not grounded in supplied course fields or accessed source bodies, or label them as `待核验` outside publishable teaching claims.
 5. Do not infer a resource's contents from its title, URL, publisher, type, stage, or `value` field. Metadata can support route planning and evidence limitations, not unobserved body claims.
+6. Do not infer a metadata-only candidate's authority enum from those fields. Until its provenance is validated, omit `authority` and use `authorityStatus: unresolved`.
 
 ## Media, freshness, and conflict
 

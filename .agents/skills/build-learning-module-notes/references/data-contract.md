@@ -92,6 +92,8 @@ const blockedDraft = {
 
 `courseFieldBasis` is traceability to supplied curriculum input, not citation or evidence. Candidate source IDs must be genuine IDs from supplied resource metadata, remain separate from draft sections, and must not appear in a formal evidence map until provenance, body access, and registry resolution are established.
 
+Candidate metadata records in this blocked shape must not carry the formal `authority` enum. Keep their supplied publisher/source/type fields verbatim and use `authorityStatus: 'unresolved'` until provenance is validated against accessible material and the project registry.
+
 `brokenReferenceCount: null` and the complete `tests` object are mandatory in every blocked artifact. A request such as “only output the outline, source-role cards, and coverage matrix” does not waive this audit. When those are the only permitted top-level items, include an explicit audit object containing both fields inside the coverage-matrix result rather than omitting them or claiming a test ran.
 
 ## Integrity checks
