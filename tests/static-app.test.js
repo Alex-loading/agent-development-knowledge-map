@@ -170,7 +170,7 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
     read('src/ui/progress-view.js'),
   ]);
   const source = `${dom}\n${shell}\n${app}\n${genericViews.join('\n')}`;
-  const genericViewSource = genericViews.join('\n');
+  const genericViewSource = `${shell}\n${genericViews.join('\n')}`;
 
   assert.match(dom, /export function element\b/);
   assert.match(dom, /export function button\b/);
@@ -426,6 +426,10 @@ test('release guide marks Harness active with scope and derives every planned mo
   for (const later of ['RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
     assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
   }
+  assert.match(
+    boundary,
+    new RegExp(`以下${countPattern(plannedModules.length)}个模块[^\\n]{0,40}(?:仍未开放|仍只有目录与依赖元数据|规划中)`),
+  );
   for (const module of plannedModules) {
     assert.match(
       boundary,
