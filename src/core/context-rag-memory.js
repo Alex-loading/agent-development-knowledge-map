@@ -273,16 +273,10 @@ export function retrieveAndPack(corpus, query, options) {
     traceById.get(entry.id).filteredReason = reason;
   }
 
-  let candidates = scored.filter((entry) => {
-    const matches = Object.entries(options.filters)
-      .every(([field, value]) => entry[field] === value);
-    if (!matches) exclude(entry, 'metadata-filtered');
-    return matches;
-  });
-
+  let candidates = scored;
   if (options.latestVersionOnly) {
     const latestVersionByDocument = new Map();
-    for (const entry of candidates) {
+    for (const entry of scored) {
       const current = latestVersionByDocument.get(entry.documentId) ?? -Infinity;
       latestVersionByDocument.set(entry.documentId, Math.max(current, entry.version));
     }
@@ -292,6 +286,13 @@ export function retrieveAndPack(corpus, query, options) {
       return isLatest;
     });
   }
+
+  candidates = candidates.filter((entry) => {
+    const matches = Object.entries(options.filters)
+      .every(([field, value]) => entry[field] === value);
+    if (!matches) exclude(entry, 'metadata-filtered');
+    return matches;
+  });
 
   candidates = candidates.filter((entry) => {
     const passes = entry.hybridScore >= options.threshold;

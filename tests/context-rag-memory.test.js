@@ -271,6 +271,30 @@ test('retrieveAndPack keeps only the latest document version when requested', ()
   )));
 });
 
+test('retrieveAndPack never revives an old version when the latest version misses metadata filters', () => {
+  const result = retrieveAndPack([
+    chunk('guide-v1', {
+      documentId: 'guide', version: 1, department: 'engineering', denseScore: 0.9,
+    }),
+    chunk('guide-v2', {
+      documentId: 'guide', version: 2, department: 'sales', denseScore: 0.8,
+    }),
+  ], 'agent', retrievalOptions({
+    alpha: 1,
+    filters: { department: 'engineering' },
+    latestVersionOnly: true,
+  }));
+
+  assert.deepEqual(result.ranked, []);
+  assert.deepEqual(result.packed, []);
+  assert.ok(result.excluded.some(({ id, reason }) => (
+    id === 'guide-v1' && reason === 'old-version'
+  )));
+  assert.ok(result.excluded.some(({ id, reason }) => (
+    id === 'guide-v2' && reason === 'metadata-filtered'
+  )));
+});
+
 test('retrieveAndPack deduplicates documents before budget packing', () => {
   const result = retrieveAndPack([
     chunk('doc-a-best', { documentId: 'doc-a', denseScore: 0.9 }),
