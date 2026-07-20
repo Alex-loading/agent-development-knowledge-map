@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Learning Module Notes"
+  short_description: "将多来源学习资料综合成可独立学习、可追溯的系统知识章节"
+  default_prompt: "Use $build-learning-module-notes to turn this module's resources into a source-grounded Chinese learning chapter."
