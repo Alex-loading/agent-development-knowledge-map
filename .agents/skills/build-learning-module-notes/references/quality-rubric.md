@@ -46,6 +46,8 @@ Do not publish when either gate fails, regardless of score:
 
 Also block publication when lesson fields were converted into resource evidence, when provenance was guessed to fit the authority enum, or when a blocked isolated draft used invented IDs in formal `knowledgeNote.sections.sourceIds`.
 
+Also block a prose-only or word-count response when accessible core evidence or registry validation is missing. A limitation appended to otherwise polished prose does not satisfy the gate; the artifact must use the blocked contract, preserve `courseFieldBasis`, and report the failed release audit.
+
 Also stop when a key assessed outcome depends only on metadata or unmarked model memory. Report the exact blocked outcome and required evidence before revising.
 
 ## Audit record

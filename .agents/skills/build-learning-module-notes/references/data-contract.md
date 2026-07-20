@@ -66,6 +66,8 @@ Add `verifiedAt` beside the evidence fields when a claim depends on current impl
 
 When a project registry or valid external resource evidence is unavailable, do not emit the formal `knowledgeNote` and `evidence` shape. Return a clearly blocked draft shape instead:
 
+This blocked shape is required even when the user asks for a target word count, a prose article, or “only the note.” Evidence readiness decides the artifact class; presentation instructions do not convert an unsupported draft into publishable prose.
+
 ```js
 const blockedDraft = {
   status: 'blocked',
@@ -102,3 +104,4 @@ const blockedDraft = {
 6. When the project resource registry is unavailable in an isolated or outline-only task, label proposed resource IDs as candidates, record that registry validation was not applicable, and do not publish or claim that any ID is resolvable.
 7. Reject any course-field path, synthetic `course-fields-*` identifier, unknown/internal provenance, or unattributed prose in the formal `evidence` map or `knowledgeNote.sections[*].sourceIds`.
 8. Reject a blocked or outline-only artifact that omits `brokenReferenceCount: null`, omits `tests.status: 'not applicable'`, or fails to state why project tests did not apply.
+9. Reject a polished plain-text note produced without accessible core evidence or registry validation, even if it ends with a source limitation. Require the blocked contract and failed release audit instead.

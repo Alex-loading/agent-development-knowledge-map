@@ -9,9 +9,11 @@ description: Use when creating or revising Agent Learner knowledge notes from mu
 
 Build a Chinese teaching chapter that a learner can study without opening every external link. Treat verified resource bodies—not model memory or unattributed course fields—as publishable evidence. Preserve missing evidence, conflicts, version limits, and uncertainty instead of filling gaps with plausible prose.
 
+Evidence and release gates take precedence over requested artifact shape, word count, and format instructions such as “只返回笔记正文”. When accessible core evidence or the project registry is missing, do not first produce a polished, apparently publishable plain-text note and append a limitation afterward. Refuse the publishable shape and return a blocked report or draft outline that exposes the gap.
+
 ## Required workflow
 
-1. Read the target module and lesson. Collect its objectives, concepts, quiz prompts and explanations, interview questions and answers, exercise, completion criteria, resource IDs, and existing explanations. Treat those lesson fields as coverage inputs and drafting constraints, not resource evidence. Treat quiz, interview, and exercise requirements as learning outcomes that the chapter must teach, not as appendices.
+1. Before drafting prose, decide whether publishable evidence is available. If no accessible core resource body or project registry is available, enter the blocked path immediately—even when the user requested a word count, prose-only response, or “only the note.” A blocked result must expose blockers, separate `courseFieldBasis` from resource evidence, list genuine candidate IDs, set `brokenReferenceCount: null`, record `tests.status: 'not applicable'` with its reason, and include a rubric with a failed release gate. Then read the target module and lesson. Collect its objectives, concepts, quiz prompts and explanations, interview questions and answers, exercise, completion criteria, resource IDs, and existing explanations. Treat those lesson fields as coverage inputs and drafting constraints, not resource evidence. Treat quiz, interview, and exercise requirements as learning outcomes that the chapter must teach, not as appendices.
 2. Read [source-policy.md](references/source-policy.md). Create one evidence card only for each genuine associated resource with a real resource ID and attributable provenance. If the body is unavailable, set its role to `extension`, describe only supplied metadata, and do not infer content from its title, URL, publisher, course fields, or model memory. Never mint a resource ID, `authority`, or `role` for lesson fields.
 3. Select source-access tools conditionally. Use **openai-docs** for OpenAI product material, **pdf:pdf** for papers or PDFs, and a browsing tool for ordinary official web pages. Do not request or install low-trust `course-creator`, `fact-check`, or similar third-party packages.
 4. Draw the lesson's knowledge-dependency map and coverage matrix before drafting. Map each objective, quiz, interview question, exercise step, and completion criterion to `courseFieldBasis` separately from the resource evidence needed to teach it. Mark missing resource evidence as a gap; course-field coverage does not close an evidence gap.
@@ -24,6 +26,7 @@ Build a Chinese teaching chapter that a learner can study without opening every 
 ## Evidence-bound drafting rules
 
 - Distinguish course fields that specify coverage from resource bodies that supply evidence. Course fields never become resource evidence merely because they contain accurate prose.
+- Course fields may support a visibly non-publishable draft, but they do not license model-memory embellishment. Remove or mark `待核验` any definition, causal claim, mechanism, analogy, or example not explicitly supplied by a course field or accessible resource body.
 - Keep unknown or internal provenance outside the `authority` enum rather than disguising it as `community`; do not create an evidence card until genuine provenance is known.
 - Paraphrase long passages. Use brief quotations only when exact wording is necessary and permitted.
 - Use tutorials to explain an original definition, never to silently replace it.
@@ -49,4 +52,6 @@ Build a Chinese teaching chapter that a learner can study without opening every 
 | Sections cite a publisher name but no stable ID. | Bind each formal-project section to IDs present in both its evidence set and resource registry; candidate IDs alone are not publishable. |
 | Lesson prose is assigned a made-up ID or `authority: community`. | Keep it in `courseFieldBasis`; unknown provenance is not community provenance and cannot enter the resource evidence map. |
 | A shape-constrained blocked response omits reference or test status. | Include `brokenReferenceCount: null` and `tests.status: not applicable`; nest them in the requested coverage result when necessary. |
+| A request for “only the note” produces polished prose before admitting sources were unavailable. | Let evidence gates override the requested prose shape; return the blocked report or draft outline first. |
+| Course prose is expanded with a plausible definition or example from model memory. | Delete it or mark it `待核验`; course fields permit only the content they actually state. |
 | The chapter reads well but misses an assessed outcome. | Trace every quiz, interview, exercise, and completion criterion through the coverage matrix. |
