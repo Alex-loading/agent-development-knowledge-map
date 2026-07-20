@@ -116,7 +116,7 @@ res-agent-hello-agents            https://github.com/datawhalechina/hello-agents
 res-agent-dlai-agentic            https://www.deeplearning.ai/courses/agentic-ai
 res-agent-lilian-weng             https://lilianweng.github.io/posts/2023-06-23-agent/
 res-agent-lihongyi                https://www.youtube.com/watch?v=M2Yg1kwPpts
-res-agent-datawhale-bili          https://www.bilibili.com/video/BV1Sb421E74u/
+res-agent-datawhale-bili          https://www.bilibili.com/video/BV17i421Y7L6/
 res-agent-disney-planner-bili     https://www.bilibili.com/video/BV1ix4y117zo/
 res-agent-ms-tool-video           https://www.youtube.com/watch?v=vieRiPRx-gI
 res-agent-ms-plan-video           https://www.youtube.com/watch?v=kPfJ2BrBCMY
