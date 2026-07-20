@@ -185,6 +185,11 @@ test('LLM first lesson resources all provide complete evidence cards', () => {
   const validRoles = new Set(['core', 'cross-check', 'extension']);
 
   assert.equal(lesson.resourceIds.length, 7, 'llm-01 应关联且核验 7 份学习资料');
+  assert.equal(
+    new Set(lesson.resourceIds).size,
+    7,
+    'llm-01 的 7 份学习资料必须使用不同 resource id',
+  );
   for (const resourceId of lesson.resourceIds) {
     const resource = resourcesById.get(resourceId);
     assert.ok(resource, `${resourceId}: 必须存在于资源库`);
