@@ -8514,9 +8514,11 @@ verifiedAt：2026-07-15
   - `<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md`
 - 第一次内容运行没有任何其他文件读取、网络访问或文件写入。
 
-## BEHAVIOR REGRESSION：可读取证据与 blocked 项目测试保真
+## SUPERSEDED BEHAVIOR REGRESSION：tracked fixture 输入（不作为最终证据）
 
-可复现 fixtures 由 commit `2147cb9` 引入：
+> **Superseded / 不作为最终验收证据。** commit `2147cb9` 曾引入下列 tracked fixtures；它们已在最终收口中删除。相关旧运行仅保留为历史审计轨迹，不能证明“测试前临时创建、测试后清理”，也不能替代后文的严格隔离盲测。
+
+历史 fixtures：
 
 - `docs/superpowers/skill-tests/fixtures/readable-source.md`：非空的确定性工具循环官方指南正文。
 - `docs/superpowers/skill-tests/fixtures/readable-registry.json`：包含 `res-fixture-loop` 的最小项目资源注册表。
@@ -9227,7 +9229,9 @@ completionCriteria:
 - 第一次内容运行中实际工具仅为 `functions.exec` → `tools.exec_command`，只读 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用。
 - 第一次内容运行没有任何其他文件读取、网络访问或文件写入。
 
-### readable evidence + registry blind rerun
+### SUPERSEDED：readable evidence + registry tracked-fixture blind rerun
+
+> **Superseded / 不作为最终验收证据。** 本次运行读取的是 tracked fixture，不满足最终要求的临时未跟踪输入生命周期；最终证据见后文严格隔离临时 fixture 盲测。
 
 - canonical ID: `/root/task2_skill_impl/blind_final_llm01/blind_readable_evidence_registry`
 - fork: `none`
@@ -9676,7 +9680,9 @@ assert.equal(raw.qualityAudit.releaseGates.minimumScore, 'passed');
 - Raw JSON parse: `passed`.
 - Access JSON parse: `passed`.
 - Exact assertions: ordered seven-file access; three outer calls with nested counts 1/4/2; formal rather than blocked artifact; official/core evidence; 4–7 sections; every section cites only `res-fixture-loop`; registry passed; both broken-reference counts zero; publication ready; tests N/A for the isolated read-only run; both release gates passed.
-## BEHAVIOR REGRESSION：blocked 项目测试结果保真
+## SUPERSEDED BEHAVIOR REGRESSION：fixture-input 项目测试结果（不作为最终证据）
+
+> **Superseded / 不作为最终验收证据。** 本次运行只是读取 fixture 中预制的 command/exitCode/summary，没有实际执行项目测试，因此不足以证明 blocked 产物会保留真实项目测试结果。最终证据见后文真实命令严格隔离盲测。
 
 - canonical ID: `/root/task2_skill_impl/blind_final_llm01/blind_preserve_project_test_results`
 - fork: `none`
@@ -10206,3 +10212,898 @@ assert.equal(fail.qualityAudit.testStatus, fail.tests.status);
 - FIRST raw JSON parse: `passed`
 - ordered access-log JSON parse: `passed`
 - semantic assertions: `passed`
+
+## FINAL BEHAVIOR：临时未跟踪正文与注册表严格隔离盲测
+
+- Canonical ID: `/root/task2_skill_impl/blind_temp_evidence_final`
+- Skill commit: `2112390`
+- Lifecycle/setup: 两个临时文件在本次严格隔离运行开始前立即创建，运行时均为未跟踪文件；它们只为本次盲测提供正文与注册表输入。
+- Supersession: 此前的 tracked-fixture 与 fixture-input 运行均已被本节及下一节的最终盲测记录取代，不作为最终行为证据。
+
+### Exact setup contents
+
+`<repo-root>/.tmp-learning-note-blind-20260721/source.md`
+
+```md
+# Temporary Official Guide: Deterministic Tool Loops
+
+Provenance: Example Standards Team official engineering guide, version 1.0, published 2026-07-20.
+
+A deterministic tool loop has four required stages: accept a typed request, execute one allowlisted tool, validate the tool result against an explicit schema, and stop with either `done` or `blocked`. The host program owns tool execution and the stop decision; the model may prepare arguments but cannot bypass the allowlist or result validator.
+
+Use this decision rule: choose a deterministic loop when the route is known in advance and every output can be checked by code. Choose a model-directed agent only when observations can change the next action and that flexibility creates measurable value. A chat interface or a tool call alone does not make a system an agent.
+
+Worked example: a weather lookup accepts a city, invokes one approved weather tool, validates that temperature and timestamp are present, and returns `done`. If the tool omits the timestamp, validation fails and the loop returns `blocked` without inventing a value.
+
+Limit: this guide defines the temporary loop and selection rule only. It does not establish performance claims for any model or framework.
+```
+
+`<repo-root>/.tmp-learning-note-blind-20260721/registry.json`
+
+```json
+{
+  "resources": {
+    "res-temp-loop": {
+      "title": "Temporary Official Guide: Deterministic Tool Loops",
+      "authority": "official",
+      "verifiedAt": "2026-07-20",
+      "bodyFile": "source.md"
+    }
+  }
+}
+```
+
+### Exact clean prompt
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用；然后完成下述用户任务。你只能使用文件读取工具读取这五个 Skill 文件以及任务中明确给出的 sourceBodyPath、projectRegistryPath；除此之外禁止使用任何工具，禁止读取其他文件、workspace、测试记录或课程文件，禁止网络和外链访问，禁止修改文件。
+
+使用新 Skill，为下面的 lesson 生成可发布的学习笔记审计产物，不修改课程文件。sourceBodyPath 与 projectRegistryPath 是本任务明确授权访问的本地来源正文和项目资源注册表；请实际读取它们，并基于实际内容完成工作。最终只输出结果。
+
+sourceBodyPath: `<repo-root>/.tmp-learning-note-blind-20260721/source.md`
+projectRegistryPath: `<repo-root>/.tmp-learning-note-blind-20260721/registry.json`
+
+lesson:
+id: temp-loop-01
+title: 确定性工具循环与 Agent 边界
+durationMinutes: 70
+summary: 从执行路径与环境反馈出发，理解确定性工具循环及其与 Agent 的边界。
+objectives:
+1. 描述确定性工具循环的关键阶段。
+2. 判断何时选择确定性循环，何时才需要模型驱动的 Agent。
+concepts: 类型化请求；工具白名单；结果结构校验；停止条件；环境反馈。
+explanations:
+1. 宿主程序负责执行工具和作出停止决定，模型只能准备参数，不能绕过白名单或结果校验。
+completionCriteria:
+1. 能画出请求、执行、校验、停止的闭环。
+2. 能用路径是否预先确定以及观察是否改变下一步动作解释选型。
+
+associated resource metadata:
+id: res-temp-loop
+title: Temporary Official Guide: Deterministic Tool Loops
+publisher: Example Standards Team
+type: 官方工程指南
+verifiedAt: 2026-07-20
+value: 解释确定性工具循环、选择规则与天气查询示例。
+```
+
+### Complete FIRST raw JSON
+
+```json
+{
+  "knowledgeNote": {
+    "readingMinutes": 20,
+    "introduction": "本章从可由程序检查的请求与工具结果出发，建立确定性工具循环的完整心智模型。学习者应先理解程序可以接收输入、调用工具并检查返回值；完成本章后，应能画出请求、执行、校验、停止的闭环，并根据执行路径和环境观察判断是否需要模型驱动的 Agent。",
+    "sections": [
+      {
+        "id": "deterministic-loop-stages",
+        "title": "确定性工具循环包含哪些阶段",
+        "paragraphs": [
+          "确定性工具循环是执行路径预先确定、输出能够由代码检查的工具调用过程。它依次完成四个阶段：接收类型化请求、执行一个白名单工具、按照显式结构校验工具结果，以及用 done 或 blocked 停止。",
+          "可以把四个阶段记成“请求→执行→校验→停止”。这个图只表示控制流程，不意味着任意请求都能执行：工具必须已获白名单许可，结果也必须通过结构校验。"
+        ],
+        "keyPoints": [
+          "闭环固定为请求、执行、校验、停止。",
+          "停止结果是 done 或 blocked。"
+        ],
+        "callout": {
+          "kind": "intuition",
+          "title": "四道门的直觉",
+          "body": "请求、工具许可、结果结构和停止状态像依次通过的四道门；这个比喻只帮助记忆顺序，实际规则由宿主程序实现。"
+        },
+        "sourceIds": [
+          "res-temp-loop"
+        ]
+      },
+      {
+        "id": "host-model-boundary",
+        "title": "宿主程序与模型的边界在哪里",
+        "paragraphs": [
+          "宿主程序负责真正执行工具，并决定循环何时停止。白名单规定可执行的工具范围，结果校验器则判断工具输出是否满足显式结构；这两项约束都不由模型绕过。",
+          "模型可以准备工具参数，但准备参数不等于拥有执行权。即使模型提出调用或生成看似合理的补充值，宿主程序仍须执行许可检查和结果校验，并在不满足要求时停止。"
+        ],
+        "keyPoints": [
+          "工具执行权和停止决定属于宿主程序。",
+          "模型只能准备参数，不能绕过白名单或校验器。"
+        ],
+        "callout": {
+          "kind": "boundary",
+          "title": "能力边界",
+          "body": "模型提出动作不等于动作已经获准；实际执行和接受结果仍由宿主程序控制。"
+        },
+        "sourceIds": [
+          "res-temp-loop"
+        ]
+      },
+      {
+        "id": "loop-or-agent-decision",
+        "title": "什么时候选择循环，什么时候选择 Agent",
+        "paragraphs": [
+          "当执行路径可以预先确定，并且每个输出都能由代码检查时，应选择确定性循环。这里的“路径预先确定”意味着下一步不需要根据开放式观察重新规划。",
+          "只有当环境观察可能改变下一步动作，而且这种灵活性能够产生可衡量的价值时，才选择模型驱动的 Agent。聊天界面或一次工具调用本身都不足以把系统定义为 Agent。"
+        ],
+        "keyPoints": [
+          "路径已知且输出可检查时选择确定性循环。",
+          "观察会改变下一步动作且灵活性有可衡量价值时才选择 Agent。"
+        ],
+        "callout": {
+          "kind": "warning",
+          "title": "不要按界面判断",
+          "body": "是否采用聊天界面、是否发生工具调用，都不是循环与 Agent 的决定性区别。"
+        },
+        "sourceIds": [
+          "res-temp-loop"
+        ]
+      },
+      {
+        "id": "weather-loop-example",
+        "title": "天气查询如何走完闭环",
+        "paragraphs": [
+          "天气查询先接收城市，再调用一个获准的天气工具。工具返回后，宿主程序检查结果中是否同时存在温度和时间戳；两项均存在时返回 done。",
+          "如果结果缺少时间戳，结构校验失败，循环返回 blocked。系统不能为了形成完整答案而虚构时间戳，因为那会绕过结果校验并破坏确定性边界。"
+        ],
+        "keyPoints": [
+          "城市是请求输入，天气工具是白名单内的执行步骤。",
+          "温度和时间戳均通过校验才返回 done。",
+          "字段缺失时返回 blocked，不补造数据。"
+        ],
+        "callout": {
+          "kind": "example",
+          "title": "决策点",
+          "body": "真正的分支发生在结构校验：字段完整则 done，字段缺失则 blocked。"
+        },
+        "sourceIds": [
+          "res-temp-loop"
+        ]
+      },
+      {
+        "id": "engineering-consequences",
+        "title": "这些边界带来什么工程含义",
+        "paragraphs": [
+          "设计确定性循环时，需要明确写出请求类型、工具白名单、结果结构和停止条件。这样才能说明哪一步可以执行、哪种返回值可以接受，以及失败时为何必须停止。",
+          "该资料只定义临时的循环结构和选择规则，并不证明任何模型或框架的性能。因此，不能从这套机制进一步推出成本、延迟或性能优势；这些结论需要其他可访问证据。"
+        ],
+        "keyPoints": [
+          "循环设计必须显式表达输入、许可、校验和停止。",
+          "机制定义不能替代性能证据。"
+        ],
+        "callout": {
+          "kind": "boundary",
+          "title": "证据范围",
+          "body": "本章可以据此说明控制流程和选型规则，但不能宣称任何模型或框架具有性能优势。"
+        },
+        "sourceIds": [
+          "res-temp-loop"
+        ]
+      }
+    ],
+    "misconceptions": [
+      {
+        "claim": "只要系统调用了工具，它就是 Agent。",
+        "correction": "工具调用本身不能决定系统类型；应检查路径是否预先确定，以及观察是否会改变下一步动作。"
+      },
+      {
+        "claim": "模型既然生成了工具参数，也可以决定绕过白名单。",
+        "correction": "模型只能准备参数，工具许可、实际执行和停止决定均属于宿主程序。"
+      },
+      {
+        "claim": "工具结果缺少字段时，可以由模型补齐后继续。",
+        "correction": "缺失显式结构要求的字段意味着校验失败，应返回 blocked，不能虚构缺失值。"
+      }
+    ],
+    "recap": [
+      "确定性工具循环依次完成类型化请求、白名单工具执行、结果结构校验和 done 或 blocked 停止。",
+      "宿主程序拥有执行权和停止决定；模型准备参数但不能绕过约束。",
+      "路径预先确定且输出可由代码检查时选择确定性循环。",
+      "只有观察会改变下一步动作且灵活性有可衡量价值时，才需要模型驱动的 Agent。"
+    ],
+    "nextStep": "后续学习可以在这个边界之上考察需要多步观察和动态选路的任务，并比较这些任务何时真正获得 Agent 灵活性的价值。"
+  },
+  "evidence": {
+    "res-temp-loop": {
+      "authority": "official",
+      "role": "core",
+      "coverage": [
+        "确定性工具循环的四个阶段",
+        "宿主程序与模型的执行边界",
+        "确定性循环与模型驱动 Agent 的选择规则",
+        "天气查询的 done 与 blocked 示例"
+      ],
+      "limitations": "资料仅定义临时循环结构和选择规则，不支持任何模型或框架的性能结论。",
+      "verifiedAt": "2026-07-20"
+    }
+  },
+  "coverageAudit": {
+    "knowledgeDependencyMap": [
+      "类型化请求→白名单工具执行→显式结构校验→done 或 blocked",
+      "路径是否预先确定＋观察是否改变下一步动作→循环或 Agent 的选型"
+    ],
+    "coverageMatrix": [
+      {
+        "outcome": "描述确定性工具循环的关键阶段",
+        "courseFieldBasis": [
+          "lesson.objectives[0]",
+          "lesson.concepts"
+        ],
+        "resourceEvidenceSourceIds": [
+          "res-temp-loop"
+        ],
+        "sectionIds": [
+          "deterministic-loop-stages"
+        ],
+        "resourceEvidenceStatus": "covered"
+      },
+      {
+        "outcome": "判断何时选择确定性循环，何时才需要模型驱动的 Agent",
+        "courseFieldBasis": [
+          "lesson.objectives[1]",
+          "lesson.completionCriteria[1]"
+        ],
+        "resourceEvidenceSourceIds": [
+          "res-temp-loop"
+        ],
+        "sectionIds": [
+          "loop-or-agent-decision"
+        ],
+        "resourceEvidenceStatus": "covered"
+      },
+      {
+        "outcome": "说明宿主程序、模型、白名单和结果校验之间的边界",
+        "courseFieldBasis": [
+          "lesson.explanations[0]",
+          "lesson.concepts"
+        ],
+        "resourceEvidenceSourceIds": [
+          "res-temp-loop"
+        ],
+        "sectionIds": [
+          "host-model-boundary",
+          "engineering-consequences"
+        ],
+        "resourceEvidenceStatus": "covered"
+      },
+      {
+        "outcome": "画出请求、执行、校验、停止的闭环",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[0]"
+        ],
+        "resourceEvidenceSourceIds": [
+          "res-temp-loop"
+        ],
+        "sectionIds": [
+          "deterministic-loop-stages",
+          "weather-loop-example"
+        ],
+        "resourceEvidenceStatus": "covered"
+      }
+    ],
+    "unprovidedAssessmentInputs": [
+      "quiz",
+      "interview",
+      "exercise"
+    ],
+    "brokenReferenceCount": 0,
+    "courseFieldProvenanceViolations": [],
+    "evidenceRoleCorrections": [],
+    "remainingLimitations": [
+      "任务未提供 quiz、interview 或 exercise 字段，因此无法映射不存在的评测项目。",
+      "现有来源不支持模型或框架的性能结论。"
+    ]
+  },
+  "qualityAudit": {
+    "categoryScores": {
+      "目标、测验与面试覆盖": {
+        "score": 25,
+        "max": 25,
+        "evidence": "所有已提供的目标和完成标准均映射到实质章节；未提供的评测字段已明确记录。"
+      },
+      "知识结构与跨章衔接": {
+        "score": 19,
+        "max": 20,
+        "evidence": "五个章节依次覆盖直觉、机制、边界、选型、实例和工程限制，并提供后续学习桥接。"
+      },
+      "来源与不确定性": {
+        "score": 25,
+        "max": 25,
+        "evidence": "所有章节仅引用已读取正文且在注册表中解析成功的 res-temp-loop，并保留性能证据边界。"
+      },
+      "教学可读性与例子": {
+        "score": 18,
+        "max": 20,
+        "evidence": "术语首次出现即解释，并完整演示天气查询的 done 与 blocked 分支。"
+      },
+      "版权与数据契约": {
+        "score": 10,
+        "max": 10,
+        "evidence": "产物为纯数据、无 HTML，章节 ID 唯一，来源内容采用转述。"
+      }
+    },
+    "total": 97,
+    "releaseGates": {
+      "sourceResolution": "passed",
+      "minimumScore": "passed",
+      "publication": "passed"
+    }
+  },
+  "tests": {
+    "status": "not applicable",
+    "reason": "本任务为隔离的只读学习笔记审计，未修改项目数据、课程文件或渲染代码，因此项目测试不适用。"
+  }
+}
+```
+
+### Complete factual access-log JSON
+
+```json
+{
+  "toolCalls": [
+    {
+      "order": 1,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.agents/skills/build-learning-module-notes/SKILL.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "---",
+        "name: build-learning-module-notes",
+        "# Build Learning Module Notes"
+      ]
+    },
+    {
+      "order": 2,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "# Source Policy",
+        "## Evidence card schema"
+      ]
+    },
+    {
+      "order": 3,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "# Chapter Standard",
+        "## Purpose"
+      ]
+    },
+    {
+      "order": 4,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "# Learning Note Data Contract",
+        "## Formal publishable contract"
+      ]
+    },
+    {
+      "order": 5,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "# Quality Rubric",
+        "## 1. 目标、测验与面试覆盖（25）"
+      ]
+    },
+    {
+      "order": 6,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.tmp-learning-note-blind-20260721/source.md",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.tmp-learning-note-blind-20260721/source.md"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "# Temporary Official Guide: Deterministic Tool Loops",
+        "Provenance: Example Standards Team official engineering guide, version 1.0, published 2026-07-20."
+      ]
+    },
+    {
+      "order": 7,
+      "tool": "functions.exec",
+      "nestedToolCall": {
+        "tool": "exec_command",
+        "cmd": "cat <repo-root>/.tmp-learning-note-blind-20260721/registry.json",
+        "workdir": "<repo-root>",
+        "yield_time_ms": 10000,
+        "max_output_tokens": 20000
+      },
+      "exactPaths": [
+        "<repo-root>/.tmp-learning-note-blind-20260721/registry.json"
+      ],
+      "exitCode": 0,
+      "verbatimSummaryLines": [
+        "Script completed",
+        "Wall time 0.1 seconds",
+        "{",
+        "  \"resources\": {",
+        "    \"res-temp-loop\": {"
+      ]
+    }
+  ],
+  "fileModifications": [],
+  "networkAccess": [],
+  "otherFilesRead": []
+}
+```
+
+### After-the-fact leakage audit
+
+Clean prompt 只公开了 lesson、关联资源元数据以及两个授权路径，没有公开临时正文或注册表的实际内容。运行按顺序读取 Skill、四个直接引用、临时正文和临时注册表；未读取 workspace、课程文件、测试记录或其他文件，也没有网络访问或文件修改。FIRST raw 中的四阶段、选型规则、天气示例、来源 authority 与注册表解析结果均在实际读取之后产生，不能仅由 clean prompt 中的元数据还原。
+
+### Executable semantic assertions
+
+以下断言以两个上方 JSON fence 的文本分别绑定为 `finalTempFirstRawJson` 与 `finalTempAccessLogJson`。
+
+```js
+const assert = require('node:assert/strict');
+const raw = JSON.parse(finalTempFirstRawJson);
+const access = JSON.parse(finalTempAccessLogJson);
+assert.ok(raw.knowledgeNote);
+assert.equal(raw.knowledgeNote.sections.length > 0, true);
+assert.equal(raw.knowledgeNote.sections.every((section) => (
+  section.sourceIds.length === 1 && section.sourceIds[0] === 'res-temp-loop'
+)), true);
+assert.equal(raw.evidence['res-temp-loop'].role, 'core');
+assert.equal(raw.evidence['res-temp-loop'].authority, 'official');
+assert.equal(raw.coverageAudit.brokenReferenceCount, 0);
+assert.deepEqual(raw.qualityAudit.releaseGates, {
+  sourceResolution: 'passed',
+  minimumScore: 'passed',
+  publication: 'passed',
+});
+assert.equal(raw.tests.status, 'not applicable');
+assert.equal(access.toolCalls.length, 7);
+assert.deepEqual(access.toolCalls.map((call) => call.nestedToolCall.cmd), [
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/SKILL.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md',
+  'cat <repo-root>/.tmp-learning-note-blind-20260721/source.md',
+  'cat <repo-root>/.tmp-learning-note-blind-20260721/registry.json',
+]);
+assert.equal(access.toolCalls.every((call) => call.exitCode === 0), true);
+assert.deepEqual(access.fileModifications, []);
+assert.deepEqual(access.networkAccess, []);
+assert.deepEqual(access.otherFilesRead, []);
+```
+
+## FINAL BEHAVIOR：blocked 产物保留真实项目测试通过结果
+
+- Canonical ID: `/root/task2_skill_impl/blind_temp_evidence_final`
+- Run note: `new separately logged strict-isolation run`
+- Supersession: 此前的 tracked-fixture 与 fixture-input 运行均已被本节及上一节的最终盲测记录取代，不作为最终行为证据。
+
+### Exact clean prompt
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用；然后完成下述用户任务。你只能使用文件读取工具读取这五个 Skill 文件，并且只能额外执行一次任务明确给出的 projectTestCommand；除此之外禁止使用任何工具，禁止读取其他文件、workspace、registry、课程文件或测试记录，禁止网络和外链访问，禁止修改文件。
+
+使用新 Skill，审计下面这个现有项目产物并返回学习笔记审计数据，不修改文件。这个产物的变更范围包含 lesson 数据与知识笔记渲染接入；请实际执行 projectTestCommand，并在审计数据中逐字记录真实执行的 command、exitCode 与 TAP summary 行。最终只输出结果。
+
+projectTestCommand: `node --test tests/data.test.js`
+
+artifact:
+id: existing-project-real-test
+changeScope: lesson 数据与知识笔记渲染接入已经变更
+
+lesson:
+id: project-real-test-01
+title: 工具结果校验
+summary: 学习为什么工具结果需要显式校验。
+objectives:
+1. 说明工具结果校验在行动循环中的作用。
+concepts: 工具结果；结构校验；停止条件。
+explanations:
+1. 工具返回后，宿主程序应检查结果是否满足预期结构，再决定继续或停止。
+completionCriteria:
+1. 能解释为什么不能直接信任未经校验的工具结果。
+
+associated resource metadata:
+id: res-project-audit-guide
+title: Project Audit Tool Validation Guide
+publisher: Example Project Team
+type: 内部工程指南
+verifiedAt: 2026-07-20
+value: 说明工具结果结构校验与停止条件。
+```
+
+### Complete FIRST raw JSON
+
+```json
+{
+  "status": "blocked",
+  "publicationReady": false,
+  "artifactId": "existing-project-real-test",
+  "changeScope": "lesson 数据与知识笔记渲染接入已经变更",
+  "blockers": [
+    {
+      "code": "SOURCE_BODY_NOT_AUTHORIZED",
+      "message": "任务只授权读取五个 Skill 文件和执行 projectTestCommand，未授权读取关联资源正文，因此核心机制没有可访问的资源证据。"
+    },
+    {
+      "code": "PROJECT_REGISTRY_NOT_AUTHORIZED",
+      "message": "任务禁止读取 registry，无法验证 res-project-audit-guide 是否存在于项目资源注册表或能否解析。"
+    },
+    {
+      "code": "RELEASE_EVIDENCE_GATE_FAILED",
+      "message": "学习目标和完成标准目前只能追溯到课程字段；课程字段不能替代资源证据，因此不能发布正式 knowledgeNote。"
+    }
+  ],
+  "knowledgeDependencyMap": [
+    {
+      "path": [
+        "工具返回",
+        "检查是否满足预期结构",
+        "决定继续或停止"
+      ],
+      "courseFieldBasis": [
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    }
+  ],
+  "outline": [
+    "工具结果与预期结构",
+    "结构校验与停止决定",
+    "未经校验结果的使用边界",
+    "回顾与待补证据"
+  ],
+  "draftSections": [
+    {
+      "id": "draft-tool-result-and-schema",
+      "title": "工具结果与预期结构",
+      "paragraphs": [
+        "课程字段要求学习工具结果与结构校验，但未提供可访问的资源正文，因此这里只保留待核验的学习方向。",
+        "待核验：工具返回后，宿主程序应检查结果是否满足预期结构。"
+      ],
+      "courseFieldBasis": [
+        "lesson.concepts",
+        "lesson.explanations[0]"
+      ]
+    },
+    {
+      "id": "draft-validation-and-stop",
+      "title": "结构校验与停止决定",
+      "paragraphs": [
+        "课程字段把结构检查放在工具返回之后，并要求宿主程序据此决定继续或停止。",
+        "这一因果关系尚缺少可访问资源正文支持，不能扩写为可发布的机制说明。"
+      ],
+      "courseFieldBasis": [
+        "lesson.concepts",
+        "lesson.explanations[0]"
+      ]
+    },
+    {
+      "id": "draft-unvalidated-result-boundary",
+      "title": "未经校验结果的使用边界",
+      "paragraphs": [
+        "完成标准要求学习者解释为什么不能直接信任未经校验的工具结果。",
+        "课程字段未提供该原因的完整资源证据；需要读取资源正文后才能补充并核验解释。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.completionCriteria[0]"
+      ]
+    }
+  ],
+  "coverageMatrix": [
+    {
+      "outcome": "说明工具结果校验在行动循环中的作用",
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "能够直接支持结构校验作用及继续或停止关系的关联资源正文"
+    },
+    {
+      "outcome": "理解工具结果、结构校验和停止条件之间的关系",
+      "courseFieldBasis": [
+        "lesson.concepts",
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "能够定义或解释三个概念及其关系的关联资源正文"
+    },
+    {
+      "outcome": "解释为什么不能直接信任未经校验的工具结果",
+      "courseFieldBasis": [
+        "lesson.completionCriteria[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "能够说明未经校验结果风险或后果的关联资源正文"
+    }
+  ],
+  "candidateResources": [
+    {
+      "id": "res-project-audit-guide",
+      "title": "Project Audit Tool Validation Guide",
+      "publisher": "Example Project Team",
+      "type": "内部工程指南",
+      "verifiedAt": "2026-07-20",
+      "value": "说明工具结果结构校验与停止条件。",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "bodyAccessStatus": "not authorized",
+      "registryResolutionStatus": "not authorized",
+      "limitations": "只有任务提供的元数据；未读取正文，未验证来源归属，也未在项目注册表中解析。元数据的 title、publisher、type、verifiedAt 和 value 均未被当作机制证据。"
+    }
+  ],
+  "brokenReferenceCount": null,
+  "tests": {
+    "status": "passed",
+    "commands": [
+      "node --test tests/data.test.js"
+    ],
+    "results": [
+      {
+        "command": "node --test tests/data.test.js",
+        "exitCode": 0,
+        "tapSummaryLines": [
+          "1..10",
+          "# tests 10",
+          "# suites 0",
+          "# pass 10",
+          "# fail 0",
+          "# cancelled 0",
+          "# skipped 0",
+          "# todo 0",
+          "# duration_ms 63.806166"
+        ]
+      }
+    ]
+  },
+  "qualityAudit": {
+    "categoryScores": {
+      "目标、测验与面试覆盖": {
+        "score": 12,
+        "max": 25,
+        "evidence": "已映射任务提供的目标、概念、解释和完成标准，但所有关键产出仍缺少资源正文证据；任务未提供 quiz、interview 或 exercise。"
+      },
+      "知识结构与跨章衔接": {
+        "score": 7,
+        "max": 20,
+        "evidence": "仅形成受课程字段约束的阻塞大纲，未形成四至七节的可发布教学章节。"
+      },
+      "来源与不确定性": {
+        "score": 0,
+        "max": 25,
+        "evidence": "资源正文和项目注册表均未获授权访问，候选资源不能成为正式证据或可解析 sourceId。"
+      },
+      "教学可读性与例子": {
+        "score": 7,
+        "max": 20,
+        "evidence": "草稿明确了因果路径，但没有资源支持的定义、具体例子或误区纠正。"
+      },
+      "版权与数据契约": {
+        "score": 10,
+        "max": 10,
+        "evidence": "结果为纯数据、无 HTML，使用 blocked 合同，没有创建正式 evidence 映射或 sourceIds。"
+      }
+    },
+    "total": 36,
+    "brokenReferenceCount": null,
+    "coverageGaps": [
+      "工具结果校验作用缺少可访问资源正文。",
+      "未经校验结果为何不可直接信任缺少可访问资源正文。",
+      "候选资源 ID 未经项目注册表解析。"
+    ],
+    "evidenceRoleCorrections": [
+      "未将元数据中的 publisher、type 或 value 推断为 authority 或 core 证据；候选资源保留为 extension。"
+    ],
+    "courseFieldProvenanceViolations": [],
+    "testStatus": "passed",
+    "remainingLimitations": [
+      "projectTestCommand 通过只证明该命令覆盖的项目断言通过，不补足资源正文或注册表证据。",
+      "无法根据未授权访问的项目文件判断现有知识笔记的具体内容和渲染表现。"
+    ],
+    "releaseGates": {
+      "sourceResolution": "failed",
+      "minimumScore": "failed",
+      "publication": "failed"
+    }
+  }
+}
+```
+
+### Complete factual access-log JSON
+
+```json
+{
+  "toolCalls": [
+    {
+      "order": 1,
+      "tool": "functions.exec",
+      "nestedCommand": "cat <repo-root>/.agents/skills/build-learning-module-notes/SKILL.md",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": []
+    },
+    {
+      "order": 2,
+      "tool": "functions.exec",
+      "nestedCommand": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": []
+    },
+    {
+      "order": 3,
+      "tool": "functions.exec",
+      "nestedCommand": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": []
+    },
+    {
+      "order": 4,
+      "tool": "functions.exec",
+      "nestedCommand": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": []
+    },
+    {
+      "order": 5,
+      "tool": "functions.exec",
+      "nestedCommand": "cat <repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": []
+    },
+    {
+      "order": 6,
+      "tool": "functions.exec",
+      "nestedCommand": "node --test tests/data.test.js",
+      "exitCode": 0,
+      "verbatimTapSummaryLines": [
+        "1..10",
+        "# tests 10",
+        "# suites 0",
+        "# pass 10",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 63.806166"
+      ]
+    }
+  ]
+}
+```
+
+### After-the-fact leakage audit
+
+Clean prompt 给出了 lesson、关联资源元数据和测试命令，但没有给出项目测试的 TAP 输出，也没有提供资源正文或注册表内容。运行只读取 Skill 及其四个直接引用，并且只额外执行一次指定测试命令；FIRST raw 中的测试通过状态与 TAP summary 来自该次真实执行。由于正文和注册表均未获授权访问，输出保持 blocked，未将 passing test 改写为 `not applicable`，也未让 passing test 绕过来源发布门槛。
+
+### Executable semantic assertions
+
+以下断言以两个上方 JSON fence 的文本分别绑定为 `finalProjectTestFirstRawJson` 与 `finalProjectTestAccessLogJson`。
+
+```js
+const assert = require('node:assert/strict');
+const raw = JSON.parse(finalProjectTestFirstRawJson);
+const access = JSON.parse(finalProjectTestAccessLogJson);
+assert.equal(raw.status, 'blocked');
+assert.equal(raw.publicationReady, false);
+assert.equal(Object.hasOwn(raw, 'knowledgeNote'), false);
+assert.equal(Object.hasOwn(raw, 'evidence'), false);
+assert.equal(JSON.stringify(raw).includes('"sourceIds"'), false);
+assert.equal(raw.candidateResources.length, 1);
+assert.equal(raw.candidateResources[0].role, 'extension');
+assert.equal(raw.candidateResources[0].authorityStatus, 'unresolved');
+assert.equal(raw.brokenReferenceCount, null);
+assert.equal(raw.tests.status, 'passed');
+assert.notEqual(raw.tests.status, 'not applicable');
+assert.deepEqual(raw.tests.commands, ['node --test tests/data.test.js']);
+assert.equal(raw.tests.results.length, 1);
+assert.equal(raw.tests.results[0].command, 'node --test tests/data.test.js');
+assert.equal(raw.tests.results[0].exitCode, 0);
+assert.deepEqual(
+  raw.tests.results[0].tapSummaryLines,
+  access.toolCalls[5].verbatimTapSummaryLines,
+);
+assert.equal(raw.tests.results[0].tapSummaryLines.includes('# tests 10'), true);
+assert.equal(raw.tests.results[0].tapSummaryLines.includes('# pass 10'), true);
+assert.equal(raw.tests.results[0].tapSummaryLines.includes('# fail 0'), true);
+assert.equal(raw.qualityAudit.releaseGates.sourceResolution, 'failed');
+assert.equal(raw.qualityAudit.releaseGates.publication, 'failed');
+assert.equal(raw.qualityAudit.testStatus, 'passed');
+assert.equal(access.toolCalls.length, 6);
+assert.deepEqual(access.toolCalls.map((call) => call.nestedCommand), [
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/SKILL.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/source-policy.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/chapter-standard.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/data-contract.md',
+  'cat <repo-root>/.agents/skills/build-learning-module-notes/references/quality-rubric.md',
+  'node --test tests/data.test.js',
+]);
+assert.equal(access.toolCalls.every((call) => call.exitCode === 0), true);
+```
+
+### Lifecycle cleanup
+
+捕获两次完整记录后，`<repo-root>/.tmp-learning-note-blind-20260721/source.md` 与 `<repo-root>/.tmp-learning-note-blind-20260721/registry.json` 均已删除；两者不属于最终 tracked 或 untracked deliverables。
