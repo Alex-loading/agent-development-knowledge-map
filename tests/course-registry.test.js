@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { resolveRoute } from '../src/app.js';
 import { courseRegistry, getCourse } from '../src/data/courses.js';
+import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 
@@ -23,11 +24,16 @@ function assertRegistryIdsAreUnique(selectIds, label) {
   }
 }
 
-test('production course registry is immutable and resolves both active courses', () => {
-  assert.deepEqual(Object.keys(courseRegistry), ['llm-foundation', 'agent-mechanism']);
+test('production course registry is immutable and resolves exactly three active courses', () => {
+  assert.deepEqual(Object.keys(courseRegistry), [
+    'llm-foundation',
+    'agent-mechanism',
+    'agent-harness',
+  ]);
   assert.equal(Object.isFrozen(courseRegistry), true);
   assert.equal(getCourse('llm-foundation'), llmFoundation);
   assert.equal(getCourse('agent-mechanism'), agentMechanism);
+  assert.equal(getCourse('agent-harness'), agentHarness);
   assert.equal(getCourse('not-registered'), null);
   assert.throws(() => {
     courseRegistry.extra = llmFoundation;
@@ -46,10 +52,26 @@ test('route resolver opens Agent dashboard and lessons from the production regis
     view: 'lesson',
     lessonId: 'agent-01',
   });
+  assert.deepEqual(resolveRoute('#agent-harness/dashboard'), {
+    hash: '#agent-harness/dashboard',
+    moduleId: 'agent-harness',
+    view: 'dashboard',
+  });
+  assert.deepEqual(resolveRoute('#agent-harness/lesson/harness-01'), {
+    hash: '#agent-harness/lesson/harness-01',
+    moduleId: 'agent-harness',
+    view: 'lesson',
+    lessonId: 'harness-01',
+  });
 });
 
 test('route resolver keeps a canonical fallback for invalid Agent lessons', () => {
   assert.deepEqual(resolveRoute('#agent-mechanism/lesson/missing'), {
+    hash: '#llm-foundation/dashboard',
+    moduleId: 'llm-foundation',
+    view: 'dashboard',
+  });
+  assert.deepEqual(resolveRoute('#agent-harness/lesson/missing'), {
     hash: '#llm-foundation/dashboard',
     moduleId: 'llm-foundation',
     view: 'dashboard',
@@ -80,12 +102,15 @@ test('route resolver falls back for active modules without a course', () => {
   assert.deepEqual(resolveRoute('#unknown/dashboard', options), fallback);
 });
 
-test('lesson, resource, quiz and interview IDs are globally unique across courses', () => {
+test('lesson, resource, quiz, interview and experiment IDs are globally unique across courses', () => {
   const selectors = [
     ['lesson id', (course) => course.lessons.map(({ id }) => id)],
     ['resource id', (course) => course.resources.map(({ id }) => id)],
     ['quiz id', (course) => course.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id))],
     ['interview id', (course) => course.interviewQuestions.map(({ id }) => id)],
+    ['experiment id', (course) => course.lessons
+      .map(({ exercise }) => exercise.experiment)
+      .filter(Boolean)],
   ];
   for (const [label, selectIds] of selectors) assertRegistryIdsAreUnique(selectIds, label);
 
@@ -94,6 +119,7 @@ test('lesson, resource, quiz and interview IDs are globally unique across course
     ...course.resources.map(({ id }) => id),
     ...course.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id)),
     ...course.interviewQuestions.map(({ id }) => id),
+    ...course.lessons.map(({ exercise }) => exercise.experiment).filter(Boolean),
   ], 'content id');
 });
 

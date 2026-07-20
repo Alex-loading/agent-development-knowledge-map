@@ -23,7 +23,7 @@ export const modules = [
   {
     id: 'agent-harness',
     title: 'Agent Harness',
-    status: 'planned',
+    status: 'active',
     summary: '搭建指令、工具权限、运行时、状态管理与人工确认组成的可靠执行框架。',
     prerequisites: ['agent-mechanism'],
     estimatedHours: 14,

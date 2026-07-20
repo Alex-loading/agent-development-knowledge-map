@@ -163,10 +163,10 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
-test('application preserves independent resource filters for each course module', (t) => {
+test('application preserves independent resource filters for Harness and the preceding module', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const windowRef = createFakeWindow('#llm-foundation/resources');
+  const windowRef = createFakeWindow('#agent-harness/resources');
   const app = startApp({
     documentRef: document,
     windowRef,
@@ -174,9 +174,10 @@ test('application preserves independent resource filters for each course module'
   });
   t.after(app.teardown);
 
-  dispatchChange(document.querySelector('#resource-filter-stage'), 'Token 实验');
-  const llmCount = document.querySelectorAll('.resource-row').length;
-  assert.ok(llmCount > 0 && llmCount < llmFoundation.resources.length);
+  assert.equal(document.querySelectorAll('.resource-row').length, 28);
+  dispatchChange(document.querySelector('#resource-filter-stage'), 'Runner 基础');
+  const harnessCount = document.querySelectorAll('.resource-row').length;
+  assert.ok(harnessCount > 0 && harnessCount < agentHarness.resources.length);
 
   navigateTo(app, windowRef, '#agent-mechanism/resources');
   assert.equal(document.querySelectorAll('.resource-row').length, agentMechanism.resources.length);
@@ -186,9 +187,9 @@ test('application preserves independent resource filters for each course module'
   const agentCount = document.querySelectorAll('.resource-row').length;
   assert.ok(agentCount > 0 && agentCount < agentMechanism.resources.length);
 
-  navigateTo(app, windowRef, '#llm-foundation/resources');
-  assert.equal(document.querySelector('#resource-filter-stage').value, 'Token 实验');
-  assert.equal(document.querySelectorAll('.resource-row').length, llmCount);
+  navigateTo(app, windowRef, '#agent-harness/resources');
+  assert.equal(document.querySelector('#resource-filter-stage').value, 'Runner 基础');
+  assert.equal(document.querySelectorAll('.resource-row').length, harnessCount);
 
   navigateTo(app, windowRef, '#agent-mechanism/resources');
   assert.equal(document.querySelector('#resource-filter-stage').value, '机制总览');
@@ -322,10 +323,10 @@ test('application persists interview mastery exactly once and updates shell summ
   assert.equal(store.saves.length, 2);
 });
 
-test('application preserves independent interview filters and revealed answers per module', (t) => {
+test('application preserves independent interview filters and revealed answers for Harness and the preceding module', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const windowRef = createFakeWindow('#llm-foundation/interviews');
+  const windowRef = createFakeWindow('#agent-harness/interviews');
   const app = startApp({
     documentRef: document,
     windowRef,
@@ -333,16 +334,17 @@ test('application preserves independent interview filters and revealed answers p
   });
   t.after(app.teardown);
 
+  assert.equal(document.querySelectorAll('.interview-card').length, 24);
   dispatchChange(document.querySelector('#interview-filter-role'), '后端工程');
   dispatchChange(document.querySelector('#interview-filter-frequency'), '中');
   dispatchChange(document.querySelector('#interview-filter-status'), 'unseen');
-  const llmCount = document.querySelectorAll('.interview-card').length;
-  assert.ok(llmCount > 0 && llmCount < llmFoundation.interviewQuestions.length);
-  const llmQuestionId = llmFoundation.interviewQuestions.find((question) => (
+  const harnessCount = document.querySelectorAll('.interview-card').length;
+  assert.ok(harnessCount > 0 && harnessCount < agentHarness.interviewQuestions.length);
+  const harnessQuestionId = agentHarness.interviewQuestions.find((question) => (
     question.roles.includes('后端工程') && question.frequency === '中'
   )).id;
-  assert.notEqual(document.querySelector(`[data-question-id="${llmQuestionId}"]`), null);
-  document.querySelector(`#interview-reveal-${llmQuestionId}`).click();
+  assert.notEqual(document.querySelector(`[data-question-id="${harnessQuestionId}"]`), null);
+  document.querySelector(`#interview-reveal-${harnessQuestionId}`).click();
   assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
 
   navigateTo(app, windowRef, '#agent-mechanism/interviews');
@@ -364,12 +366,12 @@ test('application preserves independent interview filters and revealed answers p
   document.querySelector(`#interview-reveal-${agentQuestionId}`).click();
   assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
 
-  navigateTo(app, windowRef, '#llm-foundation/interviews');
+  navigateTo(app, windowRef, '#agent-harness/interviews');
   assert.equal(document.querySelector('#interview-filter-role').value, '后端工程');
   assert.equal(document.querySelector('#interview-filter-frequency').value, '中');
   assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
-  assert.equal(document.querySelectorAll('.interview-card').length, llmCount);
-  assert.equal(document.querySelector(`#interview-reveal-${llmQuestionId}`).getAttribute('aria-expanded'), 'true');
+  assert.equal(document.querySelectorAll('.interview-card').length, harnessCount);
+  assert.equal(document.querySelector(`#interview-reveal-${harnessQuestionId}`).getAttribute('aria-expanded'), 'true');
   assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`), null);
 
   navigateTo(app, windowRef, '#agent-mechanism/interviews');
@@ -378,7 +380,7 @@ test('application preserves independent interview filters and revealed answers p
   assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
   assert.equal(document.querySelectorAll('.interview-card').length, agentCount);
   assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`).getAttribute('aria-expanded'), 'true');
-  assert.equal(document.querySelector(`#interview-reveal-${llmQuestionId}`), null);
+  assert.equal(document.querySelector(`#interview-reveal-${harnessQuestionId}`), null);
 });
 
 test('interview focus falls back to results summary when a status change removes the active card', (t) => {
@@ -442,17 +444,24 @@ test('interview summaries ignore duplicate and stale mastered/review IDs', (t) =
   assert.ok(root.textContent.includes('复习队列 1 题'));
 });
 
-test('application shell scopes dirty persisted progress to the current course catalog', (t) => {
+test('application shell scopes dirty persisted progress to the current Harness catalog', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const firstQuestionId = llmFoundation.interviewQuestions[0].id;
+  const harnessQuestionId = agentHarness.interviewQuestions[0].id;
+  const agentQuestionId = agentMechanism.interviewQuestions[0].id;
+  const llmQuestionId = llmFoundation.interviewQuestions[0].id;
   const app = startApp({
     documentRef: document,
-    windowRef: createFakeWindow('#llm-foundation/dashboard'),
+    windowRef: createFakeWindow('#agent-harness/dashboard'),
     progressStore: createStore({
       ...createDefaultProgress('llm-foundation'),
-      completedLessonIds: ['llm-01', 'llm-01', 'stale-lesson'],
-      interviewStatusById: { [firstQuestionId]: 'mastered', stale: 'mastered' },
+      completedLessonIds: ['llm-01', 'agent-01', 'harness-01', 'harness-01', 'stale-lesson'],
+      interviewStatusById: {
+        [llmQuestionId]: 'mastered',
+        [agentQuestionId]: 'mastered',
+        [harnessQuestionId]: 'mastered',
+        stale: 'mastered',
+      },
     }),
   });
   t.after(app.teardown);
@@ -1211,9 +1220,7 @@ test('every configured experiment has a resolvable accessible heading and is int
   const root = document.createElement('div');
   document.body.append(root);
 
-  const courses = [...new Map(
-    [...Object.values(courseRegistry), agentHarness].map((course) => [course.id, course]),
-  ).values()];
+  const courses = Object.values(courseRegistry);
   const configured = courses.flatMap((course) => course.lessons
     .filter((lesson) => lesson.exercise.experiment)
     .map((lesson) => ({ course, lesson, experimentId: lesson.exercise.experiment })));
@@ -1238,23 +1245,42 @@ test('every configured experiment has a resolvable accessible heading and is int
   }
 });
 
-test('all six top-level routes render exactly one h1 and explicit navigation focuses main', (t) => {
+test('real application activates Harness dashboard, all six views and its first lesson', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
+  const windowRef = createFakeWindow('#agent-mechanism/dashboard');
   const app = startApp({
     documentRef: document,
-    windowRef: createFakeWindow('#llm-foundation/dashboard'),
+    windowRef,
     progressStore: createStore(createDefaultProgress('llm-foundation')),
   });
   t.after(app.teardown);
 
+  dispatchChange(document.querySelector('#module-select'), 'agent-harness');
+  windowRef.dispatchEvent(new FakeEvent('hashchange'));
+  assert.equal(windowRef.location.hash, '#agent-harness/dashboard');
+  assert.equal(document.querySelector('#current-module-title').textContent, 'Agent Harness');
+  assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 0 / 8'));
+  assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 0 / 24'));
+
   for (const view of ['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']) {
     document.querySelector('#module-select').focus();
-    app.navigate(`#llm-foundation/${view}`);
-    app.render();
+    navigateTo(app, windowRef, `#agent-harness/${view}`);
+    const viewRoot = document.querySelector('#view-root');
+    assert.ok(viewRoot.textContent.includes('Agent Harness'), `${view} should render Harness content`);
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, `${view} should render one h1`);
     assert.equal(document.activeElement.id, 'app-main', `${view} navigation should focus main`);
+    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, 28);
+    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, 24);
+    if (view === 'progress') {
+      assert.ok(viewRoot.textContent.includes('0 / 8'));
+      assert.ok(viewRoot.textContent.includes('0 / 24'));
+    }
   }
+
+  navigateTo(app, windowRef, '#agent-harness/lesson/harness-01');
+  assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1);
+  assert.ok(document.querySelector('#view-root').textContent.includes(agentHarness.lessons[0].title));
 });
 
 test('dashboard progress bars expose accessible names and values', (t) => {
