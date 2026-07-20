@@ -11,6 +11,12 @@ const STATUS_LABELS = {
   locked: '待先修（仍可查看）',
 };
 
+const EVIDENCE_ROLE_LABELS = {
+  core: '核心依据',
+  'cross-check': '交叉核验',
+  extension: '延伸阅读',
+};
+
 function statusForLesson(course, progress, lessonId) {
   return buildKnowledgeNodes(course.lessons, progress).find(({ id }) => id === lessonId)?.status ?? 'available';
 }
@@ -88,11 +94,19 @@ function resourceSection(course, lesson) {
   const missingCount = (lesson.resourceIds?.length ?? 0) - resources.length;
 
   return element('section', { className: 'lesson-section resource-selection', attrs: { 'aria-labelledby': 'lesson-resources' } }, [
-    element('h2', { text: '精选资料', attrs: { id: 'lesson-resources' } }),
+    element('h2', { text: lesson.knowledgeNote ? '继续深挖' : '精选资料', attrs: { id: 'lesson-resources' } }),
     resources.length
       ? element('ul', {}, resources.map((resource) => element('li', {}, [
         externalLink(resource),
         element('span', { className: 'resource-note', text: `${resource.source} · ${resource.language} · ${resource.value}` }),
+        resource.evidence
+          ? element('div', { className: 'resource-evidence' }, [
+            element('p', {
+              text: `资料角色：${EVIDENCE_ROLE_LABELS[resource.evidence.role] ?? '未标注'}（${resource.evidence.role ?? 'unknown'}）`,
+            }),
+            element('p', { text: `证据边界：${resource.evidence.limitations ?? '未提供边界说明。'}` }),
+          ])
+          : null,
       ])))
       : element('p', { className: 'empty-note', text: '本节暂未关联可用资料。' }),
     missingCount

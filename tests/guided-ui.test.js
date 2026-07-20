@@ -52,6 +52,12 @@ test('lesson detail renders real teaching content and quiz interaction once afte
   const noteToc = knowledgeNote?.querySelector('nav[aria-label="本章目录"]');
   const firstSection = llmFoundation.lessons[0].knowledgeNote.sections[0];
   const firstSectionHeading = knowledgeNote?.querySelector(`#llm-01-note-${firstSection.id}`);
+  const resourceSelection = root.querySelector('.resource-selection');
+  const evidenceResource = llmFoundation.resources.find((resource) => (
+    llmFoundation.lessons[0].resourceIds.includes(resource.id) && resource.evidence
+  ));
+  const evidenceResourceItem = resourceSelection?.querySelectorAll('li')
+    .find((item) => item.textContent.includes(evidenceResource.title));
 
   assert.ok(knowledgeNote, '应渲染知识型长文笔记');
   assert.ok(noteToc, '应渲染本章目录');
@@ -60,6 +66,10 @@ test('lesson detail renders real teaching content and quiz interaction once afte
   const sourceLink = knowledgeNote.querySelector('a');
   assert.equal(new URL(sourceLink.getAttribute('href')).protocol, 'https:');
   assert.ok(!knowledgeNote.textContent.includes('原理札记'), '新版知识笔记不应继续使用旧标签');
+  assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+  assert.ok(!resourceSelection.textContent.includes('精选资料'));
+  assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.role));
+  assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.limitations));
 
   noteToc.querySelector('button').click();
   assert.equal(firstSectionHeading.getAttribute('tabindex'), '-1');
@@ -101,6 +111,14 @@ test('lesson detail falls back to legacy explanations when no knowledge note exi
   });
 
   assert.ok(root.textContent.includes(llmFoundation.lessons[1].explanations[0].heading));
+  const resourceSelection = root.querySelector('.resource-selection');
+  const legacyResource = llmFoundation.resources.find(({ id }) => llmFoundation.lessons[1].resourceIds.includes(id));
+  const legacyResourceItem = resourceSelection.querySelectorAll('li')
+    .find((item) => item.textContent.includes(legacyResource.title));
+
+  assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
+  assert.ok(legacyResourceItem.textContent.includes(`${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`));
+  assert.ok(!resourceSelection.textContent.includes('undefined'));
 });
 
 test('knowledge note keeps body visible and reports missing source references', (t) => {
