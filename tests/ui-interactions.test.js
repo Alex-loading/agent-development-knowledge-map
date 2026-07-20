@@ -1033,6 +1033,7 @@ test('retry resume lab reaches manual, reconcile, skip, retry and fail decisions
   const lab = renderExperiment('retry-resume');
   document.body.append(lab);
 
+  const crashPoint = lab.querySelector('#harness-resume-crash-point');
   const callKind = lab.querySelector('#harness-resume-call-kind');
   const completion = lab.querySelector('#harness-resume-completion');
   const errorKind = lab.querySelector('#harness-resume-error-kind');
@@ -1083,8 +1084,54 @@ test('retry resume lab reaches manual, reconcile, skip, retry and fail decisions
   assert.equal(remote.value, 'none');
   assert.equal(attempts.value, '0');
   assert.equal(maxAttempts.value, '3');
+  assert.equal(crashPoint.value, 'unknown-outcome');
   assert.equal(result.dataset.status, 'manual');
   assert.equal(document.activeElement, callKind);
+});
+
+test('retry resume crash-point presets synchronize evidence and manual edits switch to custom', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('retry-resume');
+  document.body.append(lab);
+
+  const crashPoint = lab.querySelector('#harness-resume-crash-point');
+  const callKind = lab.querySelector('#harness-resume-call-kind');
+  const completion = lab.querySelector('#harness-resume-completion');
+  const errorKind = lab.querySelector('#harness-resume-error-kind');
+  const record = lab.querySelector('#harness-resume-record');
+  const remote = lab.querySelector('#harness-resume-remote');
+  const result = lab.querySelector('#harness-resume-result');
+
+  assert.deepEqual(
+    crashPoint.children.map((option) => option.value),
+    ['unknown-outcome', 'before-call', 'after-remote-success', 'after-completion-event', 'custom'],
+  );
+  assert.equal(crashPoint.value, 'unknown-outcome');
+  assert.equal(result.dataset.status, 'manual');
+
+  dispatchChange(crashPoint, 'before-call');
+  assert.equal(callKind.value, 'read');
+  assert.equal(errorKind.value, 'transient');
+  assert.equal(completion.checked, false);
+  assert.equal(record.value, 'none');
+  assert.equal(remote.value, 'none');
+  assert.equal(result.dataset.status, 'retry');
+
+  dispatchChange(crashPoint, 'after-remote-success');
+  assert.equal(callKind.value, 'write');
+  assert.equal(errorKind.value, 'unknown');
+  assert.equal(remote.value, 'succeeded');
+  assert.equal(result.dataset.status, 'reconcile');
+
+  dispatchChange(crashPoint, 'after-completion-event');
+  assert.equal(completion.checked, true);
+  assert.equal(result.dataset.status, 'skip');
+
+  dispatchChange(crashPoint, 'before-call');
+  dispatchChange(errorKind, 'permanent');
+  assert.equal(crashPoint.value, 'custom');
+  assert.equal(result.dataset.status, 'fail');
 });
 
 test('queue backpressure lab reports exact tick flow, advances age and resets invalid input', (t) => {

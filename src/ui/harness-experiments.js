@@ -22,6 +22,23 @@ const RESUME_DEFAULTS = Object.freeze({
   maxAttempts: 3,
 });
 
+const CRASH_POINT_PRESETS = Object.freeze({
+  'unknown-outcome': RESUME_DEFAULTS,
+  'before-call': Object.freeze({
+    ...RESUME_DEFAULTS,
+    callKind: 'read',
+    errorKind: 'transient',
+  }),
+  'after-remote-success': Object.freeze({
+    ...RESUME_DEFAULTS,
+    remoteEvidence: 'succeeded',
+  }),
+  'after-completion-event': Object.freeze({
+    ...RESUME_DEFAULTS,
+    hasCompletionEvent: true,
+  }),
+});
+
 const QUEUE_DEFAULTS = Object.freeze({
   arrivals: 4,
   workers: 1,
@@ -254,6 +271,7 @@ export function renderRetryResumeExperiment() {
   const result = element('div', {
     attrs: { id: 'harness-resume-result', 'aria-live': 'polite', 'aria-atomic': 'true' },
   });
+  let crashPoint;
   let callKind;
   let completion;
   let errorKind;
@@ -291,6 +309,41 @@ export function renderRetryResumeExperiment() {
     }
   }
 
+  function markCustomAndUpdate() {
+    crashPoint.value = 'custom';
+    update();
+  }
+
+  function applyCrashPoint() {
+    const preset = CRASH_POINT_PRESETS[crashPoint.value];
+    if (preset) {
+      callKind.value = preset.callKind;
+      completion.checked = preset.hasCompletionEvent;
+      errorKind.value = preset.errorKind;
+      key.checked = preset.hasIdempotencyKey;
+      record.value = preset.idempotencyRecord;
+      remote.value = preset.remoteEvidence;
+      attempts.value = String(preset.attemptsUsed);
+      maxAttempts.value = String(preset.maxAttempts);
+    }
+    update();
+  }
+
+  const crashPointControl = selectControl({
+    id: 'harness-resume-crash-point',
+    label: '崩溃点预设',
+    value: 'unknown-outcome',
+    options: [
+      { value: 'unknown-outcome', label: 'unknown-outcome · 调用结果未知' },
+      { value: 'before-call', label: 'before-call · 调用前崩溃' },
+      { value: 'after-remote-success', label: 'after-remote-success · 远端成功后崩溃' },
+      { value: 'after-completion-event', label: 'after-completion-event · 完成事件后崩溃' },
+      { value: 'custom', label: 'custom · 自定义证据' },
+    ],
+    update: applyCrashPoint,
+  });
+  crashPoint = crashPointControl.select;
+
   const callKindControl = selectControl({
     id: 'harness-resume-call-kind',
     label: '调用类型',
@@ -299,11 +352,11 @@ export function renderRetryResumeExperiment() {
       { value: 'read', label: 'read · 读取' },
       { value: 'write', label: 'write · 写入' },
     ],
-    update,
+    update: markCustomAndUpdate,
   });
   callKind = callKindControl.select;
   const completionControl = checkboxControl({
-    id: 'harness-resume-completion', label: '已有 completion event', update,
+    id: 'harness-resume-completion', label: '已有 completion event', update: markCustomAndUpdate,
   });
   completion = completionControl.input;
   const errorKindControl = selectControl({
@@ -315,11 +368,11 @@ export function renderRetryResumeExperiment() {
       { value: 'permanent', label: 'permanent · 永久错误' },
       { value: 'unknown', label: 'unknown · 结果未知' },
     ],
-    update,
+    update: markCustomAndUpdate,
   });
   errorKind = errorKindControl.select;
   const keyControl = checkboxControl({
-    id: 'harness-resume-key', label: '使用稳定幂等键 run-001/call-001', update,
+    id: 'harness-resume-key', label: '使用稳定幂等键 run-001/call-001', update: markCustomAndUpdate,
   });
   key = keyControl.input;
   const recordControl = selectControl({
@@ -331,7 +384,7 @@ export function renderRetryResumeExperiment() {
       { value: 'pending', label: 'pending · 待确认' },
       { value: 'succeeded', label: 'succeeded · 已成功' },
     ],
-    update,
+    update: markCustomAndUpdate,
   });
   record = recordControl.select;
   const remoteControl = selectControl({
@@ -343,15 +396,15 @@ export function renderRetryResumeExperiment() {
       { value: 'succeeded', label: 'succeeded · 远端成功' },
       { value: 'failed', label: 'failed · 远端失败' },
     ],
-    update,
+    update: markCustomAndUpdate,
   });
   remote = remoteControl.select;
   const attemptsControl = numberControl({
-    id: 'harness-resume-attempts', label: '已用尝试次数', value: RESUME_DEFAULTS.attemptsUsed, update,
+    id: 'harness-resume-attempts', label: '已用尝试次数', value: RESUME_DEFAULTS.attemptsUsed, update: markCustomAndUpdate,
   });
   attempts = attemptsControl.input;
   const maxAttemptsControl = numberControl({
-    id: 'harness-resume-max-attempts', label: '最大尝试次数', value: RESUME_DEFAULTS.maxAttempts, min: 1, update,
+    id: 'harness-resume-max-attempts', label: '最大尝试次数', value: RESUME_DEFAULTS.maxAttempts, min: 1, update: markCustomAndUpdate,
   });
   maxAttempts = maxAttemptsControl.input;
 
@@ -366,6 +419,7 @@ export function renderRetryResumeExperiment() {
     }),
     element('div', { className: 'experiment-grid' }, [
       element('div', { className: 'experiment-controls harness-control-set' }, [
+        crashPointControl.control,
         callKindControl.control,
         completionControl.control,
         errorKindControl.control,
@@ -385,22 +439,15 @@ export function renderRetryResumeExperiment() {
       attrs: { id: 'harness-resume-reset' },
       events: {
         click: () => {
-          callKind.value = RESUME_DEFAULTS.callKind;
-          completion.checked = RESUME_DEFAULTS.hasCompletionEvent;
-          errorKind.value = RESUME_DEFAULTS.errorKind;
-          key.checked = RESUME_DEFAULTS.hasIdempotencyKey;
-          record.value = RESUME_DEFAULTS.idempotencyRecord;
-          remote.value = RESUME_DEFAULTS.remoteEvidence;
-          attempts.value = String(RESUME_DEFAULTS.attemptsUsed);
-          maxAttempts.value = String(RESUME_DEFAULTS.maxAttempts);
-          update();
+          crashPoint.value = 'unknown-outcome';
+          applyCrashPoint();
           callKind.focus();
         },
       },
     }),
   ]);
 
-  update();
+  applyCrashPoint();
   return lab;
 }
 
