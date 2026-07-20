@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { startApp } from '../src/app.js';
-import { FILTER_ALL, filterResources } from '../src/core/filters.js';
+import {
+  FILTER_ALL,
+  filterInterviewQuestions,
+  filterResources,
+  resourcePlatform,
+} from '../src/core/filters.js';
 import {
   createDefaultProgress,
   setInterviewStatus,
@@ -55,6 +60,54 @@ function createStore(initialState) {
     mode: () => 'local',
     resetCount: () => resetCount,
   };
+}
+
+function distinctResourceProfiles(courses) {
+  const used = new Set();
+  return courses.map((course) => {
+    const profile = course.resources.map((resource) => ({
+      language: resource.language,
+      platform: resourcePlatform(resource),
+      source: resource.source,
+      type: resource.type,
+      difficulty: resource.difficulty,
+      stage: resource.stage,
+    })).find((filters) => {
+      const key = JSON.stringify(filters);
+      const count = filterResources(course.resources, filters).length;
+      return !used.has(key) && count > 0 && count < course.resources.length;
+    });
+    assert.ok(profile, `${course.id} should expose a distinct selective resource profile`);
+    used.add(JSON.stringify(profile));
+    return { course, filters: profile };
+  });
+}
+
+function distinctInterviewProfiles(courses) {
+  const used = new Set();
+  return courses.map((course) => {
+    let profile = null;
+    for (const question of course.interviewQuestions) {
+      for (const role of question.roles) {
+        const filters = {
+          role,
+          frequency: question.frequency,
+          difficulty: question.difficulty,
+          status: 'unseen',
+        };
+        const key = JSON.stringify(filters);
+        const count = filterInterviewQuestions(course.interviewQuestions, filters, {}).length;
+        if (!used.has(key) && count > 0 && count < course.interviewQuestions.length) {
+          profile = filters;
+          break;
+        }
+      }
+      if (profile) break;
+    }
+    assert.ok(profile, `${course.id} should expose a distinct selective interview profile`);
+    used.add(JSON.stringify(profile));
+    return [course, profile];
+  });
 }
 
 test('resource library combines real filters, renders empty state and resets to all 28 resources', (t) => {
@@ -177,26 +230,36 @@ test('application preserves independent resource filters across all four active 
   const priorCourses = courses.filter(({ id }) => id !== contextRagMemory.id);
   const visitOrder = [contextRagMemory, ...priorCourses];
   const expectedStates = [];
+  const profiles = distinctResourceProfiles(visitOrder);
+  assert.equal(
+    new Set(profiles.map(({ filters }) => JSON.stringify(filters))).size,
+    visitOrder.length,
+    '每门课程必须使用不同的资源筛选组合，才能检测共享状态泄漏',
+  );
 
-  for (const [index, course] of visitOrder.entries()) {
+  for (const [index, { course, filters }] of profiles.entries()) {
     if (index > 0) navigateTo(app, windowRef, `#${course.id}/resources`);
     assert.equal(document.querySelectorAll('.resource-row').length, course.resources.length);
-    assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
-    const stage = [...new Set(course.resources.map(({ stage }) => stage))]
-      .find((candidate) => {
-        const count = course.resources.filter((resource) => resource.stage === candidate).length;
-        return count > 0 && count < course.resources.length;
-      });
-    assert.ok(stage, `${course.id} should expose a selective stage filter`);
-    dispatchChange(document.querySelector('#resource-filter-stage'), stage);
+    for (const name of Object.keys(filters)) {
+      assert.equal(document.querySelector(`#resource-filter-${name}`).value, FILTER_ALL);
+      dispatchChange(document.querySelector(`#resource-filter-${name}`), filters[name]);
+    }
     const count = document.querySelectorAll('.resource-row').length;
     assert.ok(count > 0 && count < course.resources.length, course.id);
-    expectedStates.push({ course, stage, count });
+    assert.equal(filterResources(course.resources, filters).length, count, course.id);
+    expectedStates.push({ course, filters, count });
   }
 
-  for (const { course, stage, count } of [...expectedStates, ...expectedStates]) {
+  for (const { course, filters, count } of [...expectedStates, ...expectedStates]) {
     navigateTo(app, windowRef, `#${course.id}/resources`);
-    assert.equal(document.querySelector('#resource-filter-stage').value, stage, course.id);
+    const rendered = Object.fromEntries(Object.keys(filters).map((name) => [
+      name,
+      document.querySelector(`#resource-filter-${name}`).value,
+    ]));
+    assert.deepEqual(rendered, filters, `${course.id} should restore only its resource filters`);
+    for (const other of expectedStates.filter((state) => state.course.id !== course.id)) {
+      assert.notDeepEqual(rendered, other.filters, `${course.id} must not inherit ${other.course.id}`);
+    }
     assert.equal(document.querySelectorAll('.resource-row').length, count, course.id);
   }
 });
@@ -358,22 +421,12 @@ test('application preserves independent interview filters and revealed answers a
   };
   const courses = Object.values(courseRegistry);
   const priorCourses = courses.filter(({ id }) => id !== contextRagMemory.id);
-  const configurations = [contextRagMemory, ...priorCourses].map((course) => {
-    const question = course.interviewQuestions.find((candidate) => (
-      course.interviewQuestions.filter((other) => (
-        other.roles.includes(candidate.roles[0])
-        && other.frequency === candidate.frequency
-        && other.difficulty === candidate.difficulty
-      )).length < course.interviewQuestions.length
-    ));
-    assert.ok(question, `${course.id} should expose selective interview filters`);
-    return [course, {
-      role: question.roles[0],
-      frequency: question.frequency,
-      difficulty: question.difficulty,
-      status: 'unseen',
-    }];
-  });
+  const configurations = distinctInterviewProfiles([contextRagMemory, ...priorCourses]);
+  assert.equal(
+    new Set(configurations.map(([, filters]) => JSON.stringify(filters))).size,
+    configurations.length,
+    '每门课程必须使用不同的面试筛选组合，才能检测共享状态泄漏',
+  );
   const states = [];
 
   for (const [index, [course, filters]] of configurations.entries()) {
@@ -388,8 +441,13 @@ test('application preserves independent interview filters and revealed answers a
 
   for (const { course, filters, count, questionId } of [...states, ...states]) {
     navigateTo(app, windowRef, `#${course.id}/interviews`);
-    for (const [name, value] of Object.entries(filters)) {
-      assert.equal(document.querySelector(`#interview-filter-${name}`).value, value, course.id);
+    const rendered = Object.fromEntries(Object.keys(filters).map((name) => [
+      name,
+      document.querySelector(`#interview-filter-${name}`).value,
+    ]));
+    assert.deepEqual(rendered, filters, `${course.id} should restore only its interview filters`);
+    for (const other of states.filter((state) => state.course.id !== course.id)) {
+      assert.notDeepEqual(rendered, other.filters, `${course.id} must not inherit ${other.course.id}`);
     }
     assert.equal(document.querySelectorAll('.interview-card').length, count, course.id);
     assert.equal(document.querySelector(`#interview-reveal-${questionId}`).getAttribute('aria-expanded'), 'true');
@@ -1446,7 +1504,16 @@ test('every configured experiment has a resolvable accessible heading and is int
   const configured = courses.flatMap((course) => course.lessons
     .filter((lesson) => lesson.exercise.experiment)
     .map((lesson) => ({ course, lesson, experimentId: lesson.exercise.experiment })));
-  assert.equal(configured.length, courses.length * 3);
+  assert.deepEqual(
+    configured
+      .filter(({ course }) => course.id === contextRagMemory.id)
+      .map(({ lesson, experimentId }) => [lesson.id, experimentId]),
+    [
+      ['context-02', 'context-router'],
+      ['context-05', 'hybrid-retrieval'],
+      ['context-07', 'memory-lifecycle'],
+    ],
+  );
 
   for (const { course, lesson, experimentId } of configured) {
     const resolved = renderExperiment(experimentId);

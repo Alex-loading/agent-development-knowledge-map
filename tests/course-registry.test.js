@@ -43,39 +43,21 @@ test('production course registry is immutable and resolves exactly four active c
 });
 
 test('route resolver opens registered dashboards and lessons from the production registry', () => {
-  assert.deepEqual(resolveRoute('#agent-mechanism/dashboard'), {
-    hash: '#agent-mechanism/dashboard',
-    moduleId: 'agent-mechanism',
-    view: 'dashboard',
-  });
-  assert.deepEqual(resolveRoute('#agent-mechanism/lesson/agent-01'), {
-    hash: '#agent-mechanism/lesson/agent-01',
-    moduleId: 'agent-mechanism',
-    view: 'lesson',
-    lessonId: 'agent-01',
-  });
-  assert.deepEqual(resolveRoute('#agent-harness/dashboard'), {
-    hash: '#agent-harness/dashboard',
-    moduleId: 'agent-harness',
-    view: 'dashboard',
-  });
-  assert.deepEqual(resolveRoute('#agent-harness/lesson/harness-01'), {
-    hash: '#agent-harness/lesson/harness-01',
-    moduleId: 'agent-harness',
-    view: 'lesson',
-    lessonId: 'harness-01',
-  });
-  assert.deepEqual(resolveRoute('#context-rag-memory/dashboard'), {
-    hash: '#context-rag-memory/dashboard',
-    moduleId: 'context-rag-memory',
-    view: 'dashboard',
-  });
-  assert.deepEqual(resolveRoute('#context-rag-memory/lesson/context-01'), {
-    hash: '#context-rag-memory/lesson/context-01',
-    moduleId: 'context-rag-memory',
-    view: 'lesson',
-    lessonId: 'context-01',
-  });
+  for (const course of Object.values(courseRegistry)) {
+    const firstLesson = course.lessons[0];
+    assert.ok(firstLesson, `${course.id} must expose a first lesson`);
+    assert.deepEqual(resolveRoute(`#${course.id}/dashboard`), {
+      hash: `#${course.id}/dashboard`,
+      moduleId: course.id,
+      view: 'dashboard',
+    });
+    assert.deepEqual(resolveRoute(`#${course.id}/lesson/${firstLesson.id}`), {
+      hash: `#${course.id}/lesson/${firstLesson.id}`,
+      moduleId: course.id,
+      view: 'lesson',
+      lessonId: firstLesson.id,
+    });
+  }
 });
 
 test('route resolver keeps a canonical fallback for invalid Agent lessons', () => {
