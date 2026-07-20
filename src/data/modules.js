@@ -14,7 +14,7 @@ export const modules = [
   {
     id: 'agent-mechanism',
     title: 'Agent 机制',
-    status: 'planned',
+    status: 'active',
     summary: '理解模型、工具、记忆与控制循环如何组合成可行动的智能体。',
     prerequisites: ['llm-foundation'],
     estimatedHours: 12,

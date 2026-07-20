@@ -8,6 +8,7 @@ import {
   setInterviewStatus,
   toggleReviewQueue,
 } from '../src/core/progress.js';
+import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
 import { renderDashboard } from '../src/ui/dashboard.js';
@@ -27,6 +28,11 @@ import {
 function dispatchChange(select, value) {
   select.value = value;
   select.dispatchEvent(new FakeEvent('change'));
+}
+
+function navigateTo(app, windowRef, hash) {
+  app.navigate(hash);
+  windowRef.dispatchEvent(new FakeEvent('hashchange'));
 }
 
 function createStore(initialState) {
@@ -154,6 +160,38 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
+test('application preserves independent resource filters for each course module', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const windowRef = createFakeWindow('#llm-foundation/resources');
+  const app = startApp({
+    documentRef: document,
+    windowRef,
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  dispatchChange(document.querySelector('#resource-filter-stage'), 'Token 实验');
+  const llmCount = document.querySelectorAll('.resource-row').length;
+  assert.ok(llmCount > 0 && llmCount < llmFoundation.resources.length);
+
+  navigateTo(app, windowRef, '#agent-mechanism/resources');
+  assert.equal(document.querySelectorAll('.resource-row').length, agentMechanism.resources.length);
+  assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
+
+  dispatchChange(document.querySelector('#resource-filter-stage'), '机制总览');
+  const agentCount = document.querySelectorAll('.resource-row').length;
+  assert.ok(agentCount > 0 && agentCount < agentMechanism.resources.length);
+
+  navigateTo(app, windowRef, '#llm-foundation/resources');
+  assert.equal(document.querySelector('#resource-filter-stage').value, 'Token 实验');
+  assert.equal(document.querySelectorAll('.resource-row').length, llmCount);
+
+  navigateTo(app, windowRef, '#agent-mechanism/resources');
+  assert.equal(document.querySelector('#resource-filter-stage').value, '机制总览');
+  assert.equal(document.querySelectorAll('.resource-row').length, agentCount);
+});
+
 test('interview practice keeps answers absent until reveal and preserves filters/reveal through status updates', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -258,6 +296,65 @@ test('application persists interview mastery exactly once and updates shell summ
   review.click();
   assert.equal(document.activeElement.id, `interview-review-${first.id}`);
   assert.equal(store.saves.length, 2);
+});
+
+test('application preserves independent interview filters and revealed answers per module', (t) => {
+  const document = createAppDocument();
+  t.after(installFakeDom(document));
+  const windowRef = createFakeWindow('#llm-foundation/interviews');
+  const app = startApp({
+    documentRef: document,
+    windowRef,
+    progressStore: createStore(createDefaultProgress('llm-foundation')),
+  });
+  t.after(app.teardown);
+
+  dispatchChange(document.querySelector('#interview-filter-role'), '后端工程');
+  dispatchChange(document.querySelector('#interview-filter-frequency'), '中');
+  dispatchChange(document.querySelector('#interview-filter-status'), 'unseen');
+  const llmCount = document.querySelectorAll('.interview-card').length;
+  assert.ok(llmCount > 0 && llmCount < llmFoundation.interviewQuestions.length);
+  const llmQuestionId = llmFoundation.interviewQuestions.find((question) => (
+    question.roles.includes('后端工程') && question.frequency === '中'
+  )).id;
+  assert.notEqual(document.querySelector(`[data-question-id="${llmQuestionId}"]`), null);
+  document.querySelector(`#interview-reveal-${llmQuestionId}`).click();
+  assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
+
+  navigateTo(app, windowRef, '#agent-mechanism/interviews');
+  assert.equal(document.querySelectorAll('.interview-card').length, agentMechanism.interviewQuestions.length);
+  assert.equal(document.querySelector('#interview-filter-role').value, FILTER_ALL);
+  assert.equal(document.querySelector('#interview-filter-frequency').value, FILTER_ALL);
+  assert.equal(document.querySelector('#interview-filter-status').value, FILTER_ALL);
+  assert.equal(document.querySelectorAll('.answer-drawer').length, 0);
+
+  dispatchChange(document.querySelector('#interview-filter-role'), 'AI 应用');
+  dispatchChange(document.querySelector('#interview-filter-frequency'), '高');
+  dispatchChange(document.querySelector('#interview-filter-status'), 'unseen');
+  const agentCount = document.querySelectorAll('.interview-card').length;
+  assert.ok(agentCount > 0 && agentCount < agentMechanism.interviewQuestions.length);
+  const agentQuestionId = agentMechanism.interviewQuestions.find((question) => (
+    question.roles.includes('AI 应用') && question.frequency === '高'
+  )).id;
+  assert.notEqual(document.querySelector(`[data-question-id="${agentQuestionId}"]`), null);
+  document.querySelector(`#interview-reveal-${agentQuestionId}`).click();
+  assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
+
+  navigateTo(app, windowRef, '#llm-foundation/interviews');
+  assert.equal(document.querySelector('#interview-filter-role').value, '后端工程');
+  assert.equal(document.querySelector('#interview-filter-frequency').value, '中');
+  assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
+  assert.equal(document.querySelectorAll('.interview-card').length, llmCount);
+  assert.equal(document.querySelector(`#interview-reveal-${llmQuestionId}`).getAttribute('aria-expanded'), 'true');
+  assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`), null);
+
+  navigateTo(app, windowRef, '#agent-mechanism/interviews');
+  assert.equal(document.querySelector('#interview-filter-role').value, 'AI 应用');
+  assert.equal(document.querySelector('#interview-filter-frequency').value, '高');
+  assert.equal(document.querySelector('#interview-filter-status').value, 'unseen');
+  assert.equal(document.querySelectorAll('.interview-card').length, agentCount);
+  assert.equal(document.querySelector(`#interview-reveal-${agentQuestionId}`).getAttribute('aria-expanded'), 'true');
+  assert.equal(document.querySelector(`#interview-reveal-${llmQuestionId}`), null);
 });
 
 test('interview focus falls back to results summary when a status change removes the active card', (t) => {

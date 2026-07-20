@@ -89,7 +89,7 @@ test('normalizes supported view and lesson routes to canonical hashes', () => {
   });
 });
 
-test('falls back from empty, unknown and unsupported-module routes', () => {
+test('falls back from empty, invalid and unknown-module routes', () => {
   const fallback = {
     hash: '#llm-foundation/dashboard',
     moduleId: 'llm-foundation',
@@ -97,7 +97,7 @@ test('falls back from empty, unknown and unsupported-module routes', () => {
   };
   assert.deepEqual(normalizeRoute(''), fallback);
   assert.deepEqual(normalizeRoute('#llm-foundation/not-a-view'), fallback);
-  assert.deepEqual(normalizeRoute('#agent-mechanism/dashboard'), fallback);
+  assert.deepEqual(normalizeRoute('#not-registered/dashboard'), fallback);
 });
 
 test('malformed and non-HTTPS external resources are non-clickable and disabled', () => {

@@ -123,10 +123,22 @@ export function startApp({
   let pendingViewFocusId = null;
   let pendingViewFallbackId = null;
   const viewState = {
-    resourceFilters: {},
-    interviewFilters: {},
-    revealedInterviewIds: new Set(),
+    resourceFiltersByModule: {},
+    interviewFiltersByModule: {},
+    revealedInterviewIdsByModule: {},
     resetConfirmOpen: false,
+  };
+
+  const getModuleFilters = (filtersByModule, moduleId) => {
+    if (!Object.hasOwn(filtersByModule, moduleId)) filtersByModule[moduleId] = {};
+    return filtersByModule[moduleId];
+  };
+
+  const getRevealedInterviewIds = (moduleId) => {
+    if (!Object.hasOwn(viewState.revealedInterviewIdsByModule, moduleId)) {
+      viewState.revealedInterviewIdsByModule[moduleId] = new Set();
+    }
+    return viewState.revealedInterviewIdsByModule[moduleId];
   };
 
   const syncStorageNotice = () => {
@@ -192,29 +204,33 @@ export function startApp({
     render();
   };
 
-  const updateResourceFilters = (filters, focusId) => {
-    viewState.resourceFilters = { ...filters };
+  const updateResourceFilters = (moduleId, filters, focusId) => {
+    viewState.resourceFiltersByModule[moduleId] = { ...filters };
     restoreViewFocusAfterRender(focusId, 'resource-results-summary');
     render();
   };
 
-  const updateInterviewFilters = (filters, focusId) => {
-    viewState.interviewFilters = { ...filters };
+  const updateInterviewFilters = (moduleId, filters, focusId) => {
+    viewState.interviewFiltersByModule[moduleId] = { ...filters };
     restoreViewFocusAfterRender(focusId, 'interview-results-summary');
     render();
   };
 
-  const toggleInterviewReveal = (questionId, focusId) => {
-    if (viewState.revealedInterviewIds.has(questionId)) {
-      viewState.revealedInterviewIds.delete(questionId);
+  const toggleInterviewReveal = (moduleId, questionId, focusId) => {
+    const revealedIds = new Set(getRevealedInterviewIds(moduleId));
+    if (revealedIds.has(questionId)) {
+      revealedIds.delete(questionId);
     } else {
-      viewState.revealedInterviewIds.add(questionId);
+      revealedIds.add(questionId);
     }
+    viewState.revealedInterviewIdsByModule[moduleId] = revealedIds;
     restoreViewFocusAfterRender(focusId, 'interview-results-summary');
     render();
   };
 
-  const updateInterviewStatus = (course, questionId, status, focusId) => {
+  const updateInterviewStatus = (moduleId, questionId, status, focusId) => {
+    const course = getCourse(moduleId);
+    if (!course?.interviewQuestions.some(({ id }) => id === questionId)) return;
     const currentStatus = state.interviewStatusById?.[questionId] ?? 'unseen';
     if (currentStatus === status) return;
     persistState(setInterviewStatus(state, questionId, status));
@@ -225,7 +241,9 @@ export function startApp({
     render();
   };
 
-  const updateReviewQueue = (questionId, focusId) => {
+  const updateReviewQueue = (moduleId, questionId, focusId) => {
+    const course = getCourse(moduleId);
+    if (!course?.interviewQuestions.some(({ id }) => id === questionId)) return;
     const wasQueued = state.reviewQueue?.includes(questionId);
     persistState(toggleReviewQueue(state, questionId));
     pendingAnnouncement = wasQueued ? '已移出复习队列' : '已加入复习队列';
@@ -302,20 +320,20 @@ export function startApp({
       renderResourceLibrary(root, {
         courseTitle: course.title,
         resources: course.resources,
-        filters: viewState.resourceFilters,
-        onFiltersChange: updateResourceFilters,
+        filters: getModuleFilters(viewState.resourceFiltersByModule, route.moduleId),
+        onFiltersChange: (filters, focusId) => updateResourceFilters(route.moduleId, filters, focusId),
       });
       return true;
     }
     if (route.view === 'interviews') {
       renderInterviewPractice(root, {
         ...shared,
-        filters: viewState.interviewFilters,
-        revealedIds: viewState.revealedInterviewIds,
-        onFiltersChange: updateInterviewFilters,
-        onToggleReveal: toggleInterviewReveal,
-        onSetStatus: (questionId, status, focusId) => updateInterviewStatus(course, questionId, status, focusId),
-        onToggleReview: updateReviewQueue,
+        filters: getModuleFilters(viewState.interviewFiltersByModule, route.moduleId),
+        revealedIds: getRevealedInterviewIds(route.moduleId),
+        onFiltersChange: (filters, focusId) => updateInterviewFilters(route.moduleId, filters, focusId),
+        onToggleReveal: (questionId, focusId) => toggleInterviewReveal(route.moduleId, questionId, focusId),
+        onSetStatus: (questionId, status, focusId) => updateInterviewStatus(route.moduleId, questionId, status, focusId),
+        onToggleReview: (questionId, focusId) => updateReviewQueue(route.moduleId, questionId, focusId),
         onOpenLesson: openCourseLesson,
       });
       return true;
