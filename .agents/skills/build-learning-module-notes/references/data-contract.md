@@ -90,6 +90,8 @@ const blockedDraft = {
 
 `courseFieldBasis` is traceability to supplied curriculum input, not citation or evidence. Candidate source IDs must be genuine IDs from supplied resource metadata, remain separate from draft sections, and must not appear in a formal evidence map until provenance, body access, and registry resolution are established.
 
+`brokenReferenceCount: null` and the complete `tests` object are mandatory in every blocked artifact. A request such as “only output the outline, source-role cards, and coverage matrix” does not waive this audit. When those are the only permitted top-level items, include an explicit audit object containing both fields inside the coverage-matrix result rather than omitting them or claiming a test ran.
+
 ## Integrity checks
 
 1. For a formal project chapter, resolve every `sections[*].sourceIds[*]` against both the `evidence` keys and the project resource registry. Reject the artifact if either lookup fails.
@@ -99,3 +101,4 @@ const blockedDraft = {
 5. Reject duplicate section IDs, empty arrays required above, unknown enum values, and unreferenced `core` evidence.
 6. When the project resource registry is unavailable in an isolated or outline-only task, label proposed resource IDs as candidates, record that registry validation was not applicable, and do not publish or claim that any ID is resolvable.
 7. Reject any course-field path, synthetic `course-fields-*` identifier, unknown/internal provenance, or unattributed prose in the formal `evidence` map or `knowledgeNote.sections[*].sourceIds`.
+8. Reject a blocked or outline-only artifact that omits `brokenReferenceCount: null`, omits `tests.status: 'not applicable'`, or fails to state why project tests did not apply.
