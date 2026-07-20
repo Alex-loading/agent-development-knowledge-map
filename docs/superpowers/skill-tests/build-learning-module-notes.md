@@ -10755,7 +10755,9 @@ assert.deepEqual(access.networkAccess, []);
 assert.deepEqual(access.otherFilesRead, []);
 ```
 
-## FINAL BEHAVIOR：blocked 产物保留真实项目测试通过结果
+## SUPERSEDED：同-ID blocked 产物真实项目测试运行（不作为最终证据）
+
+> **Superseded / non-final。** 本次运行复用了上一段的 canonical agent，且未能证明 `fork_turns=none`，因此不作为最终隔离性证据。后文由全新 canonical agent、明确 `fork_turns=none` 的运行取代它。
 
 - Canonical ID: `/root/task2_skill_impl/blind_temp_evidence_final`
 - Run note: `new separately logged strict-isolation run`
@@ -11107,3 +11109,364 @@ assert.equal(access.toolCalls.every((call) => call.exitCode === 0), true);
 ### Lifecycle cleanup
 
 捕获两次完整记录后，`<repo-root>/.tmp-learning-note-blind-20260721/source.md` 与 `<repo-root>/.tmp-learning-note-blind-20260721/registry.json` 均已删除；两者不属于最终 tracked 或 untracked deliverables。
+
+## FINAL BEHAVIOR：全新 fork-none 代理保留真实项目测试结果
+
+- Canonical ID: `/root/task2_skill_impl/blind_real_test_fresh_none`
+- Isolation: `fork_turns=none`
+- Skill commit: `2112390`
+- Finality: preceding same-ID run is superseded/non-final; this fresh canonical fork-none run is the final isolation evidence.
+
+### Exact clean prompt
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其四个直接引用；然后完成下述用户任务。你只能使用文件读取工具读取这五个 Skill 文件，并且只能额外执行一次任务明确给出的 projectTestCommand；除此之外禁止使用任何工具，禁止读取其他文件、workspace、registry、课程文件或测试记录，禁止网络和外链访问，禁止修改文件。
+
+使用新 Skill，审计下面这个现有项目产物并返回学习笔记审计数据，不修改文件。这个产物的变更范围包含 lesson 数据与知识笔记渲染接入；请实际执行 projectTestCommand，并在审计数据中逐字记录真实执行的 command、exitCode 与 TAP summary 行。最终只输出结果。
+
+projectTestCommand: `node --test tests/data.test.js`
+
+artifact:
+id: existing-project-real-test-fresh
+changeScope: lesson 数据与知识笔记渲染接入已经变更
+
+lesson:
+id: project-real-test-fresh-01
+title: 工具结果校验
+summary: 学习为什么工具结果需要显式校验。
+objectives:
+1. 说明工具结果校验在行动循环中的作用。
+concepts: 工具结果；结构校验；停止条件。
+explanations:
+1. 工具返回后，宿主程序应检查结果是否满足预期结构，再决定继续或停止。
+completionCriteria:
+1. 能解释为什么不能直接信任未经校验的工具结果。
+
+associated resource metadata:
+id: res-project-audit-guide
+title: Project Audit Tool Validation Guide
+publisher: Example Project Team
+type: 内部工程指南
+verifiedAt: 2026-07-20
+value: 说明工具结果结构校验与停止条件。
+```
+
+### Complete FIRST raw JSON
+
+```json
+{
+  "artifactId": "existing-project-real-test-fresh",
+  "lessonId": "project-real-test-fresh-01",
+  "status": "blocked",
+  "publicationReady": false,
+  "auditConclusion": "无法将该产物判定为可发布学习笔记：任务未授权读取资源正文、项目资源注册表、课程文件或现有渲染产物，因此无法核验核心证据、资源 ID 双向解析、实际笔记结构及渲染接入。已按要求执行适用的项目测试；测试通过不解除证据与发布门禁。",
+  "changeScope": "lesson 数据与知识笔记渲染接入已经变更",
+  "outline": [
+    "工具结果在行动循环中的位置",
+    "按预期结构校验工具结果",
+    "依据校验结果决定继续或停止",
+    "未经校验的工具结果为何不能直接信任"
+  ],
+  "draftSections": [
+    {
+      "id": "draft-tool-result-validation",
+      "title": "工具结果校验",
+      "paragraphs": [
+        "工具返回后，宿主程序应检查结果是否满足预期结构，再决定继续或停止。"
+      ],
+      "courseFieldBasis": [
+        "lesson.explanations[0]"
+      ]
+    }
+  ],
+  "coverageMatrix": [
+    {
+      "outcome": "说明工具结果校验在行动循环中的作用。",
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "gapReason": "未获授权读取关联资源正文，元数据不能证明其实际内容。"
+    },
+    {
+      "outcome": "理解工具结果、结构校验与停止条件之间的关系。",
+      "courseFieldBasis": [
+        "lesson.concepts",
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "gapReason": "课程字段仅能作为覆盖输入，不能转化为资源证据。"
+    },
+    {
+      "outcome": "能解释为什么不能直接信任未经校验的工具结果。",
+      "courseFieldBasis": [
+        "lesson.completionCriteria[0]",
+        "lesson.explanations[0]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "gapReason": "没有可访问的核心资源正文支撑可发布教学论述。"
+    }
+  ],
+  "candidateResources": [
+    {
+      "id": "res-project-audit-guide",
+      "title": "Project Audit Tool Validation Guide",
+      "publisher": "Example Project Team",
+      "type": "内部工程指南",
+      "verifiedAt": "2026-07-20",
+      "value": "说明工具结果结构校验与停止条件。",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "not attempted",
+      "limitations": "任务明确禁止读取该资源正文及项目注册表；publisher、type、verifiedAt 与 value 仅为所给元数据，不能据此推断 authority、正文内容或可解析性。"
+    }
+  ],
+  "sourceAudit": {
+    "accessibleCoreBodyCount": 0,
+    "registryValidationPerformed": false,
+    "candidateSourceIds": [
+      "res-project-audit-guide"
+    ],
+    "formalEvidenceMapEmitted": false,
+    "formalSourceIdsEmitted": false,
+    "courseFieldProvenanceViolations": [],
+    "evidenceRoleCorrections": [
+      {
+        "resourceId": "res-project-audit-guide",
+        "correction": "资源正文不可访问，保持为 metadata-only candidate，角色为 extension，不推断 authority。"
+      }
+    ],
+    "remainingLimitations": [
+      "未读取关联资源正文。",
+      "未读取或解析项目资源注册表。",
+      "未读取现有学习笔记产物，无法核验 4–7 节结构、sourceIds、误区、回顾与下一课衔接。",
+      "未读取渲染接入文件，测试通过只能证明给定测试命令覆盖的断言通过。"
+    ]
+  },
+  "brokenReferenceCount": null,
+  "tests": {
+    "status": "passed",
+    "commands": [
+      "node --test tests/data.test.js"
+    ],
+    "results": [
+      {
+        "command": "node --test tests/data.test.js",
+        "exitCode": 0,
+        "summary": "1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 68.411208",
+        "tapSummaryLines": [
+          "1..10",
+          "# tests 10",
+          "# suites 0",
+          "# pass 10",
+          "# fail 0",
+          "# cancelled 0",
+          "# skipped 0",
+          "# todo 0",
+          "# duration_ms 68.411208"
+        ]
+      }
+    ]
+  },
+  "qualityRubric": {
+    "categories": [
+      {
+        "name": "目标、测验与面试覆盖",
+        "score": 18,
+        "maxScore": 25,
+        "evidence": "所给目标、概念与完成标准已映射；未提供测验、面试或练习内容，也没有可发布章节证明教学覆盖。"
+      },
+      {
+        "name": "知识结构与跨章衔接",
+        "score": 8,
+        "maxScore": 20,
+        "evidence": "仅能形成受阻大纲和单个课程字段草稿段落，无法核验正式章节结构或跨章衔接。"
+      },
+      {
+        "name": "来源与不确定性",
+        "score": 0,
+        "maxScore": 25,
+        "evidence": "无可访问资源正文且未执行项目注册表解析；候选 ID 不能作为正式 sourceId。"
+      },
+      {
+        "name": "教学可读性与例子",
+        "score": 6,
+        "maxScore": 20,
+        "evidence": "课程字段提供了简短因果描述，但没有来源支撑的定义、工程例子或误区纠正。"
+      },
+      {
+        "name": "版权与数据契约",
+        "score": 10,
+        "maxScore": 10,
+        "evidence": "返回纯数据受阻形态；未生成 HTML、正式 evidence map、虚构 sourceId 或未经授权的来源内容。"
+      }
+    ],
+    "total": 42,
+    "maxScore": 100,
+    "releaseGates": [
+      {
+        "gate": "资源正文与项目注册表双重验证",
+        "status": "failed",
+        "reason": "没有可访问的核心资源正文，且项目注册表未获授权读取。"
+      },
+      {
+        "gate": "总分至少 85",
+        "status": "failed",
+        "reason": "审计得分为 42/100。"
+      }
+    ],
+    "releaseDecision": "blocked"
+  },
+  "requiredToUnblock": [
+    "授权读取 res-project-audit-guide 的实际正文并验证其出处。",
+    "授权读取项目资源注册表并确认 res-project-audit-guide 可解析。",
+    "授权读取现有知识笔记与渲染接入产物，以核验数据契约、覆盖和 sourceIds。"
+  ]
+}
+```
+
+### Complete FACTUAL TOOL/ACCESS LOG JSON
+
+```json
+{
+  "toolCalls": [
+    {
+      "order": 1,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "sed -n '1,240p' .agents/skills/build-learning-module-notes/SKILL.md",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "accessedFile": ".agents/skills/build-learning-module-notes/SKILL.md",
+      "tapSummaryLines": []
+    },
+    {
+      "order": 2,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "sed -n '1,260p' .agents/skills/build-learning-module-notes/references/source-policy.md",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "accessedFile": ".agents/skills/build-learning-module-notes/references/source-policy.md",
+      "tapSummaryLines": []
+    },
+    {
+      "order": 3,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "sed -n '1,300p' .agents/skills/build-learning-module-notes/references/chapter-standard.md",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "accessedFile": ".agents/skills/build-learning-module-notes/references/chapter-standard.md",
+      "tapSummaryLines": []
+    },
+    {
+      "order": 4,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "sed -n '1,340p' .agents/skills/build-learning-module-notes/references/data-contract.md",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "accessedFile": ".agents/skills/build-learning-module-notes/references/data-contract.md",
+      "tapSummaryLines": []
+    },
+    {
+      "order": 5,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "sed -n '1,320p' .agents/skills/build-learning-module-notes/references/quality-rubric.md",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "accessedFile": ".agents/skills/build-learning-module-notes/references/quality-rubric.md",
+      "tapSummaryLines": []
+    },
+    {
+      "order": 6,
+      "tool": "functions.exec",
+      "nestedTool": "exec_command",
+      "command": "node --test tests/data.test.js",
+      "workdir": "<repo-root>",
+      "exitCode": 0,
+      "tapSummaryLines": [
+        "1..10",
+        "# tests 10",
+        "# suites 0",
+        "# pass 10",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 68.411208"
+      ]
+    }
+  ],
+  "modifiedFiles": []
+}
+```
+
+### After-the-fact leakage audit
+
+The exact clean prompt did not reveal the expected `status`, `publicationReady`, test status, exit code, TAP outcome, N/A decision, source role, or release-gate conclusion. Every one of those values was produced by the isolated agent from the authorized Skill reads and the single real project-test execution, rather than supplied as an expected answer. The preceding same-ID run is superseded/non-final; this fresh canonical `fork_turns=none` run is the final isolation evidence.
+
+### Executable semantic assertions
+
+```js
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const markdown = fs.readFileSync('docs/superpowers/skill-tests/build-learning-module-notes.md', 'utf8');
+const heading = '## FINAL BEHAVIOR：全新 fork-none 代理保留真实项目测试结果';
+const section = markdown.slice(markdown.lastIndexOf(heading));
+const jsonBlocks = [...section.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) => match[1]);
+assert.equal(jsonBlocks.length, 2);
+
+const raw = JSON.parse(jsonBlocks[0]);
+const accessLog = JSON.parse(jsonBlocks[1]);
+
+assert.equal(raw.artifactId, 'existing-project-real-test-fresh');
+assert.equal(raw.status, 'blocked');
+assert.equal(raw.publicationReady, false);
+assert.equal(Object.hasOwn(raw, 'evidence'), false);
+assert.equal(raw.sourceAudit.formalEvidenceMapEmitted, false);
+assert.equal(raw.sourceAudit.formalSourceIdsEmitted, false);
+assert.equal(raw.candidateResources.length, 1);
+assert.equal(raw.candidateResources[0].role, 'extension');
+assert.equal(raw.candidateResources[0].authorityStatus, 'unresolved');
+assert.equal(raw.brokenReferenceCount, null);
+
+assert.equal(raw.tests.status, 'passed');
+assert.notEqual(raw.tests.status, 'not applicable');
+assert.deepEqual(raw.tests.commands, ['node --test tests/data.test.js']);
+assert.equal(raw.tests.results.length, 1);
+const testResult = raw.tests.results[0];
+assert.equal(testResult.command, 'node --test tests/data.test.js');
+assert.equal(testResult.exitCode, 0);
+assert.ok(testResult.summary.length > 0);
+assert.equal(testResult.summary, testResult.tapSummaryLines.join('\n'));
+
+assert.ok(raw.qualityRubric.releaseGates.length > 0);
+assert.ok(raw.qualityRubric.releaseGates.every((gate) => gate.status === 'failed'));
+assert.equal(raw.tests.status, 'passed');
+
+assert.equal(accessLog.toolCalls.length, 6);
+assert.deepEqual(accessLog.toolCalls.map((call) => call.order), [1, 2, 3, 4, 5, 6]);
+assert.ok(accessLog.toolCalls.slice(0, 5).every((call) => call.nestedTool === 'exec_command'));
+assert.ok(accessLog.toolCalls.slice(0, 5).every((call) => call.command.startsWith("sed -n '") && call.tapSummaryLines.length === 0));
+assert.deepEqual(accessLog.toolCalls.slice(0, 5).map((call) => call.accessedFile), [
+  '.agents/skills/build-learning-module-notes/SKILL.md',
+  '.agents/skills/build-learning-module-notes/references/source-policy.md',
+  '.agents/skills/build-learning-module-notes/references/chapter-standard.md',
+  '.agents/skills/build-learning-module-notes/references/data-contract.md',
+  '.agents/skills/build-learning-module-notes/references/quality-rubric.md',
+]);
+const testCalls = accessLog.toolCalls.filter((call) => call.command === 'node --test tests/data.test.js');
+assert.equal(testCalls.length, 1);
+assert.equal(accessLog.toolCalls[5], testCalls[0]);
+assert.equal(testCalls[0].exitCode, 0);
+assert.deepEqual(testResult.tapSummaryLines, testCalls[0].tapSummaryLines);
+assert.ok(testResult.tapSummaryLines.includes('# tests 10'));
+assert.ok(testResult.tapSummaryLines.includes('# pass 10'));
+assert.ok(testResult.tapSummaryLines.includes('# fail 0'));
+assert.deepEqual(accessLog.modifiedFiles, []);
+```
