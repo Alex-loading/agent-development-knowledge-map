@@ -58,6 +58,7 @@ function assertToolCatalog(toolCatalog) {
     throw new TypeError('toolCatalog 必须是数组');
   }
 
+  const toolNames = new Set();
   for (const definition of toolCatalog) {
     if (!isPlainObject(definition)) {
       throw new TypeError('工具定义必须是普通对象');
@@ -65,11 +66,25 @@ function assertToolCatalog(toolCatalog) {
     if (typeof definition.name !== 'string') {
       throw new TypeError('工具定义的 name 必须是字符串');
     }
+    if (definition.name.trim().length === 0) {
+      throw new RangeError('工具定义的 name 不能为空');
+    }
+    if (toolNames.has(definition.name)) {
+      throw new RangeError(`工具名称 "${definition.name}" 在 catalog 中重复`);
+    }
+    toolNames.add(definition.name);
     if (!Array.isArray(definition.required)) {
       throw new TypeError(`工具 "${definition.name}" 的 required 必须是数组`);
     }
-    if (definition.required.some((field) => typeof field !== 'string')) {
-      throw new TypeError(`工具 "${definition.name}" 的 required 字段名必须是字符串`);
+    const requiredFields = new Set();
+    for (const field of definition.required) {
+      if (typeof field !== 'string') {
+        throw new TypeError(`工具 "${definition.name}" 的 required 字段名必须是字符串`);
+      }
+      if (requiredFields.has(field)) {
+        throw new RangeError(`工具 "${definition.name}" 的 required 字段 "${field}" 不能重复`);
+      }
+      requiredFields.add(field);
     }
     if (!isPlainObject(definition.properties)) {
       throw new TypeError(`工具 "${definition.name}" 的 properties 必须是普通对象`);
@@ -94,8 +109,18 @@ function assertToolCatalog(toolCatalog) {
         if (!Array.isArray(property.enum)) {
           throw new TypeError(`字段 "${field}" 的 enum 必须是数组`);
         }
-        if (property.enum.some((value) => !matchesType(value, property.type))) {
-          throw new RangeError(`字段 "${field}" 的 enum 值必须符合 ${property.type} 类型`);
+        if (property.enum.length === 0) {
+          throw new RangeError(`字段 "${field}" 的 enum 不能为空`);
+        }
+        const enumValues = new Set();
+        for (const value of property.enum) {
+          if (!matchesType(value, property.type)) {
+            throw new RangeError(`字段 "${field}" 的 enum 值必须符合 ${property.type} 类型`);
+          }
+          if (enumValues.has(value)) {
+            throw new RangeError(`字段 "${field}" 的 enum 值 "${value}" 不能重复`);
+          }
+          enumValues.add(value);
         }
       }
     }

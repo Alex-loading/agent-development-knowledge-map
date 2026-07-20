@@ -103,9 +103,11 @@ test('loop outcome rejects invalid step counts without changing its input', () =
   for (const [field, value] of [
     ['stepsUsed', -1],
     ['stepsUsed', 0.5],
+    ['stepsUsed', Number.NaN],
     ['stepsUsed', Number.POSITIVE_INFINITY],
     ['maxSteps', 0],
     ['maxSteps', 1.5],
+    ['maxSteps', Number.NaN],
     ['maxSteps', Number.POSITIVE_INFINITY],
   ]) {
     assert.throws(() => decideLoopOutcome({ ...valid, [field]: value }), RangeError);
@@ -206,6 +208,16 @@ test('tool validation aggregates type and enum errors in property declaration or
   });
 });
 
+test('tool validation rejects NaN number arguments', () => {
+  assert.deepEqual(validateToolInvocation(toolCatalog, {
+    name: 'search_docs',
+    args: { query: 'numbers', limit: Number.NaN },
+  }), {
+    status: 'invalid',
+    errors: ['字段 "limit" 应为有限 number 类型'],
+  });
+});
+
 test('tool validation returns fresh results and does not mutate catalog or invocation', () => {
   const catalog = structuredClone(toolCatalog);
   const invocation = {
@@ -238,6 +250,90 @@ test('tool validation treats malformed catalogs and definitions as programmer er
   assert.throws(() => validateToolInvocation([{ ...definition, required: {} }], invocation), TypeError);
   assert.throws(() => validateToolInvocation([{ ...definition, properties: new Date(0) }], invocation), TypeError);
   assert.throws(() => validateToolInvocation([{ ...definition, risk: 'medium' }], invocation), RangeError);
+});
+
+test('tool validation rejects empty tool names', () => {
+  const definition = {
+    name: 'placeholder',
+    required: [],
+    properties: {},
+    risk: 'low',
+  };
+
+  for (const name of ['', '   ']) {
+    assert.throws(
+      () => validateToolInvocation([{ ...definition, name }], { name: 'anything', args: {} }),
+      { name: 'RangeError', message: '工具定义的 name 不能为空' },
+    );
+  }
+});
+
+test('tool validation rejects duplicate tool names regardless of catalog order', () => {
+  const invocation = { name: 'same', args: {} };
+  const lowRisk = {
+    name: 'same',
+    required: [],
+    properties: {},
+    risk: 'low',
+  };
+  const highRisk = { ...lowRisk, risk: 'high' };
+
+  for (const catalog of [
+    [lowRisk, highRisk],
+    [highRisk, lowRisk],
+  ]) {
+    assert.throws(
+      () => validateToolInvocation(catalog, invocation),
+      { name: 'RangeError', message: '工具名称 "same" 在 catalog 中重复' },
+    );
+  }
+});
+
+test('tool validation rejects duplicate required fields', () => {
+  const catalog = [{
+    name: 'repeat_required',
+    required: ['x', 'x'],
+    properties: { x: { type: 'string' } },
+    risk: 'low',
+  }];
+
+  assert.throws(
+    () => validateToolInvocation(catalog, { name: 'repeat_required', args: {} }),
+    { name: 'RangeError', message: '工具 "repeat_required" 的 required 字段 "x" 不能重复' },
+  );
+});
+
+test('tool validation rejects empty enums', () => {
+  const definition = {
+    name: 'enum_tool',
+    required: [],
+    properties: {
+      scope: { type: 'string', enum: [] },
+    },
+    risk: 'low',
+  };
+  const invocation = { name: 'enum_tool', args: {} };
+
+  assert.throws(
+    () => validateToolInvocation([definition], invocation),
+    { name: 'RangeError', message: '字段 "scope" 的 enum 不能为空' },
+  );
+});
+
+test('tool validation rejects duplicate enum values', () => {
+  const definition = {
+    name: 'enum_tool',
+    required: [],
+    properties: {
+      scope: { type: 'string', enum: ['docs', 'docs'] },
+    },
+    risk: 'low',
+  };
+
+  assert.throws(
+    () => validateToolInvocation([definition], { name: 'enum_tool', args: {} }),
+    { name: 'RangeError', message: '字段 "scope" 的 enum 值 "docs" 不能重复' },
+  );
 });
 
 test('plan recovery covers the strategy and observation decision matrix', () => {
@@ -324,9 +420,11 @@ test('plan recovery rejects invalid retry counts without changing its input', ()
   for (const [field, value] of [
     ['retriesUsed', -1],
     ['retriesUsed', 0.5],
+    ['retriesUsed', Number.NaN],
     ['retriesUsed', Number.POSITIVE_INFINITY],
     ['maxRetries', -1],
     ['maxRetries', 0.5],
+    ['maxRetries', Number.NaN],
     ['maxRetries', Number.POSITIVE_INFINITY],
   ]) {
     assert.throws(() => decidePlanRecovery({ ...valid, [field]: value }), RangeError);
