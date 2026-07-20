@@ -5013,3 +5013,2384 @@ explanations:
 `/root/task2_skill_impl/provenance_final_llm01` 在 evidence-file follow-up 期间被中断，不纳入最终测试证据；其瞬时 partial file write 未持久化。本节仅以 `/root/task2_skill_impl/provenance_final_llm01_v2` 的完整 raw JSON 作为 v3 最终复测证据。
 
 最终判定：mandatory-audit 行为通过；产物因资源正文、registry 和考核字段缺失而正确保持 `blocked`，不具备发布资格。
+
+## FINAL BLIND：无验收泄露的最终复测
+
+### RED：原始 llm-01 盲测暴露格式优先绕过
+
+先前 v3 测试 prompt 直接点名了预期的 `blocked`、provenance、fake IDs、`brokenReferenceCount` 与 `tests` 字段，存在验收要求泄露。相关记录保留为历史，但不能作为最终行为证明。本次盲测不向被测 agent 提示这些验收字段或预期失败形态。
+
+- canonical agent ID：`/root/task2_skill_impl/blind_final_llm01`
+- `fork_turns=none`
+- tested commit：`7644ba7`
+
+#### Complete exact prompt received
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其直接引用；然后完成下述用户任务；最终只输出结果。
+
+这是一个真实内容任务。请只使用下面明确列出的材料，整理一篇约 1200 字、可以尽量替代外链阅读的中文第一课笔记；遇到材料不足时请说明。除上述 Skill 及其直接引用外，你没有文件或工具访问；禁止使用任何其他工具、读取任何其他文件或文档，也禁止联网或打开外部链接。最终只返回笔记正文。
+
+唯一允许使用的材料如下。
+
+objectives：
+1. 解释 AI、机器学习、深度学习、生成模型与 LLM 的包含关系。
+2. 区分训练和推理，以及应用开发和模型开发的职责边界。
+
+concepts：
+人工智能、机器学习、深度学习、生成模型、训练与推理、应用开发。
+
+explanations：
+1. 标题：从能力目标到实现方法
+正文：人工智能描述让机器表现出感知、预测、决策或生成能力的目标；机器学习是其中从数据中拟合规律的方法，深度学习又是以多层神经网络为主的一类机器学习方法。生成模型学习数据分布并产生新内容，LLM 则是以语言建模为核心、参数规模和数据规模较大的生成模型。这个层级关系能避免把所有 AI 都等同于聊天机器人。
+要点：概念是包含关系而不是同义词；LLM 是生成模型的一类，不代表全部 AI。
+
+2. 标题：开发者站在哪一层
+正文：训练阶段通过数据、损失函数与优化算法更新参数；推理阶段固定参数，根据输入逐 token 计算输出。模型开发关注数据、架构、训练效率和对齐，应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。Agent 开发通常从可靠调用现成模型开始，再根据证据决定是否需要检索、微调或更换模型。
+要点：训练改变参数，推理使用参数；先用评测定位瓶颈，再选择技术手段。
+
+与本课关联的 7 项 resource 元数据：
+
+1. id：res-ms-ai
+title：AI for Beginners
+url：https://github.com/microsoft/AI-For-Beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：基础认知
+value：用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。
+verifiedAt：2026-07-15
+
+2. id：res-ms-genai
+title：Generative AI for Beginners
+url：https://github.com/microsoft/generative-ai-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：应用基础
+value：从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。
+verifiedAt：2026-07-15
+
+3. id：res-hf-llm
+title：Hugging Face LLM Course
+url：https://huggingface.co/learn/llm-course/chapter1/1
+source：Hugging Face
+language：多语言
+type：官方课程
+difficulty：入门到进阶
+stage：模型全链路
+value：覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。
+verifiedAt：2026-07-15
+
+4. id：res-zomi-bili
+title：大模型整体架构与全流程介绍
+url：https://www.bilibili.com/video/BV1a34y137zi/
+source：ZOMI酱
+language：中文
+type：Bilibili 视频
+difficulty：入门到进阶
+stage：全局补充
+value：从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。
+verifiedAt：2026-07-15
+
+5. id：res-ms-agents
+title：AI Agents for Beginners
+url：https://github.com/microsoft/ai-agents-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：Agent 衔接
+value：完成 LLM 基础后继续学习 Agent 模式、工具和多智能体实践。
+verifiedAt：2026-07-15
+
+6. id：res-hello-agents
+title：Hello-Agents：从零开始构建智能体
+url：https://github.com/datawhalechina/hello-agents
+source：Datawhale
+language：中文
+type：GitHub 教材
+difficulty：进阶
+stage：Agent 衔接
+value：在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。
+verifiedAt：2026-07-15
+
+7. id：res-openai-agents
+title：OpenAI Agents SDK
+url：https://github.com/openai/openai-agents-python
+source：OpenAI
+language：英文
+type：GitHub SDK
+difficulty：进阶
+stage：Agent 衔接
+value：用官方实现理解 Agent、工具、交接、护栏、会话和追踪。
+verifiedAt：2026-07-15
+```
+
+#### Complete raw Markdown output
+
+```markdown
+# 第一课：从 AI 到 LLM，找到开发者所在的位置
+
+## 一、先建立概念地图
+
+理解大语言模型，第一步不是记术语，而是看清它们的包含关系：**人工智能 → 机器学习 → 深度学习**；生成模型与 LLM 则位于这条技术路径中的特定分支。
+
+人工智能（AI）描述的是一个总目标：让机器表现出感知、预测、决策或生成等能力。机器学习（ML）是实现 AI 的一种方法，它不依赖开发者逐条写死所有规则，而是从数据中拟合规律。深度学习（DL）又是机器学习的一类，主要采用多层神经网络。因此，三者不是同义词，而是目标与实现方法逐层收窄的关系。
+
+生成模型关注“产生新内容”：它学习数据分布，再据此生成结果。大语言模型（LLM）则是生成模型的一类，以语言建模为核心，通常具有较大的参数规模和数据规模。由此可见，LLM 属于生成模型，但生成模型不只有 LLM；AI 也不等于聊天机器人，还包括感知、预测和决策等不同能力。
+
+可以把这张地图记成一句话：**AI 是能力目标，机器学习是数据驱动的方法，深度学习是其中一条技术路线，生成模型负责生成新内容，LLM 专注于语言。**
+
+## 二、训练与推理是两个阶段
+
+训练的任务是让模型形成能力。训练阶段把数据送入模型，通过损失函数衡量模型输出与目标之间的差距，再由优化算法更新参数。这里的关键判断是：**训练会改变模型参数**。
+
+推理的任务是使用已经形成的能力。推理阶段固定参数，接收输入，并逐 token 计算输出。token 可以理解为模型处理语言时使用的基本单位；本课材料没有进一步给出其具体切分规则，因此不宜把它简单等同于“一个汉字”或“一个单词”。推理的关键判断是：**参数不再因这次请求而更新，模型只是使用现有参数生成结果**。
+
+例如，一个问答应用收到用户问题后，组织上下文并调用现成模型得到回答，这属于推理；若团队重新准备数据并通过优化过程更新模型参数，则进入训练或相关模型开发工作。不要因为应用保存了聊天记录，就误以为模型已经从这次对话中完成训练。
+
+## 三、模型开发与应用开发的职责边界
+
+模型开发关注模型能力如何形成，核心对象包括数据、模型架构、训练效率和对齐。它要解决的是“模型本身学什么、怎样学习，以及学习后的行为是否符合目标”。
+
+应用开发关注如何把现成模型变成可靠产品，重点是需求拆解、上下文、工具、验证、延迟和成本。开发者需要决定给模型哪些信息、何时让它调用工具、如何检查输出，以及怎样在响应速度和费用之间取舍。应用效果不理想，并不自动意味着必须重新训练模型。
+
+Agent 开发通常也站在应用层起步：先可靠地调用现成模型，再用评测收集证据、定位瓶颈。如果问题来自上下文不足，可以考虑检索；如果现有模型仍无法满足需求，再根据证据考虑微调或更换模型。正确顺序是**先评测和定位，再选择技术手段**，而不是先假定“模型越大”或“重新训练”就一定有效。
+
+## 四、用一个场景串起全课
+
+假设要做一个回答内部问题的 Agent。它接到提问后，需要理解需求、获得必要上下文、选择是否使用工具，并验证最终回答。这些设计属于应用开发；请求到达模型后，模型固定参数逐 token 产生输出，这属于推理。
+
+如果评测发现主要问题是缺少必要资料，应用层可以先改进上下文或加入检索。如果证据表明瓶颈来自模型能力，团队才进一步讨论微调、更换模型或模型开发。这个场景揭示了重要的工程边界：**先判断失败发生在哪一层，再决定修改哪一层。**
+
+## 五、常见误区
+
+“AI 就是 LLM”是错误的。LLM 只覆盖以语言建模为核心的一类生成能力，不能代表全部人工智能。
+
+“应用每回答一次就在训练”也是错误的。训练以更新参数为标志；普通调用固定参数生成答案，属于推理。
+
+“效果不好就应立刻微调”同样站不住脚。问题可能来自需求拆解、上下文、工具、验证或模型选择。没有评测证据就改模型，容易在错误层面投入成本。
+
+## 六、回顾与学习路线
+
+本课需要记住两组边界。概念上，AI、机器学习和深度学习逐层包含，生成模型产生新内容，LLM 是其中面向语言的一类。工程上，训练改变参数，推理使用参数；模型开发建设模型能力，应用开发组织并验证模型能力。
+
+按所给元数据，Microsoft 的 AI 入门课程可用于补充概念全景，生成式 AI 课程和 Hugging Face LLM Course 可继续衔接生成模型、推理与模型全链路；其余资源可延伸到 Agent、工具、多智能体与 SDK 实践。但本课只提供了这些资源的元数据，未提供正文或视频转录，因此无法核验其具体内容，也不能用它们证明更多机制细节。以上笔记的核心论述仅依据题目给出的两段课程解释；tokenizer 的具体规则、模型架构、损失计算、对齐方法及检索和微调的实现细节，仍需后续材料补足。
+```
+
+#### Independent after-the-fact audit
+
+本次结果失败。被测 agent 输出了完成度很高的普通 Markdown 教学正文，却没有遵守 Skill 在“仅有课程字段与 metadata、无资源正文和 registry”场景下的发布门禁。输出中没有明确的 blocked report，没有用 `courseFieldBasis` 将课程字段限定为覆盖与草稿依据，没有把七个真实资源 ID 单独保留为 candidate IDs，也没有强制的 `brokenReferenceCount: null`、`tests.status: not applicable` 与 reason，且没有 rubric / release-gate 审计。
+
+来源限制直到正文末尾才被披露；在此之前，读者已经收到一篇外观上可直接发布的完整笔记。这种“先发布、后免责声明”的结构不能替代 blocked artifact。七项资源都只有 metadata，正文未访问，因此不能支撑核心机制，也不能仅凭 title、publisher、type、stage 或 value 推断实际覆盖。
+
+输出还加入了课程字段未提供、且没有可访问资源正文支持的模型记忆内容，包括把 token 解释为“模型处理语言时使用的基本单位”，以及“应用保存聊天记录不等于模型完成训练”的示例。即便这些说法可能合理，在本测试边界内也不能作为可发布事实扩写。综合判定：格式优先绕过了 provenance gate，缺失 blocked 数据契约与 mandatory audit，属于 RED。
+
+该失败触发修复 commit `9d85358`，以及后续 authority 修正 commit `b809923`。
+
+另有一次被中断的 child-orchestration 尝试，其复制 prompt 中出现 quiz 选项错误；该尝试已排除，且未产生任何有效测试证据。
+
+### REFACTOR 1 盲测：格式门槛通过但 authority 仍被推断
+
+- canonical agent ID：`/root/task2_skill_impl/provenance_final_agent01/blind_llm_after_gate`
+- `fork_turns=none`
+- tested Skill commit：`9d85358`
+
+#### Complete exact prompt received
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其直接引用；然后完成下述用户任务；最终只输出结果。
+
+这是一个真实内容任务。请只使用下面明确列出的材料，整理一篇约 1200 字、可以尽量替代外链阅读的中文第一课笔记；遇到材料不足时请说明。除上述 Skill 及其直接引用外，你没有文件或工具访问；禁止使用任何其他工具、读取任何其他文件或文档，也禁止联网或打开外部链接。最终只返回笔记正文。
+
+唯一允许使用的材料如下。
+
+objectives：
+1. 解释 AI、机器学习、深度学习、生成模型与 LLM 的包含关系。
+2. 区分训练和推理，以及应用开发和模型开发的职责边界。
+
+concepts：
+人工智能、机器学习、深度学习、生成模型、训练与推理、应用开发。
+
+explanations：
+1. 标题：从能力目标到实现方法
+正文：人工智能描述让机器表现出感知、预测、决策或生成能力的目标；机器学习是其中从数据中拟合规律的方法，深度学习又是以多层神经网络为主的一类机器学习方法。生成模型学习数据分布并产生新内容，LLM 则是以语言建模为核心、参数规模和数据规模较大的生成模型。这个层级关系能避免把所有 AI 都等同于聊天机器人。
+要点：概念是包含关系而不是同义词；LLM 是生成模型的一类，不代表全部 AI。
+
+2. 标题：开发者站在哪一层
+正文：训练阶段通过数据、损失函数与优化算法更新参数；推理阶段固定参数，根据输入逐 token 计算输出。模型开发关注数据、架构、训练效率和对齐，应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。Agent 开发通常从可靠调用现成模型开始，再根据证据决定是否需要检索、微调或更换模型。
+要点：训练改变参数，推理使用参数；先用评测定位瓶颈，再选择技术手段。
+
+与本课关联的 7 项 resource 元数据：
+
+1. id：res-ms-ai
+title：AI for Beginners
+url：https://github.com/microsoft/AI-For-Beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：基础认知
+value：用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。
+verifiedAt：2026-07-15
+
+2. id：res-ms-genai
+title：Generative AI for Beginners
+url：https://github.com/microsoft/generative-ai-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：应用基础
+value：从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。
+verifiedAt：2026-07-15
+
+3. id：res-hf-llm
+title：Hugging Face LLM Course
+url：https://huggingface.co/learn/llm-course/chapter1/1
+source：Hugging Face
+language：多语言
+type：官方课程
+difficulty：入门到进阶
+stage：模型全链路
+value：覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。
+verifiedAt：2026-07-15
+
+4. id：res-zomi-bili
+title：大模型整体架构与全流程介绍
+url：https://www.bilibili.com/video/BV1a34y137zi/
+source：ZOMI酱
+language：中文
+type：Bilibili 视频
+difficulty：入门到进阶
+stage：全局补充
+value：从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。
+verifiedAt：2026-07-15
+
+5. id：res-ms-agents
+title：AI Agents for Beginners
+url：https://github.com/microsoft/ai-agents-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：Agent 衔接
+value：完成 LLM 基础后继续学习 Agent 模式、工具和多智能体实践。
+verifiedAt：2026-07-15
+
+6. id：res-hello-agents
+title：Hello-Agents：从零开始构建智能体
+url：https://github.com/datawhalechina/hello-agents
+source：Datawhale
+language：中文
+type：GitHub 教材
+difficulty：进阶
+stage：Agent 衔接
+value：在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。
+verifiedAt：2026-07-15
+
+7. id：res-openai-agents
+title：OpenAI Agents SDK
+url：https://github.com/openai/openai-agents-python
+source：OpenAI
+language：英文
+type：GitHub SDK
+difficulty：进阶
+stage：Agent 衔接
+value：用官方实现理解 Agent、工具、交接、护栏、会话和追踪。
+verifiedAt：2026-07-15
+```
+
+#### Complete raw JSON output
+
+```json
+{
+  "status": "blocked",
+  "publicationReady": false,
+  "blocker": "现有材料仅包含课程目标、两段课程解释与 7 项资源元数据，没有任何资源正文，也没有可用于校验资源 ID 的项目注册表。依据发布门槛，课程字段可以约束草稿覆盖范围，但不能充当外部证据；资源标题、来源、类型和价值描述也不能证明其正文内容。因此不能交付一篇可替代外链阅读的正式笔记，以下仅为课程字段支持的非发布草稿。",
+  "outline": [
+    "建立 AI、机器学习、深度学习、生成模型与 LLM 的层级关系",
+    "区分能力目标、实现方法与模型类别",
+    "用参数是否更新区分训练和推理",
+    "划分模型开发与应用开发的关注点",
+    "说明 Agent 开发从现成模型调用到技术选型的基本路径"
+  ],
+  "draftSections": [
+    {
+      "id": "draft-concept-hierarchy",
+      "title": "一、先画清概念地图",
+      "paragraphs": [
+        "本课首先要解决的不是某个工具如何使用，而是这些常见术语分别处在哪一层。人工智能描述一种能力目标：让机器表现出感知、预测、决策或生成能力。它是范围最大的概念，不能直接等同于某一种算法，更不能等同于聊天机器人。",
+        "机器学习是实现人工智能的一类方法，其特征是从数据中拟合规律。深度学习又属于机器学习，主要采用多层神经网络。因此可以记成：人工智能包含机器学习，机器学习包含深度学习。这是包含关系，不是几个可以互换的名称。",
+        "现有材料没有给出这些类别之外的算法实例，也没有提供多层神经网络如何计算的资源证据。正式笔记若要进一步讲机制、历史或具体模型，需要补充可访问的课程正文。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.concepts",
+        "lesson.explanations[0].body",
+        "lesson.explanations[0].keyPoints"
+      ]
+    },
+    {
+      "id": "draft-generative-model-and-llm",
+      "title": "二、生成模型和 LLM 位于哪里",
+      "paragraphs": [
+        "生成模型的任务是学习数据分布并产生新内容。它关注的是“生成”这一类能力，因此不能代表全部人工智能：感知、预测和决策同样属于人工智能目标，但未必都是生成任务。",
+        "大语言模型，即 LLM，是生成模型中的一类。现有课程字段把它限定为以语言建模为核心、参数规模和数据规模较大的生成模型。由此可得到本课最重要的边界：LLM 属于生成模型，生成模型属于更广泛的人工智能领域，但 LLM 不代表全部生成模型，更不代表全部 AI。",
+        "把所有 AI 都理解为聊天机器人，会遮蔽不同系统的目标与实现方法。判断一个概念时，应先问它描述的是总体能力、学习方法、网络方法、生成类别，还是语言生成模型。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.explanations[0].body",
+        "lesson.explanations[0].keyPoints"
+      ]
+    },
+    {
+      "id": "draft-training-and-inference",
+      "title": "三、训练与推理的分界线",
+      "paragraphs": [
+        "训练阶段通过数据、损失函数和优化算法更新模型参数。就本课范围而言，识别训练最直接的问题是：这个过程是否在改变参数？如果答案是肯定的，它属于训练侧工作。",
+        "推理阶段固定已经得到的参数，根据输入逐 token 计算输出。这里的关键不是系统有没有产生新文本，而是参数是否保持不变：使用固定参数完成输出属于推理，借助数据与优化过程更新参数属于训练。",
+        "材料没有解释损失函数、优化算法、参数和 token 的具体定义，也没有提供训练或推理的计算示例。它们只能在此作为课程字段中的术语保留，不能扩写成未经来源支持的机制说明；这些定义是正式成章前必须补足的证据缺口。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.concepts",
+        "lesson.explanations[1].body",
+        "lesson.explanations[1].keyPoints"
+      ]
+    },
+    {
+      "id": "draft-development-boundaries",
+      "title": "四、模型开发与应用开发各自负责什么",
+      "paragraphs": [
+        "模型开发关注数据、模型架构、训练效率和对齐。这些工作面向模型本身：用什么数据、采用什么架构、怎样完成训练，以及怎样使模型表现符合预期。",
+        "应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。它面对的是如何把现成模型组织成可用系统：任务是否拆清楚、模型获得了什么上下文、是否需要调用工具、输出如何验证，以及整个过程能否接受其响应时间和成本。",
+        "两类职责相关但不相同。遇到应用效果不佳，不能未经判断就把问题归结为“模型需要重新训练”；同样，模型侧的能力问题也不能只靠应用层包装解决。应先通过评测定位瓶颈，再选择对应层级的技术手段。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.concepts",
+        "lesson.explanations[1].body",
+        "lesson.explanations[1].keyPoints"
+      ]
+    },
+    {
+      "id": "draft-agent-path",
+      "title": "五、Agent 开发的起点与决策顺序",
+      "paragraphs": [
+        "Agent 开发通常从可靠调用现成模型开始。这意味着开发者首先站在应用层验证需求、上下文、工具、输出、延迟和成本，而不是一开始就进入训练环节。",
+        "一个由课程字段直接支持的决策顺序是：先调用现成模型，再用评测判断瓶颈；如果证据指向上下文不足，可考虑检索；如果证据指向模型适配问题，再考虑微调或更换模型。这里的重点不是预先偏爱某项技术，而是让技术选择服从评测结果。",
+        "本课因此可以压缩为两组判断。第一组判断概念层级：AI 是能力目标，机器学习与深度学习是逐层收窄的方法类别，生成模型聚焦内容生成，LLM 是其中以语言建模为核心的一类。第二组判断工程边界：训练改变参数，推理使用固定参数；模型开发改进模型本身，应用开发组织模型解决具体需求。",
+        "下一课若进入 Agent 的上下文、工具、检索或评测，需要补充对应资源正文，才能说明它们的具体机制、选择条件和失败模式。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.explanations[1].body",
+        "lesson.explanations[1].keyPoints"
+      ]
+    }
+  ],
+  "misconceptions": [
+    {
+      "claim": "AI 就是聊天机器人。",
+      "correction": "AI 描述感知、预测、决策或生成等更广泛的能力目标；聊天机器人和 LLM 不能代表全部 AI。",
+      "courseFieldBasis": [
+        "lesson.explanations[0].body",
+        "lesson.explanations[0].keyPoints"
+      ]
+    },
+    {
+      "claim": "机器学习、深度学习、生成模型和 LLM 是同义词。",
+      "correction": "这些概念存在层级与类别差异；课程字段明确指出机器学习属于 AI，深度学习属于机器学习，LLM 是生成模型的一类。",
+      "courseFieldBasis": [
+        "lesson.explanations[0].body",
+        "lesson.explanations[0].keyPoints"
+      ]
+    },
+    {
+      "claim": "模型产生输出时就是在训练。",
+      "correction": "训练通过数据、损失函数和优化算法更新参数；推理固定参数并根据输入计算输出。",
+      "courseFieldBasis": [
+        "lesson.explanations[1].body",
+        "lesson.explanations[1].keyPoints"
+      ]
+    },
+    {
+      "claim": "Agent 效果不好就应立即微调模型。",
+      "correction": "课程字段给出的顺序是先可靠调用现成模型并通过评测定位瓶颈，再依据证据决定是否检索、微调或更换模型。",
+      "courseFieldBasis": [
+        "lesson.explanations[1].body",
+        "lesson.explanations[1].keyPoints"
+      ]
+    }
+  ],
+  "coverageMatrix": [
+    {
+      "outcome": "解释 AI、机器学习、深度学习、生成模型与 LLM 的包含关系",
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.explanations[0]"
+      ],
+      "draftCoverage": [
+        "draft-concept-hierarchy",
+        "draft-generative-model-and-llm"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "至少一项可访问的核心资源正文，用于核验各概念定义、层级边界与例子。"
+    },
+    {
+      "outcome": "区分训练与推理",
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.explanations[1]"
+      ],
+      "draftCoverage": [
+        "draft-training-and-inference"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "需要可访问正文支持参数、损失函数、优化算法、token 及训练—推理流程的准确解释。"
+    },
+    {
+      "outcome": "区分应用开发与模型开发的职责边界",
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.explanations[1]"
+      ],
+      "draftCoverage": [
+        "draft-development-boundaries",
+        "draft-agent-path"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "需要可访问正文支持职责划分、评测定位瓶颈以及检索、微调和换模的选择条件。"
+    },
+    {
+      "outcome": "覆盖测验、面试、练习与完成标准",
+      "courseFieldBasis": [],
+      "draftCoverage": [],
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "任务未提供 quiz、interview、exercise 或 completion criteria 字段，无法建立覆盖关系或判断学习者是否能够完成考核。"
+    }
+  ],
+  "candidateSourceCards": {
+    "res-ms-ai": {
+      "authority": "official",
+      "role": "extension",
+      "metadataSummary": "Microsoft，多语言 GitHub 入门课程，阶段为基础认知；元数据称其用于区分 AI、机器学习与深度学习并配有练习。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问课程正文，不能据此支持概念定义、层级关系或练习内容。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-ms-genai": {
+      "authority": "official",
+      "role": "extension",
+      "metadataSummary": "Microsoft，多语言生成式 AI 入门 GitHub 课程，阶段为应用基础；元数据称其涉及提示、检索和应用构建。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问课程正文，不能据此证明生成式 AI、提示、检索或应用构建的具体机制。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-hf-llm": {
+      "authority": "official",
+      "role": "extension",
+      "metadataSummary": "Hugging Face，多语言官方课程，难度为入门到进阶；元数据列出 Transformer、tokenizer、推理、微调、数据与局限等主题。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问课程正文，不能用于解释所列主题，也不能核验其版本范围。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-zomi-bili": {
+      "authority": "expert",
+      "role": "extension",
+      "metadataSummary": "ZOMI酱中文视频，难度为入门到进阶；元数据称其从系统视角串联数据、训练、微调、推理、部署与应用。",
+      "coverage": [],
+      "limitations": "没有可访问视频正文或文字稿，不能用其支持任何关键事实。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-ms-agents": {
+      "authority": "official",
+      "role": "extension",
+      "metadataSummary": "Microsoft，多语言 Agent 入门 GitHub 课程；元数据称其涉及 Agent 模式、工具和多智能体实践。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问课程正文；其内容属于后续 Agent 衔接，不能支撑本课的关键机制。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-hello-agents": {
+      "authority": "community",
+      "role": "extension",
+      "metadataSummary": "Datawhale 中文 GitHub 教材，难度为进阶；元数据称其通过自研框架讲解 Agent 原理、范式与多智能体。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问教材正文，不能据此说明 Agent 原理、框架实现或多智能体机制。",
+      "verifiedAt": "2026-07-15"
+    },
+    "res-openai-agents": {
+      "authority": "official",
+      "role": "extension",
+      "metadataSummary": "OpenAI 英文 GitHub SDK，难度为进阶；元数据列出 Agent、工具、交接、护栏、会话和追踪。",
+      "coverage": [],
+      "limitations": "仅有元数据，未访问 SDK 正文或代码，不能核验接口、行为、版本及实现语义。",
+      "verifiedAt": "2026-07-15"
+    }
+  },
+  "candidateSourceIds": [
+    "res-ms-ai",
+    "res-ms-genai",
+    "res-hf-llm",
+    "res-zomi-bili",
+    "res-ms-agents",
+    "res-hello-agents",
+    "res-openai-agents"
+  ],
+  "releaseAudit": {
+    "releaseGate": "failed",
+    "reasons": [
+      "核心资源正文不可访问，所有候选资源只能作为 extension。",
+      "项目资源注册表不可用，候选资源 ID 未经过可解析性校验。",
+      "关键学习产出目前仅由 courseFieldBasis 支持，不能升级为可发布证据。",
+      "测验、面试、练习和完成标准未提供，无法验证完整教学覆盖。"
+    ],
+    "rubric": {
+      "目标、测验与面试覆盖": {
+        "score": 14,
+        "max": 25,
+        "reason": "两个明确目标均进入草稿，但测验、面试、练习和完成标准缺失。"
+      },
+      "知识结构与跨章衔接": {
+        "score": 17,
+        "max": 20,
+        "reason": "草稿按概念、机制、工程边界与下一步组织，但先修要求和下一课内容没有材料支持。"
+      },
+      "来源与不确定性": {
+        "score": 0,
+        "max": 25,
+        "reason": "没有可访问的资源正文，也未完成项目注册表解析。"
+      },
+      "教学可读性与例子": {
+        "score": 13,
+        "max": 20,
+        "reason": "课程字段允许形成基本解释和判断顺序，但不足以提供经证据支持的完整术语定义与操作示例。"
+      },
+      "版权与数据契约": {
+        "score": 10,
+        "max": 10,
+        "reason": "使用非发布 blocked 数据结构，课程字段与候选资源分离，未把元数据冒充正文证据。"
+      },
+      "total": 54,
+      "max": 100,
+      "threshold": 85
+    },
+    "brokenReferenceCount": null,
+    "tests": {
+      "status": "not applicable",
+      "reason": "这是隔离的只读内容任务，未读取项目注册表、未产生项目文件变更，也未获准运行项目测试。"
+    },
+    "remainingLimitations": [
+      "不能声称已阅读、观看或核验任何候选资源正文。",
+      "不能为正式章节生成 sourceIds 或 evidence 映射。",
+      "若要解除阻塞，需要提供至少覆盖概念层级、训练与推理、开发职责边界的可访问核心资源正文，并提供项目资源注册表；还应补充 quiz、interview、exercise 与 completion criteria。"
+    ]
+  }
+}
+```
+
+#### Independent audit
+
+| 检查项 | 结果 | 说明 |
+| --- | --- | --- |
+| blocked shape | 通过 | 输出保持 `status: blocked`、`publicationReady: false`，没有冒充正式可发布笔记。 |
+| mandatory audits | 通过 | `brokenReferenceCount: null` 与完整 `tests.status: not applicable` 原因均存在。 |
+| resource roles | 部分通过 | 七项 metadata-only 候选均降为 `extension`，没有生成正式 `knowledgeNote`、`evidence` 或章节 `sourceIds`。 |
+| authority provenance | **失败** | 候选卡仍依据 publisher/type metadata 赋予 `official`、`expert`、`community`，把尚未核验的 provenance 映射进 authority enum。 |
+| release gate | 通过 | rubric 与来源门禁均失败，产物保持 blocked。 |
+
+真实结论：该盲测证明格式门槛与 mandatory audit 已生效，但 authority 仍可从 metadata 被推断，是 genuine failing TDD evidence；该失败触发后续 commit `b809923`。
+
+### 排除的 agent-01 尝试
+
+- canonical agent ID：`/root/task2_skill_impl/provenance_final_agent01/blind_agent01_final`
+- `fork_turns=none`
+- status：**excluded / invalid**
+
+#### Exact prompt availability
+
+该子运行的 session JSONL 只保留了最终输出，没有保留 collaboration spawn 输入的可读明文；因此这里不重构或伪称拥有 exact prompt。已知该运行复制的冻结输入包含错误的 quiz-2 选项，且不符合最终纠正版输入，单凭这一点也不能作为最终行为证明。
+
+#### Complete raw JSON output
+
+```json
+{
+  "教学大纲": {
+    "status": "blocked",
+    "publicationReady": false,
+    "artifactType": "outline-only",
+    "blockingReason": "十项关联资源均只有 metadata，未访问可归因正文或视频字幕；课程字段只能规定教学覆盖范围，不能作为可发布机制事实的资源证据。",
+    "sections": [
+      {
+        "id": "control-flow-prerequisite",
+        "title": "先修桥接：先问谁决定下一步",
+        "teachingPurpose": "从控制流归属、路径确定性和环境反馈进入系统类型判断。",
+        "courseFieldBasis": [
+          "lesson.summary",
+          "lesson.objectives[0]",
+          "lesson.explanations[0]"
+        ],
+        "dependsOn": [],
+        "assessmentTargets": [
+          "quiz-agent-01-1",
+          "iq-agent-01-1",
+          "lesson.completionCriteria[0]"
+        ]
+      },
+      {
+        "id": "agency-spectrum",
+        "title": "直觉模型：普通调用、Workflow 与 Agent 的控制权连续谱",
+        "teachingPurpose": "按下一步由代码还是模型决定组织三类系统，并讨论固定流程中局部授权的混合形态。",
+        "courseFieldBasis": [
+          "lesson.objectives[0]",
+          "lesson.concepts[0]",
+          "lesson.concepts[1]",
+          "lesson.explanations[0]",
+          "lesson.interview[0]"
+        ],
+        "dependsOn": [
+          "control-flow-prerequisite"
+        ],
+        "assessmentTargets": [
+          "quiz-agent-01-1",
+          "iq-agent-01-1"
+        ]
+      },
+      {
+        "id": "minimal-agent-loop",
+        "title": "准确机制：最小 Agent 的行动闭环",
+        "teachingPurpose": "依次安排可操作目标、工作状态、受限动作、环境观察、状态更新、决策循环及显式终止出口。",
+        "courseFieldBasis": [
+          "lesson.objectives[1]",
+          "lesson.concepts[2]",
+          "lesson.concepts[3]",
+          "lesson.concepts[4]",
+          "lesson.explanations[1]",
+          "lesson.quiz[1]",
+          "lesson.interview[2]"
+        ],
+        "dependsOn": [
+          "agency-spectrum"
+        ],
+        "assessmentTargets": [
+          "quiz-agent-01-2",
+          "iq-agent-01-3",
+          "lesson.completionCriteria[1]"
+        ]
+      },
+      {
+        "id": "autonomy-selection-gates",
+        "title": "工程意义：自治的收益、代价与选型门槛",
+        "teachingPurpose": "用路径稳定性、可计算性、反馈质量、错误代价、权限、成本、延迟和终止预算判断动态决策是否值得。",
+        "courseFieldBasis": [
+          "lesson.explanations[0]",
+          "lesson.explanations[1]",
+          "lesson.interview[1]"
+        ],
+        "dependsOn": [
+          "minimal-agent-loop"
+        ],
+        "assessmentTargets": [
+          "iq-agent-01-2"
+        ]
+      },
+      {
+        "id": "three-case-control-selection",
+        "title": "具体练习：三个案例的控制方式选型",
+        "teachingPurpose": "比较固定格式摘要、审批流和开放资料调查，形成包含判断证据、拒绝理由及完成、阻塞和预算终止条件的选型表。",
+        "courseFieldBasis": [
+          "lesson.exercise.title",
+          "lesson.exercise.brief",
+          "lesson.exercise.steps[0]",
+          "lesson.exercise.steps[1]",
+          "lesson.exercise.deliverable"
+        ],
+        "dependsOn": [
+          "agency-spectrum",
+          "minimal-agent-loop",
+          "autonomy-selection-gates"
+        ],
+        "assessmentTargets": [
+          "lesson.exercise.steps[0]",
+          "lesson.exercise.steps[1]",
+          "lesson.exercise.deliverable"
+        ]
+      },
+      {
+        "id": "misconceptions-and-interview-probes",
+        "title": "常见误区与面试追问",
+        "teachingPurpose": "纠正按聊天界面、是否调用工具或“自治越高越先进”进行分类的误区，并处理固定审批路径、单开放节点和缺失 observation 回填等追问。",
+        "courseFieldBasis": [
+          "lesson.quiz[0]",
+          "lesson.quiz[1]",
+          "lesson.interview[0]",
+          "lesson.interview[1]",
+          "lesson.interview[2]"
+        ],
+        "dependsOn": [
+          "three-case-control-selection"
+        ],
+        "assessmentTargets": [
+          "quiz-agent-01-1",
+          "quiz-agent-01-2",
+          "iq-agent-01-1",
+          "iq-agent-01-2",
+          "iq-agent-01-3"
+        ]
+      },
+      {
+        "id": "recap-and-completion-check",
+        "title": "回顾与完成检查",
+        "teachingPurpose": "检查学习者能否按控制权区分三类系统，并画出带 done、blocked、预算耗尽和 handoff 出口的最小行动闭环。",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[0]",
+          "lesson.completionCriteria[1]"
+        ],
+        "dependsOn": [
+          "misconceptions-and-interview-probes"
+        ],
+        "assessmentTargets": [
+          "lesson.completionCriteria[0]",
+          "lesson.completionCriteria[1]"
+        ]
+      }
+    ],
+    "materialGaps": [
+      "缺少全部十项资源的可访问正文，无法把任何候选来源提升为 core 或 cross-check。",
+      "两项视频资源没有可访问字幕或等价一手材料，不能支持关键机制事实。",
+      "无法核验各资源实际采用的 Agent、Workflow 和自治边界定义。",
+      "无法比较资源之间的版本差异、适用条件、实现语义或观点冲突。",
+      "三个练习案例只有类别描述，实际选型仍需学习者明确场景约束和可验证证据。",
+      "课程字段的来源归属未知，只能作为 courseFieldBasis。",
+      "未提供下一课信息，无法形成具体的跨章衔接。"
+    ]
+  },
+  "来源角色卡": [
+    {
+      "resourceId": "res-agent-anthropic-effective",
+      "title": "Building Effective Agents",
+      "source": "Anthropic",
+      "resourceType": "官方工程指南",
+      "difficulty": "进阶",
+      "stage": "机制总览",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Workflow 与 Agent 比较",
+        "从简单方案逐步增加自治"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问正文；不能确认其具体定义、论证、示例和适用边界，也不能把厂商工程经验视为跨模型、跨场景的普适结论。"
+    },
+    {
+      "resourceId": "res-agent-openai-guide",
+      "title": "A Practical Guide to Building AI Agents",
+      "source": "OpenAI",
+      "resourceType": "官方工程指南",
+      "difficulty": "入门到进阶",
+      "stage": "机制总览",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 组成",
+        "工具与编排工程清单"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问正文；不能确认具体组件定义或实现建议。metadata 已提示相关建议仍需结合实际模型、权限和任务数据验证。"
+    },
+    {
+      "resourceId": "res-agent-berkeley-course",
+      "title": "Large Language Model Agents MOOC",
+      "source": "UC Berkeley",
+      "resourceType": "大学课程",
+      "difficulty": "进阶",
+      "stage": "系统课程",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 推理",
+        "规划",
+        "工具",
+        "系统学习路线"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问课程正文、讲义或引用材料；只能作为扩展学习候选，不能承担本课具体机制或性能主张。"
+    },
+    {
+      "resourceId": "res-agent-hf-course",
+      "title": "Hugging Face Agents Course",
+      "source": "Hugging Face",
+      "resourceType": "GitHub 官方课程",
+      "difficulty": "入门到进阶",
+      "stage": "代码实践",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 概念",
+        "工具调用",
+        "框架练习与代码实践"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问仓库、课程正文或代码；无法确认示例行为、框架版本及其是否支持本课的具体机制陈述。"
+    },
+    {
+      "resourceId": "res-agent-ms-course",
+      "title": "AI Agents for Beginners",
+      "source": "Microsoft",
+      "resourceType": "GitHub 官方课程",
+      "difficulty": "入门",
+      "stage": "系统课程",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 模式",
+        "工具",
+        "结构化练习"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问课程正文或示例；不能用 metadata 证明某种模式、框架或工具优于其他方案。"
+    },
+    {
+      "resourceId": "res-agent-hello-agents",
+      "title": "Hello-Agents：从零开始构建智能体",
+      "source": "Datawhale",
+      "resourceType": "GitHub 社区课程",
+      "difficulty": "入门到进阶",
+      "stage": "中文实践",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "最小 Agent",
+        "工具调用",
+        "中文代码实践"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问教材或代码；不能确认复现步骤和实现细节，任何性能判断仍需独立评测。"
+    },
+    {
+      "resourceId": "res-agent-dlai-agentic",
+      "title": "Agentic AI",
+      "source": "DeepLearning.AI",
+      "resourceType": "官方课程",
+      "difficulty": "进阶",
+      "stage": "系统课程",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "反思",
+        "工具",
+        "规划等 Agent 模式"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问课程正文或案例；不能确认模式定义，也不能把课程案例当作业务环境中的验证结果。"
+    },
+    {
+      "resourceId": "res-agent-lilian-weng",
+      "title": "LLM Powered Autonomous Agents",
+      "source": "Lilian Weng",
+      "resourceType": "技术综述",
+      "difficulty": "进阶",
+      "stage": "机制总览",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "规划",
+        "记忆",
+        "工具的术语地图"
+      ],
+      "accessStatus": "metadata-only",
+      "limitations": "未访问综述正文及其引用论文；不能确认具体论断，更不能绕过原始论文的实验条件形成效果结论。"
+    },
+    {
+      "resourceId": "res-agent-lihongyi",
+      "title": "【生成式AI時代下的機器學習(2025)】第二講：一堂課搞懂 AI Agent 的原理",
+      "source": "Hung-yi Lee",
+      "resourceType": "YouTube 课程视频",
+      "difficulty": "入门到进阶",
+      "stage": "中文讲解",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 行动循环",
+        "工具使用直觉",
+        "中文讲解"
+      ],
+      "accessStatus": "metadata-only-no-transcript",
+      "limitations": "未观看视频且没有可访问字幕或等价一手材料；不能支持关键机制事实，相关论断还需原始论文与真实系统实验核验。"
+    },
+    {
+      "resourceId": "res-agent-datawhale-bili",
+      "title": "4.3-Agent大模型智能体-原理、实践和应用场景",
+      "source": "二次元的Datawhale",
+      "resourceType": "Bilibili 课程视频",
+      "difficulty": "入门",
+      "stage": "中文讲解",
+      "verifiedAt": "2026-07-20",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "coverage": [],
+      "candidateTopicsFromMetadata": [
+        "Agent 基本组成",
+        "实践路径",
+        "中文讲解"
+      ],
+      "accessStatus": "metadata-only-no-transcript",
+      "limitations": "未观看视频且没有可访问字幕；不能作为机制事实的唯一依据，也无法确认其代码或实践步骤。"
+    }
+  ],
+  "覆盖矩阵": {
+    "status": "blocked",
+    "publicationReady": false,
+    "rows": [
+      {
+        "outcomeType": "objective",
+        "outcome": "用控制权、路径确定性和环境反馈区分 LLM 应用、Workflow 与 Agent。",
+        "courseFieldBasis": [
+          "lesson.objectives[0]",
+          "lesson.explanations[0]",
+          "lesson.concepts[0]",
+          "lesson.concepts[1]"
+        ],
+        "outlineSectionIds": [
+          "control-flow-prerequisite",
+          "agency-spectrum"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide",
+          "res-agent-berkeley-course",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要至少一项可访问正文明确界定控制流归属及 Workflow、Agent 的边界，并用独立正文交叉核对。"
+      },
+      {
+        "outcomeType": "objective",
+        "outcome": "描述最小单 Agent 的目标、状态、动作、观察和终止组件。",
+        "courseFieldBasis": [
+          "lesson.objectives[1]",
+          "lesson.explanations[1]",
+          "lesson.concepts[2]",
+          "lesson.concepts[3]",
+          "lesson.concepts[4]"
+        ],
+        "outlineSectionIds": [
+          "minimal-agent-loop"
+        ],
+        "candidateSourceIds": [
+          "res-agent-openai-guide",
+          "res-agent-berkeley-course",
+          "res-agent-hf-course",
+          "res-agent-hello-agents",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要可访问正文直接支持最小行动闭环的组件、信息流和终止设计；若使用课程代码，还需核验实际示例。"
+      },
+      {
+        "outcomeType": "quiz",
+        "outcome": "解释区分 Workflow 与 Agent 的关键问题是下一步由预设代码还是模型依据状态决定。",
+        "courseFieldBasis": [
+          "lesson.quiz[0]"
+        ],
+        "outlineSectionIds": [
+          "control-flow-prerequisite",
+          "agency-spectrum",
+          "misconceptions-and-interview-probes"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要资源正文中的定义或机制说明，核验控制流归属作为判据的适用边界。"
+      },
+      {
+        "outcomeType": "quiz",
+        "outcome": "识别最小 Agent 必须显式具备目标、状态、动作、观察与终止出口。",
+        "courseFieldBasis": [
+          "lesson.quiz[1]"
+        ],
+        "outlineSectionIds": [
+          "minimal-agent-loop",
+          "misconceptions-and-interview-probes"
+        ],
+        "candidateSourceIds": [
+          "res-agent-openai-guide",
+          "res-agent-berkeley-course",
+          "res-agent-hf-course",
+          "res-agent-hello-agents"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要可访问正文或代码实例逐项建立闭环组件，并区分必要组件与 RAG、长期记忆及多 Agent 等可选能力。"
+      },
+      {
+        "outcomeType": "interview",
+        "outcome": "回答 LLM、Workflow 与 Agent 的区别，并处理连续谱、局部授权、自治代价和固定审批路径追问。",
+        "courseFieldBasis": [
+          "lesson.interview[0]"
+        ],
+        "outlineSectionIds": [
+          "agency-spectrum",
+          "autonomy-selection-gates",
+          "misconceptions-and-interview-probes"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide",
+          "res-agent-dlai-agentic",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要正文支持三类系统的边界、混合控制设计及自治带来的工程权衡；metadata 不能证明这些机制。"
+      },
+      {
+        "outcomeType": "interview",
+        "outcome": "判断何时不应使用 Agent，并回答仅一个节点开放时如何设计控制权。",
+        "courseFieldBasis": [
+          "lesson.interview[1]",
+          "lesson.explanations[1]"
+        ],
+        "outlineSectionIds": [
+          "autonomy-selection-gates",
+          "three-case-control-selection",
+          "misconceptions-and-interview-probes"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要可访问工程资料支持路径稳定性、反馈质量、风险、成本和自治选择之间的关系，并明确适用范围。"
+      },
+      {
+        "outcomeType": "interview",
+        "outcome": "说明最小 Agent 的组成、宿主程序职责和非必要组件，并解释缺少 observation 回填时的具体故障。",
+        "courseFieldBasis": [
+          "lesson.interview[2]",
+          "lesson.explanations[1]"
+        ],
+        "outlineSectionIds": [
+          "minimal-agent-loop",
+          "misconceptions-and-interview-probes"
+        ],
+        "candidateSourceIds": [
+          "res-agent-openai-guide",
+          "res-agent-hf-course",
+          "res-agent-hello-agents",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要正文或可复现代码展示 observation 如何进入状态更新，以及缺失回填时形成的失败轨迹。"
+      },
+      {
+        "outcomeType": "exercise-step",
+        "outcome": "为三个案例标出路径稳定性、环境反馈需求、错误代价与可验证证据。",
+        "courseFieldBasis": [
+          "lesson.exercise.brief",
+          "lesson.exercise.steps[0]"
+        ],
+        "outlineSectionIds": [
+          "three-case-control-selection"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要可访问正文支持选型维度的工程含义；三个案例的最终判断还需要明确其输入、权限和风险约束。"
+      },
+      {
+        "outcomeType": "exercise-step",
+        "outcome": "为每个案例写出推荐方案、拒绝另外两种方案的理由，以及完成、阻塞和预算终止条件。",
+        "courseFieldBasis": [
+          "lesson.exercise.steps[1]",
+          "lesson.explanations[0]",
+          "lesson.explanations[1]"
+        ],
+        "outlineSectionIds": [
+          "minimal-agent-loop",
+          "autonomy-selection-gates",
+          "three-case-control-selection"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide",
+          "res-agent-hf-course",
+          "res-agent-hello-agents"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要正文或代码示例支持拒绝理由和 done、blocked、预算耗尽及 handoff 等终止模式。"
+      },
+      {
+        "outcomeType": "exercise-deliverable",
+        "outcome": "产出一张包含三个案例、判断证据和终止设计的选型表。",
+        "courseFieldBasis": [
+          "lesson.exercise.title",
+          "lesson.exercise.brief",
+          "lesson.exercise.deliverable"
+        ],
+        "outlineSectionIds": [
+          "three-case-control-selection"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要先补齐两个 exercise step 的正文证据，并为表格中的机制判断绑定已访问材料。"
+      },
+      {
+        "outcomeType": "completion-criterion",
+        "outcome": "能用控制权而非产品名称区分三种系统。",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[0]",
+          "lesson.objectives[0]"
+        ],
+        "outlineSectionIds": [
+          "control-flow-prerequisite",
+          "agency-spectrum",
+          "recap-and-completion-check"
+        ],
+        "candidateSourceIds": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要至少一项可访问定义材料和一项独立交叉核验材料，避免仅凭课程字段发布。"
+      },
+      {
+        "outcomeType": "completion-criterion",
+        "outcome": "能为一个最小 Agent 画出包含终止出口的行动闭环。",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[1]",
+          "lesson.objectives[1]"
+        ],
+        "outlineSectionIds": [
+          "minimal-agent-loop",
+          "recap-and-completion-check"
+        ],
+        "candidateSourceIds": [
+          "res-agent-openai-guide",
+          "res-agent-berkeley-course",
+          "res-agent-hf-course",
+          "res-agent-hello-agents"
+        ],
+        "resourceEvidenceStatus": "gap",
+        "requiredMaterial": "需要可访问正文或实现示例确认闭环节点、信息流和终止出口，之后才能形成有来源支持的正式教学图示。"
+      }
+    ],
+    "audit": {
+      "candidateSourceIds": [
+        "res-agent-anthropic-effective",
+        "res-agent-openai-guide",
+        "res-agent-berkeley-course",
+        "res-agent-hf-course",
+        "res-agent-ms-course",
+        "res-agent-hello-agents",
+        "res-agent-dlai-agentic",
+        "res-agent-lilian-weng",
+        "res-agent-lihongyi",
+        "res-agent-datawhale-bili"
+      ],
+      "registryAccess": "read-only",
+      "registryMatchStatus": "十个候选 ID 均在项目资源 metadata 中找到；这不等于已验证资源正文或建立正式 evidence。",
+      "brokenReferenceCount": null,
+      "brokenReferenceReason": "本任务未生成 formal knowledgeNote.sections.sourceIds；候选 ID 只用于检索规划，因此正式 broken-reference 检查不适用。",
+      "tests": {
+        "status": "not applicable",
+        "reason": "本任务为只读的大纲、metadata-only 来源角色和覆盖矩阵审计，未修改项目数据或渲染代码，因此未运行项目测试。"
+      },
+      "resourceBodyAccess": "none",
+      "externalLinksRead": false,
+      "courseFieldProvenanceViolations": [],
+      "evidenceRoleCorrections": [
+        "十项资源因只有 metadata，全部保留为 extension。",
+        "所有角色卡的 coverage 均为空；metadata 描述仅用于候选检索方向。",
+        "未从标题、发布者或资源类型推断 authority enum。",
+        "未将 lesson 字段、字段路径或内部说明创建为 resource evidence。",
+        "未创建或替换任何 resource ID。"
+      ],
+      "conflictStatus": "unknown",
+      "conflictReason": "没有资源正文，无法比较定义、版本、实验条件或相互冲突。",
+      "qualityRubric": {
+        "scope": "按正式可发布章节标准评估当前受限大纲；未生成完整知识正文。",
+        "categories": [
+          {
+            "name": "目标、测验与面试覆盖",
+            "score": 15,
+            "maxScore": 25,
+            "evidence": "全部 objectives、quiz、interview、exercise steps、deliverable 和 completion criteria 已进入覆盖矩阵，但尚无来源支持的教学正文。"
+          },
+          {
+            "name": "知识结构与跨章衔接",
+            "score": 14,
+            "maxScore": 20,
+            "evidence": "七段大纲遵循先修、直觉、机制、工程、案例、误区和回顾顺序；下一课信息缺失。"
+          },
+          {
+            "name": "来源与不确定性",
+            "score": 7,
+            "maxScore": 25,
+            "evidence": "metadata-only、字幕缺口和未读外链状态均已显式保留，但没有可支持核心主张的资源正文。"
+          },
+          {
+            "name": "教学可读性与例子",
+            "score": 6,
+            "maxScore": 20,
+            "evidence": "已规划三个案例和误区环节，但按要求未生成完整解释、术语定义或 worked example。"
+          },
+          {
+            "name": "版权与数据契约",
+            "score": 10,
+            "maxScore": 10,
+            "evidence": "结果为纯数据；没有 HTML、长引文、虚构来源、正式 evidence map 或 publishable knowledgeNote。"
+          }
+        ],
+        "total": 52,
+        "maxTotal": 100,
+        "releaseThreshold": 85,
+        "releaseGate": "failed",
+        "releaseGateReasons": [
+          "总分低于 85。",
+          "关键 assessed outcomes 只有课程字段和 metadata，没有可访问资源正文。",
+          "候选 ID 虽与项目 metadata 匹配，但正文、来源语义和实际支持范围尚未验证。"
+        ]
+      }
+    }
+  }
+}
+```
+
+#### Exclusion audit
+
+该结果明确排除：除输入冻结错误外，它还声称 `registryAccess: read-only` 并报告 registry match，违背预期隔离边界。它不是 final proof，也不参与最终通过判断；保留全文仅用于审计历史。
+
+### FINAL BLIND llm-01
+
+- canonical agent ID：`/root/task2_skill_impl/provenance_final_agent01/blind_llm_final`
+- `fork_turns=none`
+- tested Skill commit：`b809923`
+
+#### Complete exact prompt received
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其直接引用；然后完成下述用户任务；最终只输出结果。
+
+这是一个真实内容任务。请只使用下面明确列出的材料，整理一篇约 1200 字、可以尽量替代外链阅读的中文第一课笔记；遇到材料不足时请说明。除上述 Skill 及其直接引用外，你没有文件或工具访问；禁止使用任何其他工具、读取任何其他文件或文档，也禁止联网或打开外部链接。最终只返回笔记正文。
+
+唯一允许使用的材料如下。
+
+objectives：
+1. 解释 AI、机器学习、深度学习、生成模型与 LLM 的包含关系。
+2. 区分训练和推理，以及应用开发和模型开发的职责边界。
+
+concepts：
+人工智能、机器学习、深度学习、生成模型、训练与推理、应用开发。
+
+explanations：
+1. 标题：从能力目标到实现方法
+正文：人工智能描述让机器表现出感知、预测、决策或生成能力的目标；机器学习是其中从数据中拟合规律的方法，深度学习又是以多层神经网络为主的一类机器学习方法。生成模型学习数据分布并产生新内容，LLM 则是以语言建模为核心、参数规模和数据规模较大的生成模型。这个层级关系能避免把所有 AI 都等同于聊天机器人。
+要点：概念是包含关系而不是同义词；LLM 是生成模型的一类，不代表全部 AI。
+
+2. 标题：开发者站在哪一层
+正文：训练阶段通过数据、损失函数与优化算法更新参数；推理阶段固定参数，根据输入逐 token 计算输出。模型开发关注数据、架构、训练效率和对齐，应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。Agent 开发通常从可靠调用现成模型开始，再根据证据决定是否需要检索、微调或更换模型。
+要点：训练改变参数，推理使用参数；先用评测定位瓶颈，再选择技术手段。
+
+与本课关联的 7 项 resource 元数据：
+
+1. id：res-ms-ai
+title：AI for Beginners
+url：https://github.com/microsoft/AI-For-Beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：基础认知
+value：用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。
+verifiedAt：2026-07-15
+
+2. id：res-ms-genai
+title：Generative AI for Beginners
+url：https://github.com/microsoft/generative-ai-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：应用基础
+value：从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。
+verifiedAt：2026-07-15
+
+3. id：res-hf-llm
+title：Hugging Face LLM Course
+url：https://huggingface.co/learn/llm-course/chapter1/1
+source：Hugging Face
+language：多语言
+type：官方课程
+difficulty：入门到进阶
+stage：模型全链路
+value：覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。
+verifiedAt：2026-07-15
+
+4. id：res-zomi-bili
+title：大模型整体架构与全流程介绍
+url：https://www.bilibili.com/video/BV1a34y137zi/
+source：ZOMI酱
+language：中文
+type：Bilibili 视频
+difficulty：入门到进阶
+stage：全局补充
+value：从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。
+verifiedAt：2026-07-15
+
+5. id：res-ms-agents
+title：AI Agents for Beginners
+url：https://github.com/microsoft/ai-agents-for-beginners
+source：Microsoft
+language：多语言
+type：GitHub 课程
+difficulty：入门
+stage：Agent 衔接
+value：完成 LLM 基础后继续学习 Agent 模式、工具和多智能体实践。
+verifiedAt：2026-07-15
+
+6. id：res-hello-agents
+title：Hello-Agents：从零开始构建智能体
+url：https://github.com/datawhalechina/hello-agents
+source：Datawhale
+language：中文
+type：GitHub 教材
+difficulty：进阶
+stage：Agent 衔接
+value：在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。
+verifiedAt：2026-07-15
+
+7. id：res-openai-agents
+title：OpenAI Agents SDK
+url：https://github.com/openai/openai-agents-python
+source：OpenAI
+language：英文
+type：GitHub SDK
+difficulty：进阶
+stage：Agent 衔接
+value：用官方实现理解 Agent、工具、交接、护栏、会话和追踪。
+verifiedAt：2026-07-15
+```
+
+#### Complete raw JSON output
+
+```json
+{
+  "status": "blocked",
+  "publicationReady": false,
+  "blocker": "当前材料仅包含课程字段和 7 项资源元数据，没有任何可访问的资源正文，也未提供项目资源注册表。因此无法核验来源、确认资源 ID 可解析，或把课程字段当作正式证据。依据发布门槛，不能生成一篇看似可发布、可替代外链阅读的正式笔记。",
+  "outline": [
+    "建立人工智能、机器学习、深度学习、生成模型与 LLM 的包含关系",
+    "说明生成模型和 LLM 在概念地图中的位置",
+    "以参数是否更新区分训练与推理",
+    "划分模型开发与应用开发的关注点",
+    "说明 Agent 开发从现成模型调用和评测开始的工作顺序",
+    "纠正“所有 AI 都是聊天机器人”等常见误解",
+    "衔接检索、微调、换模与 Agent 工具等后续主题"
+  ],
+  "draftSections": [
+    {
+      "id": "draft-concept-map",
+      "title": "一、先画概念地图",
+      "paragraphs": [
+        "人工智能描述的是能力目标：让机器表现出感知、预测、决策或生成能力。机器学习是实现人工智能的一类方法，其核心是从数据中拟合规律；深度学习又是机器学习的一部分，主要采用多层神经网络。",
+        "因此，这些词不是可以互换的同义词，而是从目标到实现方法的包含关系。把层级分清，才能避免把全部人工智能缩减成某一种模型或某一种应用。"
+      ],
+      "courseFieldBasis": [
+        "objectives[0]",
+        "concepts[0]",
+        "concepts[1]",
+        "concepts[2]",
+        "explanations[0]"
+      ]
+    },
+    {
+      "id": "draft-generative-model-and-llm",
+      "title": "二、生成模型与 LLM 位于哪一层",
+      "paragraphs": [
+        "生成模型是一类学习数据分布并产生新内容的模型。大语言模型，即 LLM，则是以语言建模为核心，并具有较大参数规模和数据规模的一类生成模型。",
+        "由此可得：LLM 属于生成模型，生成模型并不只有 LLM；同样，人工智能也不只包含生成任务。把 AI 直接等同于聊天机器人，会遗漏感知、预测和决策等其他能力目标。"
+      ],
+      "courseFieldBasis": [
+        "objectives[0]",
+        "concepts[3]",
+        "explanations[0]"
+      ]
+    },
+    {
+      "id": "draft-training-and-inference",
+      "title": "三、训练和推理的关键分界",
+      "paragraphs": [
+        "训练阶段使用数据、损失函数和优化算法更新模型参数。这里最重要的判断标准是参数是否发生改变：只要工作目标是通过优化调整参数，它就属于训练阶段。",
+        "推理阶段固定已经得到的参数，根据输入逐 token 计算输出。训练是在形成或调整模型能力，推理是在使用已有参数产生结果；两者不能仅凭是否调用了模型来区分。"
+      ],
+      "courseFieldBasis": [
+        "objectives[1]",
+        "concepts[4]",
+        "explanations[1]"
+      ]
+    },
+    {
+      "id": "draft-development-boundary",
+      "title": "四、模型开发与应用开发各自负责什么",
+      "paragraphs": [
+        "模型开发主要关注数据、模型架构、训练效率和对齐。这些工作直接面向模型本身及其参数形成过程，与训练阶段联系更紧密。",
+        "应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。应用开发者需要把模型能力组织成满足具体需求的系统，并判断输出是否可靠、响应是否及时、成本是否可接受。"
+      ],
+      "courseFieldBasis": [
+        "objectives[1]",
+        "concepts[5]",
+        "explanations[1]"
+      ]
+    },
+    {
+      "id": "draft-agent-workflow",
+      "title": "五、Agent 开发应从哪里开始",
+      "paragraphs": [
+        "Agent 开发通常先从可靠调用现成模型开始，而不是立即进入模型训练。开发者先围绕需求组织上下文、工具和验证方式，再观察系统在可靠性、延迟与成本上的表现。",
+        "下一步技术选择应由评测证据决定：先定位瓶颈，再判断是否需要检索、微调或更换模型。训练并不是遇到问题后的默认答案；技术手段应对应已经识别的问题。"
+      ],
+      "courseFieldBasis": [
+        "objectives[1]",
+        "explanations[1]"
+      ]
+    },
+    {
+      "id": "draft-misconceptions-and-recap",
+      "title": "六、常见误区与本课回顾",
+      "paragraphs": [
+        "误区一是把人工智能、机器学习、深度学习和 LLM 当作同义词。正确关系是：人工智能描述能力目标，机器学习是实现方法之一，深度学习属于机器学习，LLM 又属于生成模型的一类。",
+        "误区二是把应用问题直接转化为训练任务。更合适的顺序是先使用现成模型完成可验证的应用闭环，以评测定位瓶颈，再选择检索、微调或换模。记忆本课只需抓住两条主线：概念之间看包含关系，开发阶段看参数是否更新以及职责关注点。"
+      ],
+      "courseFieldBasis": [
+        "objectives[0]",
+        "objectives[1]",
+        "explanations[0]",
+        "explanations[1]"
+      ]
+    }
+  ],
+  "coverageMatrix": [
+    {
+      "outcome": "解释 AI、机器学习、深度学习、生成模型与 LLM 的包含关系",
+      "courseFieldBasis": [
+        "objectives[0]",
+        "explanations[0]"
+      ],
+      "draftCoverage": "covered",
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "至少取得一项关联资源的可访问正文，并核验其确实支持这些概念定义和包含关系。"
+    },
+    {
+      "outcome": "区分训练和推理",
+      "courseFieldBasis": [
+        "objectives[1]",
+        "explanations[1]"
+      ],
+      "draftCoverage": "covered",
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "需要可访问的资源正文支持训练更新参数、推理固定参数并逐 token 计算输出等机制。"
+    },
+    {
+      "outcome": "划分应用开发和模型开发的职责边界",
+      "courseFieldBasis": [
+        "objectives[1]",
+        "concepts[5]",
+        "explanations[1]"
+      ],
+      "draftCoverage": "covered",
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "需要可访问正文验证两类开发工作的关注点及其边界。"
+    },
+    {
+      "outcome": "根据评测结果选择检索、微调或更换模型",
+      "courseFieldBasis": [
+        "explanations[1]"
+      ],
+      "draftCoverage": "covered",
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "需要资源正文支持这一 Agent 开发决策顺序及各技术手段的适用边界。"
+    },
+    {
+      "outcome": "测验、面试、练习与完成标准",
+      "courseFieldBasis": [],
+      "draftCoverage": "unavailable",
+      "resourceEvidenceStatus": "gap",
+      "requiredEvidence": "题目未提供相应课程字段，无法检查这些学习产出是否得到覆盖。"
+    }
+  ],
+  "candidateSourceIds": [
+    "res-ms-ai",
+    "res-ms-genai",
+    "res-hf-llm",
+    "res-zomi-bili",
+    "res-ms-agents",
+    "res-hello-agents",
+    "res-openai-agents"
+  ],
+  "candidateResources": [
+    {
+      "id": "res-ms-ai",
+      "title": "AI for Beginners",
+      "source": "Microsoft",
+      "type": "GitHub 课程",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，未访问课程正文，不能确认其实际覆盖范围或作为本课事实证据。"
+    },
+    {
+      "id": "res-ms-genai",
+      "title": "Generative AI for Beginners",
+      "source": "Microsoft",
+      "type": "GitHub 课程",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，未访问课程正文，不能用标题或 value 字段推断具体内容。"
+    },
+    {
+      "id": "res-hf-llm",
+      "title": "Hugging Face LLM Course",
+      "source": "Hugging Face",
+      "type": "官方课程",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，尚未验证正文、版本及其对训练和推理机制的具体表述。"
+    },
+    {
+      "id": "res-zomi-bili",
+      "title": "大模型整体架构与全流程介绍",
+      "source": "ZOMI酱",
+      "type": "Bilibili 视频",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "未提供可访问字幕或文字稿，不能用该视频支撑关键事实。"
+    },
+    {
+      "id": "res-ms-agents",
+      "title": "AI Agents for Beginners",
+      "source": "Microsoft",
+      "type": "GitHub 课程",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，不能确认其对工具、Agent 模式或多智能体实践的实际讲解。"
+    },
+    {
+      "id": "res-hello-agents",
+      "title": "Hello-Agents：从零开始构建智能体",
+      "source": "Datawhale",
+      "type": "GitHub 教材",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，未核验教材正文和适用版本。"
+    },
+    {
+      "id": "res-openai-agents",
+      "title": "OpenAI Agents SDK",
+      "source": "OpenAI",
+      "type": "GitHub SDK",
+      "authorityStatus": "unresolved",
+      "role": "extension",
+      "verifiedAt": "2026-07-15",
+      "limitations": "仅有元数据，未访问代码或文档，不能确认具体接口与当前实现语义。"
+    }
+  ],
+  "brokenReferenceCount": null,
+  "tests": {
+    "status": "not applicable",
+    "reason": "这是受限材料下的隔离只读内容任务，未产生或验证项目数据与渲染变更，项目测试也不在允许访问的材料范围内。"
+  },
+  "rubric": {
+    "scores": {
+      "目标、测验与面试覆盖": 18,
+      "知识结构与跨章衔接": 15,
+      "来源与不确定性": 0,
+      "教学可读性与例子": 14,
+      "版权与数据契约": 10
+    },
+    "total": 57,
+    "releaseGate": "failed",
+    "failureReasons": [
+      "没有可访问的核心资源正文，全部关键结论只能追溯到 courseFieldBasis。",
+      "没有项目资源注册表，无法解析和验证候选资源 ID。",
+      "总分低于 85 分。",
+      "测验、面试、练习和完成标准未提供，无法进行完整教学覆盖审计。"
+    ],
+    "requiredToUnblock": "提供至少一项直接支持核心目标的资源正文、项目资源注册表，以及本课的测验、面试、练习和完成标准；完成来源核验与引用解析后，才能改写为约 1200 字的正式第一课笔记。"
+  }
+}
+```
+
+#### Independent audit
+
+| 检查项 | 结果 | 说明 |
+| --- | --- | --- |
+| blocked artifact | 通过 | 资源正文与 registry 缺失时正确阻塞，没有生成正式章节。 |
+| publishable structures | 通过 | 无正式 `knowledgeNote`、`evidence` map 或 `sourceIds`。 |
+| candidate resources | 通过 | 七个输入给定的 genuine ID 均保留为 metadata-only `extension` candidate。 |
+| authority | 通过 | 七项全部为 `authorityStatus: unresolved`，没有写入 authority enum。 |
+| reference audit | 通过 | `brokenReferenceCount: null`，没有把未执行解析写成零断链。 |
+| tests audit | 通过 | `tests.status: not applicable`，并给出隔离只读与无项目变更的准确原因。 |
+| rubric/release | 通过 | rubric 总分低于 85，release gate 明确失败。 |
+| model-memory boundary | 通过 | 正文性草稿只追溯到 `courseFieldBasis`；未用模型记忆补写 unsupported 机制、API 或资源正文。 |
+
+该运行是 commit `b809923` 的 llm-01 final behavior proof。
+
+### FINAL BLIND agent-01
+
+- canonical agent ID：`/root/task2_skill_impl/provenance_final_agent01/blind_agent01_final_v2`
+- `fork_turns=none`
+- tested Skill commit：`b809923`
+
+#### Complete exact prompt received
+
+```text
+先读取并使用 `<repo-root>/.agents/skills/build-learning-module-notes/SKILL.md` 及其直接引用；然后完成下述用户任务；最终只输出结果。
+
+使用新 Skill，只输出大纲、来源角色和覆盖矩阵，不修改课程文件。
+
+lesson：
+id: agent-01
+title: Agent、Workflow 与普通 LLM 应用
+durationMinutes: 80
+summary: 从控制权和行动闭环出发，判断何时使用普通调用、确定性 Workflow 或拥有有限自治权的 Agent。
+objectives:
+1. 用控制权、路径确定性和环境反馈区分 LLM 应用、Workflow 与 Agent。
+2. 描述最小单 Agent 的目标、状态、动作、观察和终止组件。
+concepts: Agency 连续谱；Workflow；动作空间；环境观察；终止条件。
+explanations:
+1. 差别在控制流而不在名称：普通 LLM 应用通常由代码决定一次或少数几次调用，模型只生成内容；Workflow 由开发者预先写好分支、顺序和重试规则，模型可填充某些节点；Agent 则让模型依据当前目标、状态与新观察，在受限动作空间内选择下一步。三者是控制权连续谱，不应把任何会调用 API 的程序都包装成 Agent。要点：先问谁决定下一步，再判断系统类型；自治越高，成本、延迟和失败面通常越大。
+2. 最小行动闭环与选型门槛：最小 Agent 需要可操作目标、保存进展的状态、允许执行的动作或工具、来自环境的观察、依据观察更新状态的决策循环，以及 done、blocked、预算耗尽或 handoff 等显式终止出口。如果路径稳定、结果可由普通代码计算、错误代价很高或缺少可观察反馈，优先使用确定性代码或 Workflow，而不是增加自治。要点：Agent 不是只有模型和工具，还必须有状态与终止；只有动态决策确实创造价值时才承担自治成本。
+exercise:
+title: 为三个案例选择控制方式
+brief: 比较固定格式摘要、审批流和开放资料调查三个案例，决定采用普通调用、Workflow 或 Agent。
+steps:
+1. 为每个案例标出路径是否稳定、是否需要环境反馈、错误代价与可验证证据。
+2. 写出推荐方案、拒绝另外两种方案的理由，以及完成、阻塞和预算终止条件。
+deliverable: 一张包含三个案例、判断证据和终止设计的选型表。
+quiz:
+1. quiz-agent-01-1：区分 Workflow 与 Agent 最关键的问题是什么？选项：界面是否像聊天；是否使用大模型；下一步主要由预设代码还是模型依据状态决定（正确）；是否部署在云端。解释：核心差别是控制流归属：Workflow 预设路径，Agent 在边界内根据状态和观察动态选择动作。
+2. quiz-agent-01-2：下面哪项是最小 Agent 必须显式具备的？选项：无限上下文；目标、状态、动作、观察与终止出口（正确）；向量数据库；多个协作 Agent。解释：行动闭环必须能表达任务、执行动作、吸收观察并在可验证条件下停止；RAG 和多 Agent 都不是必需组件。
+interview:
+1. iq-agent-01-1：LLM、Agent、Workflow 有什么区别？短答：判断标准是看控制流和环境反馈：LLM 是生成能力组件；Workflow 由代码预设步骤与分支；Agent 则让模型依据目标、当前状态和新观察，在受限动作空间内动态决定下一步，并由显式终止条件停止。深挖：三者是 agency 连续谱，系统可在固定流程的局部节点授予模型选择权，不必二选一；自治提高对开放任务的适应性，也扩大成本、延迟、权限和不可预测失败面。误区：只要应用调用过一个工具或使用了聊天界面，就把它称为 Agent。追问：一个带模型分类节点和固定审批路径的系统更接近哪一类，为什么？
+2. iq-agent-01-2：什么时候不应该使用 Agent？短答：判断标准是动态决策是否带来超过其风险与成本的价值：路径稳定、普通代码可确定求解、缺少可靠反馈、错误不可接受或无法设置权限和终止预算时，应优先确定性程序或 Workflow。深挖：高自治意味着更多模型调用、更长尾延迟和更难复现的轨迹，必须由真实失败样例证明必要性；高风险动作可保留 Agent 做信息收集，但把最终执行收回规则、审批或人工。误区：认为 Agent 总比 Workflow 先进，所以所有业务都应尽可能增加自治。追问：如果任务大部分固定、只有一个节点开放，你会怎样设计控制权？
+3. iq-agent-01-3：最小 Agent 必须有哪些组成部分？短答：判断标准是系统能否完成可验证行动闭环：至少要有可操作目标、工作状态、受限动作或工具、环境 observation、依据观察更新状态的决策循环，以及 done、blocked、预算耗尽和 handoff 等终止出口。深挖：模型只是决策组件，宿主程序负责执行、权限、状态持久化与确定性检查；RAG、长期记忆、框架和多 Agent 都可能有用，但不是最小单 Agent 的必要条件。误区：回答“模型、Prompt 和工具”就结束，遗漏状态更新、完成证据和停止条件。追问：如果去掉 observation 回填，系统会出现什么具体故障？
+completionCriteria:
+1. 能用控制权而非产品名称区分三种系统。
+2. 能为一个最小 Agent 画出包含终止出口的行动闭环。
+
+关联 resource metadata（所有 verifiedAt 均为 2026-07-20）：
+1. res-agent-anthropic-effective | Building Effective Agents | Anthropic | 官方工程指南 | 进阶 | 机制总览 | 厂商团队总结的工程经验，用于比较 workflow 与 Agent、从简单方案逐步增加自治；它不是跨模型、跨场景都成立的普适论文结论。
+2. res-agent-openai-guide | A Practical Guide to Building AI Agents | OpenAI | 官方工程指南 | 入门到进阶 | 机制总览 | 厂商给出的 Agent 组成、工具与编排工程经验，适合建立实现清单；其建议应结合自己的模型、权限和任务数据验证。
+3. res-agent-berkeley-course | Large Language Model Agents MOOC | UC Berkeley | 大学课程 | 进阶 | 系统课程 | 大学公开课程提供 Agent 推理、规划、工具与应用的系统学习路线，用于扩展本模块而不承担具体性能主张。
+4. res-agent-hf-course | Hugging Face Agents Course | Hugging Face | GitHub 官方课程 | 入门到进阶 | 代码实践 | 官方开源课程把 Agent 概念、工具调用和框架练习连接起来，适合在先理解机制后对照实现。
+5. res-agent-ms-course | AI Agents for Beginners | Microsoft | GitHub 官方课程 | 入门 | 系统课程 | 官方开源课程以逐课示例介绍 Agent 模式和工具，适合作为结构化练习入口，不作为框架优劣的普适证据。
+6. res-agent-hello-agents | Hello-Agents：从零开始构建智能体 | Datawhale | GitHub 社区课程 | 入门到进阶 | 中文实践 | 中文开源教材提供从机制到代码的学习路径，可用于复现最小 Agent 与工具调用；性能结论仍需独立评测。
+7. res-agent-dlai-agentic | Agentic AI | DeepLearning.AI | 官方课程 | 进阶 | 系统课程 | 课程围绕反思、工具、规划等模式组织练习，适合横向梳理模式；课程案例不能替代业务环境中的验证。
+8. res-agent-lilian-weng | LLM Powered Autonomous Agents | Lilian Weng | 技术综述 | 进阶 | 机制总览 | 作者综述串联规划、记忆与工具等概念，适合建立术语地图；具体效果应回到所引论文的实验条件核对。
+9. res-agent-lihongyi | 【生成式AI時代下的機器學習(2025)】第二講：一堂課搞懂 AI Agent 的原理 | Hung-yi Lee | YouTube 课程视频 | 入门到进阶 | 中文讲解 | 中文课程视频用于建立 Agent 行动循环和工具使用直觉，论断应结合原始论文与真实系统实验核验。
+10. res-agent-datawhale-bili | 4.3-Agent大模型智能体-原理、实践和应用场景 | 二次元的Datawhale | Bilibili 课程视频 | 入门 | 中文讲解 | 中文社区课程视频辅助理解 Agent 基本组成与实践路径，适合配合代码复现，不承担机制事实的唯一依据。
+```
+
+#### Complete raw JSON output
+
+```json
+{
+  "outline": [
+    {
+      "id": "control-flow-first",
+      "title": "先问谁决定下一步：从控制流识别系统类型",
+      "teachingFunctions": [
+        "先修桥接",
+        "直觉模型",
+        "准确机制"
+      ],
+      "dependsOn": [],
+      "contentPlan": [
+        "以“谁决定下一步”为首要判断问题。",
+        "对比普通 LLM 应用、开发者预设路径的 Workflow，以及模型依据目标、状态和新观察选择动作的 Agent。",
+        "将三者放在控制权连续谱上，避免仅凭聊天界面、工具调用或产品名称分类。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.concepts[0]",
+        "lesson.concepts[1]",
+        "lesson.explanations[0]",
+        "lesson.quiz[0]",
+        "lesson.interview[0]",
+        "lesson.completionCriteria[0]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "agency-selection-threshold",
+      "title": "自治不是默认升级：用路径、反馈与风险设置选型门槛",
+      "teachingFunctions": [
+        "准确机制",
+        "工程意义"
+      ],
+      "dependsOn": [
+        "control-flow-first"
+      ],
+      "contentPlan": [
+        "比较路径稳定性、环境反馈需求、普通代码是否可确定求解、错误代价和可验证证据。",
+        "说明自治提高对开放任务的适应性时，也会扩大成本、延迟、权限和不可预测失败面。",
+        "当路径稳定、缺少可靠反馈、错误不可接受或不能设置权限与预算时，优先采用确定性代码或 Workflow。",
+        "对于大部分固定、局部开放的任务，仅在开放节点授予有限选择权。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.explanations[0]",
+        "lesson.explanations[1]",
+        "lesson.interview[0]",
+        "lesson.interview[1]",
+        "lesson.exercise.steps[0]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "minimal-agent-loop",
+      "title": "最小 Agent：目标、状态、动作、观察与决策循环",
+      "teachingFunctions": [
+        "准确机制",
+        "工程意义"
+      ],
+      "dependsOn": [
+        "control-flow-first",
+        "agency-selection-threshold"
+      ],
+      "contentPlan": [
+        "从可操作目标开始，定义保存任务进展的状态。",
+        "限定允许执行的动作或工具，并把环境 observation 回填到状态。",
+        "让决策循环依据目标、当前状态和新观察选择下一步。",
+        "区分模型的决策职责与宿主程序的执行、权限、状态持久化和确定性检查职责。",
+        "说明 RAG、长期记忆、框架和多 Agent 不是最小单 Agent 的必要组件。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.concepts[2]",
+        "lesson.concepts[3]",
+        "lesson.explanations[1]",
+        "lesson.quiz[1]",
+        "lesson.interview[2]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "explicit-termination-exits",
+      "title": "行动闭环必须能停：完成、阻塞、预算与移交",
+      "teachingFunctions": [
+        "准确机制",
+        "工程意义"
+      ],
+      "dependsOn": [
+        "minimal-agent-loop"
+      ],
+      "contentPlan": [
+        "把 done、blocked、预算耗尽和 handoff 设计为显式终止出口。",
+        "要求完成状态附带可验证证据，而不是只依赖模型自述。",
+        "说明缺少 observation 回填会使系统无法依据真实环境结果更新状态。",
+        "把终止条件同时用于控制成本、长尾延迟和失控循环。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[1]",
+        "lesson.concepts[4]",
+        "lesson.explanations[1]",
+        "lesson.exercise.steps[1]",
+        "lesson.interview[2]",
+        "lesson.completionCriteria[1]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "three-case-control-selection",
+      "title": "三个案例的控制方式选型演练",
+      "teachingFunctions": [
+        "具体例子",
+        "工程应用"
+      ],
+      "dependsOn": [
+        "agency-selection-threshold",
+        "explicit-termination-exits"
+      ],
+      "contentPlan": [
+        "分别分析固定格式摘要、审批流和开放资料调查。",
+        "为每个案例标注路径是否稳定、是否需要环境反馈、错误代价和可验证证据。",
+        "选择普通调用、Workflow 或 Agent，并写出拒绝另外两种方案的理由。",
+        "为每个案例补充完成、阻塞和预算终止条件。",
+        "产出包含三个案例、判断证据和终止设计的选型表。"
+      ],
+      "courseFieldBasis": [
+        "lesson.exercise.title",
+        "lesson.exercise.brief",
+        "lesson.exercise.steps[0]",
+        "lesson.exercise.steps[1]",
+        "lesson.exercise.deliverable",
+        "lesson.objectives[0]",
+        "lesson.objectives[1]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "misconceptions-and-interview-reasoning",
+      "title": "常见误区与面试推理链",
+      "teachingFunctions": [
+        "常见误区",
+        "测验与面试迁移"
+      ],
+      "dependsOn": [
+        "control-flow-first",
+        "agency-selection-threshold",
+        "minimal-agent-loop",
+        "explicit-termination-exits"
+      ],
+      "contentPlan": [
+        "纠正“调用工具或使用聊天界面就是 Agent”的误区。",
+        "纠正“Agent 总比 Workflow 先进，应尽可能增加自治”的误区。",
+        "纠正“模型、Prompt 和工具已经构成最小 Agent”的误区。",
+        "围绕控制流归属、动态决策价值和可验证行动闭环组织三道面试题的短答、深挖与追问。"
+      ],
+      "courseFieldBasis": [
+        "lesson.quiz[0]",
+        "lesson.quiz[1]",
+        "lesson.interview[0]",
+        "lesson.interview[1]",
+        "lesson.interview[2]"
+      ],
+      "resourceEvidenceStatus": "gap"
+    },
+    {
+      "id": "recap-and-next-step",
+      "title": "回顾：先选控制权，再设计行动闭环",
+      "teachingFunctions": [
+        "回顾与下一章"
+      ],
+      "dependsOn": [
+        "three-case-control-selection",
+        "misconceptions-and-interview-reasoning"
+      ],
+      "contentPlan": [
+        "用控制权、路径确定性和环境反馈回顾三类系统的区分方法。",
+        "用目标、状态、动作、观察、决策循环和终止出口回顾最小 Agent。",
+        "以下一课具体内容建立跨章衔接的工作暂缓；当前输入未提供下一课元数据，不能虚构衔接主题。"
+      ],
+      "courseFieldBasis": [
+        "lesson.objectives[0]",
+        "lesson.objectives[1]",
+        "lesson.completionCriteria[0]",
+        "lesson.completionCriteria[1]"
+      ],
+      "resourceEvidenceStatus": "gap",
+      "remainingGap": "缺少下一课元数据，无法建立有依据的明确跨章衔接。"
+    }
+  ],
+  "sourceRoles": [
+    {
+      "resourceId": "res-agent-anthropic-effective",
+      "title": "Building Effective Agents",
+      "publisher": "Anthropic",
+      "materialType": "官方工程指南",
+      "level": "进阶",
+      "orientation": "机制总览",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于核验 Workflow 与 Agent 的比较及逐步增加自治的工程边界。",
+      "limitations": "未访问正文，不能据标题、出版方或 metadata 推断其实际论述，也不能将厂商经验当作跨模型、跨场景的普适结论。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-openai-guide",
+      "title": "A Practical Guide to Building AI Agents",
+      "publisher": "OpenAI",
+      "materialType": "官方工程指南",
+      "level": "入门到进阶",
+      "orientation": "机制总览",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于核验 Agent 组成、工具与编排实现清单。",
+      "limitations": "未访问正文，不能确认具体组成定义或实现建议；相关建议还需结合实际模型、权限和任务数据验证。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-berkeley-course",
+      "title": "Large Language Model Agents MOOC",
+      "publisher": "UC Berkeley",
+      "materialType": "大学课程",
+      "level": "进阶",
+      "orientation": "系统课程",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于扩展 Agent 推理、规划、工具与应用的后续学习路线。",
+      "limitations": "未访问课程正文，不能用于支持本课具体机制或性能主张。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-hf-course",
+      "title": "Hugging Face Agents Course",
+      "publisher": "Hugging Face",
+      "materialType": "GitHub 官方课程",
+      "level": "入门到进阶",
+      "orientation": "代码实践",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于在理解机制后对照工具调用与框架练习。",
+      "limitations": "未访问仓库或课程正文，不能确认其代码、框架语义、版本或对本课结论的支持范围。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-ms-course",
+      "title": "AI Agents for Beginners",
+      "publisher": "Microsoft",
+      "materialType": "GitHub 官方课程",
+      "level": "入门",
+      "orientation": "系统课程",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选作为结构化示例与练习入口。",
+      "limitations": "未访问课程正文，不能用于证明框架优劣或支持本课具体机制主张。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-hello-agents",
+      "title": "Hello-Agents：从零开始构建智能体",
+      "publisher": "Datawhale",
+      "materialType": "GitHub 社区课程",
+      "level": "入门到进阶",
+      "orientation": "中文实践",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于后续复现最小 Agent 与工具调用。",
+      "limitations": "未访问教材正文或代码，不能确认其实现细节；任何性能结论仍需独立评测。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-dlai-agentic",
+      "title": "Agentic AI",
+      "publisher": "DeepLearning.AI",
+      "materialType": "官方课程",
+      "level": "进阶",
+      "orientation": "系统课程",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于横向梳理反思、工具和规划等模式。",
+      "limitations": "未访问课程正文，不能把课程案例视为业务环境中的验证结果。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-lilian-weng",
+      "title": "LLM Powered Autonomous Agents",
+      "publisher": "Lilian Weng",
+      "materialType": "技术综述",
+      "level": "进阶",
+      "orientation": "机制总览",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于建立规划、记忆与工具等术语之间的路线图。",
+      "limitations": "未访问综述正文及其引用论文，不能确认具体机制描述或实验结论；效果主张需回到原论文条件核对。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-lihongyi",
+      "title": "【生成式AI時代下的機器學習(2025)】第二講：一堂課搞懂 AI Agent 的原理",
+      "publisher": "Hung-yi Lee",
+      "materialType": "YouTube 课程视频",
+      "level": "入门到进阶",
+      "orientation": "中文讲解",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "transcriptStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于辅助建立行动循环和工具使用直觉。",
+      "limitations": "未取得可访问字幕或等价正文，不能支持关键事实；相关论断仍需原始论文或真实系统实验核验。",
+      "verifiedAt": "2026-07-20"
+    },
+    {
+      "resourceId": "res-agent-datawhale-bili",
+      "title": "4.3-Agent大模型智能体-原理、实践和应用场景",
+      "publisher": "二次元的Datawhale",
+      "materialType": "Bilibili 课程视频",
+      "level": "入门",
+      "orientation": "中文讲解",
+      "role": "extension",
+      "authorityStatus": "unresolved",
+      "bodyAccessStatus": "unavailable",
+      "transcriptStatus": "unavailable",
+      "registryStatus": "not validated",
+      "plannedUse": "仅据所给 metadata，候选用于配合代码复现辅助理解 Agent 的基本组成和实践路径。",
+      "limitations": "未取得可访问字幕或等价正文，不能作为机制事实的唯一依据。",
+      "verifiedAt": "2026-07-20"
+    }
+  ],
+  "coverageMatrix": {
+    "rows": [
+      {
+        "outcome": "目标 1：用控制权、路径确定性和环境反馈区分 LLM 应用、Workflow 与 Agent。",
+        "courseFieldBasis": [
+          "lesson.objectives[0]",
+          "lesson.explanations[0]"
+        ],
+        "outlineSections": [
+          "control-flow-first",
+          "agency-selection-threshold",
+          "three-case-control-selection"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "目标 2：描述最小单 Agent 的目标、状态、动作、观察和终止组件。",
+        "courseFieldBasis": [
+          "lesson.objectives[1]",
+          "lesson.explanations[1]"
+        ],
+        "outlineSections": [
+          "minimal-agent-loop",
+          "explicit-termination-exits"
+        ],
+        "candidateRoute": [
+          "res-agent-openai-guide",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "概念：Agency 连续谱与 Workflow。",
+        "courseFieldBasis": [
+          "lesson.concepts[0]",
+          "lesson.concepts[1]",
+          "lesson.explanations[0]"
+        ],
+        "outlineSections": [
+          "control-flow-first",
+          "agency-selection-threshold"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "概念：动作空间、环境观察与终止条件。",
+        "courseFieldBasis": [
+          "lesson.concepts[2]",
+          "lesson.concepts[3]",
+          "lesson.concepts[4]",
+          "lesson.explanations[1]"
+        ],
+        "outlineSections": [
+          "minimal-agent-loop",
+          "explicit-termination-exits"
+        ],
+        "candidateRoute": [
+          "res-agent-openai-guide",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "测验 1：以控制流归属区分 Workflow 与 Agent。",
+        "courseFieldBasis": [
+          "lesson.quiz[0].question",
+          "lesson.quiz[0].options",
+          "lesson.quiz[0].explanation"
+        ],
+        "outlineSections": [
+          "control-flow-first",
+          "misconceptions-and-interview-reasoning"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "测验 2：识别最小 Agent 必须显式具备的行动闭环组件。",
+        "courseFieldBasis": [
+          "lesson.quiz[1].question",
+          "lesson.quiz[1].options",
+          "lesson.quiz[1].explanation"
+        ],
+        "outlineSections": [
+          "minimal-agent-loop",
+          "explicit-termination-exits",
+          "misconceptions-and-interview-reasoning"
+        ],
+        "candidateRoute": [
+          "res-agent-openai-guide",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "面试 1：说明 LLM、Workflow 与 Agent 的区别，并处理局部授权选择权的追问。",
+        "courseFieldBasis": [
+          "lesson.interview[0]"
+        ],
+        "outlineSections": [
+          "control-flow-first",
+          "agency-selection-threshold",
+          "misconceptions-and-interview-reasoning"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "面试 2：判断何时不应使用 Agent，并解释固定流程中单个开放节点的控制权设计。",
+        "courseFieldBasis": [
+          "lesson.interview[1]"
+        ],
+        "outlineSections": [
+          "agency-selection-threshold",
+          "misconceptions-and-interview-reasoning"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "面试 3：列出最小 Agent 组件，并解释缺少 observation 回填的具体故障。",
+        "courseFieldBasis": [
+          "lesson.interview[2]"
+        ],
+        "outlineSections": [
+          "minimal-agent-loop",
+          "explicit-termination-exits",
+          "misconceptions-and-interview-reasoning"
+        ],
+        "candidateRoute": [
+          "res-agent-openai-guide",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "练习步骤 1：为三个案例标出路径稳定性、环境反馈、错误代价和可验证证据。",
+        "courseFieldBasis": [
+          "lesson.exercise.brief",
+          "lesson.exercise.steps[0]"
+        ],
+        "outlineSections": [
+          "agency-selection-threshold",
+          "three-case-control-selection"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "练习步骤 2：推荐控制方式、拒绝另外两种方式，并设计完成、阻塞和预算终止条件。",
+        "courseFieldBasis": [
+          "lesson.exercise.steps[1]"
+        ],
+        "outlineSections": [
+          "explicit-termination-exits",
+          "three-case-control-selection"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "练习交付物：包含三个案例、判断证据和终止设计的选型表。",
+        "courseFieldBasis": [
+          "lesson.exercise.deliverable"
+        ],
+        "outlineSections": [
+          "three-case-control-selection"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "完成标准 1：能用控制权而非产品名称区分三种系统。",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[0]"
+        ],
+        "outlineSections": [
+          "control-flow-first",
+          "three-case-control-selection",
+          "recap-and-next-step"
+        ],
+        "candidateRoute": [
+          "res-agent-anthropic-effective",
+          "res-agent-openai-guide"
+        ],
+        "resourceEvidenceStatus": "gap"
+      },
+      {
+        "outcome": "完成标准 2：能画出包含终止出口的最小 Agent 行动闭环。",
+        "courseFieldBasis": [
+          "lesson.completionCriteria[1]"
+        ],
+        "outlineSections": [
+          "minimal-agent-loop",
+          "explicit-termination-exits",
+          "recap-and-next-step"
+        ],
+        "candidateRoute": [
+          "res-agent-openai-guide",
+          "res-agent-lilian-weng"
+        ],
+        "resourceEvidenceStatus": "gap"
+      }
+    ],
+    "audit": {
+      "status": "blocked",
+      "publicationReady": false,
+      "blockers": [
+        "只提供了关联资源 metadata，未提供或访问任何可归因的资源正文。",
+        "未验证项目资源注册表，候选资源 ID 的可解析性未知。",
+        "全部核心和受评学习产出目前只能追溯到 courseFieldBasis，课程字段不能替代资源证据。",
+        "未提供下一课元数据，无法完成有依据的明确跨章衔接。"
+      ],
+      "candidateSourceIds": [
+        "res-agent-anthropic-effective",
+        "res-agent-openai-guide",
+        "res-agent-berkeley-course",
+        "res-agent-hf-course",
+        "res-agent-ms-course",
+        "res-agent-hello-agents",
+        "res-agent-dlai-agentic",
+        "res-agent-lilian-weng",
+        "res-agent-lihongyi",
+        "res-agent-datawhale-bili"
+      ],
+      "brokenReferenceCount": null,
+      "tests": {
+        "status": "not applicable",
+        "reason": "本任务为隔离、只读的大纲、来源角色与覆盖规划，未产生项目数据或渲染变更，且未执行项目资源注册表解析，因此项目测试不适用。"
+      },
+      "rubric": {
+        "categoryScores": {
+          "目标、测验与面试覆盖": {
+            "score": 25,
+            "max": 25,
+            "evidence": "两个目标、两道测验、三道面试题、两个练习步骤、交付物和两个完成标准均已映射到大纲。"
+          },
+          "知识结构与跨章衔接": {
+            "score": 17,
+            "max": 20,
+            "evidence": "大纲按先修、直觉、机制、工程意义、案例、误区和回顾组织；因缺少下一课信息，明确跨章衔接仍是缺口。"
+          },
+          "来源与不确定性": {
+            "score": 4,
+            "max": 25,
+            "evidence": "所有资源均保持为 metadata-only 候选并显式标为 gap，但没有可访问正文或注册表解析结果，无法支撑正式章节。"
+          },
+          "教学可读性与例子": {
+            "score": 13,
+            "max": 20,
+            "evidence": "大纲包含三案例演练和三类误区，但本任务不产出完整教学段落，尚不能验证自包含学习体验。"
+          },
+          "版权与数据契约": {
+            "score": 10,
+            "max": 10,
+            "evidence": "输出为纯数据；未生成 HTML、正式 knowledgeNote、evidence 映射或虚构 sourceIds；课程字段与候选来源分离。"
+          }
+        },
+        "total": 69,
+        "max": 100,
+        "releaseGate": "failed",
+        "releaseGateReasons": [
+          "总分低于 85。",
+          "项目资源注册表解析未执行。",
+          "核心受评产出缺少可访问资源正文证据。"
+        ],
+        "evidenceRoleCorrections": "全部 metadata-only 资源均降为 extension；未根据出版方、标题或材料类型猜测 authority。",
+        "courseFieldProvenanceViolations": [],
+        "remainingLimitations": [
+          "候选来源的实际覆盖范围、冲突、版本语义和可引用内容均待正文核验。",
+          "视频候选缺少可访问字幕或等价正文。",
+          "当前结果只能用于后续取证和章节设计，不能作为可发布知识笔记。"
+        ]
+      }
+    }
+  }
+}
+```
+
+#### Independent audit
+
+| 检查项 | 结果 | 说明 |
+| --- | --- | --- |
+| requested shape | 通过 | 恰好三个顶层请求产物：`outline`、`sourceRoles`、`coverageMatrix`。 |
+| metadata-only roles | 通过 | 10/10 来源均为 `extension`，正文不可用；两项视频额外保留 transcript 缺口。 |
+| authority | 通过 | 10/10 均为 `authorityStatus: unresolved`，没有根据 publisher、标题或材料类型猜测 authority enum。 |
+| registry isolation | 通过 | 10/10 均为 `registryStatus: not validated`，没有声称读取或匹配 registry。 |
+| provenance separation | 通过 | 课程字段只进入 `courseFieldBasis`；资源 evidence 全部保持 gap。 |
+| assessed coverage | 通过 | coverage matrix 含 14 行：2 objectives、2 concept groups、2 quiz、3 interview、2 exercise steps、1 deliverable、2 completion criteria。 |
+| mandatory audits | 通过 | `brokenReferenceCount: null`；tests 为 N/A 且原因完整。 |
+| publishable structures | 通过 | 无正式 `knowledgeNote`、`evidence` map、章节 `sourceIds` 或 fake IDs。 |
+| release gate | 通过 | rubric 为 69/100，正文证据和 registry 门禁失败，正确保持 blocked。 |
+
+该运行使用纠正后的 quiz 2 选项（包含“向量数据库”和“多个协作 Agent”），是 commit `b809923` 的 agent-01 final behavior proof。
+
+### FINAL BLIND 结论
+
+只有 `/blind_llm_final` 与 `/blind_agent01_final_v2` 两个基于 commit `b809923` 的运行构成最终行为证明。更早的 v3 mandatory-audit 复测直接泄露了验收字段，不能单独充当 blind proof；第一轮 blind RED 与 REFACTOR 1 authority 盲测失败均是真实 TDD 证据；被排除的 `/blind_agent01_final` 因错误冻结输入和越界 registry 声明不属于证据集。
