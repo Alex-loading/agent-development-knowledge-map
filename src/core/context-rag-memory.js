@@ -16,6 +16,15 @@ const PROJECTION_TYPES = new Set([
   'raw',
 ]);
 
+const CONTEXT_PROJECTIONS_BY_LAYER = new Map([
+  ['static-instruction', new Set(['instruction'])],
+  ['current-turn', new Set(['current-turn'])],
+  ['conversation-state', new Set(['state-projection'])],
+  ['corpus', new Set(['retrieval-evidence', 'raw'])],
+  ['checkpoint', new Set(['state-projection', 'raw'])],
+  ['long-term-memory', new Set(['memory-projection'])],
+]);
+
 const CONTEXT_STRATEGIES = new Set(['recent-first', 'evidence-first']);
 const CONTEXT_STATUSES = new Set(['active', 'expired', 'superseded']);
 
@@ -67,6 +76,9 @@ function assertContextItem(item, index, ids) {
   }
   if (!PROJECTION_TYPES.has(item.projectionType)) {
     throw new RangeError(`${name}.projectionType is not supported`);
+  }
+  if (!CONTEXT_PROJECTIONS_BY_LAYER.get(item.layer).has(item.projectionType)) {
+    throw new RangeError(`${name} layer and projectionType combination is not supported`);
   }
   assertSafeInteger(item.tokenCost, `${name}.tokenCost`);
   assertNonEmptyString(item.sourceRef, `${name}.sourceRef`);
@@ -460,6 +472,11 @@ function createMemoryRecord(event, policy, now) {
   };
 }
 
+function isMemoryEffectiveAt(record, now) {
+  return record.status === 'active'
+    && (record.expiresAt === null || record.expiresAt > now);
+}
+
 export function applyMemoryEvent(state, event, policy, now) {
   const recordIds = assertMemoryState(state);
   assertPlainObject(event, 'event');
@@ -499,8 +516,8 @@ export function applyMemoryEvent(state, event, policy, now) {
     assertNonEmptyString(event.targetId, 'event.targetId');
     const target = nextState.records.find(({ id }) => id === event.targetId);
     if (!target) throw new RangeError(`memory target not found: ${event.targetId}`);
-    if (target.status !== 'active') {
-      throw new RangeError('only an active memory record can be corrected');
+    if (!isMemoryEffectiveAt(target, now)) {
+      throw new RangeError('only an active, unexpired memory record can be corrected');
     }
     if (target.subject !== event.subject
       || target.key !== event.key
@@ -514,7 +531,7 @@ export function applyMemoryEvent(state, event, policy, now) {
   }
 
   const duplicateValue = nextState.records.some((record) => (
-    record.status === 'active'
+    isMemoryEffectiveAt(record, now)
     && record.subject === event.subject
     && record.key === event.key
     && record.value === event.value
@@ -540,21 +557,21 @@ export function recallMemory(state, query, now) {
   assertNonEmptyString(query.scope, 'query.scope');
   assertNonEmptyString(query.text, 'query.text');
   const queryTerms = memoryTerms(query.text);
+  if (queryTerms.size === 0) {
+    throw new RangeError('query.text must contain at least one searchable term');
+  }
   const recalled = [];
   const excluded = [];
 
   for (const record of state.records) {
     if (record.subject !== query.subject || record.scope !== query.scope) continue;
-    if (record.status === 'superseded') {
-      excluded.push({ id: record.id, reason: 'superseded' });
-      continue;
-    }
-    if (record.status === 'deleted') {
-      excluded.push({ id: record.id, reason: 'deleted' });
-      continue;
-    }
-    if (record.expiresAt !== null && record.expiresAt <= now) {
-      excluded.push({ id: record.id, reason: 'expired' });
+    if (!isMemoryEffectiveAt(record, now)) {
+      const reason = record.status === 'superseded'
+        ? 'superseded'
+        : record.status === 'deleted'
+          ? 'deleted'
+          : 'expired';
+      excluded.push({ id: record.id, reason });
       continue;
     }
     const searchableTerms = memoryTerms(`${record.key} ${record.value}`);

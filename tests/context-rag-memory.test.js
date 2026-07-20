@@ -164,6 +164,28 @@ test('assembleContext validates budgets, policies, identifiers, layers, projecti
   for (const call of invalidCalls) assert.throws(call);
 });
 
+test('assembleContext rejects projection types that attempt to elevate a storage layer', () => {
+  const corpusAsInstruction = contextItem('corpus-attack', {
+    layer: 'corpus',
+    projectionType: 'instruction',
+    required: true,
+  });
+  const checkpointAsTurn = contextItem('checkpoint-attack', {
+    layer: 'checkpoint',
+    projectionType: 'current-turn',
+    required: true,
+  });
+
+  assert.throws(
+    () => assembleContext([corpusAsInstruction], 10, 0, { strategy: 'recent-first' }),
+    /layer.*projection|projection.*layer|combination/i,
+  );
+  assert.throws(
+    () => assembleContext([checkpointAsTurn], 10, 0, { strategy: 'recent-first' }),
+    /layer.*projection|projection.*layer|combination/i,
+  );
+});
+
 function chunk(id, overrides = {}) {
   return {
     id,
@@ -543,6 +565,51 @@ test('recallMemory breaks equal-score ties by newest observedAt then ID', () => 
   }, 22);
 
   assert.deepEqual(result.records.map(({ id }) => id), ['new-a', 'new-b', 'same-z']);
+});
+
+test('recallMemory rejects punctuation-only and emoji-only queries instead of recalling everything', () => {
+  const state = applyMemoryEvent(
+    memoryState(),
+    saveEvent('private-memory'),
+    memoryPolicy(),
+    20,
+  ).state;
+
+  for (const text of ['!!! ...', '🤖✨']) {
+    assert.throws(() => recallMemory(state, {
+      subject: 'user-1', scope: 'assistant', text,
+    }, 21), /searchable|term|query/i);
+  }
+});
+
+test('memory expiry boundary permits re-save and rejects correction of expired records', () => {
+  const stored = applyMemoryEvent(memoryState(), saveEvent('temporary-old', {
+    ttl: 5,
+  }), memoryPolicy(), 20).state;
+  const snapshot = structuredClone(stored);
+
+  const recalledAtExpiry = recallMemory(stored, {
+    subject: 'user-1', scope: 'assistant', text: 'editor',
+  }, 25);
+  assert.deepEqual(recalledAtExpiry.records, []);
+  assert.deepEqual(recalledAtExpiry.excluded, [{
+    id: 'temporary-old', reason: 'expired',
+  }]);
+
+  const resaved = applyMemoryEvent(stored, saveEvent('temporary-new', {
+    ttl: 5,
+    sourceRef: 'turn:2',
+  }), memoryPolicy(), 25);
+  assert.equal(resaved.action, 'store');
+  assert.equal(resaved.state.records.length, 2);
+  assert.equal(resaved.state.records[1].id, 'temporary-new');
+
+  assert.throws(() => applyMemoryEvent(stored, {
+    ...saveEvent('temporary-correction', { value: 'Zed', sourceRef: 'turn:3' }),
+    type: 'correct',
+    targetId: 'temporary-old',
+  }, memoryPolicy(), 25), /expired|active/i);
+  assert.deepEqual(stored, snapshot);
 });
 
 test('applyMemoryEvent uses supplied time for advance-time and never accepts clock rollback', () => {
