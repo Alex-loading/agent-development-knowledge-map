@@ -87,6 +87,23 @@ test('paper-lab styles include responsive, focus, motion and design tokens', asy
   assert.match(styles, /\.notice/i);
 });
 
+test('long-form knowledge notes use a responsive paper-lab reading layout', async () => {
+  const styles = await read('styles/app.css');
+
+  for (const selector of [
+    '.knowledge-note',
+    '.knowledge-note__toc',
+    '.knowledge-note__section',
+    '.knowledge-note__sources',
+    '.knowledge-note__callout',
+    '.knowledge-note__misconceptions',
+    '.knowledge-note__recap',
+  ]) {
+    assert.ok(styles.includes(selector), `missing long-form note style ${selector}`);
+  }
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.knowledge-note__section/s);
+});
+
 test('small-text palette tokens meet WCAG AA contrast on paper', async () => {
   const tokens = await read('styles/tokens.css');
   const paper = cssHex(tokens, '--color-paper');
@@ -168,6 +185,7 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
     read('src/ui/resources.js'),
     read('src/ui/interviews.js'),
     read('src/ui/progress-view.js'),
+    read('src/ui/knowledge-note.js'),
   ]);
   const source = `${dom}\n${shell}\n${app}\n${genericViews.join('\n')}`;
   const genericViewSource = `${shell}\n${genericViews.join('\n')}`;
