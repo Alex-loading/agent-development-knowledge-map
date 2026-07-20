@@ -2,9 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { normalizeRoute } from '../src/app.js';
+import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { externalLink } from '../src/ui/dom.js';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+
+function markdownSection(markdown, heading) {
+  const marker = `## ${heading}`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `README should contain section ${heading}`);
+  const contentStart = start + marker.length;
+  const nextHeading = markdown.indexOf('\n## ', contentStart);
+  return markdown.slice(contentStart, nextHeading === -1 ? markdown.length : nextHeading);
+}
 
 function cssHex(tokens, name) {
   const value = tokens.match(new RegExp(`${name}:\\s*(#[0-9a-f]{6})`, 'i'))?.[1];
@@ -231,7 +241,7 @@ test('release guide documents operation, architecture, privacy and the extension
   for (const category of ['课程', '资源', '练习', '面试高频']) {
     assert.match(readme, new RegExp(`必(?:须|需)[^\n]{0,40}${category}|${category}[^\n]{0,40}必(?:须|需)`));
   }
-  for (const planned of ['Agent 机制', 'Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
+  for (const planned of ['Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
     assert.ok(readme.includes(planned), `README should identify planned module ${planned}`);
   }
 
@@ -254,6 +264,79 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /(?:抛出|不可用|阻止)[^\n]{0,50}memory|memory[^\n]{0,50}(?:抛出|不可用|阻止)/i);
   assert.match(readme, /`prerequisites`/);
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
+});
+
+test('release guide publishes both complete modules with counts and canonical route examples', async () => {
+  const readme = await read('README.md');
+  const status = markdownSection(readme, '当前状态');
+
+  assert.match(status, /LLM 基础[^\n]{0,30}(?:完整|完成)/);
+  assert.match(status, /Agent 机制[^\n]{0,30}(?:完整|完成)/);
+  assert.match(status, /Agent 机制[\s\S]{0,400}8\s*节[\s\S]{0,200}28\s*(?:份|条)[^\n]{0,30}资源[\s\S]{0,200}24\s*(?:道|条)[^\n]{0,30}面试[\s\S]{0,200}3\s*(?:个|项)[^\n]{0,30}实验/);
+
+  for (const route of [
+    '#llm-foundation/dashboard',
+    '#llm-foundation/lesson/llm-04',
+    '#agent-mechanism/dashboard',
+    '#agent-mechanism/lesson/agent-04',
+  ]) {
+    assert.ok(readme.includes(route), `README should document route ${route}`);
+  }
+});
+
+test('release guide maps all Agent lessons and its three interactive labs', async () => {
+  const readme = await read('README.md');
+  const map = markdownSection(readme, 'Agent 机制课程地图');
+
+  for (const lesson of agentMechanism.lessons) {
+    assert.ok(map.includes(`\`${lesson.id}\``), `README should list ${lesson.id}`);
+    assert.ok(map.includes(lesson.title), `README should name ${lesson.title}`);
+  }
+  for (const lab of [
+    ['tool-contract', '工具契约检查台'],
+    ['agent-loop', 'Agent Loop 决策台'],
+    ['plan-recovery', '计划恢复棋盘'],
+  ]) {
+    assert.ok(map.includes(`\`${lab[0]}\``), `README should list ${lab[0]}`);
+    assert.ok(map.includes(lab[1]), `README should name ${lab[1]}`);
+  }
+});
+
+test('release guide records multi-module state isolation and evidence labels as completed facts', async () => {
+  const readme = await read('README.md');
+
+  assert.match(readme, /内容\s*ID[^\n]{0,50}全局唯一/);
+  assert.match(readme, /汇总[^\n]{0,50}当前(?:\s*course|课程)/i);
+  assert.match(readme, /重置[^\n]{0,80}(?:整个|整份)[^\n]{0,40}agent-learner:progress:v1/);
+  for (const stateName of [
+    'resourceFiltersByModule',
+    'interviewFiltersByModule',
+    'revealedInterviewIdsByModule',
+  ]) {
+    assert.match(readme, new RegExp(`\\b${stateName}\\b[^\\n]{0,80}moduleId|moduleId[^\\n]{0,80}\\b${stateName}\\b`));
+  }
+  for (const label of ['来源', '类型', '难度', '阶段', '学习价值', 'verifiedAt']) {
+    assert.ok(readme.includes(label), `README should document resource evidence label ${label}`);
+  }
+  for (const file of ['agent-mechanism.js', 'core/agent-mechanism.js', 'ui/agent-experiments.js']) {
+    assert.ok(readme.includes(file), `README should document ${file}`);
+  }
+});
+
+test('release guide defines the Agent scope and keeps only the remaining six modules planned', async () => {
+  const readme = await read('README.md');
+  const boundary = markdownSection(readme, '后续模块边界');
+
+  for (const scope of ['单 Agent', '目标', '状态', '工具', 'loop', '规划', '恢复', '工作上下文', '终止']) {
+    assert.match(boundary, new RegExp(scope, 'i'), `README should define Agent scope: ${scope}`);
+  }
+  for (const later of ['Agent Harness', 'RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
+    assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
+  }
+  for (const planned of ['Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
+    assert.match(boundary, new RegExp(`${planned}[^\\n]{0,30}(?:planned|规划中)`, 'i'));
+  }
+  assert.doesNotMatch(readme, /Agent 机制[^\n]{0,30}(?:planned|规划中)/i);
 });
 
 test('styles explicitly protect 320px layouts, media and touch interactions', async () => {

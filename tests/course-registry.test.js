@@ -8,8 +8,19 @@ import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 
 function assertRegistryIdsAreUnique(selectIds, label) {
-  const ids = Object.values(courseRegistry).flatMap(selectIds);
+  const idsByCourse = Object.values(courseRegistry).map(selectIds);
+  const ids = idsByCourse.flat();
   assert.equal(new Set(ids).size, ids.length, `${label} 必须在课程内及跨课程全局唯一`);
+  for (let first = 0; first < idsByCourse.length; first += 1) {
+    for (let second = first + 1; second < idsByCourse.length; second += 1) {
+      const otherCourseIds = new Set(idsByCourse[second]);
+      assert.deepEqual(
+        idsByCourse[first].filter((id) => otherCourseIds.has(id)),
+        [],
+        `${label} 在任意两门课程间都不能重复`,
+      );
+    }
+  }
 }
 
 test('production course registry is immutable and resolves both active courses', () => {
@@ -69,17 +80,15 @@ test('route resolver falls back for active modules without a course', () => {
   assert.deepEqual(resolveRoute('#unknown/dashboard', options), fallback);
 });
 
-test('all registry-backed content IDs are globally unique by entity type', () => {
-  assertRegistryIdsAreUnique((course) => course.lessons.map(({ id }) => id), 'lesson id');
-  assertRegistryIdsAreUnique((course) => course.resources.map(({ id }) => id), 'resource id');
-  assertRegistryIdsAreUnique(
-    (course) => course.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id)),
-    'quiz id',
-  );
-  assertRegistryIdsAreUnique(
-    (course) => course.interviewQuestions.map(({ id }) => id),
-    'interview id',
-  );
+test('lesson, resource, quiz and interview IDs are globally unique across courses', () => {
+  const selectors = [
+    ['lesson id', (course) => course.lessons.map(({ id }) => id)],
+    ['resource id', (course) => course.resources.map(({ id }) => id)],
+    ['quiz id', (course) => course.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id))],
+    ['interview id', (course) => course.interviewQuestions.map(({ id }) => id)],
+  ];
+  for (const [label, selectIds] of selectors) assertRegistryIdsAreUnique(selectIds, label);
+
   assertRegistryIdsAreUnique((course) => [
     ...course.lessons.map(({ id }) => id),
     ...course.resources.map(({ id }) => id),
