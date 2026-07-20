@@ -28,7 +28,7 @@ const sections = Object.freeze([
     ]),
     keyPoints: Object.freeze([
       '学习闭环由任务、数据、参数、目标或损失以及优化共同构成。',
-      '训练损失下降不等于业务目标达成，泛化必须由独立样例验证。',
+      '训练误差下降不等于已经泛化，需用未参与训练的验证数据检查过拟合。',
     ]),
     sourceIds: Object.freeze(['res-ms-ai', 'res-hf-llm']),
   }),
