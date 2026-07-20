@@ -150,6 +150,7 @@ export function reduceRun(state, event, policy) {
     return runResult(nextState, true, `terminal state ${state.status} is irreversible`);
   }
 
+  let stepBudgetExhausted = false;
   if (event.type === 'fail' || event.type === 'cancel' || event.type === 'timeout') {
     nextState.status = {
       fail: 'failed',
@@ -179,20 +180,23 @@ export function reduceRun(state, event, policy) {
     } else if (event.type === 'approve') {
       nextState.pendingApproval = null;
     } else if (event.type === 'step') {
-      const stepsUsed = nextState.stepsUsed + 1;
-      assertNonNegativeInteger(stepsUsed, 'next state stepsUsed');
-      nextState.stepsUsed = stepsUsed;
+      if (nextState.stepsUsed >= policy.maxSteps) {
+        nextState.status = 'failed';
+        stepBudgetExhausted = true;
+      } else {
+        const stepsUsed = nextState.stepsUsed + 1;
+        assertNonNegativeInteger(stepsUsed, 'next state stepsUsed');
+        nextState.stepsUsed = stepsUsed;
+      }
     }
 
-    nextState.status = event.type === 'step' && nextState.stepsUsed >= policy.maxSteps
-      ? 'failed'
-      : transition.to;
+    if (!stepBudgetExhausted) nextState.status = transition.to;
   }
 
   nextState.sequence = event.sequence;
   nextState.processedEventIds.push(event.eventId);
 
-  const reason = event.type === 'step' && nextState.status === 'failed'
+  const reason = stepBudgetExhausted
     ? 'step budget exhausted'
     : `event ${event.type} applied`;
   return runResult(nextState, false, reason);
@@ -238,6 +242,19 @@ export function planResume(input) {
   assertNumber(input.jitterFactor, 'input.jitterFactor');
   if (input.jitterFactor > 1) {
     throw new RangeError('input.jitterFactor must be between 0 and 1');
+  }
+
+  const hasSuccessEvidence = input.hasCompletionEvent
+    || input.idempotencyRecord === 'succeeded'
+    || input.remoteEvidence === 'succeeded';
+  const hasFailureEvidence = input.remoteEvidence === 'failed'
+    || input.errorKind === 'permanent';
+  if (hasSuccessEvidence && hasFailureEvidence) {
+    return resumeResult(
+      'manual',
+      '成功与失败证据冲突，需要人工对账',
+      ['evidenceConsistency'],
+    );
   }
 
   if (input.hasCompletionEvent || input.idempotencyRecord === 'succeeded') {

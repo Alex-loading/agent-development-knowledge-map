@@ -157,24 +157,47 @@ test('reduceRun keeps terminal states irreversible', () => {
   }
 });
 
-test('reduceRun counts steps and fails exactly at the step budget', () => {
-  const first = reduceRun(runState({ status: 'running' }), {
-    eventId: 'step-1',
-    sequence: 1,
+test('reduceRun allows the final budgeted step and can complete afterward', () => {
+  const fourth = reduceRun(runState({
+    status: 'running',
+    sequence: 3,
+    processedEventIds: ['step-1', 'step-2', 'step-3'],
+    stepsUsed: 3,
+  }), {
+    eventId: 'step-4',
+    sequence: 4,
     type: 'step',
-  }, { maxSteps: 2 });
-  assert.equal(first.state.status, 'running');
-  assert.equal(first.state.stepsUsed, 1);
+  }, { maxSteps: 4 });
+  assert.equal(fourth.rejected, false);
+  assert.equal(fourth.state.status, 'running');
+  assert.equal(fourth.state.stepsUsed, 4);
 
-  const second = reduceRun(first.state, {
-    eventId: 'step-2',
-    sequence: 2,
+  const completed = reduceRun(fourth.state, {
+    eventId: 'complete-5',
+    sequence: 5,
+    type: 'complete',
+  }, { maxSteps: 4 });
+  assert.equal(completed.rejected, false);
+  assert.equal(completed.state.status, 'succeeded');
+  assert.equal(completed.state.stepsUsed, 4);
+});
+
+test('reduceRun fails an extra step after budget exhaustion without incrementing usage', () => {
+  const result = reduceRun(runState({
+    status: 'running',
+    sequence: 4,
+    processedEventIds: ['step-1', 'step-2', 'step-3', 'step-4'],
+    stepsUsed: 4,
+  }), {
+    eventId: 'step-5',
+    sequence: 5,
     type: 'step',
-  }, { maxSteps: 2 });
-  assert.equal(second.rejected, false);
-  assert.equal(second.state.status, 'failed');
-  assert.equal(second.state.stepsUsed, 2);
-  assert.match(second.reason, /step|步骤|budget|预算/i);
+  }, { maxSteps: 4 });
+
+  assert.equal(result.rejected, false);
+  assert.equal(result.state.status, 'failed');
+  assert.equal(result.state.stepsUsed, 4);
+  assert.match(result.reason, /step|步骤|budget|预算/i);
 });
 
 test('reduceRun does not mutate state, event, or policy', () => {
@@ -250,11 +273,13 @@ test('reduceRun rejects unsafe integer state, event, and policy values', () => {
     event,
     { maxSteps: unsafeInteger },
   ), RangeError);
-  assert.throws(() => reduceRun(
+  const exhausted = reduceRun(
     runState({ status: 'running', stepsUsed: Number.MAX_SAFE_INTEGER }),
     { eventId: 'step-limit', sequence: 1, type: 'step' },
     { maxSteps: Number.MAX_SAFE_INTEGER },
-  ), RangeError);
+  );
+  assert.equal(exhausted.state.status, 'failed');
+  assert.equal(exhausted.state.stepsUsed, Number.MAX_SAFE_INTEGER);
 });
 
 test('reduceRun enforces the pending approval state invariant before approve', () => {
@@ -291,13 +316,34 @@ function resumeInput(overrides = {}) {
 
 test('planResume skips completed or idempotently succeeded calls with highest priority', () => {
   for (const input of [
-    resumeInput({ hasCompletionEvent: true, errorKind: 'permanent', remoteEvidence: 'failed' }),
-    resumeInput({ idempotencyRecord: 'succeeded', errorKind: 'permanent' }),
+    resumeInput({ hasCompletionEvent: true }),
+    resumeInput({ idempotencyRecord: 'succeeded' }),
   ]) {
     const result = planResume(input);
     assert.equal(result.decision, 'skip');
     assert.deepEqual(result.missingEvidence, []);
     assert.equal(result.nextAttemptAt, null);
+  }
+});
+
+test('planResume sends contradictory success and failure evidence to manual reconciliation', () => {
+  const expected = {
+    decision: 'manual',
+    reason: '成功与失败证据冲突，需要人工对账',
+    missingEvidence: ['evidenceConsistency'],
+    nextAttemptAt: null,
+  };
+
+  for (const input of [
+    resumeInput({
+      hasCompletionEvent: true,
+      remoteEvidence: 'failed',
+      errorKind: 'permanent',
+    }),
+    resumeInput({ idempotencyRecord: 'succeeded', remoteEvidence: 'failed' }),
+    resumeInput({ remoteEvidence: 'succeeded', errorKind: 'permanent' }),
+  ]) {
+    assert.deepEqual(planResume(input), expected);
   }
 });
 
