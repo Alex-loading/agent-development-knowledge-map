@@ -371,7 +371,7 @@ function assertNullableSafeInteger(value, name) {
   if (value !== null) assertSafeInteger(value, name);
 }
 
-function assertMemoryRecord(record, index, ids) {
+function assertMemoryRecord(record, index, ids, clock) {
   const name = `state.records[${index}]`;
   assertPlainObject(record, name);
   for (const field of ['id', 'subject', 'key', 'value', 'scope', 'sourceRef', 'sensitivity']) {
@@ -381,7 +381,13 @@ function assertMemoryRecord(record, index, ids) {
   ids.add(record.id);
   assertFiniteNumber(record.confidence, `${name}.confidence`, { minimum: 0, maximum: 1 });
   assertSafeInteger(record.observedAt, `${name}.observedAt`);
+  if (record.observedAt > clock) {
+    throw new RangeError(`${name}.observedAt must not be after state.clock`);
+  }
   assertNullableSafeInteger(record.expiresAt, `${name}.expiresAt`);
+  if (record.expiresAt !== null && record.expiresAt < record.observedAt) {
+    throw new RangeError(`${name}.expiresAt must not be before observedAt`);
+  }
   if (!MEMORY_STATUSES.has(record.status)) {
     throw new RangeError(`${name}.status is not supported`);
   }
@@ -395,6 +401,13 @@ function assertMemoryRecord(record, index, ids) {
   if (record.status === 'deleted' && record.deletedAt === null) {
     throw new RangeError(`${name}.deletedAt is required for deleted records`);
   }
+  if (record.status !== 'deleted' && record.deletedAt !== null) {
+    throw new RangeError(`${name}.deletedAt must be null outside deleted status`);
+  }
+  if (record.deletedAt !== null
+    && (record.deletedAt < record.observedAt || record.deletedAt > clock)) {
+    throw new RangeError(`${name}.deletedAt must be between observedAt and state.clock`);
+  }
 }
 
 function assertMemoryState(state) {
@@ -402,7 +415,9 @@ function assertMemoryState(state) {
   assertSafeInteger(state.clock, 'state.clock');
   if (!Array.isArray(state.records)) throw new TypeError('state.records must be an array');
   const ids = new Set();
-  state.records.forEach((record, index) => assertMemoryRecord(record, index, ids));
+  state.records.forEach((record, index) => (
+    assertMemoryRecord(record, index, ids, state.clock)
+  ));
   return ids;
 }
 
@@ -488,7 +503,27 @@ export function applyMemoryEvent(state, event, policy, now) {
   const nextState = cloneMemoryState(state, now);
 
   if (event.type === 'advance-time') {
-    return memoryResult(nextState, 'advance-time', 'memory clock advanced');
+    const expiredRecordIds = state.records
+      .filter((record) => (
+        isMemoryEffectiveAt(record, state.clock)
+        && !isMemoryEffectiveAt(record, now)
+      ))
+      .map(({ id }) => id)
+      .sort(compareText);
+    if (expiredRecordIds.length > 0) {
+      return {
+        ...memoryResult(
+          nextState,
+          'expire',
+          `${expiredRecordIds.length} memory record(s) expired while advancing clock`,
+        ),
+        expiredRecordIds,
+      };
+    }
+    return {
+      ...memoryResult(nextState, 'advance-time', 'memory clock advanced without expiry'),
+      expiredRecordIds,
+    };
   }
 
   if (event.type === 'delete') {

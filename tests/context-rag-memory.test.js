@@ -404,6 +404,25 @@ function saveEvent(id, overrides = {}) {
   };
 }
 
+function memoryRecord(id, overrides = {}) {
+  return {
+    id,
+    subject: 'user-1',
+    key: `key-${id}`,
+    value: `value-${id}`,
+    scope: 'assistant',
+    sourceRef: `turn:${id}`,
+    confidence: 1,
+    sensitivity: 'normal',
+    observedAt: 5,
+    expiresAt: null,
+    status: 'active',
+    supersededBy: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
 test('applyMemoryEvent stores explicit saves with complete lifecycle fields and no mutation', () => {
   const state = memoryState();
   const event = saveEvent('memory-1');
@@ -630,6 +649,121 @@ test('applyMemoryEvent uses supplied time for advance-time and never accepts clo
   assert.throws(() => recallMemory(advanced.state, {
     subject: 'user-1', scope: 'assistant', text: 'editor',
   }, 49), /clock|time/i);
+});
+
+test('memory state rejects future observations in both apply and recall without mutation', () => {
+  const state = memoryState({
+    clock: 10,
+    records: [memoryRecord('future', { observedAt: 11 })],
+  });
+  const snapshot = structuredClone(state);
+
+  assert.throws(() => applyMemoryEvent(
+    state,
+    { type: 'advance-time' },
+    memoryPolicy(),
+    20,
+  ), /observedAt|clock|future/i);
+  assert.throws(() => recallMemory(state, {
+    subject: 'user-1', scope: 'assistant', text: 'future',
+  }, 20), /observedAt|clock|future/i);
+  assert.deepEqual(state, snapshot);
+});
+
+test('memory state rejects inconsistent expiry and deletion timestamps', () => {
+  const invalidStates = [
+    memoryState({
+      records: [memoryRecord('expiry-before-observation', {
+        observedAt: 5, expiresAt: 4,
+      })],
+    }),
+    memoryState({
+      records: [memoryRecord('deletion-before-observation', {
+        observedAt: 5, status: 'deleted', deletedAt: 4,
+      })],
+    }),
+    memoryState({
+      records: [memoryRecord('deletion-after-clock', {
+        observedAt: 5, status: 'deleted', deletedAt: 11,
+      })],
+    }),
+    memoryState({
+      records: [memoryRecord('active-with-deletion', {
+        observedAt: 5, status: 'active', deletedAt: 6,
+      })],
+    }),
+  ];
+
+  for (const state of invalidStates) {
+    assert.throws(() => applyMemoryEvent(
+      state,
+      { type: 'advance-time' },
+      memoryPolicy(),
+      20,
+    ), /observedAt|expiresAt|deletedAt|clock|deleted/i);
+  }
+
+  const expiresAtObservation = memoryState({
+    records: [memoryRecord('immediate-expiry', { observedAt: 5, expiresAt: 5 })],
+  });
+  assert.doesNotThrow(() => recallMemory(expiresAtObservation, {
+    subject: 'user-1', scope: 'assistant', text: 'immediate expiry',
+  }, 10));
+});
+
+test('advance-time reports records crossing the TTL boundary in stable ID order', () => {
+  let state = applyMemoryEvent(memoryState(), saveEvent('expires-z', {
+    key: 'temporary-z', value: 'z', ttl: 5,
+  }), memoryPolicy(), 20).state;
+  state = applyMemoryEvent(state, saveEvent('expires-a', {
+    key: 'temporary-a', value: 'a', ttl: 4,
+  }), memoryPolicy(), 21).state;
+
+  const result = applyMemoryEvent(
+    state,
+    { type: 'advance-time' },
+    memoryPolicy(),
+    25,
+  );
+
+  assert.equal(result.action, 'expire');
+  assert.match(result.reason, /expire|expired|到期/i);
+  assert.deepEqual(result.expiredRecordIds, ['expires-a', 'expires-z']);
+  assert.equal(result.state.clock, 25);
+  assert.ok(result.state.records.every(({ status }) => status === 'active'));
+});
+
+test('advance-time does not re-emit already expired records and remains a no-op without crossings', () => {
+  const stored = applyMemoryEvent(memoryState(), saveEvent('expires-once', {
+    ttl: 5,
+  }), memoryPolicy(), 20).state;
+  const first = applyMemoryEvent(
+    stored,
+    { type: 'advance-time' },
+    memoryPolicy(),
+    25,
+  );
+  assert.equal(first.action, 'expire');
+  assert.deepEqual(first.expiredRecordIds, ['expires-once']);
+
+  const second = applyMemoryEvent(
+    first.state,
+    { type: 'advance-time' },
+    memoryPolicy(),
+    30,
+  );
+  assert.equal(second.action, 'advance-time');
+  assert.deepEqual(second.expiredRecordIds, []);
+
+  const withoutTtl = applyMemoryEvent(memoryState(), saveEvent('persistent'), memoryPolicy(), 20).state;
+  const noExpiry = applyMemoryEvent(
+    withoutTtl,
+    { type: 'advance-time' },
+    memoryPolicy(),
+    30,
+  );
+  assert.equal(noExpiry.action, 'advance-time');
+  assert.deepEqual(noExpiry.expiredRecordIds, []);
 });
 
 test('memory lifecycle validates events, state identity and required provenance fields', () => {

@@ -1451,6 +1451,7 @@ test('memory lifecycle experiment applies preset events and keeps recall subject
   assert.ok(result.textContent.includes('superseded records'));
 
   lab.querySelector('#memory-event-advance-time').click();
+  assert.equal(result.dataset.action, 'expire');
   assert.ok(result.textContent.includes('expired records'));
   lab.querySelector('#memory-event-delete').click();
   assert.equal(result.dataset.action, 'delete');
