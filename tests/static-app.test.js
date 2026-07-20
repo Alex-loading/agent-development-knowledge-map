@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { normalizeRoute } from '../src/app.js';
+import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { llmFoundation } from '../src/data/llm-foundation.js';
 import { externalLink } from '../src/ui/dom.js';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -142,13 +144,19 @@ test('malformed and non-HTTPS external resources are non-clickable and disabled'
   }
 });
 
-test('application modules avoid unsafe HTML rendering and inline handlers', async () => {
-  const [dom, shell, app] = await Promise.all([
+test('application modules avoid unsafe HTML rendering, inline handlers and course hardcoding', async () => {
+  const [dom, shell, app, ...genericViews] = await Promise.all([
     read('src/ui/dom.js'),
     read('src/ui/shell.js'),
     read('src/app.js'),
+    read('src/ui/dashboard.js'),
+    read('src/ui/curriculum.js'),
+    read('src/ui/knowledge-map.js'),
+    read('src/ui/resources.js'),
+    read('src/ui/interviews.js'),
+    read('src/ui/progress-view.js'),
   ]);
-  const source = `${dom}\n${shell}\n${app}`;
+  const source = `${dom}\n${shell}\n${app}\n${genericViews.join('\n')}`;
 
   assert.match(dom, /export function element\b/);
   assert.match(dom, /export function button\b/);
@@ -157,6 +165,7 @@ test('application modules avoid unsafe HTML rendering and inline handlers', asyn
   assert.match(app, /addEventListener\(['"]hashchange['"]/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /setAttribute\(['"]on/i);
+  assert.doesNotMatch(source, /\bagentHarness\b|Agent Harness|agent-harness/);
 });
 
 test('application integrates the dashboard, curriculum and knowledge-map renderers', async () => {
@@ -196,9 +205,10 @@ test('practice views are real renderers with paper-lab responsive component styl
 });
 
 test('Agent experiment renderers are isolated, safely registered and responsively styled', async () => {
-  const [experiments, agentExperiments, styles] = await Promise.all([
+  const [experiments, agentExperiments, harnessExperiments, styles] = await Promise.all([
     read('src/ui/experiments.js'),
     read('src/ui/agent-experiments.js'),
+    read('src/ui/harness-experiments.js'),
     read('styles/app.css'),
   ]);
 
@@ -215,7 +225,7 @@ test('Agent experiment renderers are isolated, safely registered and responsivel
   }
   assert.match(experiments, /import\s*\{\s*agentExperimentRenderers\s*\}\s*from ['"]\.\/agent-experiments\.js['"]/);
   assert.match(experiments, /Object\.freeze\s*\(\s*\{[\s\S]*\.\.\.agentExperimentRenderers[\s\S]*\}\s*\)/);
-  assert.doesNotMatch(`${experiments}\n${agentExperiments}`, /\.innerHTML\s*=|insertAdjacentHTML|setAttribute\(['"]on/i);
+  assert.doesNotMatch(`${experiments}\n${agentExperiments}\n${harnessExperiments}`, /\.innerHTML\s*=|insertAdjacentHTML|setAttribute\(['"]on/i);
 
   for (const selector of ['.agent-status-stamp', '.agent-decision-ledger', '.tool-invocation', '.tool-error-list']) {
     assert.ok(styles.includes(selector), `missing Agent lab style ${selector}`);
@@ -241,7 +251,7 @@ test('release guide documents operation, architecture, privacy and the extension
   for (const category of ['课程', '资源', '练习', '面试高频']) {
     assert.match(readme, new RegExp(`必(?:须|需)[^\n]{0,40}${category}|${category}[^\n]{0,40}必(?:须|需)`));
   }
-  for (const planned of ['Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
+  for (const planned of ['上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
     assert.ok(readme.includes(planned), `README should identify planned module ${planned}`);
   }
 
@@ -266,19 +276,32 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide publishes both complete modules with counts and canonical route examples', async () => {
+test('release guide publishes three complete modules with data-derived counts and canonical routes', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
 
-  assert.match(status, /LLM 基础[^\n]{0,30}(?:完整|完成)/);
-  assert.match(status, /Agent 机制[^\n]{0,30}(?:完整|完成)/);
-  assert.match(status, /Agent 机制[\s\S]{0,400}8\s*节[\s\S]{0,200}28\s*(?:份|条)[^\n]{0,30}资源[\s\S]{0,200}24\s*(?:道|条)[^\n]{0,30}面试[\s\S]{0,200}3\s*(?:个|项)[^\n]{0,30}实验/);
+  assert.match(status, /当前有三个完整模块/);
+  for (const course of [llmFoundation, agentMechanism, agentHarness]) {
+    const line = status.split('\n').find((candidate) => candidate.includes(course.title));
+    const quizCount = course.lessons.reduce((total, lesson) => total + lesson.quiz.length, 0);
+    const experimentCount = course.lessons.filter((lesson) => lesson.exercise.experiment).length;
+
+    assert.ok(line, `README should publish ${course.title} status`);
+    assert.match(line, /(?:完整|完成)/, `${course.title} should be complete`);
+    assert.match(line, new RegExp(`${course.lessons.length}\\s*节课程`));
+    assert.match(line, new RegExp(`${course.resources.length}\\s*(?:份|条)[^，。；]*资源`));
+    assert.match(line, new RegExp(`${course.interviewQuestions.length}\\s*(?:道|条)[^，。；]*面试`));
+    assert.match(line, new RegExp(`${quizCount}\\s*(?:道|个)?\\s*quiz`, 'i'));
+    assert.match(line, new RegExp(`${experimentCount}\\s*(?:个|项)[^，。；]*交互实验`));
+  }
 
   for (const route of [
     '#llm-foundation/dashboard',
     '#llm-foundation/lesson/llm-04',
     '#agent-mechanism/dashboard',
     '#agent-mechanism/lesson/agent-04',
+    '#agent-harness/dashboard',
+    '#agent-harness/lesson/harness-01',
   ]) {
     assert.ok(readme.includes(route), `README should document route ${route}`);
   }
@@ -302,6 +325,27 @@ test('release guide maps all Agent lessons and its three interactive labs', asyn
   }
 });
 
+test('release guide maps all Harness lessons, labs and deterministic simulation boundary', async () => {
+  const readme = await read('README.md');
+  const map = markdownSection(readme, 'Agent Harness 课程地图');
+
+  for (const lesson of agentHarness.lessons) {
+    assert.ok(map.includes(`\`${lesson.id}\``), `README should list ${lesson.id}`);
+    assert.ok(map.includes(lesson.title), `README should name ${lesson.title}`);
+  }
+  for (const [lessonId, experimentId] of [
+    ['harness-01', 'run-lifecycle'],
+    ['harness-06', 'retry-resume'],
+    ['harness-07', 'queue-backpressure'],
+  ]) {
+    const mappingLine = map.split('\n').find((line) => (
+      line.includes(`\`${lessonId}\``) && line.includes(`\`${experimentId}\``)
+    ));
+    assert.ok(mappingLine, `README should map ${experimentId} to ${lessonId}`);
+  }
+  assert.match(map, /确定性模拟[^\n]{0,180}(?:真实 worker|真实持久层)[^\n]{0,180}(?:真实外部系统|真实队列)/i);
+});
+
 test('release guide records multi-module state isolation and evidence labels as completed facts', async () => {
   const readme = await read('README.md');
 
@@ -318,25 +362,52 @@ test('release guide records multi-module state isolation and evidence labels as 
   for (const label of ['来源', '类型', '难度', '阶段', '学习价值', 'verifiedAt']) {
     assert.ok(readme.includes(label), `README should document resource evidence label ${label}`);
   }
-  for (const file of ['agent-mechanism.js', 'core/agent-mechanism.js', 'ui/agent-experiments.js']) {
+  for (const file of [
+    'src/data/llm-foundation.js',
+    'src/data/agent-mechanism.js',
+    'src/data/agent-harness.js',
+    'courseRegistry',
+    'src/core/agent-harness.js',
+    'src/ui/harness-experiments.js',
+    'core/agent-mechanism.js',
+    'ui/agent-experiments.js',
+  ]) {
     assert.ok(readme.includes(file), `README should document ${file}`);
   }
 });
 
-test('release guide defines the Agent scope and keeps only the remaining six modules planned', async () => {
+test('release guide marks Harness active with scope and keeps only five later modules planned', async () => {
   const readme = await read('README.md');
-  const boundary = markdownSection(readme, '后续模块边界');
+  const boundary = markdownSection(readme, '模块路线图与边界');
 
-  for (const scope of ['单 Agent', '目标', '状态', '工具', 'loop', '规划', '恢复', '工作上下文', '终止']) {
-    assert.match(boundary, new RegExp(scope, 'i'), `README should define Agent scope: ${scope}`);
+  assert.match(boundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
+  for (const scope of ['宿主 Runner', 'Run State', 'Event Log', 'Checkpoint', '权限', '人工审批', 'Sandbox', 'Budget', 'Timeout', 'Retry', 'Cancel', '幂等', 'Resume', '并发', '队列', '背压', 'Blocked', 'HITL', 'Handoff', '运行产物']) {
+    assert.match(boundary, new RegExp(scope, 'i'), `README should define Harness scope: ${scope}`);
   }
-  for (const later of ['Agent Harness', 'RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
+  for (const later of ['RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
     assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
   }
-  for (const planned of ['Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
+  const plannedModules = ['上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付'];
+  for (const planned of plannedModules) {
     assert.match(boundary, new RegExp(`${planned}[^\\n]{0,30}(?:planned|规划中)`, 'i'));
   }
+  assert.equal(boundary.split('\n').filter((line) => /(?:planned|规划中)/i.test(line)).length, 5);
   assert.doesNotMatch(readme, /Agent 机制[^\n]{0,30}(?:planned|规划中)/i);
+  assert.doesNotMatch(readme, /Agent Harness[^\n]{0,30}(?:planned|规划中)/i);
+  assert.doesNotMatch(readme, /两个完整模块|(?:其余|剩余)六个|六个[^\n]{0,20}(?:planned|规划中)/i);
+});
+
+test('release guide labels Harness evidence limits without judging uncollected platforms', async () => {
+  const readme = await read('README.md');
+  const evidence = markdownSection(readme, '资源准入与核验');
+
+  assert.match(evidence, /官方 SDK[^\n]{0,80}当前实现语义/);
+  assert.match(evidence, /checkpoint\s*\/\s*replay[^\n]{0,80}不可外推/i);
+  assert.match(evidence, /durable[^\n]{0,80}不保证[^\n]{0,80}exactly-once/i);
+  assert.match(evidence, /厂商文章[^\n]{0,80}工程经验/);
+  assert.match(evidence, /视频[^\n]{0,50}(?:仅|只)[^\n]{0,20}补充/);
+  assert.match(evidence, /小红书[^\n]{0,80}无稳定公开核验链接[^\n]{0,80}未收录/);
+  assert.doesNotMatch(evidence, /小红书[^\n]{0,50}(?:无|没有)[^\n]{0,20}优质内容/);
 });
 
 test('styles explicitly protect 320px layouts, media and touch interactions', async () => {

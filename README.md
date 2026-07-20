@@ -1,17 +1,18 @@
 # Agent Learner：Agent 开发知识地图
 
-Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交互式学习站。当前版本已经开放「LLM 基础」与「Agent 机制」两个完整模块：内容可学习、可练习、可复习、可记录进度，而不是只罗列链接。
+Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交互式学习站。当前版本已经开放「LLM 基础」「Agent 机制」与「Agent Harness」三个完整模块：内容可学习、可练习、可复习、可记录进度，而不是只罗列链接。
 
 页面采用“纸张研究实验室”视觉：暖色纸张底、深绿墨色、朱红索引与赭色批注。当前仓库未提交产品截图；启动本地服务即可查看桌面与移动端布局。
 
 ## 当前状态
 
-当前有两个完整模块：
+当前有三个完整模块：
 
-- **LLM 基础模块已完成**：8 节课程、28 份已记录核验日期的资源、24 道面试题和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
-- **Agent 机制模块已完成**：8 节课程、28 份已记录核验日期的资源、24 道面试题和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
+- **LLM 基础模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
+- **Agent 机制模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
+- **Agent Harness 模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖宿主 Runner、状态与事件、工具治理、隔离、预算、可靠恢复、并发调度和人工接力。
 
-两个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余六个目录模块仍未开放，范围见“后续模块边界”。
+三个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余五个目录模块仍未开放，范围见“模块路线图与边界”。
 
 ## 功能导览
 
@@ -34,13 +35,15 @@ LLM 基础的三项概念实验嵌在对应课程内：
 
 ## 模块切换与路由
 
-使用页头的模块选择器可在 LLM 基础与 Agent 机制之间切换；六个一级视图会沿用当前 `moduleId`，不会把一个模块的临时筛选带到另一个模块。Hash 路由的规范示例是：
+使用页头的模块选择器可在 LLM 基础、Agent 机制与 Agent Harness 之间切换；六个一级视图会沿用当前 `moduleId`，不会把一个模块的临时筛选带到另一个模块。Hash 路由的规范示例是：
 
 ```text
 #llm-foundation/dashboard
 #llm-foundation/lesson/llm-04
 #agent-mechanism/dashboard
 #agent-mechanism/lesson/agent-04
+#agent-harness/dashboard
+#agent-harness/lesson/harness-01
 ```
 
 模块必须同时在目录中标记为 `active` 并注册到 `courseRegistry` 才能打开；无效模块或课程 ID 会回退到默认模块首页。
@@ -64,20 +67,42 @@ Agent 机制是一条从控制权判断到综合设计的八节单 Agent 主线�
 - `agent-04` / `agent-loop`：**Agent Loop 决策台**，观察完成、阻塞、继续和预算耗尽的优先级；
 - `agent-05` / `plan-recovery`：**计划恢复棋盘**，触发 retry、switch-action、replace-step、replan 与 blocked。
 
-## 后续模块边界
+## Agent Harness 课程地图
+
+Agent Harness 是一条从宿主执行入口到可靠调度、人工接力与运行产物的八节工程主线：
+
+1. `harness-01` **Harness 与宿主 Runner**：明确模型、Agent loop、Harness 与宿主进程的职责边界，并定义 run 生命周期。
+2. `harness-02` **Run State、Event Log 与 Checkpoint**：用可序列化状态、追加事件和 checkpoint 支持审计与恢复。
+3. `harness-03` **工具注册、权限与人工审批**：把工具契约、最小权限、风险分级和审批决策放在模型之外执行。
+4. `harness-04` **Sandbox、隔离与资源边界**：比较进程、容器和 microVM 的隔离边界，并限制文件、网络、CPU 与内存。
+5. `harness-05` **Budget、Timeout、Retry 与 Cancel**：组合步骤、时间、费用预算和有限重试，保证取消能传播并收敛。
+6. `harness-06` **幂等副作用与安全 Resume**：用幂等键、调用账本、远端查询和补偿处理崩溃后的模糊窗口。
+7. `harness-07` **并发、队列与背压**：用租约、并发上限和过载策略调度长任务，避免无限积压。
+8. `harness-08` **Blocked、HITL、Handoff 与运行产物**：把无法自治完成的 run 转成可恢复、可交接、可验收的结果。
+
+三项交互实验与课程直接对应：
+
+- `harness-01` / `run-lifecycle`：**Run Lifecycle 状态台**，按事件观察 run 的合法转换、终态守卫与步骤预算；
+- `harness-06` / `retry-resume`：**Retry / Resume 恢复决策台**，根据错误、幂等记录与远端证据选择跳过、对账、重试或人工处理；
+- `harness-07` / `queue-backpressure`：**Queue / Backpressure 调度台**，观察 worker 容量、队列阈值、拒绝与取消策略。
+
+三项实验均为确定性模拟，只呈现输入对应的控制决策；它们不是真实 worker 或真实持久层，也不调用真实外部系统或真实队列，因此不能用于推断生产吞吐、故障概率或隔离强度。
+
+## 模块路线图与边界
 
 已开放的 Agent 机制模块只讲**单 Agent**：目标、状态、工具、loop、规划、恢复、工作上下文和终止。它建立的是机制层心智模型，不把生产运行时、知识检索、评测治理或分布式协作提前塞进同一门课。
 
-以下六个模块仍只有目录与依赖元数据：
+**Agent Harness**：active（已开放）。范围是宿主 Runner、Run State、Event Log、Checkpoint、工具权限与人工审批、Sandbox 隔离、Budget / Timeout / Retry / Cancel、幂等副作用与安全 Resume、并发队列与背压，以及 Blocked / HITL / Handoff / 运行产物。它负责执行与恢复控制，但不提前覆盖 RAG 与长期记忆、完整后端服务、系统化评测治理或多 Agent 协议。
 
-- **Agent Harness**：planned（规划中），承接运行时、权限、沙箱、人工审批与工程编排；
+以下五个模块仍只有目录与依赖元数据：
+
 - **上下文、RAG 与记忆**：planned（规划中），承接检索、长期记忆、索引与上下文工程；
 - **AI 后端工程**：planned（规划中），承接服务、队列、数据与部署；
 - **评测、可观测与安全**：planned（规划中），承接离线/在线评测、追踪、风险与安全治理；
 - **多 Agent 与 MCP**：planned（规划中），承接多 Agent 协作、协议与 MCP 生态；
 - **求职与项目交付**：planned（规划中），承接作品集、系统设计与面试交付。
 
-因此 Harness、RAG / 记忆、评测安全以及多 Agent / MCP 均属于后续模块；目录卡片不代表课程已开放。
+因此 RAG / 记忆、完整 AI 后端、评测治理、多 Agent / MCP 与求职交付仍属于后续模块；目录卡片不代表课程已开放。
 
 ## 快速开始
 
@@ -115,10 +140,10 @@ agent-learner:progress:v1
 data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路由与事件） -> storage（本地持久化）
 ```
 
-- `src/data/` 保存模块目录、课程事实和 `courses.js` 注册表；路由只接受“模块元数据为 active 且课程已经注册”的组合。
-- `src/data/llm-foundation.js` 与 `src/data/agent-mechanism.js` 分别保存两个完整课程的数据，`src/data/courses.js` 组成不可变注册表。
-- `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验共用的判定源。
-- `src/ui/` 使用安全 DOM API 生成六个视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js` 只负责控件、错误呈现和可访问结果。
+- `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
+- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js` 与 `src/data/agent-harness.js` 分别保存三个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。
+- `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，均不查询 DOM。
+- `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js` 与 `src/ui/harness-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
 - `src/core/storage.js` 负责结构校验、`localStorage` 与内存回退。
 
@@ -138,11 +163,14 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 │   │   ├── modules.js         # 模块目录、状态、先修关系
 │   │   ├── courses.js         # 不可变课程注册表与 getCourse 查询
 │   │   ├── llm-foundation.js  # LLM 课程、资源、面试题
-│   │   └── agent-mechanism.js # Agent 课程、资源、面试题
+│   │   ├── agent-mechanism.js # Agent 课程、资源、面试题
+│   │   └── agent-harness.js   # Harness 课程、资源、面试题
 │   ├── core/                  # 无 DOM 的领域逻辑与存储适配器
-│   │   └── agent-mechanism.js # Agent loop、工具契约、计划恢复判定
+│   │   ├── agent-mechanism.js # Agent loop、工具契约、计划恢复判定
+│   │   └── agent-harness.js   # Run、Resume 与队列背压判定
 │   └── ui/                    # 各视图、课程详情、实验和 DOM 工具
-│       └── agent-experiments.js # Agent 三项交互实验 renderer
+│       ├── agent-experiments.js # Agent 三项交互实验 renderer
+│       └── harness-experiments.js # Harness 三项交互实验 renderer
 └── tests/
     ├── data.test.js           # 数据规模、字段和交叉引用
     ├── course-registry.test.js # 注册表与多模块路由边界
@@ -155,7 +183,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 ## 数据字段约定
 
-现有实现是字段契约的权威示例：模块见 `src/data/modules.js`，课程数据见 `src/data/llm-foundation.js` 与 `src/data/agent-mechanism.js`，进度见 `src/core/progress.js`。
+现有实现是字段契约的权威示例：模块见 `src/data/modules.js`，课程数据见 `src/data/llm-foundation.js`、`src/data/agent-mechanism.js` 与 `src/data/agent-harness.js`，进度见 `src/core/progress.js`。
 
 ### Module
 
@@ -196,7 +224,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 进度写入必须走 `src/core/progress.js` 的不可变操作和 `src/core/storage.js` 的存储接口，不要让 UI 直接修改原对象。
 
-第二个完整模块开放后，多模块契约已经落实为以下事实：
+三个完整模块开放后，多模块契约已经落实为以下事实：
 
 - lesson、resource、quiz、interview 四类内容 ID 在各课程内及跨课程全局唯一，扁平进度记录不会因 ID 碰撞串课；
 - 课程与面试进度汇总按当前 course 的真实 ID 集合过滤，其他模块或陈旧记录不计入当前百分比；
@@ -205,7 +233,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - 临时面试筛选保存在 `interviewFiltersByModule`，以 `moduleId` 隔离；
 - 临时 revealed 展开状态保存在 `revealedInterviewIdsByModule`，以 `moduleId` 隔离。
 
-`ProgressState` 仍是一个专用键内的扁平记录；上述全局 ID、按当前课程过滤与模块级临时 UI 状态共同保证两个已开放模块不会互相污染。
+`ProgressState` 仍是一个专用键内的扁平记录；上述全局 ID、按当前课程过滤与模块级临时 UI 状态共同保证三个已开放模块不会互相污染。
 
 ## 添加新模块
 
@@ -230,7 +258,11 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - 仅收录可解析的 HTTPS 链接，不编造项目名、作者、地址或核验结论。
 - 添加前打开目标页，确认标题、作者/组织、内容主题与可访问性，再把当天日期写入 `verifiedAt`。
 - 优先稳定的项目主页、文档页、论文页或公开视频页，避免搜索结果页、临时跳转和需要私有权限的链接。
-- 博客和长视频可以承担系统讲解；Bilibili、YouTube 等视频需标明来源。小红书、抖音等短视频只作为补充线索，不作为核心知识与事实依据。
+- 官方 SDK 文档仅用于说明其当前实现语义，不把某个版本的 Runner、状态或审批 API 写成跨框架标准。
+- 框架的 checkpoint/replay 只证明该框架的具体语义，不可外推为所有 Harness 的通用保证。
+- durable 编排不保证任意外部副作用 exactly-once；仍需幂等键、去重、查询、对账或补偿来处理模糊窗口。
+- 厂商文章提供的是工程经验，不是普适定律；采用其 timeout、retry 或过载策略前仍需在本系统验证。
+- 视频（包括短视频）仅作为直觉、演示与中文导航的补充，不承担可靠性或安全性结论。小红书因无稳定公开核验链接而未收录；这只说明本次证据条件不足，不评价平台内容质量。
 - 链接失效、内容改名或长期未核验时，先更新或移除，再调整课程引用；不要保留“看起来可能正确”的不稳定链接。
 
 ## 测试与发布检查
@@ -246,7 +278,7 @@ find src -name '*.js' -print0 | xargs -0 -n1 node --check
 发布前还应：
 
 - 用 `npm run serve` 启动仓库根目录，确认 `/`、`/styles/app.css`、`/src/app.js` 均返回 HTTP 200；
-- 在约 1440px 与 320px/390px 宽度分别检查两个模块的六个视图、六项实验、筛选、测验、面试展开/状态/队列、持久化与重置；
+- 在约 1440px 与 320px/390px 宽度分别检查三个模块的六个视图、九项实验、筛选、测验、面试展开/状态/队列、持久化与重置；
 - 仅在明确导航时把焦点移到 `main`，筛选、展开、状态和重置后恢复到有意义的控件或摘要；
 - 保证每个路由一个 `h1`，后续标题层级合理；动态结果使用礼貌 live region；展开控件使用 `aria-expanded` 与 `aria-controls`；
 - 以键盘检查跳过链接、可见焦点、禁用状态和二次确认；核心移动端触控目标约 44px；
