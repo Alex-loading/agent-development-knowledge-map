@@ -483,6 +483,7 @@ test('styles explicitly protect 320px layouts, media and touch interactions', as
   assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)/i);
   assert.match(styles, /@media\s*\(max-width\s*:\s*22rem\)/i);
   assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*(?:button|select|input)[^{]*\{[^}]*min-height\s*:\s*(?:2\.75rem|44px)/is);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*?\.text-action\s*\{[^}]*min-height\s*:\s*2\.75rem/is);
   assert.match(styles, /input\[type=["']range["']\][^{]*\{[^}]*max-width\s*:\s*100%/is);
   assert.match(styles, /prefers-reduced-motion\s*:\s*reduce/i);
 });
