@@ -1187,6 +1187,13 @@ button:disabled {
   border-top: 1px solid var(--color-border-soft);
 }
 
+.agent-decision-values {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .agent-decision-ledger__entry dt,
 .agent-decision-ledger__entry dd {
   margin: 0;
@@ -1205,17 +1212,17 @@ button:disabled {
   font-weight: 600;
 }
 
-div.agent-decision-ledger {
+.tool-contract-decision {
   display: block;
   padding: var(--space-3);
 }
 
-div.agent-decision-ledger .agent-status-stamp__label {
+.tool-contract-decision .agent-status-stamp__label {
   display: block;
   margin: 0 0 var(--space-3);
 }
 
-div.agent-decision-ledger p {
+.tool-contract-decision p {
   margin-bottom: 0;
 }
 

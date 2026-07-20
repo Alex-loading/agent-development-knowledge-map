@@ -760,6 +760,42 @@ test('sampling lab controls and presets update parameters and nucleus membership
   assert.equal(topP.value, '0.9');
 });
 
+test('prototype-inherited experiment IDs use the accessible unavailable note', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+
+  for (const experimentId of ['toString', 'constructor']) {
+    const unavailable = renderExperiment(experimentId);
+    assert.equal(unavailable.tagName, 'SECTION', experimentId);
+    assert.equal(unavailable.getAttribute('role'), 'status', experimentId);
+    assert.ok(unavailable.textContent.includes('暂不可用'), experimentId);
+    const headingId = unavailable.getAttribute('aria-labelledby');
+    assert.ok(headingId, experimentId);
+    assert.notEqual(unavailable.querySelector(`#${headingId}`), null, experimentId);
+  }
+});
+
+test('Agent decision live regions contain a semantically valid definition list', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+
+  for (const [experimentId, resultId] of [
+    ['agent-loop', '#agent-loop-result'],
+    ['plan-recovery', '#plan-recovery-result'],
+  ]) {
+    const lab = renderExperiment(experimentId);
+    document.body.append(lab);
+    const result = lab.querySelector(resultId);
+    assert.equal(result.tagName, 'DIV', experimentId);
+    assert.equal(result.getAttribute('aria-live'), 'polite', experimentId);
+    assert.equal(result.getAttribute('aria-atomic'), 'true', experimentId);
+    const ledger = result.querySelector('dl');
+    assert.notEqual(ledger, null, experimentId);
+    assert.equal(ledger.children.every((child) => child.tagName === 'DIV'), true, experimentId);
+    assert.equal(result.children.some((child) => ['DT', 'DD'].includes(child.tagName)), false, experimentId);
+  }
+});
+
 test('Agent loop lab exposes core decisions, invalid input and a focused reset state', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));

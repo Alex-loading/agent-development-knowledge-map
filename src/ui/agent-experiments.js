@@ -123,10 +123,12 @@ function setDecision(result, status, entries) {
   result.dataset.status = status;
   result.replaceChildren(
     element('strong', { className: 'agent-status-stamp__label', text: STATUS_LABELS[status] ?? status }),
-    ...entries.map(({ term, value }) => element('div', { className: 'agent-decision-ledger__entry' }, [
-      element('dt', { text: `${term}：` }),
-      element('dd', { text: value }),
-    ])),
+    element('dl', { className: 'agent-decision-values' }, entries.map(({ term, value }) => (
+      element('div', { className: 'agent-decision-ledger__entry' }, [
+        element('dt', { text: `${term}：` }),
+        element('dd', { text: value }),
+      ])
+    ))),
   );
 }
 
@@ -137,7 +139,7 @@ function setInvalidDecision(result, error) {
 }
 
 export function renderAgentLoopExperiment() {
-  const result = element('dl', {
+  const result = element('div', {
     attrs: { id: 'agent-loop-result', 'aria-live': 'polite', 'aria-atomic': 'true' },
   });
   let goalSatisfied;
@@ -240,7 +242,7 @@ export function renderToolContractExperiment() {
     const currentInvocation = TOOL_PRESETS[preset.value];
     invocation.textContent = JSON.stringify(currentInvocation, null, 2);
     const decision = validateToolInvocation(TOOL_CATALOG, currentInvocation);
-    result.className = 'agent-decision-ledger agent-status-stamp';
+    result.className = 'agent-decision-ledger agent-status-stamp tool-contract-decision';
     result.dataset.status = decision.status;
     const summary = decision.status === 'ready'
       ? 'schema 校验通过，宿主可以进入执行前检查。'
@@ -312,7 +314,7 @@ export function renderToolContractExperiment() {
 }
 
 export function renderPlanRecoveryExperiment() {
-  const result = element('dl', {
+  const result = element('div', {
     attrs: { id: 'plan-recovery-result', 'aria-live': 'polite', 'aria-atomic': 'true' },
   });
   let strategy;

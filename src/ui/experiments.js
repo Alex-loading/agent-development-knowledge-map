@@ -57,6 +57,8 @@ const experimentRenderers = Object.freeze({
   ...agentExperimentRenderers,
 });
 
+let unavailableExperimentSequence = 0;
+
 function labHeader(index, id, title, description) {
   return element('header', { className: 'experiment-lab__header' }, [
     element('span', { className: 'section-index', text: `概念实验 ${index}` }),
@@ -437,14 +439,19 @@ export function renderSamplingExperiment() {
 }
 
 export function renderExperiment(experimentId) {
-  const renderer = experimentRenderers[experimentId];
+  const renderer = Object.hasOwn(experimentRenderers, experimentId)
+    ? experimentRenderers[experimentId]
+    : null;
   if (renderer) return renderer();
+
+  unavailableExperimentSequence += 1;
+  const headingId = `experiment-unavailable-title-${unavailableExperimentSequence}`;
 
   return element('section', {
     className: 'experiment-lab experiment-unavailable',
-    attrs: { role: 'status', 'aria-label': '交互实验暂不可用' },
+    attrs: { role: 'status', 'aria-labelledby': headingId },
   }, [
-    element('h3', { text: '交互实验暂不可用' }),
+    element('h3', { text: '交互实验暂不可用', attrs: { id: headingId } }),
     element('p', { text: '这项实验尚未配置，仍可按上方练习步骤手动完成并记录结论。' }),
   ]);
 }
