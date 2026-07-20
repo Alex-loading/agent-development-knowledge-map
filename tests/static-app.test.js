@@ -37,6 +37,44 @@ function cssHex(tokens, name) {
   return value;
 }
 
+function cssBlock(source, marker) {
+  const markerIndex = source.indexOf(marker);
+  assert.notEqual(markerIndex, -1, `missing CSS block ${marker}`);
+  const openingBrace = source.indexOf('{', markerIndex);
+  assert.notEqual(openingBrace, -1, `missing opening brace for ${marker}`);
+  let depth = 0;
+
+  for (let index = openingBrace; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}') depth -= 1;
+    if (depth === 0) return source.slice(openingBrace + 1, index);
+  }
+
+  assert.fail(`missing closing brace for ${marker}`);
+}
+
+function cssRule(source, selector) {
+  return cssBlock(source, `${selector} {`);
+}
+
+function cssRulesForSelector(source, selector) {
+  return [...source.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selectors]) => selectors.split(',').some((candidate) => candidate.trim() === selector))
+    .map(([, , declarations]) => declarations);
+}
+
+function cssDeclaration(rule, property) {
+  const value = rule.match(new RegExp(`(?:^|\\n)\\s*${escapeRegExp(property)}:\\s*([^;]+);`))?.[1]?.trim();
+  assert.ok(value, `missing CSS declaration ${property}`);
+  return value;
+}
+
+function cssVariable(declaration) {
+  const name = declaration.match(/var\((--[\w-]+)\)/)?.[1];
+  assert.ok(name, `CSS declaration should use a color token: ${declaration}`);
+  return name;
+}
+
 function relativeLuminance(hex) {
   const channels = hex.slice(1).match(/.{2}/g).map((value) => Number.parseInt(value, 16) / 255);
   const linear = channels.map((value) => (
@@ -87,11 +125,23 @@ test('paper-lab styles include responsive, focus, motion and design tokens', asy
   assert.match(styles, /\.notice/i);
 });
 
-test('long-form knowledge notes use a responsive paper-lab reading layout', async () => {
+test('long-form knowledge notes enforce readable measure, responsive flow and visible content', async () => {
   const styles = await read('styles/app.css');
+  const note = cssRule(styles, '.knowledge-note');
+  const sources = cssRule(styles, '.knowledge-note__sources');
+  const evidence = cssRule(styles, '.resource-evidence');
+  const mobile = cssBlock(styles, '@media (max-width: 40rem) {');
+  const mobileSection = cssRule(mobile, '.knowledge-note__section');
+  const mobileTocButton = cssRule(mobile, '.knowledge-note__toc button');
 
+  assert.match(note, /width:\s*min\(\s*100%\s*,\s*7[0-4]ch\s*\)/);
+  assert.match(mobileSection, /grid-template-columns:\s*(?:minmax\(\s*0\s*,\s*1fr\s*\)|1fr)/);
+  assert.match(mobileTocButton, /min-height:\s*2\.75rem/);
+  for (const wrappingRule of [sources, evidence]) {
+    assert.match(wrappingRule, /overflow-wrap:\s*anywhere/);
+    assert.match(wrappingRule, /word-break:\s*break-word/);
+  }
   for (const selector of [
-    '.knowledge-note',
     '.knowledge-note__toc',
     '.knowledge-note__section',
     '.knowledge-note__sources',
@@ -99,9 +149,46 @@ test('long-form knowledge notes use a responsive paper-lab reading layout', asyn
     '.knowledge-note__misconceptions',
     '.knowledge-note__recap',
   ]) {
-    assert.ok(styles.includes(selector), `missing long-form note style ${selector}`);
+    assert.ok(
+      cssRulesForSelector(styles, selector).some((rule) => rule.trim()),
+      `missing substantive rule for ${selector}`,
+    );
   }
-  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.knowledge-note__section/s);
+
+  const hiddenKnowledgeNoteRules = [...styles.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selectors, declarations]) => (
+      selectors.includes('.knowledge-note')
+      && /(?:display\s*:\s*none|visibility\s*:\s*hidden)/.test(declarations)
+    ));
+  assert.deepEqual(hiddenKnowledgeNoteRules, []);
+});
+
+test('knowledge-note accent text keeps WCAG AA contrast on paper tints', async () => {
+  const [tokens, styles] = await Promise.all([
+    read('styles/tokens.css'),
+    read('styles/app.css'),
+  ]);
+  const focus = cssRule(styles, '.knowledge-note__toc button:focus-visible');
+  const hover = cssRule(styles, '.knowledge-note__toc button:hover:not(:disabled)');
+  const misconceptionLabel = cssRule(styles, '.knowledge-note__misconceptions dt::before');
+  const misconception = cssRule(styles, '.knowledge-note__misconceptions dt');
+  const focusForeground = cssHex(tokens, cssVariable(cssDeclaration(focus, 'color')));
+  const focusBackground = cssHex(tokens, cssVariable(cssDeclaration(focus, 'background')));
+  const hoverForeground = cssHex(tokens, cssVariable(cssDeclaration(hover, 'color')));
+  const misconceptionForeground = cssHex(tokens, cssVariable(cssDeclaration(misconceptionLabel, 'color')));
+  const misconceptionBackground = cssHex(tokens, cssVariable(cssDeclaration(misconception, 'background')));
+
+  assert.ok(contrastRatio(focusForeground, focusBackground) >= 4.5, 'TOC focus text must reach 4.5:1');
+  for (const hoverBackground of ['--color-ochre-soft', '--color-paper']) {
+    assert.ok(
+      contrastRatio(hoverForeground, cssHex(tokens, hoverBackground)) >= 4.5,
+      `TOC hover text must reach 4.5:1 against ${hoverBackground}`,
+    );
+  }
+  assert.ok(
+    contrastRatio(misconceptionForeground, misconceptionBackground) >= 4.5,
+    'misconception label must reach 4.5:1',
+  );
 });
 
 test('small-text palette tokens meet WCAG AA contrast on paper', async () => {

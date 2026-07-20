@@ -975,13 +975,13 @@ button:disabled {
 }
 
 .knowledge-note__toc button:hover:not(:disabled) {
-  color: var(--color-vermilion);
+  color: var(--color-forest);
   background: linear-gradient(90deg, var(--color-ochre-soft), transparent);
 }
 
 .knowledge-note__toc button:focus-visible {
   outline-offset: 0.2rem;
-  color: var(--color-vermilion);
+  color: var(--color-forest);
   background: var(--color-ochre-soft);
 }
 
@@ -1148,7 +1148,7 @@ button:disabled {
 }
 
 .knowledge-note__misconceptions dt::before {
-  color: var(--color-vermilion);
+  color: var(--color-ink);
   content: '错误理解';
 }
 
@@ -1193,6 +1193,7 @@ button:disabled {
   font-size: 0.82rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .resource-evidence p {
