@@ -66,8 +66,10 @@ function assertNonNegativeInteger(value, name, { positive = false } = {}) {
     throw new TypeError(`${name} must be a number`);
   }
   const minimum = positive ? 1 : 0;
-  if (!Number.isFinite(value) || !Number.isInteger(value) || value < minimum) {
-    throw new RangeError(`${name} must be a ${positive ? 'positive' : 'non-negative'} integer`);
+  if (!Number.isSafeInteger(value) || value < minimum) {
+    throw new RangeError(
+      `${name} must be a ${positive ? 'positive' : 'non-negative'} safe integer`,
+    );
   }
 }
 
@@ -97,6 +99,12 @@ function assertRunState(state) {
 
   if (state.pendingApproval !== null) {
     assertNonEmptyString(state.pendingApproval, 'state.pendingApproval');
+  }
+  if (state.status === 'awaiting_approval' && state.pendingApproval === null) {
+    throw new RangeError('awaiting_approval state requires pendingApproval');
+  }
+  if (state.status !== 'awaiting_approval' && state.pendingApproval !== null) {
+    throw new RangeError('pendingApproval must be null outside awaiting_approval');
   }
 }
 
@@ -148,6 +156,7 @@ export function reduceRun(state, event, policy) {
       cancel: 'cancelled',
       timeout: 'timed_out',
     }[event.type];
+    nextState.pendingApproval = null;
   } else {
     const transition = RUN_TRANSITIONS[event.type];
     if (!transition) {
@@ -170,7 +179,9 @@ export function reduceRun(state, event, policy) {
     } else if (event.type === 'approve') {
       nextState.pendingApproval = null;
     } else if (event.type === 'step') {
-      nextState.stepsUsed += 1;
+      const stepsUsed = nextState.stepsUsed + 1;
+      assertNonNegativeInteger(stepsUsed, 'next state stepsUsed');
+      nextState.stepsUsed = stepsUsed;
     }
 
     nextState.status = event.type === 'step' && nextState.stepsUsed >= policy.maxSteps
@@ -259,8 +270,8 @@ export function planResume(input) {
   if (input.errorKind === 'transient' && canRetry) {
     const nextAttemptAt = input.now
       + input.baseDelayMs * (2 ** input.attemptsUsed) * (1 + input.jitterFactor);
-    if (!Number.isFinite(nextAttemptAt)) {
-      throw new RangeError('computed nextAttemptAt must be finite');
+    if (!Number.isFinite(nextAttemptAt) || nextAttemptAt > Number.MAX_SAFE_INTEGER) {
+      throw new RangeError('computed nextAttemptAt must be finite and safely representable');
     }
     return resumeResult('retry', '临时错误且操作可安全重试', [], nextAttemptAt);
   }
@@ -370,7 +381,7 @@ export function stepQueue(state, input) {
     if (remaining <= 0) {
       completed.push(job.id);
     } else {
-      stillRunning.push({ id: job.id, remaining });
+      stillRunning.push({ ...job, id: job.id, remaining });
     }
   }
   nextState.running = stillRunning;
@@ -380,27 +391,46 @@ export function stepQueue(state, input) {
     throw new RangeError('active running jobs exceed input.workerCount');
   }
 
-  nextState.queued = nextState.queued.map((job) => ({
-    ...job,
-    age: job.age + 1,
-  }));
+  nextState.queued = nextState.queued.map((job) => {
+    const age = job.age + 1;
+    assertNonNegativeInteger(age, 'next queued job.age');
+    return { ...job, age };
+  });
 
   const started = [];
-  while (nextState.running.length < input.workerCount && nextState.queued.length > 0) {
-    const job = nextState.queued.shift();
-    nextState.running.push({ id: job.id, remaining: job.remaining });
+  const queuedStartCount = Math.min(
+    input.workerCount - nextState.running.length,
+    nextState.queued.length,
+  );
+  const queuedToStart = nextState.queued.slice(0, queuedStartCount);
+  nextState.queued = nextState.queued.slice(queuedStartCount);
+  for (const job of queuedToStart) {
+    const runningJob = { ...job };
+    delete runningJob.age;
+    nextState.running.push({ ...runningJob, id: job.id, remaining: job.remaining });
     started.push(job.id);
   }
 
   const admitted = [];
   const rejected = [];
   for (const arrival of input.arrivals) {
+    const jobMetadata = { ...arrival };
+    delete jobMetadata.duration;
     if (nextState.running.length < input.workerCount) {
-      nextState.running.push({ id: arrival.id, remaining: arrival.duration });
+      nextState.running.push({
+        ...jobMetadata,
+        id: arrival.id,
+        remaining: arrival.duration,
+      });
       admitted.push(arrival.id);
       started.push(arrival.id);
     } else if (nextState.queued.length < input.maxQueue) {
-      nextState.queued.push({ id: arrival.id, age: 0, remaining: arrival.duration });
+      nextState.queued.push({
+        ...jobMetadata,
+        id: arrival.id,
+        age: 0,
+        remaining: arrival.duration,
+      });
       admitted.push(arrival.id);
     } else {
       rejected.push(arrival.id);

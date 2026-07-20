@@ -71,7 +71,10 @@ test('reduceRun permits fail, cancel, and timeout from any non-terminal status',
     for (const status of [
       'created', 'queued', 'running', 'awaiting_approval', 'retry_wait', 'blocked',
     ]) {
-      const result = reduceRun(runState({ status }), {
+      const state = status === 'awaiting_approval'
+        ? runState({ status, pendingApproval: 'pending-call' })
+        : runState({ status });
+      const result = reduceRun(state, {
         eventId: `${type}-${status}`,
         sequence: 1,
         type,
@@ -223,6 +226,52 @@ test('reduceRun validates objects, statuses, counts, IDs, sequence, and approval
   }, { maxSteps: 1 }), TypeError);
 });
 
+test('reduceRun rejects unsafe integer state, event, and policy values', () => {
+  const unsafeInteger = 2 ** 53;
+  const event = { eventId: 'event-1', sequence: 1, type: 'enqueue' };
+
+  assert.throws(() => reduceRun(
+    runState({ sequence: Number.MAX_SAFE_INTEGER + 1 }),
+    event,
+    { maxSteps: 1 },
+  ), RangeError);
+  assert.throws(() => reduceRun(
+    runState({ stepsUsed: unsafeInteger }),
+    event,
+    { maxSteps: 1 },
+  ), RangeError);
+  assert.throws(() => reduceRun(
+    runState(),
+    { ...event, sequence: unsafeInteger },
+    { maxSteps: 1 },
+  ), RangeError);
+  assert.throws(() => reduceRun(
+    runState(),
+    event,
+    { maxSteps: unsafeInteger },
+  ), RangeError);
+  assert.throws(() => reduceRun(
+    runState({ status: 'running', stepsUsed: Number.MAX_SAFE_INTEGER }),
+    { eventId: 'step-limit', sequence: 1, type: 'step' },
+    { maxSteps: Number.MAX_SAFE_INTEGER },
+  ), RangeError);
+});
+
+test('reduceRun enforces the pending approval state invariant before approve', () => {
+  const approve = { eventId: 'approve-1', sequence: 1, type: 'approve' };
+
+  assert.throws(() => reduceRun(
+    runState({ status: 'awaiting_approval', pendingApproval: null }),
+    approve,
+    { maxSteps: 2 },
+  ), RangeError);
+  assert.throws(() => reduceRun(
+    runState({ status: 'running', pendingApproval: 'stale-call' }),
+    { eventId: 'step-1', sequence: 1, type: 'step' },
+    { maxSteps: 2 },
+  ), RangeError);
+});
+
 function resumeInput(overrides = {}) {
   return {
     callKind: 'read',
@@ -335,6 +384,29 @@ test('planResume validates enums, booleans, keys, and all numeric inputs', () =>
     assert.throws(() => planResume({ ...valid, [field]: value }), RangeError);
   }
   assert.throws(() => planResume({ ...valid, now: '1000' }), TypeError);
+});
+
+test('planResume rejects unsafe retry counts and unsafe backoff timestamps', () => {
+  const unsafeInteger = 2 ** 53;
+
+  assert.throws(() => planResume(resumeInput({ attemptsUsed: unsafeInteger })), RangeError);
+  assert.throws(() => planResume(resumeInput({
+    maxAttempts: Number.MAX_SAFE_INTEGER + 1,
+  })), RangeError);
+  assert.throws(() => planResume(resumeInput({
+    attemptsUsed: 53,
+    maxAttempts: 54,
+    now: 0,
+    baseDelayMs: 1,
+    jitterFactor: 0,
+  })), RangeError);
+  assert.throws(() => planResume(resumeInput({
+    attemptsUsed: 1_024,
+    maxAttempts: 1_025,
+    now: 0,
+    baseDelayMs: 1,
+    jitterFactor: 0,
+  })), RangeError);
 });
 
 test('planResume leaves its input untouched', () => {
@@ -518,4 +590,47 @@ test('stepQueue does not mutate state or input and returns fresh nested data', (
   assert.notEqual(result.state.running, state.running);
   assert.notEqual(result.state.completed, state.completed);
   assert.notEqual(result.state.queued[0], state.queued[0]);
+});
+
+test('stepQueue rejects unsafe job and worker integer values', () => {
+  const unsafeInteger = 2 ** 53;
+  const state = queueState();
+
+  assert.throws(() => stepQueue(queueState({
+    queued: [{ id: 'q', age: unsafeInteger, remaining: 1 }],
+  }), queueInput()), RangeError);
+  assert.throws(() => stepQueue(queueState({
+    queued: [{ id: 'q', age: 0, remaining: Number.MAX_SAFE_INTEGER + 1 }],
+  }), queueInput()), RangeError);
+  assert.throws(() => stepQueue(queueState({
+    running: [{ id: 'r', remaining: unsafeInteger }],
+  }), queueInput()), RangeError);
+  assert.throws(() => stepQueue(state, queueInput({ workerCount: unsafeInteger })), RangeError);
+  assert.throws(() => stepQueue(state, queueInput({
+    serviceCapacity: Number.MAX_SAFE_INTEGER + 1,
+  })), RangeError);
+  assert.throws(() => stepQueue(state, queueInput({ maxQueue: unsafeInteger })), RangeError);
+  assert.throws(() => stepQueue(state, queueInput({
+    arrivals: [{ id: 'a', duration: unsafeInteger }],
+  })), RangeError);
+  assert.throws(() => stepQueue(queueState({
+    queued: [{ id: 'q', age: Number.MAX_SAFE_INTEGER, remaining: 1 }],
+  }), queueInput({ workerCount: 0 })), RangeError);
+});
+
+test('stepQueue preserves extra metadata when jobs enter or remain running', () => {
+  const result = stepQueue(queueState({
+    queued: [{ id: 'queued', age: 2, remaining: 5, lane: 'batch' }],
+    running: [{ id: 'running', remaining: 5, lane: 'interactive' }],
+  }), queueInput({
+    arrivals: [{ id: 'arrival', duration: 4, lane: 'priority' }],
+    workerCount: 3,
+    serviceCapacity: 2,
+  }));
+
+  assert.deepEqual(result.state.running, [
+    { id: 'running', remaining: 3, lane: 'interactive' },
+    { id: 'queued', remaining: 5, lane: 'batch' },
+    { id: 'arrival', remaining: 4, lane: 'priority' },
+  ]);
 });
