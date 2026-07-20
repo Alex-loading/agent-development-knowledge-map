@@ -6,6 +6,7 @@ import { resolveRoute } from '../src/app.js';
 import { courseRegistry, getCourse } from '../src/data/courses.js';
 import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 
 function assertRegistryIdsAreUnique(selectIds, label) {
@@ -24,23 +25,24 @@ function assertRegistryIdsAreUnique(selectIds, label) {
   }
 }
 
-test('production course registry is immutable and resolves exactly three active courses', () => {
-  assert.deepEqual(Object.keys(courseRegistry), [
-    'llm-foundation',
-    'agent-mechanism',
-    'agent-harness',
-  ]);
+test('production course registry is immutable and resolves exactly four active courses', () => {
+  const expectedCourses = [
+    llmFoundation,
+    agentMechanism,
+    agentHarness,
+    contextRagMemory,
+  ];
+  assert.deepEqual(Object.keys(courseRegistry), expectedCourses.map(({ id }) => id));
   assert.equal(Object.isFrozen(courseRegistry), true);
-  assert.equal(getCourse('llm-foundation'), llmFoundation);
-  assert.equal(getCourse('agent-mechanism'), agentMechanism);
-  assert.equal(getCourse('agent-harness'), agentHarness);
+  for (const course of expectedCourses) assert.equal(getCourse(course.id), course);
+  assert.equal(getCourse('context-rag-memory'), contextRagMemory);
   assert.equal(getCourse('not-registered'), null);
   assert.throws(() => {
     courseRegistry.extra = llmFoundation;
   }, TypeError);
 });
 
-test('route resolver opens Agent dashboard and lessons from the production registry', () => {
+test('route resolver opens registered dashboards and lessons from the production registry', () => {
   assert.deepEqual(resolveRoute('#agent-mechanism/dashboard'), {
     hash: '#agent-mechanism/dashboard',
     moduleId: 'agent-mechanism',
@@ -63,6 +65,17 @@ test('route resolver opens Agent dashboard and lessons from the production regis
     view: 'lesson',
     lessonId: 'harness-01',
   });
+  assert.deepEqual(resolveRoute('#context-rag-memory/dashboard'), {
+    hash: '#context-rag-memory/dashboard',
+    moduleId: 'context-rag-memory',
+    view: 'dashboard',
+  });
+  assert.deepEqual(resolveRoute('#context-rag-memory/lesson/context-01'), {
+    hash: '#context-rag-memory/lesson/context-01',
+    moduleId: 'context-rag-memory',
+    view: 'lesson',
+    lessonId: 'context-01',
+  });
 });
 
 test('route resolver keeps a canonical fallback for invalid Agent lessons', () => {
@@ -72,6 +85,11 @@ test('route resolver keeps a canonical fallback for invalid Agent lessons', () =
     view: 'dashboard',
   });
   assert.deepEqual(resolveRoute('#agent-harness/lesson/missing'), {
+    hash: '#llm-foundation/dashboard',
+    moduleId: 'llm-foundation',
+    view: 'dashboard',
+  });
+  assert.deepEqual(resolveRoute('#context-rag-memory/lesson/missing'), {
     hash: '#llm-foundation/dashboard',
     moduleId: 'llm-foundation',
     view: 'dashboard',

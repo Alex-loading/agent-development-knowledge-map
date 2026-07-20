@@ -9,8 +9,7 @@ import {
   setInterviewStatus,
   toggleReviewQueue,
 } from '../src/core/progress.js';
-import { agentHarness } from '../src/data/agent-harness.js';
-import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
@@ -163,10 +162,10 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
-test('application preserves independent resource filters across all three active modules', (t) => {
+test('application preserves independent resource filters across all four active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const windowRef = createFakeWindow('#agent-harness/resources');
+  const windowRef = createFakeWindow('#context-rag-memory/resources');
   const app = startApp({
     documentRef: document,
     windowRef,
@@ -174,36 +173,31 @@ test('application preserves independent resource filters across all three active
   });
   t.after(app.teardown);
 
-  assert.equal(document.querySelectorAll('.resource-row').length, 28);
-  dispatchChange(document.querySelector('#resource-filter-stage'), 'Runner 基础');
-  const harnessCount = document.querySelectorAll('.resource-row').length;
-  assert.ok(harnessCount > 0 && harnessCount < agentHarness.resources.length);
+  const courses = Object.values(courseRegistry);
+  const priorCourses = courses.filter(({ id }) => id !== contextRagMemory.id);
+  const visitOrder = [contextRagMemory, ...priorCourses];
+  const expectedStates = [];
 
-  navigateTo(app, windowRef, '#agent-mechanism/resources');
-  assert.equal(document.querySelectorAll('.resource-row').length, agentMechanism.resources.length);
-  assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
+  for (const [index, course] of visitOrder.entries()) {
+    if (index > 0) navigateTo(app, windowRef, `#${course.id}/resources`);
+    assert.equal(document.querySelectorAll('.resource-row').length, course.resources.length);
+    assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
+    const stage = [...new Set(course.resources.map(({ stage }) => stage))]
+      .find((candidate) => {
+        const count = course.resources.filter((resource) => resource.stage === candidate).length;
+        return count > 0 && count < course.resources.length;
+      });
+    assert.ok(stage, `${course.id} should expose a selective stage filter`);
+    dispatchChange(document.querySelector('#resource-filter-stage'), stage);
+    const count = document.querySelectorAll('.resource-row').length;
+    assert.ok(count > 0 && count < course.resources.length, course.id);
+    expectedStates.push({ course, stage, count });
+  }
 
-  dispatchChange(document.querySelector('#resource-filter-stage'), '机制总览');
-  const agentCount = document.querySelectorAll('.resource-row').length;
-  assert.ok(agentCount > 0 && agentCount < agentMechanism.resources.length);
-
-  navigateTo(app, windowRef, '#llm-foundation/resources');
-  assert.equal(document.querySelectorAll('.resource-row').length, llmFoundation.resources.length);
-  assert.equal(document.querySelector('#resource-filter-stage').value, FILTER_ALL);
-
-  dispatchChange(document.querySelector('#resource-filter-stage'), 'Token 实验');
-  const llmCount = document.querySelectorAll('.resource-row').length;
-  assert.ok(llmCount > 0 && llmCount < llmFoundation.resources.length);
-
-  const expectedStates = [
-    ['agent-harness', 'Runner 基础', harnessCount],
-    ['agent-mechanism', '机制总览', agentCount],
-    ['llm-foundation', 'Token 实验', llmCount],
-  ];
-  for (const [moduleId, stage, count] of [...expectedStates, ...expectedStates]) {
-    navigateTo(app, windowRef, `#${moduleId}/resources`);
-    assert.equal(document.querySelector('#resource-filter-stage').value, stage, moduleId);
-    assert.equal(document.querySelectorAll('.resource-row').length, count, moduleId);
+  for (const { course, stage, count } of [...expectedStates, ...expectedStates]) {
+    navigateTo(app, windowRef, `#${course.id}/resources`);
+    assert.equal(document.querySelector('#resource-filter-stage').value, stage, course.id);
+    assert.equal(document.querySelectorAll('.resource-row').length, count, course.id);
   }
 });
 
@@ -334,10 +328,10 @@ test('application persists interview mastery exactly once and updates shell summ
   assert.equal(store.saves.length, 2);
 });
 
-test('application preserves independent interview filters and revealed answers across all three active modules', (t) => {
+test('application preserves independent interview filters and revealed answers across all four active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const windowRef = createFakeWindow('#agent-harness/interviews');
+  const windowRef = createFakeWindow('#context-rag-memory/interviews');
   const app = startApp({
     documentRef: document,
     windowRef,
@@ -362,11 +356,24 @@ test('application preserves independent interview filters and revealed answers a
     assert.equal(document.querySelectorAll('.answer-drawer').length, 1);
     return { course, filters, count, questionId: question.id };
   };
-  const configurations = [
-    [agentHarness, { role: '后端工程', frequency: '中', difficulty: '深挖', status: 'unseen' }],
-    [agentMechanism, { role: 'AI 应用', frequency: '高', difficulty: '进阶', status: 'unseen' }],
-    [llmFoundation, { role: 'Agent 开发', frequency: '高', difficulty: '基础', status: 'unseen' }],
-  ];
+  const courses = Object.values(courseRegistry);
+  const priorCourses = courses.filter(({ id }) => id !== contextRagMemory.id);
+  const configurations = [contextRagMemory, ...priorCourses].map((course) => {
+    const question = course.interviewQuestions.find((candidate) => (
+      course.interviewQuestions.filter((other) => (
+        other.roles.includes(candidate.roles[0])
+        && other.frequency === candidate.frequency
+        && other.difficulty === candidate.difficulty
+      )).length < course.interviewQuestions.length
+    ));
+    assert.ok(question, `${course.id} should expose selective interview filters`);
+    return [course, {
+      role: question.roles[0],
+      frequency: question.frequency,
+      difficulty: question.difficulty,
+      status: 'unseen',
+    }];
+  });
   const states = [];
 
   for (const [index, [course, filters]] of configurations.entries()) {
@@ -453,10 +460,14 @@ test('interview summaries ignore duplicate and stale mastered/review IDs', (t) =
   assert.ok(root.textContent.includes('复习队列 1 题'));
 });
 
-test('application progress scopes lesson, interview and quiz state across all three active modules', (t) => {
+test('application progress scopes lesson, interview and quiz state across all four active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
-  const courses = [agentHarness, agentMechanism, llmFoundation];
+  const registeredCourses = Object.values(courseRegistry);
+  const courses = [
+    contextRagMemory,
+    ...registeredCourses.filter(({ id }) => id !== contextRagMemory.id),
+  ];
   const expected = courses.map((course, index) => ({
     course,
     count: index + 1,
@@ -471,7 +482,7 @@ test('application progress scopes lesson, interview and quiz state across all th
     id,
     { correct: 1, total: 2, percent: 50, results: [] },
   ])));
-  const windowRef = createFakeWindow('#agent-harness/progress');
+  const windowRef = createFakeWindow('#context-rag-memory/progress');
   const app = startApp({
     documentRef: document,
     windowRef,
@@ -486,12 +497,22 @@ test('application progress scopes lesson, interview and quiz state across all th
 
   for (const { course, count, lessons } of [...expected, ...expected]) {
     navigateTo(app, windowRef, `#${course.id}/progress`);
-    assert.ok(document.querySelector('#progress-summary').textContent.includes(`课程 ${count} / 8`), course.id);
-    assert.ok(document.querySelector('#progress-summary').textContent.includes(`面试 ${count} / 24`), course.id);
+    assert.ok(
+      document.querySelector('#progress-summary').textContent.includes(
+        `课程 ${count} / ${course.lessons.length}`,
+      ),
+      course.id,
+    );
+    assert.ok(
+      document.querySelector('#progress-summary').textContent.includes(
+        `面试 ${count} / ${course.interviewQuestions.length}`,
+      ),
+      course.id,
+    );
     const root = document.querySelector('#view-root');
     assert.deepEqual(
       root.querySelectorAll('.progress-ledger__summary strong').map(({ textContent }) => textContent),
-      [`${count} / 8`, `${count} / 24`],
+      [`${count} / ${course.lessons.length}`, `${count} / ${course.interviewQuestions.length}`],
       course.id,
     );
     const completedList = root.querySelector('.completed-lesson-list');
@@ -1425,7 +1446,7 @@ test('every configured experiment has a resolvable accessible heading and is int
   const configured = courses.flatMap((course) => course.lessons
     .filter((lesson) => lesson.exercise.experiment)
     .map((lesson) => ({ course, lesson, experimentId: lesson.exercise.experiment })));
-  assert.equal(configured.length, 9);
+  assert.equal(configured.length, courses.length * 3);
 
   for (const { course, lesson, experimentId } of configured) {
     const resolved = renderExperiment(experimentId);
@@ -1446,7 +1467,7 @@ test('every configured experiment has a resolvable accessible heading and is int
   }
 });
 
-test('real application activates Harness dashboard, all six views and its first lesson', (t) => {
+test('real application activates context RAG memory, switches all modules and renders six views plus labs', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#agent-mechanism/dashboard');
@@ -1457,31 +1478,53 @@ test('real application activates Harness dashboard, all six views and its first 
   });
   t.after(app.teardown);
 
-  dispatchChange(document.querySelector('#module-select'), 'agent-harness');
+  dispatchChange(document.querySelector('#module-select'), 'context-rag-memory');
   windowRef.dispatchEvent(new FakeEvent('hashchange'));
-  assert.equal(windowRef.location.hash, '#agent-harness/dashboard');
-  assert.equal(document.querySelector('#current-module-title').textContent, 'Agent Harness');
+  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
+  assert.equal(document.querySelector('#current-module-title').textContent, contextRagMemory.title);
   assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 0 / 8'));
   assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 0 / 24'));
 
+  const priorCourses = Object.values(courseRegistry)
+    .filter(({ id }) => id !== contextRagMemory.id);
+  for (const course of priorCourses) {
+    document.querySelector('#module-select').focus();
+    dispatchChange(document.querySelector('#module-select'), course.id);
+    windowRef.dispatchEvent(new FakeEvent('hashchange'));
+    assert.equal(windowRef.location.hash, `#${course.id}/dashboard`, course.id);
+    assert.equal(document.querySelector('#current-module-title').textContent, course.title, course.id);
+    assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, course.id);
+    assert.equal(document.activeElement.id, 'app-main', course.id);
+  }
+  dispatchChange(document.querySelector('#module-select'), contextRagMemory.id);
+  windowRef.dispatchEvent(new FakeEvent('hashchange'));
+  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
+
   for (const view of ['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']) {
     document.querySelector('#module-select').focus();
-    navigateTo(app, windowRef, `#agent-harness/${view}`);
+    navigateTo(app, windowRef, `#context-rag-memory/${view}`);
     const viewRoot = document.querySelector('#view-root');
-    assert.ok(viewRoot.textContent.includes('Agent Harness'), `${view} should render Harness content`);
+    assert.ok(viewRoot.textContent.includes(contextRagMemory.title), `${view} should render context course content`);
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, `${view} should render one h1`);
     assert.equal(document.activeElement.id, 'app-main', `${view} navigation should focus main`);
-    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, 28);
-    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, 24);
+    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, contextRagMemory.resources.length);
+    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, contextRagMemory.interviewQuestions.length);
     if (view === 'progress') {
-      assert.ok(viewRoot.textContent.includes('0 / 8'));
-      assert.ok(viewRoot.textContent.includes('0 / 24'));
+      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.lessons.length}`));
+      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.interviewQuestions.length}`));
     }
   }
 
-  navigateTo(app, windowRef, '#agent-harness/lesson/harness-01');
-  assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1);
-  assert.ok(document.querySelector('#view-root').textContent.includes(agentHarness.lessons[0].title));
+  for (const lessonId of ['context-02', 'context-05', 'context-07']) {
+    navigateTo(app, windowRef, `#context-rag-memory/lesson/${lessonId}`);
+    const viewRoot = document.querySelector('#view-root');
+    assert.equal(viewRoot.querySelectorAll('h1').length, 1, lessonId);
+    assert.equal(viewRoot.querySelectorAll('.experiment-lab').length, 1, lessonId);
+    assert.ok(viewRoot.textContent.includes(
+      contextRagMemory.lessons.find(({ id }) => id === lessonId).title,
+    ));
+    assert.equal(document.activeElement.id, 'app-main', lessonId);
+  }
 });
 
 test('dashboard progress bars expose accessible names and values', (t) => {
