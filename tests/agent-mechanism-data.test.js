@@ -159,7 +159,13 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
   assert.equal(resourcePlatform(byId.get('res-agent-douyin-claude-code')), '抖音');
   assert.match(byId.get('res-agent-douyin-claude-code').value, /仅作.*实作补充.*不作为机制事实依据/);
 
-  for (const resource of agentMechanism.resources.filter(({ type }) => type === '论文')) {
+  const coala = byId.get('res-agent-coala');
+  assert.doesNotMatch(coala.value, /评测设定/);
+  assert.match(coala.value, /概念架构|文献综述/);
+
+  for (const resource of agentMechanism.resources.filter(
+    ({ id, type }) => type === '论文' && id !== coala.id,
+  )) {
     assert.match(resource.value, /论文在其评测设定中/);
   }
   for (const id of ['res-agent-anthropic-effective', 'res-agent-openai-guide', 'res-agent-anthropic-tools']) {
