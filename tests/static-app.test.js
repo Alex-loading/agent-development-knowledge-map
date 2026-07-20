@@ -2,12 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { normalizeRoute } from '../src/app.js';
-import { agentHarness } from '../src/data/agent-harness.js';
-import { agentMechanism } from '../src/data/agent-mechanism.js';
-import { llmFoundation } from '../src/data/llm-foundation.js';
+import { courseRegistry } from '../src/data/courses.js';
+import { modules } from '../src/data/modules.js';
 import { externalLink } from '../src/ui/dom.js';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+const agentHarness = courseRegistry['agent-harness'];
+const agentMechanism = courseRegistry['agent-mechanism'];
+const SMALL_CHINESE_NUMERALS = Object.freeze([
+  '零', '一', '二|两', '三', '四', '五', '六', '七', '八', '九', '十',
+]);
+
+function countPattern(count) {
+  const chineseNumeral = SMALL_CHINESE_NUMERALS[count];
+  return chineseNumeral === undefined ? `${count}` : `(?:${count}|${chineseNumeral})`;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 function markdownSection(markdown, heading) {
   const marker = `## ${heading}`;
@@ -157,6 +170,7 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
     read('src/ui/progress-view.js'),
   ]);
   const source = `${dom}\n${shell}\n${app}\n${genericViews.join('\n')}`;
+  const genericViewSource = genericViews.join('\n');
 
   assert.match(dom, /export function element\b/);
   assert.match(dom, /export function button\b/);
@@ -165,7 +179,18 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
   assert.match(app, /addEventListener\(['"]hashchange['"]/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /setAttribute\(['"]on/i);
-  assert.doesNotMatch(source, /\bagentHarness\b|Agent Harness|agent-harness/);
+  for (const module of modules) {
+    assert.doesNotMatch(
+      genericViewSource,
+      new RegExp(escapeRegExp(module.id), 'i'),
+      `generic views should not hardcode module ID ${module.id}`,
+    );
+    assert.doesNotMatch(
+      genericViewSource,
+      new RegExp(escapeRegExp(module.title), 'i'),
+      `generic views should not hardcode module title ${module.title}`,
+    );
+  }
 });
 
 test('application integrates the dashboard, curriculum and knowledge-map renderers', async () => {
@@ -251,8 +276,8 @@ test('release guide documents operation, architecture, privacy and the extension
   for (const category of ['课程', '资源', '练习', '面试高频']) {
     assert.match(readme, new RegExp(`必(?:须|需)[^\n]{0,40}${category}|${category}[^\n]{0,40}必(?:须|需)`));
   }
-  for (const planned of ['上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付']) {
-    assert.ok(readme.includes(planned), `README should identify planned module ${planned}`);
+  for (const module of modules.filter((candidate) => candidate.status === 'planned')) {
+    assert.ok(readme.includes(module.title), `README should identify planned module ${module.title}`);
   }
 
   assert.match(readme, /LLM 基础[^\n]{0,30}(?:完整|完成)/);
@@ -276,16 +301,28 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide publishes three complete modules with data-derived counts and canonical routes', async () => {
+test('release guide publishes every active registered course with data-derived counts and canonical routes', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
+  const activeModules = modules.filter((module) => module.status === 'active');
+  const activeCourses = Object.values(courseRegistry);
 
-  assert.match(status, /当前有三个完整模块/);
-  for (const course of [llmFoundation, agentMechanism, agentHarness]) {
+  assert.deepEqual(
+    activeCourses.map((course) => course.id).sort(),
+    activeModules.map((module) => module.id).sort(),
+    'active modules and registered courses should be the same set',
+  );
+  assert.match(
+    status,
+    new RegExp(`当前有${countPattern(activeCourses.length)}个完整模块`),
+  );
+  for (const course of activeCourses) {
+    const module = activeModules.find((candidate) => candidate.id === course.id);
     const line = status.split('\n').find((candidate) => candidate.includes(course.title));
     const quizCount = course.lessons.reduce((total, lesson) => total + lesson.quiz.length, 0);
     const experimentCount = course.lessons.filter((lesson) => lesson.exercise.experiment).length;
 
+    assert.equal(course.title, module.title, `${course.id} catalog and course titles should agree`);
     assert.ok(line, `README should publish ${course.title} status`);
     assert.match(line, /(?:完整|完成)/, `${course.title} should be complete`);
     assert.match(line, new RegExp(`${course.lessons.length}\\s*节课程`));
@@ -376,9 +413,11 @@ test('release guide records multi-module state isolation and evidence labels as 
   }
 });
 
-test('release guide marks Harness active with scope and keeps only five later modules planned', async () => {
+test('release guide marks Harness active with scope and derives every planned module from the catalog', async () => {
   const readme = await read('README.md');
   const boundary = markdownSection(readme, '模块路线图与边界');
+  const activeModules = modules.filter((module) => module.status === 'active');
+  const plannedModules = modules.filter((module) => module.status === 'planned');
 
   assert.match(boundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
   for (const scope of ['宿主 Runner', 'Run State', 'Event Log', 'Checkpoint', '权限', '人工审批', 'Sandbox', 'Budget', 'Timeout', 'Retry', 'Cancel', '幂等', 'Resume', '并发', '队列', '背压', 'Blocked', 'HITL', 'Handoff', '运行产物']) {
@@ -387,14 +426,34 @@ test('release guide marks Harness active with scope and keeps only five later mo
   for (const later of ['RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
     assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
   }
-  const plannedModules = ['上下文、RAG 与记忆', 'AI 后端工程', '评测、可观测与安全', '多 Agent 与 MCP', '求职与项目交付'];
-  for (const planned of plannedModules) {
-    assert.match(boundary, new RegExp(`${planned}[^\\n]{0,30}(?:planned|规划中)`, 'i'));
+  for (const module of plannedModules) {
+    assert.match(
+      boundary,
+      new RegExp(`${escapeRegExp(module.title)}[^\\n]{0,30}(?:planned|规划中)`, 'i'),
+      `README should identify planned module ${module.title}`,
+    );
   }
-  assert.equal(boundary.split('\n').filter((line) => /(?:planned|规划中)/i.test(line)).length, 5);
-  assert.doesNotMatch(readme, /Agent 机制[^\n]{0,30}(?:planned|规划中)/i);
-  assert.doesNotMatch(readme, /Agent Harness[^\n]{0,30}(?:planned|规划中)/i);
-  assert.doesNotMatch(readme, /两个完整模块|(?:其余|剩余)六个|六个[^\n]{0,20}(?:planned|规划中)/i);
+  assert.equal(
+    boundary.split('\n').filter((line) => /(?:planned|规划中)/i.test(line)).length,
+    plannedModules.length,
+  );
+  for (const module of activeModules) {
+    assert.doesNotMatch(
+      readme,
+      new RegExp(`${escapeRegExp(module.title)}[^\\n]{0,30}(?:planned|规划中)`, 'i'),
+      `active module ${module.title} should not be described as planned`,
+    );
+  }
+
+  const staleActiveCount = activeModules.length - 1;
+  const stalePlannedCount = plannedModules.length + 1;
+  assert.doesNotMatch(
+    readme,
+    new RegExp(
+      `${countPattern(staleActiveCount)}个完整模块|(?:其余|剩余)${countPattern(stalePlannedCount)}个[^\\n]{0,20}(?:planned|规划中|仍未开放)`,
+      'i',
+    ),
+  );
 });
 
 test('release guide labels Harness evidence limits without judging uncollected platforms', async () => {
