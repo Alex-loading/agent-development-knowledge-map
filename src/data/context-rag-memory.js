@@ -1,45 +1,46 @@
 const VERIFIED_AT = '2026-07-21';
 
-const primaryBoundary = '证据边界：该资料反映当前实现、产品文档或研究/评测设定，会变化且不保证可外推到所有系统。';
+const officialBoundary = '证据边界：该资料描述当前产品或框架实现，接口和版本会变化，不代表跨产品或框架标准。';
+const researchBoundary = '证据边界：研究结论绑定论文的实验或评测设定，不可外推为所有语料、模型或业务的结论。';
+const engineeringBoundary = '证据边界：这是厂商工程经验，不代表可普适复现的收益或系统保证。';
+const benchmarkBoundary = '证据边界：评测任务与数据集限定了结果含义，不代表生产环境中的记忆质量。';
 const courseBoundary = '证据边界：项目依赖与接口版本会更新，示例只作学习导航，不承担生产质量或安全保证。';
 const videoBoundary = '证据边界：视频用于建立直觉与学习导航，不作为实现细节、效果数字或系统保证的权威证据。';
 
 const resources = [
-  { id: 'res-context-anthropic-engineering', title: 'Effective context engineering for AI agents', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '上下文工程', value: '学习用途：理解上下文选择、压缩、隔离和工具结果管理的工程框架；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-lost-middle', title: 'Lost in the Middle', url: 'https://aclanthology.org/2024.tacl-1.9/', source: 'TACL', language: '英文', type: '研究论文', difficulty: '进阶', stage: '长上下文边界', value: '学习用途：分析信息位置与长上下文利用效果之间的关系；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-openai-compaction', title: 'Compaction', url: 'https://developers.openai.com/api/docs/guides/compaction', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '进阶', stage: '会话压缩', value: '学习用途：对照长会话压缩与状态续接的产品接口；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-openai-embeddings', title: 'Vector embeddings', url: 'https://developers.openai.com/api/docs/guides/embeddings', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: 'Embedding', value: '学习用途：理解文本向量作为语义检索表示的用途；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-dpr', title: 'Dense Passage Retrieval', url: 'https://aclanthology.org/2020.emnlp-main.550/', source: 'EMNLP', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Dense Retrieval', value: '学习用途：理解双编码器稠密召回的训练目标与实验方式；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-rrf', title: 'Reciprocal Rank Fusion', url: 'https://research.google/pubs/reciprocal-rank-fusion-outperforms-condorcet-and-individual-rank-learning-methods/', source: 'Google Research', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Hybrid Retrieval', value: '学习用途：学习不依赖原始分数尺度的排序融合方法；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-contextual-retrieval', title: 'Introducing Contextual Retrieval', url: 'https://www.anthropic.com/engineering/contextual-retrieval', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '检索增强', value: '学习用途：观察为 chunk 补充文档上下文的检索设计；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-openai-retrieval', title: 'Retrieval', url: 'https://developers.openai.com/api/docs/guides/retrieval', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '检索管线', value: '学习用途：对照向量存储、搜索与属性过滤的产品接口；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-rag-paper', title: 'Retrieval-Augmented Generation', url: 'https://proceedings.neurips.cc/paper/2020/hash/6b493230-Abstract.html', source: 'NeurIPS', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'RAG 基础', value: '学习用途：理解参数化生成与外部非参数知识结合的原始研究设定；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-openai-citations', title: 'Citation formatting', url: 'https://developers.openai.com/api/docs/guides/citation-formatting', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门', stage: '引用呈现', value: '学习用途：学习把文件标注转换为用户可读引用的实现方式；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-alce', title: 'Enabling Large Language Models to Generate Text with Citations', url: 'https://aclanthology.org/2023.emnlp-main.398/', source: 'EMNLP', language: '英文', type: '研究论文', difficulty: '进阶', stage: '引用评测', value: '学习用途：区分引用完整性、正确性与答案质量的评测维度；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-beir', title: 'BEIR benchmark', url: 'https://openreview.net/forum?id=wCu6T5xFjeJ', source: 'OpenReview', language: '英文', type: '研究论文', difficulty: '进阶', stage: '检索评测', value: '学习用途：比较不同检索方法在异构数据集上的零样本表现；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-ragas', title: 'RAGAS', url: 'https://aclanthology.org/2024.eacl-demo.16/', source: 'EACL', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'RAG 评测', value: '学习用途：认识将检索上下文与生成回答分开评估的思路；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-langchain-memory', title: 'Memory overview', url: 'https://docs.langchain.com/oss/python/concepts/memory', source: 'LangChain', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '记忆建模', value: '学习用途：对照短期状态与长期记忆的框架概念；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-coala', title: 'Cognitive Architectures for Language Agents', url: 'https://openreview.net/forum?id=1i6ZCvflQJ', source: 'TMLR / OpenReview', language: '英文', type: '研究论文', difficulty: '深挖', stage: '记忆架构', value: '学习用途：用认知架构视角组织工作、情景、语义与程序性记忆；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-memgpt', title: 'MemGPT', url: 'https://arxiv.org/abs/2310.08560', source: 'arXiv', language: '英文', type: '研究论文', difficulty: '深挖', stage: '分层记忆', value: '学习用途：研究用分层存储和显式管理扩展有效上下文的思路；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-memorybank', title: 'MemoryBank', url: 'https://ojs.aaai.org/index.php/AAAI/article/view/29946', source: 'AAAI', language: '英文', type: '研究论文', difficulty: '深挖', stage: '记忆更新', value: '学习用途：观察长期对话记忆的形成、更新和遗忘建模；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-longmemeval', title: 'LongMemEval', url: 'https://github.com/xiaowu0162/LongMemEval', source: 'GitHub', language: '英文', type: '评测仓库', difficulty: '进阶', stage: '长期记忆评测', value: '学习用途：认识跨会话记忆检索、时间推理和知识更新任务；' + primaryBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-openai-data', title: 'Your data', url: 'https://developers.openai.com/api/docs/guides/your-data', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '数据边界', value: '学习用途：核对托管数据、保留与控制选项的产品说明；' + primaryBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-anthropic-engineering', title: 'Effective context engineering for AI agents', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '上下文工程', value: '学习用途：理解上下文选择、压缩、隔离和工具结果管理的工程框架；' + engineeringBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-lost-middle', title: 'Lost in the Middle', url: 'https://aclanthology.org/2024.tacl-1.9/', source: 'TACL', language: '英文', type: '研究论文', difficulty: '进阶', stage: '长上下文边界', value: '学习用途：分析信息位置与长上下文利用效果之间的关系；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-openai-compaction', title: 'Compaction', url: 'https://developers.openai.com/api/docs/guides/compaction', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '进阶', stage: '会话压缩', value: '学习用途：对照长会话压缩与状态续接的产品接口；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-openai-embeddings', title: 'Vector embeddings', url: 'https://developers.openai.com/api/docs/guides/embeddings', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: 'Embedding', value: '学习用途：理解文本向量作为语义检索表示的用途；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-dpr', title: 'Dense Passage Retrieval', url: 'https://aclanthology.org/2020.emnlp-main.550/', source: 'EMNLP', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Dense Retrieval', value: '学习用途：理解双编码器稠密召回的训练目标与实验方式；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-rrf', title: 'Reciprocal Rank Fusion', url: 'https://research.google/pubs/reciprocal-rank-fusion-outperforms-condorcet-and-individual-rank-learning-methods/', source: 'Google Research', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Hybrid Retrieval', value: '学习用途：学习不依赖原始分数尺度的排序融合方法；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-contextual-retrieval', title: 'Introducing Contextual Retrieval', url: 'https://www.anthropic.com/engineering/contextual-retrieval', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '检索增强', value: '学习用途：观察为 chunk 补充文档上下文的检索设计；' + engineeringBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-openai-retrieval', title: 'Retrieval', url: 'https://developers.openai.com/api/docs/guides/retrieval', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '检索管线', value: '学习用途：对照向量存储、搜索与属性过滤的产品接口；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-rag-paper', title: 'Retrieval-Augmented Generation', url: 'https://proceedings.neurips.cc/paper/2020/hash/6b493230-Abstract.html', source: 'NeurIPS', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'RAG 基础', value: '学习用途：理解参数化生成与外部非参数知识结合的原始研究设定；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-openai-citations', title: 'Citation formatting', url: 'https://developers.openai.com/api/docs/guides/citation-formatting', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门', stage: '引用呈现', value: '学习用途：学习把文件标注转换为用户可读引用的实现方式；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-alce', title: 'Enabling Large Language Models to Generate Text with Citations', url: 'https://aclanthology.org/2023.emnlp-main.398/', source: 'EMNLP', language: '英文', type: '研究论文', difficulty: '进阶', stage: '引用评测', value: '学习用途：区分引用完整性、正确性与答案质量的评测维度；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-beir', title: 'BEIR benchmark', url: 'https://openreview.net/forum?id=wCu6T5xFjeJ', source: 'OpenReview', language: '英文', type: '研究论文', difficulty: '进阶', stage: '检索评测', value: '学习用途：比较不同检索方法在异构数据集上的零样本表现；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-ragas', title: 'RAGAS', url: 'https://aclanthology.org/2024.eacl-demo.16/', source: 'EACL', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'RAG 评测', value: '学习用途：认识将检索上下文与生成回答分开评估的思路；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-langchain-memory', title: 'Memory overview', url: 'https://docs.langchain.com/oss/python/concepts/memory', source: 'LangChain', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '记忆建模', value: '学习用途：对照短期状态与长期记忆的框架概念；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-coala', title: 'Cognitive Architectures for Language Agents', url: 'https://openreview.net/forum?id=1i6ZCvflQJ', source: 'TMLR / OpenReview', language: '英文', type: '研究论文', difficulty: '深挖', stage: '记忆架构', value: '学习用途：用认知架构视角组织工作、情景、语义与程序性记忆；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-memgpt', title: 'MemGPT', url: 'https://arxiv.org/abs/2310.08560', source: 'arXiv', language: '英文', type: '研究论文', difficulty: '深挖', stage: '分层记忆', value: '学习用途：研究用分层存储和显式管理扩展有效上下文的思路；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-memorybank', title: 'MemoryBank', url: 'https://ojs.aaai.org/index.php/AAAI/article/view/29946', source: 'AAAI', language: '英文', type: '研究论文', difficulty: '深挖', stage: '记忆更新', value: '学习用途：观察长期对话记忆的形成、更新和遗忘建模；' + researchBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-longmemeval', title: 'LongMemEval', url: 'https://github.com/xiaowu0162/LongMemEval', source: 'GitHub', language: '英文', type: '评测仓库', difficulty: '进阶', stage: '长期记忆评测', value: '学习用途：认识跨会话记忆检索、时间推理和知识更新任务；' + benchmarkBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-openai-data', title: 'Your data', url: 'https://developers.openai.com/api/docs/guides/your-data', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '数据边界', value: '学习用途：核对托管数据、保留与控制选项的产品说明；' + officialBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-rag-scratch', title: 'RAG from scratch', url: 'https://github.com/langchain-ai/rag-from-scratch', source: 'LangChain GitHub', language: '英文', type: '代码课程', difficulty: '入门到进阶', stage: 'RAG 实作', value: '学习用途：按 notebook 拆解索引、检索、生成与评估步骤；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-llm-universe', title: 'LLM Universe', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: '开源课程', difficulty: '入门到进阶', stage: 'RAG 实作', value: '学习用途：用中文材料练习知识库问答的完整链路；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-all-in-rag', title: 'All in RAG', url: 'https://github.com/datawhalechina/all-in-rag', source: 'Datawhale', language: '中文', type: '开源课程', difficulty: '进阶', stage: 'RAG 工程', value: '学习用途：扩展检索、解析与评测组件的工程视野；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-hello-agents', title: 'Hello Agents', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: '开源课程', difficulty: '入门到进阶', stage: 'Agent 记忆', value: '学习用途：结合 Agent 应用观察 RAG 与记忆的接入位置；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-practical-guide', title: '上下文工程实践指南', url: 'https://wakeup-jin.github.io/Practical-Guide-to-Context-Engineering/', source: 'Practical Guide to Context Engineering', language: '中文', type: '公开指南', difficulty: '入门到进阶', stage: '上下文工程', value: '学习用途：用中文案例复习上下文组织与压缩策略；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-hf-agentic-rag', title: 'Agentic RAG', url: 'https://huggingface.co/learn/agents-course/unit3/agentic-rag/agentic-rag', source: 'Hugging Face', language: '英文', type: '公开课程', difficulty: '进阶', stage: 'Agentic RAG', value: '学习用途：观察 Agent 如何决定检索与检查证据；' + courseBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-ragflow', title: 'RAGFlow 中文文档', url: 'https://ragflow.com.cn/docs', source: 'RAGFlow', language: '中文', type: '官方文档', difficulty: '入门到进阶', stage: 'RAG 工程', value: '学习用途：对照文档解析、知识库和检索配置的产品实践；' + courseBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-ragflow', title: 'RAGFlow 中文文档', url: 'https://ragflow.com.cn/docs', source: 'RAGFlow', language: '中文', type: '官方文档', difficulty: '入门到进阶', stage: 'RAG 工程', value: '学习用途：对照文档解析、知识库和检索配置的产品实践；' + officialBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-bilibili', title: 'Datawhale RAG 入门视频', url: 'https://www.bilibili.com/video/BV1Sb421E74u/', source: 'Datawhale / Bilibili', language: '中文', type: '公开视频', difficulty: '入门', stage: 'RAG 入门', value: '学习用途：通过演示建立 RAG 数据流的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'Bilibili' },
   { id: 'res-context-youtube', title: '李宏毅 2025 上下文工程课程', url: 'https://www.youtube.com/watch?v=lVdajtNpaGI', source: 'Hung-yi Lee / YouTube', language: '中文', type: '公开视频', difficulty: '入门到进阶', stage: '上下文工程', value: '学习用途：从课程讲解建立长上下文与上下文工程的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'YouTube' },
 ];
 
-let quizNumber = 0;
-function quiz(prompt, choices, answerIndex, explanation) {
-  quizNumber += 1;
+function quiz(id, prompt, choices, answerIndex, explanation) {
   return {
-    id: 'quiz-context-' + String(quizNumber).padStart(2, '0'),
+    id: 'quiz-' + id,
     prompt,
     choices,
     answerIndex,
@@ -81,8 +82,8 @@ const lessons = [
     resourceIds: ['res-context-anthropic-engineering', 'res-context-lost-middle', 'res-context-practical-guide'],
     exercise: { title: '绘制五层信息地图', brief: '把一组系统指令、消息、文档、运行游标和用户偏好放入正确层次。', steps: ['逐项标记作用域、所有者、生命周期、来源和能否直接进入本轮 prompt', '为可投影项写选择条件，为不可投影项写明确原因和替代引用方式'], deliverable: '一张五层分类表和一份本轮 context manifest。' },
     quizzes: [
-      quiz('哪一项最准确描述 checkpoint？', ['跨会话用户偏好库', '特定 run 的控制位置与恢复提交点', '本轮全部检索证据'], 1, 'Checkpoint 服务运行恢复，不等于长期记忆，也不会自动进入 prompt context。'),
-      quiz('Corpus 中的原始文档何时进入模型上下文？', ['持久化后自动进入', '经过检索、选择和证据投影后', '只要创建了索引就进入'], 1, 'Corpus 是后端知识源，只有被选择的证据投影才进入本次模型调用。'),
+      quiz('context-01-1', '哪一项最准确描述 checkpoint？', ['跨会话用户偏好库', '特定 run 的控制位置与恢复提交点', '本轮全部检索证据'], 1, 'Checkpoint 服务运行恢复，不等于长期记忆，也不会自动进入 prompt context。'),
+      quiz('context-01-2', 'Corpus 中的原始文档何时进入模型上下文？', ['持久化后自动进入', '经过检索、选择和证据投影后', '只要创建了索引就进入'], 1, 'Corpus 是后端知识源，只有被选择的证据投影才进入本次模型调用。'),
     ],
     completionCriteria: ['能用作用域与生命周期准确区分五类信息对象', '能解释每个上下文条目的来源、投影方式和排除原因'],
   }),
@@ -99,8 +100,8 @@ const lessons = [
     resourceIds: ['res-context-anthropic-engineering', 'res-context-lost-middle', 'res-context-openai-compaction', 'res-context-practical-guide', 'res-context-youtube'],
     exercise: { title: '组装预算有界的上下文', brief: '为一轮包含硬约束、会话状态、检索证据和偏好的调用分配有限预算。', steps: ['计算输出预留与可用输入预算，标记 required、priority、tokenCost 和 sourceRef', '分别处理刚好装满、普通超限和 required 超限，核对 included 与 excluded 原因'], deliverable: '一份确定排序、预算守恒且带排除原因的 context manifest。', experiment: 'context-router' },
     quizzes: [
-      quiz('Context engineering 比 prompt engineering 多关注什么？', ['只修改措辞', '信息来源、选择、预算、排序和生命周期', '只增加示例数量'], 1, 'Context engineering 管理模型实际获得信息的全链路，不只优化提示词文本。'),
-      quiz('Required 内容本身超过输入预算时应如何处理？', ['静默截断系统约束', '明确返回不可组装并请求缩减或调整预算', '随机删除一半内容'], 1, '硬约束不能在无告警情况下截断，调用方需要收到明确失败与原因。'),
+      quiz('context-02-1', 'Context engineering 比 prompt engineering 多关注什么？', ['只修改措辞', '信息来源、选择、预算、排序和生命周期', '只增加示例数量'], 1, 'Context engineering 管理模型实际获得信息的全链路，不只优化提示词文本。'),
+      quiz('context-02-2', 'Required 内容本身超过输入预算时应如何处理？', ['静默截断系统约束', '明确返回不可组装并请求缩减或调整预算', '随机删除一半内容'], 1, '硬约束不能在无告警情况下截断，调用方需要收到明确失败与原因。'),
     ],
     completionCriteria: ['能为一次调用计算输入预算并解释各层配额', '能稳定处理边界与超限且不静默删除 required 信息'],
   }),
@@ -117,8 +118,8 @@ const lessons = [
     resourceIds: ['res-context-openai-compaction', 'res-context-langchain-memory', 'res-context-coala', 'res-context-openai-data'],
     exercise: { title: '压缩一段含纠正的长会话', brief: '把含偏好修改、工具失败和未决承诺的 transcript 转成可继续工作的状态。', steps: ['提取 canonical facts、约束、未决项、来源消息和 supersession 关系', '生成明确标注不确定性的摘要，并为被省略细节保留 transcript 回取指针'], deliverable: '一份 canonical state、一个有损摘要和一张来源映射表。' },
     quizzes: [
-      quiz('Summary 与 conversation state 的关键区别是什么？', ['Summary 必然完整', 'Summary 是有损叙述，state 表达当前可操作事实与约束', 'State 不需要来源'], 1, '摘要服务压缩而会丢失信息，规范状态服务当前决策并应保留来源。'),
-      quiz('用户纠正旧事实后应怎样处理？', ['删除全部历史', '新值 supersede 旧值并保留两者来源与时间', '同时把新旧值都当当前真值'], 1, '当前状态采用最新有效值，同时保留可审计的更正链。'),
+      quiz('context-03-1', 'Summary 与 conversation state 的关键区别是什么？', ['Summary 必然完整', 'Summary 是有损叙述，state 表达当前可操作事实与约束', 'State 不需要来源'], 1, '摘要服务压缩而会丢失信息，规范状态服务当前决策并应保留来源。'),
+      quiz('context-03-2', '用户纠正旧事实后应怎样处理？', ['删除全部历史', '新值 supersede 旧值并保留两者来源与时间', '同时把新旧值都当当前真值'], 1, '当前状态采用最新有效值，同时保留可审计的更正链。'),
     ],
     completionCriteria: ['能从 transcript 生成带来源的规范状态和有损摘要', '能正确表示事实纠正、冲突、未决项与历史回取路径'],
   }),
@@ -135,8 +136,8 @@ const lessons = [
     resourceIds: ['res-context-openai-embeddings', 'res-context-dpr', 'res-context-openai-retrieval', 'res-context-rag-paper', 'res-context-rag-scratch', 'res-context-llm-universe'],
     exercise: { title: '为异构文档设计 chunk schema', brief: '为 FAQ、产品手册和制度文档制定可检索且能准确引用的切分方案。', steps: ['确定结构边界、目标大小、overlap、标题继承和 retrieval/citation unit 映射', '加入版本、失效、部门、语言、权限和 source span，并演练文档更新后的重建流程'], deliverable: '一份 chunk schema、三类切分示例和版本失效流程。' },
     quizzes: [
-      quiz('Index 与 corpus 的关系是什么？', ['Index 就是唯一源文档', 'Index 是从 corpus 派生的检索结构', '两者都只保存摘要'], 1, 'Corpus 保留源文档和治理事实，index 是可重建的检索投影。'),
-      quiz('Chunk 过度 overlap 的主要风险是什么？', ['完全无法检索', '重复候选挤占排序和上下文预算', '自动提升引用忠实性'], 1, '大量重叠会生成近重复证据，降低结果多样性并浪费 token。'),
+      quiz('context-04-1', 'Index 与 corpus 的关系是什么？', ['Index 就是唯一源文档', 'Index 是从 corpus 派生的检索结构', '两者都只保存摘要'], 1, 'Corpus 保留源文档和治理事实，index 是可重建的检索投影。'),
+      quiz('context-04-2', 'Chunk 过度 overlap 的主要风险是什么？', ['完全无法检索', '重复候选挤占排序和上下文预算', '自动提升引用忠实性'], 1, '大量重叠会生成近重复证据，降低结果多样性并浪费 token。'),
     ],
     completionCriteria: ['能为不同文档结构选择合理 chunk 与引用边界', '能让索引中的每个单元回溯到有效源文档版本和 span'],
   }),
@@ -153,8 +154,8 @@ const lessons = [
     resourceIds: ['res-context-dpr', 'res-context-rrf', 'res-context-contextual-retrieval', 'res-context-openai-retrieval', 'res-context-beir', 'res-context-rag-scratch', 'res-context-all-in-rag', 'res-context-hf-agentic-rag'],
     exercise: { title: '运行混合检索诊断', brief: '在固定小语料中比较 sparse、dense 和 hybrid，并定位候选消失的阶段。', steps: ['应用版本、部门和语言过滤，记录 sparse/dense 分数、融合名次、threshold 与 top-k', '改写查询并比较 trace，分别标记不存在、未召回、被过滤和排序靠后的原因'], deliverable: '一份可回放 retrieval trace 和三种方法的选择说明。', experiment: 'hybrid-retrieval' },
     quizzes: [
-      quiz('包含精确产品编号的查询通常先重视哪种信号？', ['Sparse 词法匹配', '随机向量', '只用生成模型猜测'], 0, '精确编号和稀有词通常适合词法召回，但仍应通过真实数据验证。'),
-      quiz('Query rewrite 的主要风险是什么？', ['查询会自动加密', '改写可能加入原意之外的假设并造成错召', '必然让 top-k 变大'], 1, '改写能提升可召回性，也可能偏离用户意图，因此需要保留原查询和 trace。'),
+      quiz('context-05-1', '包含精确产品编号的查询通常先重视哪种信号？', ['Sparse 词法匹配', '随机向量', '只用生成模型猜测'], 0, '精确编号和稀有词通常适合词法召回，但仍应通过真实数据验证。'),
+      quiz('context-05-2', 'Query rewrite 的主要风险是什么？', ['查询会自动加密', '改写可能加入原意之外的假设并造成错召', '必然让 top-k 变大'], 1, '改写能提升可召回性，也可能偏离用户意图，因此需要保留原查询和 trace。'),
     ],
     completionCriteria: ['能按查询特征解释 sparse、dense 与 hybrid 的选择', '能通过阶段 trace 定位过滤、阈值、排序和改写问题'],
   }),
@@ -171,8 +172,8 @@ const lessons = [
     resourceIds: ['res-context-rrf', 'res-context-contextual-retrieval', 'res-context-rag-paper', 'res-context-openai-citations', 'res-context-alce', 'res-context-ragas', 'res-context-ragflow'],
     exercise: { title: '打包可引用证据', brief: '把混合召回候选经过重排、版本去重和多样性选择装入固定预算。', steps: ['执行固定 rerank，移除旧版本与近重复 chunk，并记录每次排除原因', '按预算选择互补证据，生成唯一 source/version/span 的 citation manifest 并逐条核对 claim'], deliverable: '一个 evidence packet、排除清单和 claim-to-citation 核对表。' },
     quizzes: [
-      quiz('为什么第一阶段 top-k 不宜直接全部塞入 prompt？', ['候选可能重复、旧版或相关性不足', '模型不能读取文本', '引用只支持单个 chunk'], 0, '候选生成强调召回，仍需重排、版本处理、去重、多样性和预算打包。'),
-      quiz('有引用的答案是否一定正确？', ['是，链接存在即可', '否，引用可能不支持对应主张或遗漏关键证据', '是，只要来自官方文档'], 1, '引用提供回源线索，但仍需验证主张与证据之间的支持关系。'),
+      quiz('context-06-1', '为什么第一阶段 top-k 不宜直接全部塞入 prompt？', ['候选可能重复、旧版或相关性不足', '模型不能读取文本', '引用只支持单个 chunk'], 0, '候选生成强调召回，仍需重排、版本处理、去重、多样性和预算打包。'),
+      quiz('context-06-2', '有引用的答案是否一定正确？', ['是，链接存在即可', '否，引用可能不支持对应主张或遗漏关键证据', '是，只要来自官方文档'], 1, '引用提供回源线索，但仍需验证主张与证据之间的支持关系。'),
     ],
     completionCriteria: ['能把候选稳定转换为去重且多样的 evidence packet', '能逐条验证 citation span 是否支持答案中的对应主张'],
   }),
@@ -189,8 +190,8 @@ const lessons = [
     resourceIds: ['res-context-langchain-memory', 'res-context-coala', 'res-context-memgpt', 'res-context-memorybank', 'res-context-longmemeval', 'res-context-openai-data', 'res-context-hello-agents'],
     exercise: { title: '模拟个人助理记忆生命周期', brief: '为显式偏好、一次性行程、敏感字段、重复观察和用户纠正决定写入与召回。', steps: ['按 admission policy 执行 reject、store、no-op 或 supersede，并记录 provenance、confidence、scope 和 TTL', '推进时间、执行删除并从不同 subject/scope 召回，检查 expired、deleted 与越权记录不会投影'], deliverable: '一份记忆事件日志、有效记录表和本轮 memory projection。', experiment: 'memory-lifecycle' },
     quizzes: [
-      quiz('哪类聊天内容应该自动永久写入长期记忆？', ['所有消息', '没有任何类别应无条件自动永久写入', '每次工具输出'], 1, '长期记忆写入需要明确的准入、作用域、敏感性与生命周期策略。'),
-      quiz('用户纠正已保存偏好时应怎样处理？', ['忽略新值', '新记录 supersede 旧值并阻止旧值继续召回', '同时随机召回新旧值'], 1, '纠正关系保留来源历史，同时保证当前有效投影只使用新值。'),
+      quiz('context-07-1', '哪类聊天内容应该自动永久写入长期记忆？', ['所有消息', '没有任何类别应无条件自动永久写入', '每次工具输出'], 1, '长期记忆写入需要明确的准入、作用域、敏感性与生命周期策略。'),
+      quiz('context-07-2', '用户纠正已保存偏好时应怎样处理？', ['忽略新值', '新记录 supersede 旧值并阻止旧值继续召回', '同时随机召回新旧值'], 1, '纠正关系保留来源历史，同时保证当前有效投影只使用新值。'),
     ],
     completionCriteria: ['能为不同信息给出可解释的记忆准入与作用域决定', '能证明更新、过期、删除和跨主体隔离在召回时生效'],
   }),
@@ -207,12 +208,39 @@ const lessons = [
     resourceIds: ['res-context-ragas', 'res-context-longmemeval', 'res-context-rag-scratch', 'res-context-llm-universe', 'res-context-all-in-rag', 'res-context-hello-agents', 'res-context-hf-agentic-rag', 'res-context-ragflow', 'res-context-bilibili', 'res-context-youtube'],
     exercise: { title: '设计并诊断政策助理', brief: '为企业政策助理画出上下文、RAG 与记忆架构，并诊断一组错误回答。', steps: ['定义 source、chunk、candidate、evidence packet、state、memory projection、prompt 和 citation 的接口', '针对未摄取、旧版本、漏召、误过滤、打包丢失、错误记忆和不忠实生成逐层给出证据与修复'], deliverable: '一张综合架构图、一份分层故障树和可执行验收清单。' },
     quizzes: [
-      quiz('RAG 回答错误时首先应怎样诊断？', ['立刻扩大所有 top-k', '沿 source 到 answer 分层检查信息在哪一步失真或消失', '直接改成长期记忆'], 1, '分层 trace 能区分摄取、检索、打包、记忆冲突和生成忠实性问题。'),
-      quiz('什么时候更适合长期记忆而不是 RAG corpus？', ['保存某用户可治理的跨会话偏好', '保存所有公共产品手册', '替代模型行为训练'], 0, '主体相关、经准入且可更新删除的跨会话信息适合长期记忆。'),
+      quiz('context-08-1', 'RAG 回答错误时首先应怎样诊断？', ['立刻扩大所有 top-k', '沿 source 到 answer 分层检查信息在哪一步失真或消失', '直接改成长期记忆'], 1, '分层 trace 能区分摄取、检索、打包、记忆冲突和生成忠实性问题。'),
+      quiz('context-08-2', '什么时候更适合长期记忆而不是 RAG corpus？', ['保存某用户可治理的跨会话偏好', '保存所有公共产品手册', '替代模型行为训练'], 0, '主体相关、经准入且可更新删除的跨会话信息适合长期记忆。'),
     ],
     completionCriteria: ['能交付层次清楚且所有投影均可回源的综合架构', '能用分层证据区分检索、打包、记忆与生成故障'],
   }),
 ];
+
+const interviewIdentityByQuestion = new Map([
+  ['prompt context、conversation state、corpus、checkpoint、长期记忆有什么区别？', ['iq-context-01-1', 'context-01']],
+  ['Context engineering 与 prompt engineering 有何区别？', ['iq-context-01-2', 'context-01']],
+  ['一条知识如何从源文档进入模型上下文？', ['iq-context-01-3', 'context-01']],
+  ['如何管理有限 context window？', ['iq-context-02-1', 'context-02']],
+  ['滑窗、摘要和 retrieval 应怎么选？', ['iq-context-02-2', 'context-02']],
+  ['Context 越长效果一定越好吗？', ['iq-context-02-3', 'context-02']],
+  ['Transcript、conversation state、summary 的区别？', ['iq-context-03-1', 'context-03']],
+  ['如何安全压缩长会话？', ['iq-context-03-2', 'context-03']],
+  ['用户修改了先前事实，状态如何更新？', ['iq-context-03-3', 'context-03']],
+  ['如何设计 chunking？', ['iq-context-04-1', 'context-04']],
+  ['Corpus 如何处理版本和失效？', ['iq-context-04-2', 'context-04']],
+  ['source document、retrieval unit、citation unit 有何不同？', ['iq-context-04-3', 'context-04']],
+  ['Sparse、dense、hybrid retrieval 怎么选？', ['iq-context-05-1', 'context-05']],
+  ['top-k、threshold 和 metadata filter 如何配合？', ['iq-context-05-2', 'context-05']],
+  ['Query rewrite 有什么价值和风险？', ['iq-context-05-3', 'context-05']],
+  ['为什么需要 reranker？', ['iq-context-06-1', 'context-06']],
+  ['为什么需要去重和多样性？', ['iq-context-06-2', 'context-06']],
+  ['RAG 中有引用为什么仍会答错？', ['iq-context-06-3', 'context-06']],
+  ['什么是长期记忆，什么时候写？', ['iq-context-07-1', 'context-07']],
+  ['Semantic、episodic、procedural memory 怎么理解？', ['iq-context-07-2', 'context-07']],
+  ['如何处理冲突、过期和删除？', ['iq-context-07-3', 'context-07']],
+  ['RAG 答错时如何诊断？', ['iq-context-08-1', 'context-08']],
+  ['RAG、fine-tuning 和长期记忆如何选？', ['iq-context-08-2', 'context-08']],
+  ['请设计上下文、RAG 与记忆架构。', ['iq-context-08-3', 'context-08']],
+]);
 
 const interviewSpecs = [
   [1, 'prompt context、conversation state、corpus、checkpoint、长期记忆有什么区别？', 'prompt context 是本轮可见输入，state 是当前会话状态，corpus 是外部知识源，checkpoint 是 run 恢复点，长期记忆是跨会话且经治理的信息。', ['五者用作用域、生命周期、所有者和是否直接投影来区分。', 'checkpoint 不等于长期记忆，corpus 和 memory 也都不会自动进入 prompt。'], '把所有持久数据都叫记忆，并假设模型随时能看见。', '请为五类对象各举一个不应直接进入 prompt 的字段。', '高', '基础', ['Agent 开发', 'AI 应用', '后端工程']],
@@ -242,7 +270,7 @@ const interviewSpecs = [
 ];
 
 const interviewQuestions = interviewSpecs.map(([
-  lessonNumber,
+  ,
   question,
   shortAnswer,
   deepDive,
@@ -251,11 +279,11 @@ const interviewQuestions = interviewSpecs.map(([
   frequency,
   difficulty,
   roles,
-], index) => {
-  const lessonSuffix = String(lessonNumber).padStart(2, '0');
+]) => {
+  const [id, lessonId] = interviewIdentityByQuestion.get(question);
   return {
-    id: 'iq-context-' + lessonSuffix + '-' + ((index % 3) + 1),
-    lessonId: 'context-' + lessonSuffix,
+    id,
+    lessonId,
     question,
     shortAnswer,
     deepDive,

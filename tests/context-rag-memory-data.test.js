@@ -161,20 +161,23 @@ test('resources are the exact 28 verified HTTPS entries with complete metadata',
   }
 });
 
-test('source-class evidence boundaries avoid unsupported permanence and guarantees', () => {
-  const byUrl = new Map(contextRagMemory.resources.map((resource) => [resource.url, resource]));
-  for (const url of resourceUrls.slice(0, 19)) {
-    assert.match(
-      byUrl.get(url).value,
-      /(?:实验设定|当前实现|产品文档|工程经验|评测设定|研究设定).*(?:不可外推|不代表|不保证|会变化)/,
-      url,
-    );
-  }
-  for (const url of resourceUrls.slice(19, 26)) {
-    assert.match(byUrl.get(url).value, /(?:依赖|接口|版本).*(?:变化|更新)/, url);
-  }
-  for (const url of resourceUrls.slice(26)) {
-    assert.match(byUrl.get(url).value, /直觉|学习导航/, url);
+test('each source class states its matching evidence boundary', () => {
+  const boundaryByType = new Map([
+    ['官方文档', /当前产品或框架实现.*接口和版本会变化.*不代表跨产品或框架标准/],
+    ['研究论文', /研究结论绑定论文的实验或评测设定.*不可外推为所有语料、模型或业务的结论/],
+    ['工程文章', /厂商工程经验.*不代表可普适复现的收益或系统保证/],
+    ['评测仓库', /评测任务与数据集.*不代表生产环境中的记忆质量/],
+    ['代码课程', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
+    ['开源课程', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
+    ['公开课程', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
+    ['公开指南', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
+    ['公开视频', /用于建立直觉与学习导航.*不作为.*权威证据/],
+  ]);
+
+  for (const resource of contextRagMemory.resources) {
+    const matcher = boundaryByType.get(resource.type);
+    assert.ok(matcher, `${resource.id}: unexpected type ${resource.type}`);
+    assert.match(resource.value, matcher, `${resource.id}: ${resource.type}`);
   }
 });
 
@@ -210,7 +213,14 @@ test('interview bank contains exactly three complete qualitative questions for e
   assert.deepEqual(contextRagMemory.interviewQuestions.map(({ question }) => question), interviewTitles);
 
   for (const lessonId of lessonIds) {
-    assert.equal(contextRagMemory.interviewQuestions.filter(({ lessonId: id }) => id === lessonId).length, 3);
+    const expectedLessonQuestionIds = [1, 2, 3].map((number) => `iq-${lessonId}-${number}`);
+    assert.deepEqual(
+      contextRagMemory.interviewQuestions
+        .filter(({ lessonId: id }) => id === lessonId)
+        .map(({ id }) => id),
+      expectedLessonQuestionIds,
+      `${lessonId}: stable interview IDs`,
+    );
   }
   for (const item of contextRagMemory.interviewQuestions) {
     assert.ok(item.shortAnswer.length >= 20, item.id);
@@ -225,6 +235,16 @@ test('interview bank contains exactly three complete qualitative questions for e
     assert.ok(validDifficulties.has(item.difficulty), `${item.id}: difficulty`);
     assert.ok(item.roles.length >= 1, item.id);
     assert.ok(item.roles.every((role) => validRoles.has(role)), `${item.id}: roles`);
+  }
+});
+
+test('quiz identifiers are stable within and owned by their lessons', () => {
+  for (const lesson of contextRagMemory.lessons) {
+    assert.deepEqual(
+      lesson.quiz.map(({ id }) => id),
+      [1, 2].map((number) => `quiz-${lesson.id}-${number}`),
+      `${lesson.id}: stable quiz IDs`,
+    );
   }
 });
 
