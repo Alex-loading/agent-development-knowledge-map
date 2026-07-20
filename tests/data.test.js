@@ -7,15 +7,6 @@ import { llmFoundation } from '../src/data/llm-foundation.js';
 const expectedLessonIds = Array.from({ length: 8 }, (_, index) =>
   `llm-${String(index + 1).padStart(2, '0')}`,
 );
-const llm01VerifiedResourceIds = new Set([
-  'res-ms-ai',
-  'res-ms-genai',
-  'res-hf-llm',
-  'res-zomi-bili',
-  'res-ms-agents',
-  'res-hello-agents',
-  'res-openai-agents',
-]);
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
@@ -241,6 +232,33 @@ test('knowledge note remains an llm-01-only pilot with explanation fallback else
   }
 });
 
+test('LLM foundation export is deeply frozen', () => {
+  const lesson = llmFoundation.lessons.find(({ id }) => id === 'llm-01');
+  const resource = llmFoundation.resources.find(({ id }) => id === 'res-ms-genai');
+
+  for (const value of [
+    llmFoundation,
+    llmFoundation.resources,
+    resource,
+    resource.evidence,
+    resource.evidence.coverage,
+    llmFoundation.lessons,
+    lesson,
+    lesson.resourceIds,
+    lesson.knowledgeNote,
+    lesson.knowledgeNote.sections,
+  ]) {
+    assert.ok(Object.isFrozen(value), '公开课程数据及其嵌套结构必须被冻结');
+  }
+
+  assert.throws(() => {
+    resource.evidence.coverage[0] = '被篡改的覆盖范围';
+  }, TypeError);
+  assert.throws(() => {
+    lesson.resourceIds.push('res-injected');
+  }, TypeError);
+});
+
 test('every quiz item is answerable and explained', () => {
   for (const lesson of llmFoundation.lessons) {
     for (const item of lesson.quiz) {
@@ -291,13 +309,17 @@ test('lesson resource and interview references resolve in both directions', () =
 });
 
 test('resources are curated HTTPS entries with verification metadata', () => {
+  const llm01ResourceIds = new Set(
+    llmFoundation.lessons.find(({ id }) => id === 'llm-01').resourceIds,
+  );
+  assert.equal(llm01ResourceIds.size, 7, 'llm-01 必须精确关联 7 项已核验资源');
   assert.ok(llmFoundation.resources.length >= 18);
   assert.ok(llmFoundation.resources.length <= 30);
   for (const resource of llmFoundation.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
     assert.equal(
       resource.verifiedAt,
-      llm01VerifiedResourceIds.has(resource.id) ? '2026-07-21' : '2026-07-15',
+      llm01ResourceIds.has(resource.id) ? '2026-07-21' : '2026-07-15',
       resource.id,
     );
     for (const field of ['source', 'language', 'type', 'difficulty', 'stage', 'value']) {

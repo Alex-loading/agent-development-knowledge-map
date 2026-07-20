@@ -8,8 +8,8 @@ const resources = [
     id: 'res-ms-ai', title: 'AI for Beginners', url: 'https://github.com/microsoft/AI-For-Beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '基础认知', value: '用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
       authority: 'official', role: 'cross-check', verifiedAt: LLM_01_VERIFIED_AT,
-      coverage: ['AI 与机器学习的范围关系', '语言建模与自监督预训练', '条件生成与零样本、少样本使用'],
-      limitations: 'LLM 章节含过时且未可靠归因的模型参数表，也使用“理解”“包含人类知识”等教学性拟人表达；不用于当前模型规格、推理系统或现代 Agent 机制。',
+      coverage: ['AI 与机器学习的范围关系', '语言建模与自监督预训练', '条件生成与零样本、少样本使用', '损失、梯度下降优化与参数更新', '训练误差和验证误差、过拟合与泛化边界'],
+      limitations: '神经网络章节只支撑课程级的损失、梯度优化和训练/验证最小机制，不构成大模型训练系统保证；LLM 章节还含过时且未可靠归因的模型参数表及拟人表达，不用于当前模型规格或现代 Agent 机制。',
     },
   },
   {
@@ -56,8 +56,8 @@ const resources = [
     id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
       authority: 'official', role: 'extension', verifiedAt: LLM_01_VERIFIED_AT,
-      coverage: ['LLM、instructions 与 tools 的应用编排', '可选 handoffs、guardrails、sessions 与 tracing 组件'],
-      limitations: '只支撑 OpenAI Agents SDK 的应用编排边界，不支撑 AI 与机器学习层级、模型训练机制或所有 Agent 框架都必须采用的通用结构。',
+      coverage: ['LLM、instructions 与 tools 的应用编排', '可选 handoffs、guardrails、sessions 与 tracing 组件', '敏感工具配置 needs_approval 后暂停调用并等待人批准或拒绝'],
+      limitations: '审批语义只适用于 OpenAI Agents SDK 中配置了 needs_approval 或 require approval 的工具调用，guardrails 不是权限系统；该资料不支撑模型训练机制，也不代表所有 Agent 框架都自动具备人工审批。',
     },
   },
   { id: 'res-tiktoken', title: 'tiktoken', url: 'https://github.com/openai/tiktoken', source: 'OpenAI', language: '英文', type: 'GitHub 工具', difficulty: '进阶', stage: 'Token 实验', value: '实际观察 BPE tokenizer 的编码、解码和 token 预算。', verifiedAt: VERIFIED_AT },
@@ -410,11 +410,17 @@ const interviewQuestions = [
   },
 ];
 
-export const llmFoundation = {
+const deepFreeze = (value) => {
+  if (value === null || typeof value !== 'object') return value;
+  for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
+  return Object.freeze(value);
+};
+
+export const llmFoundation = deepFreeze({
   id: 'llm-foundation',
   title: 'LLM 基础',
   summary: '面向 Agent 与 AI 应用开发者的第一阶段课程：先理解模型，再学会把概率能力装进可验证系统。',
   lessons,
   resources,
   interviewQuestions,
-};
+});
