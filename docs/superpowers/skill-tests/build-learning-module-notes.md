@@ -248,6 +248,84 @@ Agent 开发通常属于应用开发一侧。一个稳妥的起点，是先可�
 不过，目前只有这七项资源的元数据和价值说明，虽然均标记为 2026 年 7 月 15 日验证，但没有资源正文。因此，本课无法进一步复述其具体章节、代码示例、练习内容或技术细节，也不能据此评价各课程的实际深度。当前能够确定的核心结论是：先建立概念层级，明确训练与推理的差别，再站在应用开发视角，通过评测决定是否引入检索、微调或模型替换。
 ```
 
+## Skill 结构验证记录
+
+### 脚手架界面字段调整
+
+按计划原样运行官方 `init_skill.py` 时，目录和 `SKILL.md` 模板已经创建，但脚手架在生成 `agents/openai.yaml` 前拒绝了原短描述：
+
+```text
+[ERROR] short_description must be 25-64 characters (got 21).
+```
+
+因此没有把这次调用记作完整成功。最终 `openai.yaml` 使用等义的 27 字短描述“将多来源学习资料综合成可独立学习、可追溯的系统知识章节”，满足脚手架记录的 25–64 字限制；没有降低或绕过该限制。
+
+### 官方验证器的运行环境
+
+直接用系统 Python 运行官方验证器：
+
+```bash
+/usr/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+```
+
+以及用工作区 bundled Python 运行同一未修改的验证器：
+
+```bash
+/Users/octopus/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+```
+
+两次都在导入验证器依赖时失败，实际错误均为：
+
+```text
+ModuleNotFoundError: No module named 'yaml'
+```
+
+这不是 Skill 校验失败，而是两个现有 Python 环境都没有 PyYAML。验证期间没有联网、没有安装依赖、没有修改官方 `quick_validate.py`，也没有把兼容代码写入仓库。
+
+为实际执行官方验证器剩余逻辑，在 `/private/tmp` 下建立临时目录，并只向该进程的 `PYTHONPATH` 注入一个最小只读 `yaml.py` 兼容模块。它仅实现本 Skill 当前两字段、扁平 `key: scalar` frontmatter 所需的 `safe_load` 和 `YAMLError`；它不支持嵌套对象、列表、锚点、标签或一般 YAML 语法，不能替代 PyYAML，也没有修改被验证文件。可复现方式如下：
+
+```bash
+SKILL_YAML_COMPAT_DIR="$(mktemp -d)"
+# 将下方兼容模块代码保存为 "$SKILL_YAML_COMPAT_DIR/yaml.py"
+env PYTHONPATH="$SKILL_YAML_COMPAT_DIR" /usr/bin/python3 /Users/octopus/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/build-learning-module-notes
+```
+
+兼容模块的完整代码为：
+
+```python
+class YAMLError(Exception):
+    pass
+
+
+def safe_load(source):
+    result = {}
+    for line in source.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if ":" not in line:
+            raise YAMLError(f"expected a key/value pair: {line}")
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            raise YAMLError("empty key")
+        if value.startswith(('"', "'")):
+            quote = value[0]
+            if len(value) < 2 or not value.endswith(quote):
+                raise YAMLError(f"unterminated quoted scalar: {line}")
+            value = value[1:-1]
+        result[key] = value
+    return result
+```
+
+官方 `quick_validate.py` 随后实际输出并以状态码 0 退出：
+
+```text
+Skill is valid!
+```
+
+该结果只表示官方脚本在其既有校验范围内确认 frontmatter 的字典形状、允许字段、名称格式和描述限制；临时兼容模块的狭窄解析范围已在上面明确限定。
+
 ## GREEN：llm-01 隔离复测
 
 ### 执行条件与精确提示
