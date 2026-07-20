@@ -9,6 +9,7 @@ import {
   setInterviewStatus,
   toggleReviewQueue,
 } from '../src/core/progress.js';
+import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
@@ -960,6 +961,178 @@ test('plan recovery lab reaches every recovery branch, handles invalid numbers a
   assert.equal(document.activeElement, strategy);
 });
 
+test('Agent Harness labs render accessible headings and atomic live results', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+
+  for (const [experimentId, resultId] of [
+    ['run-lifecycle', 'harness-lifecycle-result'],
+    ['retry-resume', 'harness-resume-result'],
+    ['queue-backpressure', 'harness-queue-result'],
+  ]) {
+    const lab = renderExperiment(experimentId);
+    document.body.append(lab);
+    assert.ok(lab.className.includes('experiment-lab'), experimentId);
+    const headingId = lab.getAttribute('aria-labelledby');
+    assert.ok(headingId, experimentId);
+    assert.notEqual(lab.querySelector(`#${headingId}`), null, experimentId);
+    const result = lab.querySelector(`#${resultId}`);
+    assert.notEqual(result, null, experimentId);
+    assert.ok(result.className.includes('harness-metrics-grid'), experimentId);
+    assert.equal(result.getAttribute('aria-live'), 'polite', experimentId);
+    assert.equal(result.getAttribute('aria-atomic'), 'true', experimentId);
+  }
+});
+
+test('run lifecycle lab applies ordered events, rejects illegal transitions and resets focus', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('run-lifecycle');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#harness-lifecycle-result');
+  const enqueue = lab.querySelector('#harness-event-enqueue');
+  assert.equal(result.dataset.status, 'created');
+  assert.ok(result.textContent.includes('sequence：0'));
+  assert.ok(lab.textContent.includes('确定性状态机模拟'));
+  assert.ok(lab.textContent.includes('不是真实 worker'));
+  assert.ok(lab.textContent.includes('持久层'));
+  for (const eventType of [
+    'enqueue', 'start', 'request-approval', 'approve', 'schedule-retry', 'retry',
+    'block', 'resume', 'step', 'complete', 'fail', 'cancel', 'timeout',
+  ]) {
+    assert.notEqual(lab.querySelector(`#harness-event-${eventType}`), null, eventType);
+  }
+
+  lab.querySelector('#harness-event-start').click();
+  assert.equal(result.dataset.status, 'rejected');
+  assert.ok(result.textContent.includes('illegal transition'));
+  assert.ok(result.textContent.includes('状态：created'));
+
+  enqueue.click();
+  assert.equal(result.dataset.status, 'queued');
+  lab.querySelector('#harness-event-start').click();
+  assert.equal(result.dataset.status, 'running');
+  lab.querySelector('#harness-event-request-approval').click();
+  assert.equal(result.dataset.status, 'awaiting_approval');
+  assert.ok(result.textContent.includes('refund-001'));
+  lab.querySelector('#harness-event-approve').click();
+  assert.equal(result.dataset.status, 'running');
+  assert.ok(result.textContent.includes('sequence：4'));
+  assert.ok(result.textContent.includes('pending approval：无'));
+
+  lab.querySelector('#harness-lifecycle-reset').click();
+  assert.equal(result.dataset.status, 'created');
+  assert.ok(result.textContent.includes('steps：0'));
+  assert.equal(document.activeElement, enqueue);
+});
+
+test('retry resume lab reaches manual, reconcile, skip, retry and fail decisions', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('retry-resume');
+  document.body.append(lab);
+
+  const callKind = lab.querySelector('#harness-resume-call-kind');
+  const completion = lab.querySelector('#harness-resume-completion');
+  const errorKind = lab.querySelector('#harness-resume-error-kind');
+  const key = lab.querySelector('#harness-resume-key');
+  const record = lab.querySelector('#harness-resume-record');
+  const remote = lab.querySelector('#harness-resume-remote');
+  const attempts = lab.querySelector('#harness-resume-attempts');
+  const maxAttempts = lab.querySelector('#harness-resume-max-attempts');
+  const result = lab.querySelector('#harness-resume-result');
+
+  assert.equal(result.dataset.status, 'manual');
+  assert.ok(result.textContent.includes('completionEvent'));
+  assert.ok(lab.textContent.includes('可重试错误不等于副作用可安全重放'));
+
+  dispatchChange(remote, 'succeeded');
+  assert.equal(result.dataset.status, 'reconcile');
+  assert.ok(result.textContent.includes('completionEvent'));
+  completion.checked = true;
+  completion.dispatchEvent(new FakeEvent('change'));
+  assert.equal(result.dataset.status, 'skip');
+
+  completion.checked = false;
+  completion.dispatchEvent(new FakeEvent('change'));
+  dispatchChange(remote, 'none');
+  dispatchChange(callKind, 'read');
+  dispatchChange(errorKind, 'transient');
+  assert.equal(result.dataset.status, 'retry');
+  assert.ok(result.textContent.includes('1300'));
+
+  dispatchChange(errorKind, 'permanent');
+  assert.equal(result.dataset.status, 'fail');
+  attempts.value = '';
+  attempts.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('non-negative safe integer'));
+
+  key.checked = true;
+  key.dispatchEvent(new FakeEvent('change'));
+  dispatchChange(record, 'pending');
+  maxAttempts.value = '8';
+  maxAttempts.dispatchEvent(new FakeEvent('input'));
+  lab.querySelector('#harness-resume-reset').click();
+  assert.equal(callKind.value, 'write');
+  assert.equal(completion.checked, false);
+  assert.equal(errorKind.value, 'unknown');
+  assert.equal(key.checked, false);
+  assert.equal(record.value, 'none');
+  assert.equal(remote.value, 'none');
+  assert.equal(attempts.value, '0');
+  assert.equal(maxAttempts.value, '3');
+  assert.equal(result.dataset.status, 'manual');
+  assert.equal(document.activeElement, callKind);
+});
+
+test('queue backpressure lab reports exact tick flow, advances age and resets invalid input', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('queue-backpressure');
+  document.body.append(lab);
+
+  const arrivals = lab.querySelector('#harness-queue-arrivals');
+  const workers = lab.querySelector('#harness-queue-workers');
+  const service = lab.querySelector('#harness-queue-service');
+  const limit = lab.querySelector('#harness-queue-limit');
+  const tick = lab.querySelector('#harness-queue-tick');
+  const result = lab.querySelector('#harness-queue-result');
+  assert.ok(lab.textContent.includes('离散 tick 教学模拟'));
+  assert.ok(lab.textContent.includes('不是分布式队列'));
+  assert.equal(result.dataset.status, 'healthy');
+
+  tick.click();
+  assert.equal(result.dataset.status, 'overloaded');
+  assert.ok(result.textContent.includes('started：job-001'));
+  assert.ok(result.textContent.includes('queued：job-002、job-003'));
+  assert.ok(result.textContent.includes('rejected：job-004'));
+  assert.ok(result.textContent.includes('utilization：100%'));
+
+  tick.click();
+  assert.ok(result.textContent.includes('running：job-001 (remaining 1)'));
+  assert.ok(result.textContent.includes('oldest age：1'));
+  assert.ok(result.textContent.includes('rejected：job-005、job-006、job-007、job-008'));
+
+  workers.value = '';
+  workers.dispatchEvent(new FakeEvent('input'));
+  assert.equal(result.dataset.status, 'invalid');
+  assert.ok(result.textContent.includes('non-negative safe integer'));
+
+  arrivals.value = '1';
+  service.value = '2';
+  limit.value = '5';
+  lab.querySelector('#harness-queue-reset').click();
+  assert.equal(arrivals.value, '4');
+  assert.equal(workers.value, '1');
+  assert.equal(service.value, '1');
+  assert.equal(limit.value, '2');
+  assert.equal(result.dataset.status, 'healthy');
+  assert.ok(result.textContent.includes('running：无'));
+  assert.equal(document.activeElement, tick);
+});
+
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -991,10 +1164,13 @@ test('every configured experiment has a resolvable accessible heading and is int
   const root = document.createElement('div');
   document.body.append(root);
 
-  const configured = Object.values(courseRegistry).flatMap((course) => course.lessons
+  const courses = [...new Map(
+    [...Object.values(courseRegistry), agentHarness].map((course) => [course.id, course]),
+  ).values()];
+  const configured = courses.flatMap((course) => course.lessons
     .filter((lesson) => lesson.exercise.experiment)
     .map((lesson) => ({ course, lesson, experimentId: lesson.exercise.experiment })));
-  assert.equal(configured.length, 6);
+  assert.equal(configured.length, 9);
 
   for (const { course, lesson, experimentId } of configured) {
     const resolved = renderExperiment(experimentId);

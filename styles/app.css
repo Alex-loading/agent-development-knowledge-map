@@ -1212,6 +1212,98 @@ button:disabled {
   font-weight: 600;
 }
 
+.harness-decision,
+.harness-metrics-grid,
+.harness-event-grid,
+.harness-control-set,
+.harness-state-track,
+.harness-queue-meter-wrap {
+  min-width: 0;
+}
+
+.harness-decision {
+  overflow-wrap: anywhere;
+}
+
+.harness-metrics-grid {
+  align-content: start;
+}
+
+.harness-decision[data-status="healthy"],
+.harness-decision[data-status="succeeded"],
+.harness-decision[data-status="skip"],
+.harness-decision[data-status="reconcile"] {
+  --stamp-color: var(--color-forest);
+}
+
+.harness-decision[data-status="rejected"],
+.harness-decision[data-status="failed"],
+.harness-decision[data-status="cancelled"],
+.harness-decision[data-status="timed_out"],
+.harness-decision[data-status="invalid"],
+.harness-decision[data-status="overloaded"] {
+  --stamp-color: var(--color-vermilion);
+}
+
+.harness-state-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 1px;
+  margin: var(--space-5) 0 0;
+  border: 1px solid var(--color-border-soft);
+  padding: 1px;
+  background: var(--color-border-soft);
+  list-style: none;
+}
+
+.harness-state-track__state {
+  min-width: 0;
+  padding: var(--space-2);
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+  background: var(--color-paper-raised);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.harness-state-track__state[data-active="true"] {
+  color: var(--color-paper-raised);
+  background: var(--color-forest);
+  font-weight: 700;
+}
+
+.harness-event-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+.harness-event-button,
+.harness-tick-button {
+  min-width: 0;
+  min-height: 2.75rem;
+  overflow-wrap: anywhere;
+}
+
+.harness-check-control {
+  min-width: 0;
+}
+
+.harness-queue-meter-wrap {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.harness-queue-meter {
+  width: 100%;
+  height: 0.85rem;
+  accent-color: var(--color-vermilion);
+}
+
 .tool-contract-decision {
   display: block;
   padding: var(--space-3);
@@ -2109,6 +2201,10 @@ button:disabled {
     width: 100%;
   }
 
+  .harness-state-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .filter-ledger__summary button {
     width: 100%;
     margin-left: 0;
@@ -2198,6 +2294,16 @@ button:disabled {
   .agent-decision-ledger__entry dd {
     border-top: 1px dashed var(--color-border-soft);
     border-left: 0;
+  }
+
+  .harness-event-grid,
+  .harness-state-track {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .harness-event-button,
+  .harness-tick-button {
+    width: 100%;
   }
 }
 

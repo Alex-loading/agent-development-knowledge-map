@@ -4,6 +4,7 @@ import {
   sampleDistribution,
 } from '../core/experiments.js';
 import { agentExperimentRenderers } from './agent-experiments.js';
+import { harnessExperimentRenderers } from './harness-experiments.js';
 import { button, element } from './dom.js';
 
 const BUDGET_DEFAULTS = Object.freeze({
@@ -55,6 +56,7 @@ const experimentRenderers = Object.freeze({
   attention: renderAttentionExperiment,
   sampling: renderSamplingExperiment,
   ...agentExperimentRenderers,
+  ...harnessExperimentRenderers,
 });
 
 let unavailableExperimentSequence = 0;
