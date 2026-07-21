@@ -2,14 +2,39 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { modules } from '../src/data/modules.js';
+import { agentHarness } from '../src/data/agent-harness.js';
+import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
+import { llmFoundationNotes } from '../src/data/llm-foundation-notes.js';
 
 const expectedLessonIds = Array.from({ length: 8 }, (_, index) =>
   `llm-${String(index + 1).padStart(2, '0')}`,
 );
+const noteExpectations = new Map([
+  ['llm-01', { minMinutes: 20, maxMinutes: 30, minLength: 3000 }],
+  ['llm-02', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['llm-03', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['llm-04', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+  ['llm-05', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+  ['llm-06', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+  ['llm-07', { minMinutes: 35, maxMinutes: 40, minLength: 3600 }],
+  ['llm-08', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+]);
+const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+const validRoles = new Set(['core', 'cross-check', 'extension']);
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
+}
+
+function assertDeepFrozen(value, label, seen = new Set()) {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  assert.ok(Object.isFrozen(value), `${label}: 公开课程数据及其嵌套结构必须被冻结`);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    assertDeepFrozen(nestedValue, `${label}.${key}`, seen);
+  }
 }
 
 test('module catalog starts with four active modules and exposes planned dependencies', () => {
@@ -103,164 +128,117 @@ test('every lesson has substantive teaching, practice and completion material', 
   }
 });
 
-test('LLM first lesson has a source-grounded long-form knowledge note pilot', () => {
-  const lesson = llmFoundation.lessons.find(({ id }) => id === 'llm-01');
-  const note = lesson.knowledgeNote;
-  assert.ok(note, 'llm-01 必须提供 knowledgeNote 试点');
-  assert.ok(
-    typeof note.introduction === 'string' && note.introduction.length > 0,
-    'llm-01: knowledgeNote.introduction 不能为空',
-  );
-  assert.ok(Array.isArray(note.sections), 'llm-01: knowledgeNote.sections 必须为数组');
-  assert.ok(
-    typeof note.nextStep === 'string' && note.nextStep.length > 0,
-    'llm-01: knowledgeNote.nextStep 不能为空',
-  );
-
-  const lessonResourceIds = new Set(lesson.resourceIds);
-  const sectionIds = note.sections.map(({ id }) => id);
-  const bodyLength = note.introduction.length
-    + note.sections.flatMap(({ paragraphs }) => paragraphs).join('').length
-    + note.nextStep.length;
-
-  assert.ok(
-    note.readingMinutes >= 20 && note.readingMinutes <= 30,
-    'llm-01: knowledgeNote 阅读时长应为 20–30 分钟',
-  );
-  assert.ok(
-    note.sections.length >= 6 && note.sections.length <= 7,
-    'llm-01: knowledgeNote 应包含 6–7 个递进章节',
-  );
-  assert.equal(
-    new Set(sectionIds).size,
-    sectionIds.length,
-    'llm-01: knowledgeNote section id 不应重复',
-  );
-  assert.ok(
-    bodyLength >= 3000 && bodyLength <= 5500,
-    `llm-01: knowledgeNote 正文长度应为 3000–5500 字符，当前为 ${bodyLength}`,
-  );
-
-  for (const section of note.sections) {
-    assert.match(section.id ?? '', /^[a-z0-9-]+$/, 'section id 必须为 kebab-case');
-    assert.ok(
-      typeof section.title === 'string' && section.title.length >= 4,
-      `${section.id}: title 至少 4 个字符`,
-    );
-    assert.ok(
-      Array.isArray(section.paragraphs) && section.paragraphs.length >= 2,
-      `${section.id}: 至少需要 2 个正文段落`,
-    );
-    assert.ok(
-      section.paragraphs.every(
-        (paragraph) => typeof paragraph === 'string' && paragraph.length >= 60,
-      ),
-      `${section.id}: 每个正文段落至少需要 60 个字符`,
-    );
-    assert.ok(
-      Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
-      `${section.id}: 至少需要 2 个要点`,
-    );
-    assert.ok(
-      Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
-      `${section.id}: 至少需要 1 个来源`,
-    );
-    assert.ok(
-      section.sourceIds.every((id) => lessonResourceIds.has(id)),
-      `${section.id}: sourceIds 必须全部属于 llm-01.resourceIds`,
-    );
-  }
-
-  assert.ok(
-    Array.isArray(note.misconceptions) && note.misconceptions.length >= 3,
-    'llm-01: 至少需要 3 个常见误区',
-  );
-  assert.ok(
-    Array.isArray(note.recap) && note.recap.length >= 5,
-    'llm-01: recap 至少需要 5 个回顾要点',
-  );
-});
-
-test('LLM first lesson resources all provide complete evidence cards', () => {
-  const lesson = llmFoundation.lessons.find(({ id }) => id === 'llm-01');
+test('every LLM lesson has a source-grounded long-form knowledge note', () => {
   const resourcesById = new Map(
     llmFoundation.resources.map((resource) => [resource.id, resource]),
   );
-  const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
-  const validRoles = new Set(['core', 'cross-check', 'extension']);
-
-  assert.equal(lesson.resourceIds.length, 7, 'llm-01 应关联且核验 7 份学习资料');
-  assert.equal(
-    new Set(lesson.resourceIds).size,
-    7,
-    'llm-01 的 7 份学习资料必须使用不同 resource id',
+  assert.deepEqual(Object.keys(llmFoundationNotes), expectedLessonIds, '笔记注册表必须覆盖且只覆盖八节 LLM 课程');
+  assert.deepEqual(
+    llmFoundation.lessons.filter((lesson) => lesson.knowledgeNote).map((lesson) => lesson.id),
+    expectedLessonIds,
+    '八节 LLM 课程都必须提供 knowledgeNote',
   );
-  for (const resourceId of lesson.resourceIds) {
-    const resource = resourcesById.get(resourceId);
-    assert.ok(resource, `${resourceId}: 必须存在于资源库`);
-    assert.ok(resource.evidence, `${resourceId}: 必须提供 evidence 来源卡`);
-    assert.ok(
-      validAuthorities.has(resource.evidence.authority),
-      `${resourceId}: evidence.authority 值无效`,
-    );
-    assert.ok(
-      validRoles.has(resource.evidence.role),
-      `${resourceId}: evidence.role 值无效`,
-    );
-    assert.ok(
-      Array.isArray(resource.evidence.coverage) && resource.evidence.coverage.length >= 1,
-      `${resourceId}: evidence.coverage 不能为空`,
-    );
-    assert.ok(
-      typeof resource.evidence.limitations === 'string'
-        && resource.evidence.limitations.length >= 15,
-      `${resourceId}: evidence.limitations 至少需要 15 个字符`,
-    );
+  assert.equal(new Set(Object.values(llmFoundationNotes)).size, expectedLessonIds.length,
+    '每节 LLM 课程必须使用不同的 knowledgeNote 对象');
+
+  for (const lesson of llmFoundation.lessons) {
+    const expectation = noteExpectations.get(lesson.id);
+    const note = lesson.knowledgeNote;
+    assert.ok(expectation, `${lesson.id}: 必须有知识笔记发布要求`);
+    assert.ok(note, `${lesson.id}: 必须提供 knowledgeNote`);
+    assert.equal(note, llmFoundationNotes[lesson.id], `${lesson.id}: knowledgeNote 必须引用注册表中的同一对象`);
+    assert.ok(typeof note.introduction === 'string' && note.introduction.length > 0, `${lesson.id}: introduction 不能为空`);
+    assert.ok(typeof note.nextStep === 'string' && note.nextStep.length > 0, `${lesson.id}: nextStep 不能为空`);
+    assert.ok(Array.isArray(note.sections), `${lesson.id}: sections 必须为数组`);
+
+    const sectionIds = note.sections.map(({ id }) => id);
+    const bodyLength = note.introduction.length
+      + note.sections.flatMap(({ paragraphs }) => paragraphs).join('').length
+      + note.nextStep.length;
+    assert.ok(note.readingMinutes >= expectation.minMinutes && note.readingMinutes <= expectation.maxMinutes,
+      `${lesson.id}: 阅读时长应为 ${expectation.minMinutes}–${expectation.maxMinutes} 分钟`);
+    assert.ok(note.sections.length >= 5 && note.sections.length <= 7, `${lesson.id}: 应包含 5–7 个递进章节`);
+    assertUnique(sectionIds, `${lesson.id}: knowledgeNote section id`);
+    assert.ok(bodyLength >= expectation.minLength && bodyLength <= 9000,
+      `${lesson.id}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
+
+    const lessonResourceIds = new Set(lesson.resourceIds);
+    for (const section of note.sections) {
+      assert.match(section.id ?? '', /^[a-z0-9-]+$/, `${lesson.id}: section id 必须为 kebab-case`);
+      assert.ok(typeof section.title === 'string' && section.title.trim().length >= 4,
+        `${lesson.id}:${section.id}: title 至少需要 4 个非空字符`);
+      assert.ok(Array.isArray(section.paragraphs) && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
+        `${lesson.id}:${section.id}: 需要 2–4 个正文段落`);
+      assert.ok(section.paragraphs.every((paragraph) => typeof paragraph === 'string' && paragraph.length >= 60),
+        `${lesson.id}:${section.id}: 每个正文段落至少需要 60 个字符`);
+      assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
+        `${lesson.id}:${section.id}: 至少需要 2 个要点`);
+      assert.ok(section.keyPoints.every((keyPoint) => typeof keyPoint === 'string' && keyPoint.trim().length > 0),
+        `${lesson.id}:${section.id}: 每个要点必须是非空字符串`);
+      assert.ok(Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
+        `${lesson.id}:${section.id}: 至少需要 1 个来源`);
+      assert.ok(section.sourceIds.every((id) => resourcesById.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部存在于全局资源库`);
+      assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于 lesson.resourceIds`);
+    }
+    assert.ok(Array.isArray(note.misconceptions) && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
+      `${lesson.id}: 需要 4–6 个常见误区`);
+    assert.ok(note.misconceptions.every((misconception) => (
+      typeof misconception?.claim === 'string' && misconception.claim.trim().length > 0
+      && typeof misconception.correction === 'string' && misconception.correction.trim().length > 0
+    )), `${lesson.id}: 每个误区必须具有非空 claim 和 correction`);
+    assert.ok(Array.isArray(note.recap) && note.recap.length >= 5, `${lesson.id}: recap 至少需要 5 个回顾要点`);
+    assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${lesson.id}: 每个 recap 项必须是非空字符串`);
   }
 });
 
-test('knowledge note remains an llm-01-only pilot with explanation fallback elsewhere', () => {
-  assert.deepEqual(
-    llmFoundation.lessons
-      .filter((lesson) => lesson.knowledgeNote)
-      .map((lesson) => lesson.id),
-    ['llm-01'],
-    '当前只有 llm-01 应启用 knowledgeNote 试点',
-  );
+test('all 28 LLM resources provide complete evidence cards', () => {
+  assert.equal(llmFoundation.resources.length, 28, 'LLM 课程必须维护 28 份资源');
+  for (const resource of llmFoundation.resources) {
+    assert.ok(resource.evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(resource.evidence.authority), `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validRoles.has(resource.evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(resource.evidence.coverage) && resource.evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(typeof resource.evidence.limitations === 'string' && resource.evidence.limitations.length >= 15,
+      `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+  }
+});
 
-  for (const lesson of llmFoundation.lessons.filter(({ id }) => id !== 'llm-01')) {
-    assert.equal(lesson.knowledgeNote, undefined, `${lesson.id}: 不应提前启用 knowledgeNote`);
-    assert.ok(
-      Array.isArray(lesson.explanations) && lesson.explanations.length >= 2,
-      `${lesson.id}: 必须保留 explanations 作为 fallback`,
-    );
+test('other active module courses retain explanation fallback without knowledge notes', () => {
+  for (const course of [agentMechanism, agentHarness, contextRagMemory]) {
+    for (const lesson of course.lessons) {
+      assert.equal(lesson.knowledgeNote, undefined, `${course.id}:${lesson.id}: 不应启用 knowledgeNote`);
+      assert.ok(
+        Array.isArray(lesson.explanations) && lesson.explanations.length >= 2,
+        `${course.id}:${lesson.id}: 必须保留 explanations 作为 fallback`,
+      );
+    }
   }
 });
 
 test('LLM foundation export is deeply frozen', () => {
-  const lesson = llmFoundation.lessons.find(({ id }) => id === 'llm-01');
-  const resource = llmFoundation.resources.find(({ id }) => id === 'res-ms-genai');
+  const lessonEight = llmFoundation.lessons.find(({ id }) => id === 'llm-08');
+  const resource = llmFoundation.resources.find(({ id }) => id === 'res-openai-evals');
 
-  for (const value of [
-    llmFoundation,
-    llmFoundation.resources,
-    resource,
-    resource.evidence,
-    resource.evidence.coverage,
-    llmFoundation.lessons,
-    lesson,
-    lesson.resourceIds,
-    lesson.knowledgeNote,
-    lesson.knowledgeNote.sections,
-  ]) {
-    assert.ok(Object.isFrozen(value), '公开课程数据及其嵌套结构必须被冻结');
+  assertDeepFrozen(llmFoundationNotes, 'llmFoundationNotes');
+  for (const lesson of llmFoundation.lessons) {
+    assert.ok(lesson.knowledgeNote, `${lesson.id}: 冻结验证前必须提供 knowledgeNote`);
+    assertDeepFrozen(lesson.knowledgeNote, `${lesson.id}.knowledgeNote`);
   }
+  for (const candidate of llmFoundation.resources) {
+    assert.ok(candidate.evidence, `${candidate.id}: 冻结验证前必须提供 evidence`);
+    assertDeepFrozen(candidate.evidence, `${candidate.id}.evidence`);
+  }
+  assertDeepFrozen(llmFoundation, 'llmFoundation');
 
   assert.throws(() => {
     resource.evidence.coverage[0] = '被篡改的覆盖范围';
   }, TypeError);
   assert.throws(() => {
-    lesson.resourceIds.push('res-injected');
+    lessonEight.knowledgeNote.recap.push('被篡改的回顾要点');
   }, TypeError);
 });
 
@@ -314,19 +292,12 @@ test('lesson resource and interview references resolve in both directions', () =
 });
 
 test('resources are curated HTTPS entries with verification metadata', () => {
-  const llm01ResourceIds = new Set(
-    llmFoundation.lessons.find(({ id }) => id === 'llm-01').resourceIds,
-  );
-  assert.equal(llm01ResourceIds.size, 7, 'llm-01 必须精确关联 7 项已核验资源');
   assert.ok(llmFoundation.resources.length >= 18);
   assert.ok(llmFoundation.resources.length <= 30);
   for (const resource of llmFoundation.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(
-      resource.verifiedAt,
-      llm01ResourceIds.has(resource.id) ? '2026-07-21' : '2026-07-15',
-      resource.id,
-    );
+    assert.match(resource.verifiedAt, /^2026-07-(15|21|22)$/, `${resource.id}: verifiedAt 格式或允许日期无效`);
+    assert.ok(resource.verifiedAt <= '2026-07-22', `${resource.id}: verifiedAt 不得晚于 2026-07-22`);
     for (const field of ['source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
@@ -345,7 +316,6 @@ test('curated resources include verified video, eval and security primary source
   assert.equal(karpathyYoutube.source, 'Andrej Karpathy');
   assert.match(karpathyYoutube.type, /YouTube/);
   assert.equal(karpathyYoutube.platform, 'YouTube');
-  assert.equal(karpathyYoutube.verifiedAt, '2026-07-15');
   assert.ok(
     ['llm-03', 'llm-04'].some((lessonId) =>
       llmFoundation.lessons

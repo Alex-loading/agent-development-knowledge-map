@@ -2,6 +2,8 @@ import { llmFoundationNotes } from './llm-foundation-notes.js';
 
 const VERIFIED_AT = '2026-07-15';
 const LLM_01_VERIFIED_AT = '2026-07-21';
+const WAVE_01_VERIFIED_AT = '2026-07-22';
+const WAVE_02_VERIFIED_AT = '2026-07-22';
 
 const resources = [
   {
@@ -13,11 +15,11 @@ const resources = [
     },
   },
   {
-    id: 'res-ms-genai', title: 'Generative AI for Beginners', url: 'https://github.com/microsoft/generative-ai-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '应用基础', value: '从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。', verifiedAt: LLM_01_VERIFIED_AT,
+    id: 'res-ms-genai', title: 'Generative AI for Beginners', url: 'https://github.com/microsoft/generative-ai-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '应用基础', value: '从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
-      authority: 'official', role: 'core', verifiedAt: LLM_01_VERIFIED_AT,
-      coverage: ['生成式 AI 与 LLM 基础', 'tokenizer 与自回归生成', '模型、服务与应用的边界', '预训练、微调、RAG、部署和 Agent 衔接'],
-      limitations: '“生成式 AI 是深度学习子集”等表述是面向现代主流系统的简化分类；Foundry 流程和具体模型清单具有平台与时间边界，不能当作通用唯一实现。',
+      authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['生成式 AI 与 LLM 基础', 'tokenizer、embedding 与自回归生成', '模型、服务与应用的边界', '上下文预算、RAG 与应用评测', '预训练、SFT、微调与部署的目标边界', 'Prompt 设计、结构化输出与应用评测', 'Agent 衔接与生产应用迭代'],
+      limitations: '“生成式 AI 是深度学习子集”等表述是面向现代主流系统的简化分类；本模块只用实际访问的课程正文支撑 tokenization、embedding、训练阶段、Prompt、RAG 与评测，Foundry 流程、接口示例和模型清单具有平台与时间边界，不能当作通用唯一实现。',
     },
   },
   {
@@ -29,19 +31,61 @@ const resources = [
     },
   },
   {
-    id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: LLM_01_VERIFIED_AT,
+    id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
-      authority: 'official', role: 'core', verifiedAt: LLM_01_VERIFIED_AT,
-      coverage: ['LLM 与 Transformer 基础', '自监督预训练和微调', '使用已训练模型推理', 'prefill 与 decode', '偏见、上下文和资源限制'],
-      limitations: '不能单独支撑完整的 AI、机器学习、深度学习领域层级，也不覆盖应用团队的完整职责；本章不把“推理参数固定”归因成该课程的明确原句。',
+      authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['LLM 与 Transformer 基础', 'tokenization、输入 embedding 与上下文化表示', '位置相关表示与上下文限制', '自监督预训练、SFT 与参数高效微调', '使用已训练模型推理', 'logits、生成、prefill、decode 与 KV Cache', '偏见、数据与资源限制'],
+      limitations: '不能单独支撑完整的 AI、机器学习、深度学习领域层级，也不覆盖应用团队的完整职责；不同模型的 tokenizer、位置表示、训练配方、窗口与推理接口仍须查对应模型和服务，本模块不把某一教学实现推广成所有模型保证。',
     },
   },
-  { id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: VERIFIED_AT },
-  { id: 'res-karpathy', title: 'Neural Networks: Zero to Hero', url: 'https://github.com/karpathy/nn-zero-to-hero', source: 'Andrej Karpathy', language: '英文', type: 'GitHub + 视频', difficulty: '进阶', stage: '原理实作', value: '从反向传播手写到 tokenizer 与 GPT，代码和直觉紧密对应。', verifiedAt: VERIFIED_AT },
-  { id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: VERIFIED_AT },
-  { id: 'res-rasbt', title: 'LLMs from Scratch', url: 'https://github.com/rasbt/LLMs-from-scratch', source: 'Sebastian Raschka', language: '英文', type: 'GitHub 教材', difficulty: '进阶', stage: '模型实作', value: '逐章实现数据处理、Attention、GPT、预训练、微调与 LoRA。', verifiedAt: VERIFIED_AT },
-  { id: 'res-happy-llm', title: 'Happy-LLM：从零开始构建大模型', url: 'https://github.com/datawhalechina/happy-llm', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '入门到进阶', stage: '中文主线', value: '中文系统讲解 NLP、Transformer、训练、微调并提供动手实现。', verifiedAt: VERIFIED_AT },
-  { id: 'res-llm-universe', title: 'LLM Universe：动手学大模型应用开发', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: 'GitHub 课程', difficulty: '入门', stage: '应用开发', value: '面向 Python 开发者讲 API、Prompt、RAG、评估和应用落地。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['消息、工具、解析器与执行边界', '模型输出解析与结构校验', 'trace、token、成本、延迟和错误可观测性', '离线评测、线上反馈、重试与 fallback'],
+      limitations: '课程以 smolagents 与 OpenTelemetry 等具体框架和观测实现为例，接口与行为具有版本边界；成功解析不等于权限合法、事实正确或业务有效，生产系统仍需独立授权、业务校验和降级。',
+    },
+  },
+  {
+    id: 'res-karpathy', title: 'Neural Networks: Zero to Hero', url: 'https://github.com/karpathy/nn-zero-to-hero', source: 'Andrej Karpathy', language: '英文', type: 'GitHub + 视频', difficulty: '进阶', stage: '原理实作', value: '从反向传播手写到 tokenizer 与 GPT，代码和直觉紧密对应。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['训练循环与计算依赖', 'micrograd 标量自动微分、链式法则和梯度累加', '参数更新与梯度清理的教学实现', '训练和验证损失的诊断思路'],
+      limitations: '核心正文来自课程仓库与 micrograd 教学实现，只用于说明标量计算图和最小训练闭环，不代表生产张量框架或分布式训练系统；Transformer 与推理课程在 llm-04、llm-06 只作为扩展路线，本轮未取得 Build GPT 视频可核验字幕，未把视频当作机制正文。',
+    },
+  },
+  {
+    id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'extension', verifiedAt: VERIFIED_AT,
+      coverage: ['视频身份、作者与从 bigram 到 GPT 教学路线的元数据，作为课后实作入口'],
+      limitations: '本轮只核验视频页面和课程元数据，没有取得可核验字幕或逐字正文，因此不用于支撑 token、上下文、Attention 或 Transformer 的任何关键机制。',
+    },
+  },
+  {
+    id: 'res-rasbt', title: 'LLMs from Scratch', url: 'https://github.com/rasbt/LLMs-from-scratch', source: 'Sebastian Raschka', language: '英文', type: 'GitHub 教材', difficulty: '进阶', stage: '模型实作', value: '逐章实现数据处理、Attention、GPT、预训练、微调与 LoRA。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['tokenization、输入 embedding 与位置表示', 'Q、K、V 与缩放点积注意力', '多头、因果掩码与 GPT-like decoder block', 'GPT-like Pre-Norm 教学实现', '预训练、分类与指令微调、LoRA 实作', 'logits、temperature、top-k 与生成循环', '自回归推理与 KV Cache 教学实现'],
+      limitations: '这是面向学习者的 GPT-like 代码与教材，不代表所有模型采用相同 tokenizer、位置机制、训练配方、采样接口、缓存布局、尺寸或归一化放置；Pre-Norm 实现不能反向改写原始 Transformer 论文的 Post-Norm 架构。',
+    },
+  },
+  {
+    id: 'res-happy-llm', title: 'Happy-LLM：从零开始构建大模型', url: 'https://github.com/datawhalechina/happy-llm', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '入门到进阶', stage: '中文主线', value: '中文系统讲解 NLP、Transformer、训练、微调并提供动手实现。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'community', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['中文解释多头注意力、因果掩码与 Transformer 组成', '残差、归一化与逐位置前馈网络的教学交叉核验', '预训练、SFT、偏好优化、LoRA 与参数高效微调的中文交叉核验'],
+      limitations: '这是社区二手教材，用于中文解释和交叉核验，不能替代原始论文、训练方法原典或具体模型实现；其中示例架构、训练流程与参数不应推广为所有现代 LLM 的保证。',
+    },
+  },
+  {
+    id: 'res-llm-universe', title: 'LLM Universe：动手学大模型应用开发', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: 'GitHub 课程', difficulty: '入门', stage: '应用开发', value: '面向 Python 开发者讲 API、Prompt、RAG、评估和应用落地。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'community', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['Prompt 设计、少样本示例与输入组织', 'RAG 的文档切分、检索与生成链路', '应用评估与检索问答实验', '检索相关性、答案忠实度和对照评测的工程提示'],
+      limitations: '本模块只把实际访问的 Prompt、RAG 与应用评测正文作为中文交叉核验；社区实现、依赖版本与示例结果不代表检索一定相关、答案一定忠实或方法适用于所有模型和业务。',
+    },
+  },
   {
     id: 'res-hello-agents', title: 'Hello-Agents：从零开始构建智能体', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '进阶', stage: 'Agent 衔接', value: '在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
@@ -50,8 +94,22 @@ const resources = [
       limitations: '这是社区二手教材，适合中文解释和工程交叉核验；框架实现、模型示例与其他时敏内容不能替代模型厂商或 SDK 官方语义。',
     },
   },
-  { id: 'res-openai-cookbook', title: 'OpenAI Cookbook', url: 'https://github.com/openai/openai-cookbook', source: 'OpenAI', language: '英文', type: 'GitHub 示例', difficulty: '入门到进阶', stage: '应用实践', value: '官方 API 示例与指南，适合核对结构化输出、评测和生产实践。', verifiedAt: VERIFIED_AT },
-  { id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-openai-cookbook', title: 'OpenAI Cookbook', url: 'https://github.com/openai/openai-cookbook', source: 'OpenAI', language: '英文', type: 'GitHub 示例', difficulty: '入门到进阶', stage: '应用实践', value: '官方 API 示例与指南，适合核对结构化输出、评测和生产实践。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['tiktoken 文本计数与 API 请求计数边界', 'embedding 问答与检索实验', '长输入处理和长文分块摘要', 'RAG、摘要与应用评测的迭代闭环', '结构化输出、校验与评测示例', 'token、成本、延迟与失败记录的实验方法'],
+      limitations: '示例面向 OpenAI API 与其核验时版本，完整请求还可能包含消息、工具和其他协议开销；摘要是有损转换，检索候选也不保证相关或正确。OpenAI Docs 只用于协同核对时敏 API 语义，未把独立文档主张伪归因给 Cookbook；API 字段、模型支持与示例结果都不能当成其他版本、模型和任务的通用保证。',
+    },
+  },
+  {
+    id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['版本化评测数据集、参考答案与 rubric', 'basic、model-graded 与其他 grader 组合', 'meta-eval、可复现运行与评测迭代'],
+      limitations: '仓库框架、注册表和模板随版本演进，不能据此推断所有评测服务具有同一接口；model grader 不是 gold truth，需用人工标签和 meta-eval 校准，也不等同于生产系统的完整发布门禁。',
+    },
+  },
   {
     id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
@@ -60,19 +118,110 @@ const resources = [
       limitations: '审批语义只适用于 OpenAI Agents SDK 中配置了 needs_approval 或 require approval 的工具调用，guardrails 不是权限系统；该资料不支撑模型训练机制，也不代表所有 Agent 框架都自动具备人工审批。',
     },
   },
-  { id: 'res-tiktoken', title: 'tiktoken', url: 'https://github.com/openai/tiktoken', source: 'OpenAI', language: '英文', type: 'GitHub 工具', difficulty: '进阶', stage: 'Token 实验', value: '实际观察 BPE tokenizer 的编码、解码和 token 预算。', verifiedAt: VERIFIED_AT },
-  { id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: VERIFIED_AT },
-  { id: 'res-stanford-cs336', title: 'Stanford CS336: Language Modeling from Scratch', url: 'https://cs336.stanford.edu/', source: 'Stanford University', language: '英文', type: '大学课程', difficulty: '深挖', stage: '训练系统', value: '从数据、tokenizer、Transformer 到分布式训练与评估，适合深入路线。', verifiedAt: VERIFIED_AT },
-  { id: 'res-google-ml', title: 'Machine Learning Crash Course', url: 'https://developers.google.com/machine-learning/crash-course/', source: 'Google for Developers', language: '英文', type: '官方课程', difficulty: '入门', stage: '机器学习基础', value: '通过可视化与练习补齐损失、梯度、泛化等机器学习基本概念。', verifiedAt: VERIFIED_AT },
-  { id: 'res-fastai', title: 'Practical Deep Learning for Coders', url: 'https://course.fast.ai/', source: 'fast.ai', language: '英文', type: '开放课程', difficulty: '入门到进阶', stage: '深度学习实践', value: '以项目驱动方式建立训练模型与诊断模型的工程直觉。', verifiedAt: VERIFIED_AT },
-  { id: 'res-d2l-zh', title: '动手学深度学习', url: 'https://zh.d2l.ai/', source: 'Dive into Deep Learning', language: '中文', type: '交互教材', difficulty: '入门到进阶', stage: '深度学习基础', value: '中文教材与可运行代码并重，适合查补张量、优化、注意力和 Transformer。', verifiedAt: VERIFIED_AT },
-  { id: 'res-3b1b-nn', title: '3Blue1Brown 神经网络专题', url: 'https://www.3blue1brown.com/topics/neural-networks', source: '3Blue1Brown', language: '英文', type: '可视化课程', difficulty: '入门', stage: '直觉建立', value: '用高质量动画建立梯度、反向传播、Embedding 与 Transformer 直觉。', verifiedAt: VERIFIED_AT },
-  { id: 'res-3b1b-transformer', title: 'Transformers, the tech behind LLMs', url: 'https://www.3blue1brown.com/lessons/gpt/', source: '3Blue1Brown', language: '英文', type: '视频图文', difficulty: '入门', stage: 'Transformer 直觉', value: '从输入向量到输出概率，直观串起 decoder-only Transformer。', verifiedAt: VERIFIED_AT },
-  { id: 'res-3b1b-attention', title: 'Attention in transformers, step-by-step', url: 'https://www.3blue1brown.com/lessons/attention/', source: '3Blue1Brown', language: '英文', type: '视频图文', difficulty: '进阶', stage: 'Attention 直觉', value: '逐步可视化 Q、K、V 与信息更新，适合配合交互实验。', verifiedAt: VERIFIED_AT },
-  { id: 'res-attention-paper', title: 'Attention Is All You Need', url: 'https://arxiv.org/abs/1706.03762', source: 'Vaswani 等', language: '英文', type: '论文', difficulty: '深挖', stage: '架构原典', value: 'Transformer 原始论文，适合在具备直觉后核对公式与架构动机。', verifiedAt: VERIFIED_AT },
-  { id: 'res-limu-transformer', title: 'Transformer《动手学深度学习 v2》', url: 'https://www.bilibili.com/video/BV1Kq4y1H7FL/', source: '跟李沐学AI', language: '中文', type: 'Bilibili 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '从架构讲解进入多头注意力与 Transformer 代码，适合配合 D2L 教材。', verifiedAt: VERIFIED_AT },
-  { id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: VERIFIED_AT },
-  { id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-tiktoken', title: 'tiktoken', url: 'https://github.com/openai/tiktoken', source: 'OpenAI', language: '英文', type: 'GitHub 工具', difficulty: '进阶', stage: 'Token 实验', value: '实际观察 BPE tokenizer 的编码、解码和 token 预算。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['BPE 编码、token ID、解码与本地文本计数', '按指定 encoding 比较文本切分和 token 用量'],
+      limitations: '本地纯文本编码只覆盖传入字符串，不自动计入聊天消息角色、边界标记、工具定义或其他 API 包装；模型到 encoding 的映射和完整计数口径须按目标服务版本核验。',
+    },
+  },
+  {
+    id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'cross-check', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['优先采用满足需求的最简单设计', 'workflow 与 agent 的适用边界', 'routing、evaluator-optimizer 等模式', '复杂度换取质量、成本和延迟的工程权衡'],
+      limitations: '文章提供厂商工程经验与模式建议，不支撑 OWASP Prompt Injection 威胁细节，也不构成跨模型、跨框架的普遍 benchmark；具体实现仍需用本项目评测和风险门槛验证。',
+    },
+  },
+  {
+    id: 'res-stanford-cs336', title: 'Stanford CS336: Language Modeling from Scratch', url: 'https://cs336.stanford.edu/', source: 'Stanford University', language: '英文', type: '大学课程', difficulty: '深挖', stage: '训练系统', value: '从数据、tokenizer、Transformer 到分布式训练与评估，适合深入路线。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'academic', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['训练数据抽取、过滤、精确与模糊去重', 'PII 处理、质量过滤阈值与数据分布影响', 'SFT、偏好优化与 DPO 的目标边界', '偏好偏差、训练退化与回归评测'],
+      limitations: '课程与实验用于建立训练系统和数据治理机制，不构成生产训练结果保证；它不覆盖 LoRA 或 RAG 的完整选型，也不能把课程中的具体模型、数据量和算力设置泛化为其他系统。',
+    },
+  },
+  {
+    id: 'res-google-ml', title: 'Machine Learning Crash Course', url: 'https://developers.google.com/machine-learning/crash-course/', source: 'Google for Developers', language: '英文', type: '官方课程', difficulty: '入门', stage: '机器学习基础', value: '通过可视化与练习补齐损失、梯度、泛化等机器学习基本概念。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['线性与非线性模型', '损失函数与梯度下降', '学习率对收敛、震荡和发散的影响', '训练、验证、过拟合和泛化诊断'],
+      limitations: '课程支撑通用机器学习训练机制和诊断，不等于大型语言模型训练系统规范；训练损失与验证指标仍是业务目标的代理，不能单独证明生产可发布。',
+    },
+  },
+  {
+    id: 'res-fastai', title: 'Practical Deep Learning for Coders', url: 'https://course.fast.ai/', source: 'fast.ai', language: '英文', type: '开放课程', difficulty: '入门到进阶', stage: '深度学习实践', value: '以项目驱动方式建立训练模型与诊断模型的工程直觉。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['批次训练、损失与优化的项目实践', '学习率选择、训练曲线与验证集诊断', '从训练指标到实际任务检查的工程直觉'],
+      limitations: '项目式课程用于实践交叉核验，具体库默认值、训练配方和 API 具有版本边界；它不证明某套激活、学习率或训练指标适合所有模型与业务。',
+    },
+  },
+  {
+    id: 'res-d2l-zh', title: '动手学深度学习', url: 'https://zh.d2l.ai/', source: 'Dive into Deep Learning', language: '中文', type: '交互教材', difficulty: '入门到进阶', stage: '深度学习基础', value: '中文教材与可运行代码并重，适合查补张量、优化、注意力和 Transformer。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'academic', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['张量形状、线性层与激活函数', '损失归约、计算图、链式法则与反向传播', '优化器、学习率与梯度累积边界', '训练、验证与泛化诊断'],
+      limitations: '教材示例用于解释通用深度学习机制，具体框架代码会随版本变化；zero-grad 与梯度累积是框架和训练循环语义，不能写成微积分定律，也不构成生产 LLM 训练保证。',
+    },
+  },
+  {
+    id: 'res-3b1b-nn', title: '3Blue1Brown 神经网络专题', url: 'https://www.3blue1brown.com/topics/neural-networks', source: '3Blue1Brown', language: '英文', type: '可视化课程', difficulty: '入门', stage: '直觉建立', value: '用高质量动画建立梯度、反向传播、Embedding 与 Transformer 直觉。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['神经网络前向计算的可视化直觉', '梯度与反向传播的局部敏感度', '链式法则把损失影响传回参数'],
+      limitations: '可视化课程用于建立直觉和交叉核验，不替代张量框架、优化器或验证集的完整工程语义；动画类比不能证明全局最优或生产质量。',
+    },
+  },
+  {
+    id: 'res-3b1b-transformer', title: 'Transformers, the tech behind LLMs', url: 'https://www.3blue1brown.com/lessons/gpt/', source: '3Blue1Brown', language: '英文', type: '视频图文', difficulty: '入门', stage: 'Transformer 直觉', value: '从输入向量到输出概率，直观串起 decoder-only Transformer。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['token 向量、位置线索与上下文化表示', 'decoder-only Transformer 从输入表示到输出分布的直觉链路'],
+      limitations: '图文材料用于表示与 decoder-only 数据流的直觉核验，不能据此断言所有模型的位置实现、上下文限制或内部维度相同，也不提供 RAG 检索可靠性保证。',
+    },
+  },
+  {
+    id: 'res-3b1b-attention', title: 'Attention in transformers, step-by-step', url: 'https://www.3blue1brown.com/lessons/attention/', source: '3Blue1Brown', language: '英文', type: '视频图文', difficulty: '进阶', stage: 'Attention 直觉', value: '逐步可视化 Q、K、V 与信息更新，适合配合交互实验。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['Q、K、V 的查询、匹配与 Value 聚合直觉', '注意力权重和上下文化表示更新', '缩放点积与多头注意力的可视化解释'],
+      limitations: '图文可视化用于解释计算流程，不证明某个头具有固定人类语义；注意力权重本身也不是最终输出的充分因果解释，更不能替代任务干预与评测。',
+    },
+  },
+  {
+    id: 'res-attention-paper', title: 'Attention Is All You Need', url: 'https://arxiv.org/abs/1706.03762', source: 'Vaswani 等', language: '英文', type: '论文', difficulty: '深挖', stage: '架构原典', value: 'Transformer 原始论文，适合在具备直觉后核对公式与架构动机。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'academic', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['Q、K、V 与缩放点积注意力公式', '多头注意力、因果 decoder mask 与逐位置前馈网络', '残差、LayerNorm 和 encoder-decoder Transformer 原始架构'],
+      limitations: '论文描述 2017 年 encoder-decoder Transformer 与 Post-Norm 结构，报告结果受其任务和设置约束；不能将其静默泛化为现代 GPT decoder-only、Pre-Norm 或任意服务实现。',
+    },
+  },
+  {
+    id: 'res-limu-transformer', title: 'Transformer《动手学深度学习 v2》', url: 'https://www.bilibili.com/video/BV1Kq4y1H7FL/', source: '跟李沐学AI', language: '中文', type: 'Bilibili 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '从架构讲解进入多头注意力与 Transformer 代码，适合配合 D2L 教材。', verifiedAt: WAVE_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
+      coverage: ['通过关联的 D2L 等价正文交叉核验多头注意力、残差、归一化与 Transformer 实作'],
+      limitations: '本轮未取得 Bilibili 视频字幕或逐字正文，只访问了该课程关联的 D2L 等价正文；因此不把视频本身当作已读正文，也不据此推断讲者在视频中的额外主张。',
+    },
+  },
+  {
+    id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'extension', verifiedAt: VERIFIED_AT,
+      coverage: ['视频身份、主题和以卷积类比解释 embedding、位置与 Attention 的元数据，作为课后扩展入口'],
+      limitations: '本轮只取得视频与作者元数据，没有可核验字幕或正文，因此不用于支撑 token、位置表示、Attention 或 Transformer 的关键机制；卷积类比也不能推出 Attention 与 CNN 架构等价。',
+    },
+  },
+  {
+    id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['直接与间接 Prompt Injection', 'RAG poisoning 与工具调用操纵', '指令和不可信数据分离、输入输出校验', '最小权限、人工确认、监控日志与纵深防御', 'guardrail 与单层过滤的失效边界'],
+      limitations: '指南中的正则、代码片段和风险阈值是防御示范，不是跨语言通用检测器；每一层都可能被绕过，控制选择必须结合本系统资产、入口、权限和副作用威胁模型。',
+    },
+  },
   {
     id: 'res-zomi-bili', title: '大模型整体架构与全流程介绍', url: 'https://www.bilibili.com/video/BV1a34y137zi/', source: 'ZOMI酱', language: '中文', type: 'Bilibili 视频', difficulty: '入门到进阶', stage: '全局补充', value: '从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
@@ -121,6 +270,7 @@ const lessons = [
       { heading: '反向传播分配责任', body: '反向传播应用链式法则，从损失沿计算图反向计算每个参数对损失的局部影响，也就是梯度。优化器利用梯度与学习率更新参数，然后下一批数据重新前向计算。梯度不是“正确答案”，而是当前点附近使损失变化最快的方向；学习率过大可能震荡，过小则学习缓慢，因此训练是一段需要监控的迭代过程。', keyPoints: ['反向传播计算梯度，优化器执行更新', '梯度是局部信息，训练效果还受数据与超参数影响'] },
     ],
     resourceIds: ['res-karpathy', 'res-google-ml', 'res-d2l-zh', 'res-3b1b-nn', 'res-fastai'],
+    knowledgeNote: llmFoundationNotes['llm-02'],
     exercise: { title: '讲清一次参数更新', brief: '任选一个二分类小例子，不依赖公式堆砌，用自己的话串起一轮学习。', steps: ['给出输入、参数、预测与真实标签，并说明损失为何变大或变小', '从损失反推某个权重的梯度方向，再说明优化器如何修改它', '补充学习率过大和过小时分别可能观察到什么'], deliverable: '一段 200–400 字说明，必须包含前向、损失、梯度和参数更新。' },
     quiz: [
       quiz('quiz-llm-02-1', '反向传播直接产生的核心结果是什么？', ['新的训练数据', '每个相关参数的梯度', '最终部署接口', '固定的正确答案'], 1, '反向传播沿计算图使用链式法则计算梯度，参数修改由优化器随后完成。'),
@@ -138,7 +288,8 @@ const lessons = [
       { heading: '文本不是直接进入模型', body: 'Tokenizer 按词表与合并规则把文本编码为 token ID；token 可能是词、子词、标点或字节片段，并不等同于自然语言中的“一个词”。Embedding 表把离散 ID 映射为连续向量，训练过程让可用于预测的相似性和关系体现在向量空间中。模型仍需位置相关信息来区分相同 token 在不同顺序中的作用。', keyPoints: ['字符数、单词数与 token 数不能简单画等号', 'Embedding 是可学习表示，不是字典释义'] },
       { heading: '上下文是一项有限预算', body: '上下文窗口容纳系统指令、历史消息、检索材料、工具结果和待生成内容，超出限制会报错或触发截断策略。即便没有超限，堆入无关或互相冲突的信息也可能稀释有效信号。应用要记录各部分 token 用量，给输出留余量，并根据任务采用摘要、检索、分段或状态化存储，而不是把全部历史无条件拼接。', keyPoints: ['窗口上限不等于有效利用能力', '预算设计同时影响质量、成本和延迟'] },
     ],
-    resourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-3b1b-transformer', 'res-wangmutou-transformer', 'res-karpathy-build-gpt'],
+    resourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-3b1b-transformer', 'res-wangmutou-transformer', 'res-karpathy-build-gpt', 'res-openai-cookbook', 'res-ms-genai', 'res-llm-universe'],
+    knowledgeNote: llmFoundationNotes['llm-03'],
     exercise: { title: 'Token 与上下文预算实验', brief: '比较中英文、代码和重复历史的 token 数，设计一个不超预算的客服 Agent 输入。', steps: ['用 tokenizer 记录同义中英文句子、JSON 和代码片段的 token 数', '给定窗口预算，分别分配系统指令、历史、检索、用户输入和输出额度', '人为加入无关长文并比较模型回答，再写出截断或摘要策略'], deliverable: '一张预算表、三组 token 计数和一段说明质量变化原因的实验结论。', experiment: 'token-budget' },
     quiz: [
       quiz('quiz-llm-03-1', '关于 token 的说法哪项正确？', ['一个 token 永远等于一个汉字', 'token 边界由 tokenizer 规则决定', 'token 与 embedding 是同一个对象', '所有模型共享完全相同的词表'], 1, '不同 tokenizer 的词表与编码规则不同，同一文本的 token 划分和数量都可能变化。'),
@@ -157,6 +308,7 @@ const lessons = [
       { heading: 'Transformer 是可堆叠的表示更新器', body: '多个注意力头可在不同投影子空间学习不同关系，拼接后共同更新表示。残差连接保留旧表示并提供稳定梯度路径，归一化控制数值尺度，逐位置前馈网络对每个 token 的特征做非线性变换。Decoder-only 模型重复这些模块，最后把当前位置表示映射到词表 logits，因此输出源于多层信息混合而非检索一句存好的文本。', keyPoints: ['多头提供多组可学习的信息读取方式', '残差、归一化和前馈层都是完整 Transformer 的关键部分'] },
     ],
     resourceIds: ['res-3b1b-attention', 'res-karpathy', 'res-karpathy-build-gpt', 'res-rasbt', 'res-attention-paper', 'res-happy-llm', 'res-limu-transformer', 'res-wangmutou-transformer'],
+    knowledgeNote: llmFoundationNotes['llm-04'],
     exercise: { title: '操纵 Attention 直觉实验', brief: '改变一个短句中的 Query-Key 相似度与掩码，观察权重和输出表示如何变化。', steps: ['在交互面板选择某个 token，记录它对其他位置的注意权重', '提高一个 Key 的匹配分数并解释对应 Value 对输出的影响', '打开因果掩码，说明哪些连接被禁止及其训练意义'], deliverable: '两张权重对比记录，以及一段从输入表示到更新表示的信息流解释。', experiment: 'attention' },
     quiz: [
       quiz('quiz-llm-04-1', 'Self-Attention 中最终被加权汇总的是什么？', ['Query 向量', 'Key 向量', 'Value 向量', '损失函数'], 2, 'Query 与 Key 产生权重，权重用于对 Value 加权汇总，从其他位置读取信息。'),
@@ -174,7 +326,8 @@ const lessons = [
       { heading: '不同阶段优化不同目标', body: '预训练通常利用大规模文本做下一 token 预测，获得通用语言与模式能力；监督微调使用高质量输入输出示例，把能力塑造成遵循任务和对话格式的行为；偏好优化再利用人类或模型偏好信号，让回答风格、安全性和有用性更符合目标。阶段不是简单“继续喂数据”，每一步的数据分布和目标函数都决定模型会学到什么。', keyPoints: ['预训练建立通用能力，后训练塑造可用行为', '高质量且与目标匹配的数据常比盲目增加数量更重要'] },
       { heading: '微调、LoRA 与 RAG 的选择', body: '全量微调更新大量参数，资源和运维成本高；LoRA 冻结主体参数并训练低秩增量，降低训练与存储成本，但仍需要数据和评测。RAG 在推理时检索外部资料，不把新事实写入模型参数，因而更适合频繁变化、需要引用或权限隔离的知识。若问题是输出格式和稳定行为，可考虑微调；若问题是可更新事实与出处，通常先验证 RAG。', keyPoints: ['LoRA 降低参数更新成本但不消除数据与评测成本', '行为定制与知识注入是不同问题'] },
     ],
-    resourceIds: ['res-rasbt', 'res-happy-llm', 'res-hf-llm', 'res-stanford-cs336'],
+    resourceIds: ['res-rasbt', 'res-happy-llm', 'res-hf-llm', 'res-stanford-cs336', 'res-ms-genai', 'res-openai-cookbook'],
+    knowledgeNote: llmFoundationNotes['llm-05'],
     exercise: { title: '训练方案决策表', brief: '为客服语气、公司制度问答和专业分类三个需求比较技术路线。', steps: ['分别写出预训练、SFT、偏好优化、LoRA 和 RAG 的直接优化目标', '从数据、计算、更新频率、可引用性和风险五个维度评分', '为三个需求选择方案并写出在上线前必须通过的评测'], deliverable: '一张目标—成本—用例对比表，以及三项有证据链的技术选择。' },
     quiz: [
       quiz('quiz-llm-05-1', '需要每天更新且回答必须给出处的制度知识，优先验证哪种方案？', ['从头预训练', 'RAG', '只提高温度', '删除系统指令'], 1, 'RAG 可在推理时使用可更新、可引用的外部资料，也更容易做权限与版本管理。'),
@@ -193,6 +346,7 @@ const lessons = [
       { heading: '缓存已经计算过的上下文', body: 'prefill 阶段并行处理输入上下文并为每层计算 Key、Value；decode 阶段逐 token 生成。若每一步都重新计算整个前缀会大量重复工作，KV Cache 保存历史位置的 Key、Value，让新 token 只需计算自身并读取缓存。它显著降低重复计算，却会随序列长度、批量和模型结构占用显存，因此长上下文与高并发需要在延迟、吞吐和内存之间取舍。', keyPoints: ['KV Cache 复用的是注意力中的历史 K/V，不是最终答案', '缓存加速 decode，但内存压力会影响可服务并发'] },
     ],
     resourceIds: ['res-hf-llm', 'res-karpathy', 'res-rasbt', 'res-openai-cookbook', 'res-zomi-bili'],
+    knowledgeNote: llmFoundationNotes['llm-06'],
     exercise: { title: '采样参数对比实验', brief: '固定提示，组合调整 temperature 与 top-p，比较稳定性、多样性和任务适配。', steps: ['用同一提示在低温与高温下各生成多次，记录重复率和错误类型', '固定 temperature 后逐步收窄 top-p，观察候选变化', '为代码生成、创意标题和结构化抽取分别选择参数并说明理由'], deliverable: '至少六次输出的对比表，以及面向三类任务的参数决策说明。', experiment: 'sampling' },
     quiz: [
       quiz('quiz-llm-06-1', 'temperature 调高通常直接改变什么？', ['训练数据', 'logits 转换后的概率分布形状', '上下文窗口硬上限', 'KV Cache 层数'], 1, 'temperature 缩放 logits，使概率分布通常更平或更尖，从而影响采样多样性。'),
@@ -210,7 +364,8 @@ const lessons = [
       { heading: 'Prompt 是运行时规格', body: '系统或开发者指令定义稳定规则，用户输入表达本次目标，工具结果与检索内容提供数据但不应自然获得更高权限。好的提示说明任务、输入边界、成功标准和禁止事项，并用少量代表性示例消除格式或分类歧义。示例不是越多越好：它们会占上下文，也可能把偶然模式变成模型错误遵循的惯例。', keyPoints: ['区分指令与不可信数据的权限', '示例用于澄清决策边界而不是堆砌上下文'] },
       { heading: '结构化输出需要闭环验证', body: '要求“返回 JSON”只是自然语言愿望；生产系统应提供可机器检查的 Schema，约束字段、类型、枚举和必填项，再在服务端解析与校验。失败时把精简的验证错误反馈给模型并限制重试次数，仍失败则进入降级或人工路径。即使语法通过，也要继续做业务校验，因为合法的日期、ID 或金额仍可能在业务上无效。', keyPoints: ['语法校验与业务校验是两层防线', '重试必须有边界、可观测并避免重复副作用'] },
     ],
-    resourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-llm-universe', 'res-hf-agents'],
+    resourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-llm-universe', 'res-hf-agents', 'res-owasp-prompt-injection'],
+    knowledgeNote: llmFoundationNotes['llm-07'],
     exercise: { title: '设计结构化输出契约', brief: '为工单分类器设计提示、JSON Schema、验证错误和降级行为。', steps: ['定义类别、优先级、理由和证据字段，写出必填、类型和枚举约束', '加入两个边界示例与一条不可信工单内容，明确它不能覆盖系统规则', '设计解析失败、业务校验失败和连续失败时的不同处理'], deliverable: '一份提示模板、一份 JSON Schema 和带最大重试次数的伪代码。' },
     quiz: [
       quiz('quiz-llm-07-1', '模型返回了可解析 JSON，生产系统下一步应做什么？', ['直接执行所有动作', '继续做 Schema 与业务规则校验', '删除日志', '把温度调到最高'], 1, '语法正确不代表字段齐全或业务有效，必须在可信代码中执行结构与业务校验。'),
@@ -229,6 +384,7 @@ const lessons = [
       { heading: '用评测和边界管理系统', body: '离线评测应从真实任务与失败日志构建版本化样本，分别测任务质量、证据忠实度、格式、安全和延迟成本；线上监控关注分布变化、异常率与用户反馈。Prompt injection 的本质是不可信内容试图改变控制流，防御必须延伸到最小工具权限、参数校验、敏感动作确认和输出隔离。最终要把准确率、尾延迟、token 成本与风险共同放进发布门槛。', keyPoints: ['评测集要覆盖正常、边界、对抗和回归样例', '模型提示不是安全边界，权限与执行控制必须由系统保证'] },
     ],
     resourceIds: ['res-anthropic-agents', 'res-openai-cookbook', 'res-openai-evals', 'res-owasp-prompt-injection', 'res-ms-genai', 'res-hf-agents', 'res-llm-universe'],
+    knowledgeNote: llmFoundationNotes['llm-08'],
     exercise: { title: 'LLM 功能测试清单', brief: '为“读取知识库并起草退款答复”的功能建立发布前检查表。', steps: ['收集正常、信息不足、冲突材料、超长上下文和对抗指令样例', '为正确性、忠实度、格式、安全、成本和 P95 延迟定义指标与阈值', '列出工具最小权限、高风险操作确认、日志脱敏和失败降级方案'], deliverable: '一份至少 15 条用例、含指标与责任人的发布检查表。' },
     quiz: [
       quiz('quiz-llm-08-1', '以下哪项最能构成 Prompt Injection 的系统性防线？', ['只在提示里写“不要被攻击”', '最小权限、输入标记、参数校验和敏感动作确认', '无限扩大上下文', '隐藏所有错误'], 1, '提示可辅助模型识别风险，但真正的安全边界来自权限、验证、隔离和人工控制。'),
