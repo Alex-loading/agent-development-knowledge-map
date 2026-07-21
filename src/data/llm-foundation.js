@@ -3,6 +3,7 @@ import { llmFoundationNotes } from './llm-foundation-notes.js';
 const VERIFIED_AT = '2026-07-15';
 const LLM_01_VERIFIED_AT = '2026-07-21';
 const WAVE_01_VERIFIED_AT = '2026-07-22';
+const WAVE_02_VERIFIED_AT = '2026-07-22';
 
 const resources = [
   {
@@ -17,8 +18,8 @@ const resources = [
     id: 'res-ms-genai', title: 'Generative AI for Beginners', url: 'https://github.com/microsoft/generative-ai-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '应用基础', value: '从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['生成式 AI 与 LLM 基础', 'tokenizer、embedding 与自回归生成', '模型、服务与应用的边界', '上下文预算、RAG 与应用评测', '预训练、微调、部署和 Agent 衔接'],
-      limitations: '“生成式 AI 是深度学习子集”等表述是面向现代主流系统的简化分类；本轮只复核课程第 04、08、14、15 章来支撑 tokenization、embedding、RAG 与评测，Foundry 流程和具体模型清单具有平台与时间边界，不能当作通用唯一实现。',
+      coverage: ['生成式 AI 与 LLM 基础', 'tokenizer、embedding 与自回归生成', '模型、服务与应用的边界', '上下文预算、RAG 与应用评测', '预训练、SFT、微调与部署的目标边界', 'Prompt 设计、结构化输出与应用评测', 'Agent 衔接与生产应用迭代'],
+      limitations: '“生成式 AI 是深度学习子集”等表述是面向现代主流系统的简化分类；本模块只用实际访问的课程正文支撑 tokenization、embedding、训练阶段、Prompt、RAG 与评测，Foundry 流程、接口示例和模型清单具有平台与时间边界，不能当作通用唯一实现。',
     },
   },
   {
@@ -33,17 +34,24 @@ const resources = [
     id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['LLM 与 Transformer 基础', 'tokenization、输入 embedding 与上下文化表示', '位置相关表示与上下文限制', '自监督预训练和微调', '使用已训练模型推理', 'prefill 与 decode', '偏见与资源限制'],
-      limitations: '不能单独支撑完整的 AI、机器学习、深度学习领域层级，也不覆盖应用团队的完整职责；不同模型的 tokenizer、位置表示和窗口规则仍须查对应模型与接口，本章不把“推理参数固定”归因成该课程的明确原句。',
+      coverage: ['LLM 与 Transformer 基础', 'tokenization、输入 embedding 与上下文化表示', '位置相关表示与上下文限制', '自监督预训练、SFT 与参数高效微调', '使用已训练模型推理', 'logits、生成、prefill、decode 与 KV Cache', '偏见、数据与资源限制'],
+      limitations: '不能单独支撑完整的 AI、机器学习、深度学习领域层级，也不覆盖应用团队的完整职责；不同模型的 tokenizer、位置表示、训练配方、窗口与推理接口仍须查对应模型和服务，本模块不把某一教学实现推广成所有模型保证。',
     },
   },
-  { id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['消息、工具、解析器与执行边界', '模型输出解析与结构校验', 'trace、token、成本、延迟和错误可观测性', '离线评测、线上反馈、重试与 fallback'],
+      limitations: '课程以 smolagents 与 OpenTelemetry 等具体框架和观测实现为例，接口与行为具有版本边界；成功解析不等于权限合法、事实正确或业务有效，生产系统仍需独立授权、业务校验和降级。',
+    },
+  },
   {
     id: 'res-karpathy', title: 'Neural Networks: Zero to Hero', url: 'https://github.com/karpathy/nn-zero-to-hero', source: 'Andrej Karpathy', language: '英文', type: 'GitHub + 视频', difficulty: '进阶', stage: '原理实作', value: '从反向传播手写到 tokenizer 与 GPT，代码和直觉紧密对应。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'expert', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
       coverage: ['训练循环与计算依赖', 'micrograd 标量自动微分、链式法则和梯度累加', '参数更新与梯度清理的教学实现', '训练和验证损失的诊断思路'],
-      limitations: '核心正文来自课程仓库与 micrograd 教学实现，只用于说明标量计算图和最小训练闭环，不代表生产张量框架或分布式训练系统；本轮对 Transformer 相关内容只取得课程元数据，未把 Build GPT 视频当作可访问正文。',
+      limitations: '核心正文来自课程仓库与 micrograd 教学实现，只用于说明标量计算图和最小训练闭环，不代表生产张量框架或分布式训练系统；Transformer 与推理课程在 llm-04、llm-06 只作为扩展路线，本轮未取得 Build GPT 视频可核验字幕，未把视频当作机制正文。',
     },
   },
   {
@@ -58,24 +66,24 @@ const resources = [
     id: 'res-rasbt', title: 'LLMs from Scratch', url: 'https://github.com/rasbt/LLMs-from-scratch', source: 'Sebastian Raschka', language: '英文', type: 'GitHub 教材', difficulty: '进阶', stage: '模型实作', value: '逐章实现数据处理、Attention、GPT、预训练、微调与 LoRA。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'expert', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['tokenization、输入 embedding 与位置表示', 'Q、K、V 与缩放点积注意力', '多头、因果掩码与 GPT-like decoder block', 'GPT-like Pre-Norm 教学实现'],
-      limitations: '这是面向学习者的 GPT-like 代码与教材，不代表所有模型采用相同 tokenizer、位置机制、尺寸或归一化放置；Pre-Norm 实现不能反向改写原始 Transformer 论文的 Post-Norm 架构。',
+      coverage: ['tokenization、输入 embedding 与位置表示', 'Q、K、V 与缩放点积注意力', '多头、因果掩码与 GPT-like decoder block', 'GPT-like Pre-Norm 教学实现', '预训练、分类与指令微调、LoRA 实作', 'logits、temperature、top-k 与生成循环', '自回归推理与 KV Cache 教学实现'],
+      limitations: '这是面向学习者的 GPT-like 代码与教材，不代表所有模型采用相同 tokenizer、位置机制、训练配方、采样接口、缓存布局、尺寸或归一化放置；Pre-Norm 实现不能反向改写原始 Transformer 论文的 Post-Norm 架构。',
     },
   },
   {
     id: 'res-happy-llm', title: 'Happy-LLM：从零开始构建大模型', url: 'https://github.com/datawhalechina/happy-llm', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '入门到进阶', stage: '中文主线', value: '中文系统讲解 NLP、Transformer、训练、微调并提供动手实现。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'community', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['中文解释多头注意力、因果掩码与 Transformer 组成', '残差、归一化与逐位置前馈网络的教学交叉核验'],
-      limitations: '这是社区二手教材，用于中文解释和交叉核验，不能替代原始论文定义或具体模型实现；其中示例架构与参数不应推广为所有现代 LLM 的保证。',
+      coverage: ['中文解释多头注意力、因果掩码与 Transformer 组成', '残差、归一化与逐位置前馈网络的教学交叉核验', '预训练、SFT、偏好优化、LoRA 与参数高效微调的中文交叉核验'],
+      limitations: '这是社区二手教材，用于中文解释和交叉核验，不能替代原始论文、训练方法原典或具体模型实现；其中示例架构、训练流程与参数不应推广为所有现代 LLM 的保证。',
     },
   },
   {
     id: 'res-llm-universe', title: 'LLM Universe：动手学大模型应用开发', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: 'GitHub 课程', difficulty: '入门', stage: '应用开发', value: '面向 Python 开发者讲 API、Prompt、RAG、评估和应用落地。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'community', role: 'cross-check', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['第三章 RAG 的文档切分、检索与生成链路', '第五章应用评估与检索问答实验', '检索相关性、答案质量和对照评测的工程提示'],
-      limitations: '本轮只复核课程第三章与第五章，作为上下文策略和应用评测的中文交叉核验；社区实现、依赖版本与示例结果不代表检索一定相关、正确或适用于所有模型。',
+      coverage: ['Prompt 设计、少样本示例与输入组织', 'RAG 的文档切分、检索与生成链路', '应用评估与检索问答实验', '检索相关性、答案忠实度和对照评测的工程提示'],
+      limitations: '本模块只把实际访问的 Prompt、RAG 与应用评测正文作为中文交叉核验；社区实现、依赖版本与示例结果不代表检索一定相关、答案一定忠实或方法适用于所有模型和业务。',
     },
   },
   {
@@ -90,11 +98,18 @@ const resources = [
     id: 'res-openai-cookbook', title: 'OpenAI Cookbook', url: 'https://github.com/openai/openai-cookbook', source: 'OpenAI', language: '英文', type: 'GitHub 示例', difficulty: '入门到进阶', stage: '应用实践', value: '官方 API 示例与指南，适合核对结构化输出、评测和生产实践。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
       authority: 'official', role: 'core', verifiedAt: WAVE_01_VERIFIED_AT,
-      coverage: ['tiktoken 文本计数与 API 请求计数边界', 'embedding 问答与检索实验', '长输入处理和长文分块摘要', 'RAG、摘要与应用评测的迭代闭环'],
-      limitations: '示例面向 OpenAI API 与其核验时版本，完整请求还可能包含消息、工具和其他协议开销；摘要是有损转换，检索候选也不保证相关或正确，示例结果不能当成其他模型和任务的通用基准。',
+      coverage: ['tiktoken 文本计数与 API 请求计数边界', 'embedding 问答与检索实验', '长输入处理和长文分块摘要', 'RAG、摘要与应用评测的迭代闭环', '结构化输出、校验与评测示例', 'token、成本、延迟与失败记录的实验方法'],
+      limitations: '示例面向 OpenAI API 与其核验时版本，完整请求还可能包含消息、工具和其他协议开销；摘要是有损转换，检索候选也不保证相关或正确。OpenAI Docs 只用于协同核对时敏 API 语义，未把独立文档主张伪归因给 Cookbook；API 字段、模型支持与示例结果都不能当成其他版本、模型和任务的通用保证。',
     },
   },
-  { id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['版本化评测数据集、参考答案与 rubric', 'basic、model-graded 与其他 grader 组合', 'meta-eval、可复现运行与评测迭代'],
+      limitations: '仓库框架、注册表和模板随版本演进，不能据此推断所有评测服务具有同一接口；model grader 不是 gold truth，需用人工标签和 meta-eval 校准，也不等同于生产系统的完整发布门禁。',
+    },
+  },
   {
     id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
@@ -111,8 +126,22 @@ const resources = [
       limitations: '本地纯文本编码只覆盖传入字符串，不自动计入聊天消息角色、边界标记、工具定义或其他 API 包装；模型到 encoding 的映射和完整计数口径须按目标服务版本核验。',
     },
   },
-  { id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: VERIFIED_AT },
-  { id: 'res-stanford-cs336', title: 'Stanford CS336: Language Modeling from Scratch', url: 'https://cs336.stanford.edu/', source: 'Stanford University', language: '英文', type: '大学课程', difficulty: '深挖', stage: '训练系统', value: '从数据、tokenizer、Transformer 到分布式训练与评估，适合深入路线。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'cross-check', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['优先采用满足需求的最简单设计', 'workflow 与 agent 的适用边界', 'routing、evaluator-optimizer 等模式', '复杂度换取质量、成本和延迟的工程权衡'],
+      limitations: '文章提供厂商工程经验与模式建议，不支撑 OWASP Prompt Injection 威胁细节，也不构成跨模型、跨框架的普遍 benchmark；具体实现仍需用本项目评测和风险门槛验证。',
+    },
+  },
+  {
+    id: 'res-stanford-cs336', title: 'Stanford CS336: Language Modeling from Scratch', url: 'https://cs336.stanford.edu/', source: 'Stanford University', language: '英文', type: '大学课程', difficulty: '深挖', stage: '训练系统', value: '从数据、tokenizer、Transformer 到分布式训练与评估，适合深入路线。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'academic', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['训练数据抽取、过滤、精确与模糊去重', 'PII 处理、质量过滤阈值与数据分布影响', 'SFT、偏好优化与 DPO 的目标边界', '偏好偏差、训练退化与回归评测'],
+      limitations: '课程与实验用于建立训练系统和数据治理机制，不构成生产训练结果保证；它不覆盖 LoRA 或 RAG 的完整选型，也不能把课程中的具体模型、数据量和算力设置泛化为其他系统。',
+    },
+  },
   {
     id: 'res-google-ml', title: 'Machine Learning Crash Course', url: 'https://developers.google.com/machine-learning/crash-course/', source: 'Google for Developers', language: '英文', type: '官方课程', difficulty: '入门', stage: '机器学习基础', value: '通过可视化与练习补齐损失、梯度、泛化等机器学习基本概念。', verifiedAt: WAVE_01_VERIFIED_AT,
     evidence: {
@@ -185,7 +214,14 @@ const resources = [
       limitations: '本轮只取得视频与作者元数据，没有可核验字幕或正文，因此不用于支撑 token、位置表示、Attention 或 Transformer 的关键机制；卷积类比也不能推出 Attention 与 CNN 架构等价。',
     },
   },
-  { id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: WAVE_02_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: WAVE_02_VERIFIED_AT,
+      coverage: ['直接与间接 Prompt Injection', 'RAG poisoning 与工具调用操纵', '指令和不可信数据分离、输入输出校验', '最小权限、人工确认、监控日志与纵深防御', 'guardrail 与单层过滤的失效边界'],
+      limitations: '指南中的正则、代码片段和风险阈值是防御示范，不是跨语言通用检测器；每一层都可能被绕过，控制选择必须结合本系统资产、入口、权限和副作用威胁模型。',
+    },
+  },
   {
     id: 'res-zomi-bili', title: '大模型整体架构与全流程介绍', url: 'https://www.bilibili.com/video/BV1a34y137zi/', source: 'ZOMI酱', language: '中文', type: 'Bilibili 视频', difficulty: '入门到进阶', stage: '全局补充', value: '从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。', verifiedAt: LLM_01_VERIFIED_AT,
     evidence: {
@@ -290,7 +326,8 @@ const lessons = [
       { heading: '不同阶段优化不同目标', body: '预训练通常利用大规模文本做下一 token 预测，获得通用语言与模式能力；监督微调使用高质量输入输出示例，把能力塑造成遵循任务和对话格式的行为；偏好优化再利用人类或模型偏好信号，让回答风格、安全性和有用性更符合目标。阶段不是简单“继续喂数据”，每一步的数据分布和目标函数都决定模型会学到什么。', keyPoints: ['预训练建立通用能力，后训练塑造可用行为', '高质量且与目标匹配的数据常比盲目增加数量更重要'] },
       { heading: '微调、LoRA 与 RAG 的选择', body: '全量微调更新大量参数，资源和运维成本高；LoRA 冻结主体参数并训练低秩增量，降低训练与存储成本，但仍需要数据和评测。RAG 在推理时检索外部资料，不把新事实写入模型参数，因而更适合频繁变化、需要引用或权限隔离的知识。若问题是输出格式和稳定行为，可考虑微调；若问题是可更新事实与出处，通常先验证 RAG。', keyPoints: ['LoRA 降低参数更新成本但不消除数据与评测成本', '行为定制与知识注入是不同问题'] },
     ],
-    resourceIds: ['res-rasbt', 'res-happy-llm', 'res-hf-llm', 'res-stanford-cs336'],
+    resourceIds: ['res-rasbt', 'res-happy-llm', 'res-hf-llm', 'res-stanford-cs336', 'res-ms-genai', 'res-openai-cookbook'],
+    knowledgeNote: llmFoundationNotes['llm-05'],
     exercise: { title: '训练方案决策表', brief: '为客服语气、公司制度问答和专业分类三个需求比较技术路线。', steps: ['分别写出预训练、SFT、偏好优化、LoRA 和 RAG 的直接优化目标', '从数据、计算、更新频率、可引用性和风险五个维度评分', '为三个需求选择方案并写出在上线前必须通过的评测'], deliverable: '一张目标—成本—用例对比表，以及三项有证据链的技术选择。' },
     quiz: [
       quiz('quiz-llm-05-1', '需要每天更新且回答必须给出处的制度知识，优先验证哪种方案？', ['从头预训练', 'RAG', '只提高温度', '删除系统指令'], 1, 'RAG 可在推理时使用可更新、可引用的外部资料，也更容易做权限与版本管理。'),
@@ -309,6 +346,7 @@ const lessons = [
       { heading: '缓存已经计算过的上下文', body: 'prefill 阶段并行处理输入上下文并为每层计算 Key、Value；decode 阶段逐 token 生成。若每一步都重新计算整个前缀会大量重复工作，KV Cache 保存历史位置的 Key、Value，让新 token 只需计算自身并读取缓存。它显著降低重复计算，却会随序列长度、批量和模型结构占用显存，因此长上下文与高并发需要在延迟、吞吐和内存之间取舍。', keyPoints: ['KV Cache 复用的是注意力中的历史 K/V，不是最终答案', '缓存加速 decode，但内存压力会影响可服务并发'] },
     ],
     resourceIds: ['res-hf-llm', 'res-karpathy', 'res-rasbt', 'res-openai-cookbook', 'res-zomi-bili'],
+    knowledgeNote: llmFoundationNotes['llm-06'],
     exercise: { title: '采样参数对比实验', brief: '固定提示，组合调整 temperature 与 top-p，比较稳定性、多样性和任务适配。', steps: ['用同一提示在低温与高温下各生成多次，记录重复率和错误类型', '固定 temperature 后逐步收窄 top-p，观察候选变化', '为代码生成、创意标题和结构化抽取分别选择参数并说明理由'], deliverable: '至少六次输出的对比表，以及面向三类任务的参数决策说明。', experiment: 'sampling' },
     quiz: [
       quiz('quiz-llm-06-1', 'temperature 调高通常直接改变什么？', ['训练数据', 'logits 转换后的概率分布形状', '上下文窗口硬上限', 'KV Cache 层数'], 1, 'temperature 缩放 logits，使概率分布通常更平或更尖，从而影响采样多样性。'),
@@ -326,7 +364,8 @@ const lessons = [
       { heading: 'Prompt 是运行时规格', body: '系统或开发者指令定义稳定规则，用户输入表达本次目标，工具结果与检索内容提供数据但不应自然获得更高权限。好的提示说明任务、输入边界、成功标准和禁止事项，并用少量代表性示例消除格式或分类歧义。示例不是越多越好：它们会占上下文，也可能把偶然模式变成模型错误遵循的惯例。', keyPoints: ['区分指令与不可信数据的权限', '示例用于澄清决策边界而不是堆砌上下文'] },
       { heading: '结构化输出需要闭环验证', body: '要求“返回 JSON”只是自然语言愿望；生产系统应提供可机器检查的 Schema，约束字段、类型、枚举和必填项，再在服务端解析与校验。失败时把精简的验证错误反馈给模型并限制重试次数，仍失败则进入降级或人工路径。即使语法通过，也要继续做业务校验，因为合法的日期、ID 或金额仍可能在业务上无效。', keyPoints: ['语法校验与业务校验是两层防线', '重试必须有边界、可观测并避免重复副作用'] },
     ],
-    resourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-llm-universe', 'res-hf-agents'],
+    resourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-llm-universe', 'res-hf-agents', 'res-owasp-prompt-injection'],
+    knowledgeNote: llmFoundationNotes['llm-07'],
     exercise: { title: '设计结构化输出契约', brief: '为工单分类器设计提示、JSON Schema、验证错误和降级行为。', steps: ['定义类别、优先级、理由和证据字段，写出必填、类型和枚举约束', '加入两个边界示例与一条不可信工单内容，明确它不能覆盖系统规则', '设计解析失败、业务校验失败和连续失败时的不同处理'], deliverable: '一份提示模板、一份 JSON Schema 和带最大重试次数的伪代码。' },
     quiz: [
       quiz('quiz-llm-07-1', '模型返回了可解析 JSON，生产系统下一步应做什么？', ['直接执行所有动作', '继续做 Schema 与业务规则校验', '删除日志', '把温度调到最高'], 1, '语法正确不代表字段齐全或业务有效，必须在可信代码中执行结构与业务校验。'),
@@ -345,6 +384,7 @@ const lessons = [
       { heading: '用评测和边界管理系统', body: '离线评测应从真实任务与失败日志构建版本化样本，分别测任务质量、证据忠实度、格式、安全和延迟成本；线上监控关注分布变化、异常率与用户反馈。Prompt injection 的本质是不可信内容试图改变控制流，防御必须延伸到最小工具权限、参数校验、敏感动作确认和输出隔离。最终要把准确率、尾延迟、token 成本与风险共同放进发布门槛。', keyPoints: ['评测集要覆盖正常、边界、对抗和回归样例', '模型提示不是安全边界，权限与执行控制必须由系统保证'] },
     ],
     resourceIds: ['res-anthropic-agents', 'res-openai-cookbook', 'res-openai-evals', 'res-owasp-prompt-injection', 'res-ms-genai', 'res-hf-agents', 'res-llm-universe'],
+    knowledgeNote: llmFoundationNotes['llm-08'],
     exercise: { title: 'LLM 功能测试清单', brief: '为“读取知识库并起草退款答复”的功能建立发布前检查表。', steps: ['收集正常、信息不足、冲突材料、超长上下文和对抗指令样例', '为正确性、忠实度、格式、安全、成本和 P95 延迟定义指标与阈值', '列出工具最小权限、高风险操作确认、日志脱敏和失败降级方案'], deliverable: '一份至少 15 条用例、含指标与责任人的发布检查表。' },
     quiz: [
       quiz('quiz-llm-08-1', '以下哪项最能构成 Prompt Injection 的系统性防线？', ['只在提示里写“不要被攻击”', '最小权限、输入标记、参数校验和敏感动作确认', '无限扩大上下文', '隐藏所有错误'], 1, '提示可辅助模型识别风险，但真正的安全边界来自权限、验证、隔离和人工控制。'),
