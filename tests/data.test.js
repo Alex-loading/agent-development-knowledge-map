@@ -18,7 +18,7 @@ const noteExpectations = new Map([
   ['llm-04', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
   ['llm-05', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
   ['llm-06', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
-  ['llm-07', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['llm-07', { minMinutes: 35, maxMinutes: 40, minLength: 3600 }],
   ['llm-08', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
 ]);
 const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);

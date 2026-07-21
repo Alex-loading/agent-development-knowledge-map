@@ -51,7 +51,7 @@ const noteExpectations = new Map([
   ['llm-04', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
   ['llm-05', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
   ['llm-06', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
-  ['llm-07', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['llm-07', { minMinutes: 35, maxMinutes: 40, minLength: 3600 }],
   ['llm-08', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
 ]);
 
@@ -337,7 +337,7 @@ git commit -m "feat: add training and inference knowledge notes"
 - `llm-07`：prompt 是输入契约而非魔法；指令与不可信数据边界；少量代表性示例；Schema 与结构约束；解析、Schema、业务三层校验；有限重试、幂等与降级；工单分类器完整案例。
 - `llm-08`：幻觉、非确定性、上下文污染与注入分类；从需求和失败日志建离线集；质量、忠实度、格式、安全指标；线上监控与反馈；prompt injection 纵深防御；成本与 P95 延迟门槛；退款答复发布清单。
 
-`llm-07` 为 25–30 分钟，`llm-08` 为 30–40 分钟；两篇均 6–7 个实质章节、4–6 个误区、至少 5 个 recap。
+`llm-07` 为 35–40 分钟，`llm-08` 为 30–40 分钟；两篇均 6–7 个实质章节、4–6 个误区、至少 5 个 recap。阅读量按复杂度浮动：`llm-07` 需要完整 Schema、三组规则可推导样例、category/priority 业务策略和逐分支控制流，因此不压缩为原先的短篇范围。
 
 - [ ] **Step 2：主代理核验时敏与安全来源**
 

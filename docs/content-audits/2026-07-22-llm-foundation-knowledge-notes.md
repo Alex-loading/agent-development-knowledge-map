@@ -186,13 +186,13 @@
 | interview 1 及 follow-up：健壮 Prompt 与 few-shot 选择 | `prompt-as-runtime-contract`、`few-shot-and-example-budget` | covered |
 | interview 2 及 follow-up：结构化输出仍需服务端校验与降级 | `schema-and-structured-output`、`validation-retry-and-side-effects` | covered |
 | interview 3 及 follow-up：指令层级与间接注入攻击路径 | `instruction-and-untrusted-data-boundaries` | covered |
-| exercise step 1：字段、必填、类型与枚举 | `schema-and-structured-output`、`support-ticket-classifier-contract` | covered |
-| exercise step 2：两个边界示例与不可信工单 | `few-shot-and-example-budget`、`support-ticket-classifier-contract` | covered |
-| exercise step 3：解析、业务和连续失败分流 | `validation-retry-and-side-effects`、`support-ticket-classifier-contract` | covered |
-| deliverable：提示模板、可执行 Schema 与最大重试伪代码 | `support-ticket-classifier-contract` | covered |
+| exercise step 1：字段、必填、类型、枚举及 category/priority policy | `schema-and-structured-output`、`support-ticket-classifier-contract` | covered；Prompt 与 validator 共享明确分类、高优先级和待人工规则 |
+| exercise step 2：两个边界示例与不可信工单 | `few-shot-and-example-budget`、`support-ticket-classifier-contract` | covered；正常、信息不足、注入三例均可由同一 policy 推导且 evidence 可定位 |
+| exercise step 3：解析、业务和连续失败分流 | `validation-retry-and-side-effects`、`support-ticket-classifier-contract` | covered；business validator 独立重算 category、priority、needs_human_review 后再允许执行 |
+| deliverable：提示模板、可执行 Schema 与最大重试伪代码 | `support-ticket-classifier-contract` | covered；包含完整 Schema、三例与生成—解析—Schema—policy—业务—人工控制流 |
 | completion：模糊提示契约化并实现安全降级 | `support-ticket-classifier-contract` 的双项完成自检 | covered |
 
-边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构，权限和事实由业务代码检查；有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。
+边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构，category/priority policy、权限和事实由业务 validator 独立重算和检查；有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。复审后阅读量为 38 分钟：完整 Schema、三组 policy 可推导样例及逐分支控制流构成必要工程闭环，按用户允许的复杂度浮动落入 35–40 分钟契约；质量分暂保留 96，等待后续复审结论再调整。
 
 ## `llm-08` 覆盖矩阵
 
@@ -239,7 +239,7 @@
 | `node --check src/data/llm-foundation-notes.js` | 0 | 八课聚合入口语法通过 |
 | `node --check src/data/llm-foundation.js` | 0 | 课程数据、28 张 evidence card 与八课接线语法通过 |
 | `node --test tests/data.test.js tests/guided-ui.test.js` | 0 | 20 tests：20 passed、0 failed；正式断言覆盖 exact registry keys、identity、不同对象、正文 contract、28/28 cards、source resolution、深层冻结、旧模块 fallback、渲染与安全外链 |
-| `npm test` | 0 | 254 tests：254 passed、0 failed；全仓库无回归 |
+| `npm test` | 0 | 255 tests：255 passed、0 failed；全仓库无回归 |
 | `npm run build` | not run | `package.json` 不存在 `build` script；项目是无构建步骤的原生静态站点 |
 | `git diff --check` | 0 | 无空白错误 |
 
