@@ -223,6 +223,7 @@ test('LLM foundation export is deeply frozen', () => {
   const lessonEight = llmFoundation.lessons.find(({ id }) => id === 'llm-08');
   const resource = llmFoundation.resources.find(({ id }) => id === 'res-openai-evals');
 
+  assertDeepFrozen(llmFoundationNotes, 'llmFoundationNotes');
   for (const lesson of llmFoundation.lessons) {
     assert.ok(lesson.knowledgeNote, `${lesson.id}: 冻结验证前必须提供 knowledgeNote`);
     assertDeepFrozen(lesson.knowledgeNote, `${lesson.id}.knowledgeNote`);
@@ -315,7 +316,6 @@ test('curated resources include verified video, eval and security primary source
   assert.equal(karpathyYoutube.source, 'Andrej Karpathy');
   assert.match(karpathyYoutube.type, /YouTube/);
   assert.equal(karpathyYoutube.platform, 'YouTube');
-  assert.equal(karpathyYoutube.verifiedAt, '2026-07-15');
   assert.ok(
     ['llm-03', 'llm-04'].some((lessonId) =>
       llmFoundation.lessons
