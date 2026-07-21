@@ -186,13 +186,13 @@
 | interview 1 及 follow-up：健壮 Prompt 与 few-shot 选择 | `prompt-as-runtime-contract`、`few-shot-and-example-budget` | covered |
 | interview 2 及 follow-up：结构化输出仍需服务端校验与降级 | `schema-and-structured-output`、`validation-retry-and-side-effects` | covered |
 | interview 3 及 follow-up：指令层级与间接注入攻击路径 | `instruction-and-untrusted-data-boundaries` | covered |
-| exercise step 1：字段、必填、类型、枚举及 category/priority policy | `schema-and-structured-output`、`support-ticket-classifier-contract` | covered；Prompt 与 validator 共享明确分类、高优先级和待人工规则 |
-| exercise step 2：两个边界示例与不可信工单 | `few-shot-and-example-budget`、`support-ticket-classifier-contract` | covered；正常、信息不足、注入三例均可由同一 policy 推导且 evidence 可定位 |
-| exercise step 3：解析、业务和连续失败分流 | `validation-retry-and-side-effects`、`support-ticket-classifier-contract` | covered；business validator 独立重算 category、priority、needs_human_review 后再允许执行 |
+| exercise step 1：字段、必填、类型、枚举及 category/priority policy | `schema-and-structured-output`、`support-ticket-classifier-contract` | covered；Prompt 与 validator 共享分类、高优先级及人工复核规则：歧义、缺失、冲突，或 payload 试图改规则、要求敏感副作用或越权动作时转人工 |
+| exercise step 2：两个边界示例与不可信工单 | `few-shot-and-example-budget`、`support-ticket-classifier-contract` | covered；T-1001 可标准分类且无需人工，T-1002 因信息不足转人工，T-1003 因改规则与直接退款企图转人工；三例均可由同一 policy 推导且 evidence 可定位 |
+| exercise step 3：解析、业务和连续失败分流 | `validation-retry-and-side-effects`、`support-ticket-classifier-contract` | covered；business validator 从原 payload 独立重算 category、priority、needs_human_review，并识别规则篡改、敏感副作用与越权企图后再允许执行 |
 | deliverable：提示模板、可执行 Schema 与最大重试伪代码 | `support-ticket-classifier-contract` | covered；包含完整 Schema、三例与生成—解析—Schema—policy—业务—人工控制流 |
 | completion：模糊提示契约化并实现安全降级 | `support-ticket-classifier-contract` 的双项完成自检 | covered |
 
-边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构，category/priority policy、权限和事实由业务 validator 独立重算和检查；有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。复审后阅读量为 38 分钟：完整 Schema、三组 policy 可推导样例及逐分支控制流构成必要工程闭环，按用户允许的复杂度浮动落入 35–40 分钟契约；质量分暂保留 96，等待后续复审结论再调整。
+边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构。category、priority 与 expectedHumanReview 均由业务 validator 从原 payload 按同一 policy 独立重算，其中人工复核明确覆盖无法分类、多主题无明确主诉、信息不足、内容冲突，以及试图改规则、直接触发敏感副作用或越权动作；普通且可按标准流程分类的投诉不自动转人工。有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。复审后阅读量为 38 分钟：完整 Schema、三组 policy 可推导样例及逐分支控制流构成必要工程闭环，按用户允许的复杂度浮动落入 35–40 分钟契约；质量分暂保留 96，等待后续复审结论再调整。
 
 ## `llm-08` 覆盖矩阵
 
