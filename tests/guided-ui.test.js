@@ -141,6 +141,17 @@ test('agent mechanism lessons retain legacy explanations without a knowledge not
   assert.ok(root.textContent.includes(agentMechanism.lessons[0].explanations[0].heading));
   assert.ok(root.querySelector('.lesson-explanations'));
   assert.equal(root.querySelector('.knowledge-note'), null);
+  const resourceSelection = root.querySelector('.resource-selection');
+  const legacyResource = agentMechanism.resources.find(({ id }) => (
+    agentMechanism.lessons[0].resourceIds.includes(id)
+  ));
+  const legacyResourceItem = resourceSelection.querySelectorAll('li')
+    .find((item) => item.textContent.includes(legacyResource.title));
+  assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
+  assert.ok(legacyResourceItem.textContent.includes(
+    `${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`,
+  ));
+  assert.ok(!resourceSelection.textContent.includes('undefined'));
 });
 
 test('knowledge note keeps body visible and reports missing source references', (t) => {
