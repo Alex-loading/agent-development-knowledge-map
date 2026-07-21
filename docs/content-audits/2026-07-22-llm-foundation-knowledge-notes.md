@@ -192,7 +192,7 @@
 | deliverable：提示模板、可执行 Schema 与最大重试伪代码 | `support-ticket-classifier-contract` | covered；包含完整 Schema、三例与生成—解析—Schema—policy—业务—人工控制流 |
 | completion：模糊提示契约化并实现安全降级 | `support-ticket-classifier-contract` 的双项完成自检 | covered |
 
-边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构。category、priority 与 expectedHumanReview 均由业务 validator 从原 payload 按同一 policy 独立重算，其中人工复核明确覆盖无法分类、多主题无明确主诉、信息不足、内容冲突，以及试图改规则、直接触发敏感副作用或越权动作；普通且可按标准流程分类的投诉不自动转人工。有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。复审后阅读量为 38 分钟：完整 Schema、三组 policy 可推导样例及逐分支控制流构成必要工程闭环，按用户允许的复杂度浮动落入 35–40 分钟契约；质量分暂保留 96，等待后续复审结论再调整。
+边界：消息角色优先级按具体供应商接口核验；提示分隔不等于强安全隔离；Schema 只管结构。category、priority 与 expectedHumanReview 均由业务 validator 从原 payload 按同一 policy 独立重算，其中人工复核明确覆盖无法分类、多主题无明确主诉、信息不足、内容冲突，以及试图改规则、直接触发敏感副作用或越权动作；普通且可按标准流程分类的投诉不自动转人工。有限 repair 与瞬时服务退避分开；生成和修复循环不执行副作用，幂等语义必须由下游真实实现。复审后阅读量为 38 分钟：完整 Schema、三组 policy 可推导样例及逐分支控制流构成必要工程闭环，按用户允许的复杂度浮动落入 35–40 分钟契约；最终交叉复审确认质量分为 96。
 
 ## `llm-08` 覆盖矩阵
 
