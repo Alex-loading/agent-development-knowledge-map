@@ -32,7 +32,7 @@ export const modules = [
   {
     id: 'context-rag-memory',
     title: '上下文、RAG 与记忆',
-    status: 'planned',
+    status: 'active',
     summary: '系统掌握检索、上下文工程、短长期记忆及其质量与成本权衡。',
     prerequisites: ['llm-foundation', 'agent-mechanism'],
     estimatedHours: 16,

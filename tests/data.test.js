@@ -12,18 +12,23 @@ function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
 }
 
-test('module catalog starts with three active modules and exposes planned dependencies', () => {
+test('module catalog starts with four active modules and exposes planned dependencies', () => {
   const moduleIds = new Set(modules.map((module) => module.id));
   assert.deepEqual(
-    modules.slice(0, 3).map(({ id, status }) => ({ id, status })),
+    modules.slice(0, 4).map(({ id, status }) => ({ id, status })),
     [
       { id: 'llm-foundation', status: 'active' },
       { id: 'agent-mechanism', status: 'active' },
       { id: 'agent-harness', status: 'active' },
+      { id: 'context-rag-memory', status: 'active' },
     ],
   );
-  assert.equal(modules.slice(3).length, 5);
-  assert.ok(modules.slice(3).every((module) => module.status === 'planned'));
+  assert.deepEqual(
+    modules.find(({ id }) => id === 'context-rag-memory').prerequisites,
+    ['llm-foundation', 'agent-mechanism'],
+  );
+  assert.equal(modules.slice(4).length, 4);
+  assert.ok(modules.slice(4).every((module) => module.status === 'planned'));
   assert.ok(modules.every((module) => Array.isArray(module.prerequisites)));
   assert.ok(
     modules.every((module) => module.prerequisites.every((id) => moduleIds.has(id))),

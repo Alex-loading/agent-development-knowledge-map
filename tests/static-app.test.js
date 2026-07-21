@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { normalizeRoute } from '../src/app.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { modules } from '../src/data/modules.js';
@@ -9,6 +9,7 @@ import { externalLink } from '../src/ui/dom.js';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const agentHarness = courseRegistry['agent-harness'];
 const agentMechanism = courseRegistry['agent-mechanism'];
+const contextRagMemory = courseRegistry['context-rag-memory'];
 const SMALL_CHINESE_NUMERALS = Object.freeze([
   '零', '一', '二|两', '三', '四', '五', '六', '七', '八', '九', '十',
 ]);
@@ -29,6 +30,32 @@ function markdownSection(markdown, heading) {
   const contentStart = start + marker.length;
   const nextHeading = markdown.indexOf('\n## ', contentStart);
   return markdown.slice(contentStart, nextHeading === -1 ? markdown.length : nextHeading);
+}
+
+function markdownParagraphContaining(markdown, marker) {
+  const paragraph = markdown.split(/\n\s*\n/).find((candidate) => candidate.includes(marker));
+  assert.ok(paragraph, 'README should contain paragraph ' + marker);
+  return paragraph;
+}
+
+function findUnsafeDomPatterns(source) {
+  return [
+    ['HTML sink', /\.innerHTML\s*=|insertAdjacentHTML/],
+    ['inline handler attribute', /setAttribute\(['"]on/i],
+    ['DOM0 handler assignment', /\.\s*on[a-z]+\s*=/i],
+  ].filter(([, pattern]) => pattern.test(source)).map(([label]) => label);
+}
+
+async function readJavaScriptTree(directory, relativeDirectory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const contents = await Promise.all(entries.map(async (entry) => {
+    const path = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, directory);
+    const relativePath = `${relativeDirectory}/${entry.name}`;
+    if (entry.isDirectory()) return readJavaScriptTree(path, relativePath);
+    if (!entry.name.endsWith('.js')) return [];
+    return [{ path: relativePath, source: await readFile(path, 'utf8') }];
+  }));
+  return contents.flat();
 }
 
 function cssHex(tokens, name) {
@@ -262,10 +289,11 @@ test('malformed and non-HTTPS external resources are non-clickable and disabled'
 });
 
 test('application modules avoid unsafe HTML rendering, inline handlers and course hardcoding', async () => {
-  const [dom, shell, app, ...genericViews] = await Promise.all([
+  const [dom, shell, app, uiApplicationFiles, ...genericViews] = await Promise.all([
     read('src/ui/dom.js'),
     read('src/ui/shell.js'),
     read('src/app.js'),
+    readJavaScriptTree(new URL('../src/ui/', import.meta.url), 'src/ui'),
     read('src/ui/dashboard.js'),
     read('src/ui/curriculum.js'),
     read('src/ui/knowledge-map.js'),
@@ -284,6 +312,13 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
   assert.match(app, /addEventListener\(['"]hashchange['"]/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /setAttribute\(['"]on/i);
+  for (const file of [{ path: 'src/app.js', source: app }, ...uiApplicationFiles]) {
+    assert.deepEqual(
+      findUnsafeDomPatterns(file.source),
+      [],
+      `${file.path} should avoid unsafe HTML sinks and inline or DOM0 handlers`,
+    );
+  }
   for (const module of modules) {
     assert.doesNotMatch(
       genericViewSource,
@@ -296,6 +331,20 @@ test('application modules avoid unsafe HTML rendering, inline handlers and cours
       `generic views should not hardcode module title ${module.title}`,
     );
   }
+});
+
+test('DOM safety scanner catches unsafe rendering and DOM0 handler assignment mutations', () => {
+  const mutation = `
+    region.innerHTML = unsafeMarkup;
+    region.setAttribute('onclick', unsafeHandler);
+    button.onclick = unsafeHandler;
+  `;
+
+  assert.deepEqual(findUnsafeDomPatterns(mutation), [
+    'HTML sink',
+    'inline handler attribute',
+    'DOM0 handler assignment',
+  ]);
 });
 
 test('application integrates the dashboard, curriculum and knowledge-map renderers', async () => {
@@ -437,15 +486,13 @@ test('release guide publishes every active registered course with data-derived c
     assert.match(line, new RegExp(`${experimentCount}\\s*(?:个|项)[^，。；]*交互实验`));
   }
 
-  for (const route of [
-    '#llm-foundation/dashboard',
-    '#llm-foundation/lesson/llm-04',
-    '#agent-mechanism/dashboard',
-    '#agent-mechanism/lesson/agent-04',
-    '#agent-harness/dashboard',
-    '#agent-harness/lesson/harness-01',
-  ]) {
-    assert.ok(readme.includes(route), `README should document route ${route}`);
+  for (const course of activeCourses) {
+    for (const route of [
+      `#${course.id}/dashboard`,
+      `#${course.id}/lesson/${course.lessons[0].id}`,
+    ]) {
+      assert.ok(readme.includes(route), `README should document route ${route}`);
+    }
   }
 });
 
@@ -488,6 +535,40 @@ test('release guide maps all Harness lessons, labs and deterministic simulation 
   assert.match(map, /确定性模拟[^\n]{0,180}(?:真实 worker|真实持久层)[^\n]{0,180}(?:真实外部系统|真实队列)/i);
 });
 
+test('release guide maps every Context RAG and Memory lesson, lab and responsibility boundary', async () => {
+  const readme = await read('README.md');
+  const map = markdownSection(readme, '上下文、RAG 与记忆课程地图');
+
+  for (const lesson of contextRagMemory.lessons) {
+    assert.ok(map.includes(`\`${lesson.id}\``), `README should list ${lesson.id}`);
+    assert.ok(map.includes(lesson.title), `README should name ${lesson.title}`);
+  }
+  for (const [lessonId, experimentId] of [
+    ['context-02', 'context-router'],
+    ['context-05', 'hybrid-retrieval'],
+    ['context-07', 'memory-lifecycle'],
+  ]) {
+    const mappingLine = map.split('\n').find((line) => (
+      line.includes(`\`${lessonId}\``) && line.includes(`\`${experimentId}\``)
+    ));
+    assert.ok(mappingLine, `README should map ${experimentId} to ${lessonId}`);
+  }
+
+  for (const file of [
+    'src/data/context-rag-memory.js',
+    'src/core/context-rag-memory.js',
+    'src/ui/context-experiments.js',
+  ]) {
+    assert.ok(readme.includes(file), `README should document ${file}`);
+  }
+  assert.match(map, /RAG[^\n]{0,80}(?:不等同于|不是)向量数据库/i);
+  assert.match(map, /RAG[^\n]{0,100}(?:不能|不承诺)[^\n]{0,30}(?:消除|杜绝)幻觉/i);
+  assert.match(map, /教学[^\n]{0,30}记忆[^\n]{0,60}(?:不代表|不等于|不能证明)[^\n]{0,30}(?:隐私合规|合规)/i);
+  for (const boundary of ['context projection', 'retrieval corpus', 'long-term memory', 'checkpoint', 'Harness']) {
+    assert.match(map, new RegExp(escapeRegExp(boundary), 'i'), `README should distinguish ${boundary}`);
+  }
+});
+
 test('release guide records multi-module state isolation and evidence labels as completed facts', async () => {
   const readme = await read('README.md');
 
@@ -518,18 +599,22 @@ test('release guide records multi-module state isolation and evidence labels as 
   }
 });
 
-test('release guide marks Harness active with scope and derives every planned module from the catalog', async () => {
+test('release guide marks complete modules active and derives every planned module from the catalog', async () => {
   const readme = await read('README.md');
   const boundary = markdownSection(readme, '模块路线图与边界');
+  const harnessBoundary = markdownParagraphContaining(boundary, '**Agent Harness**');
+  const contextBoundary = markdownParagraphContaining(boundary, '**上下文、RAG 与记忆**');
   const activeModules = modules.filter((module) => module.status === 'active');
   const plannedModules = modules.filter((module) => module.status === 'planned');
 
-  assert.match(boundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
+  assert.match(harnessBoundary, /Agent Harness[^\n]{0,160}(?:active|已开放)/i);
+  assert.match(contextBoundary, /上下文、RAG 与记忆[^\n]{0,220}(?:active|已开放)/i);
   for (const scope of ['宿主 Runner', 'Run State', 'Event Log', 'Checkpoint', '权限', '人工审批', 'Sandbox', 'Budget', 'Timeout', 'Retry', 'Cancel', '幂等', 'Resume', '并发', '队列', '背压', 'Blocked', 'HITL', 'Handoff', '运行产物']) {
-    assert.match(boundary, new RegExp(scope, 'i'), `README should define Harness scope: ${scope}`);
+    assert.match(harnessBoundary, new RegExp(scope, 'i'), `README should define Harness scope: ${scope}`);
   }
-  for (const later of ['RAG', '记忆', '评测', '安全', '多 Agent', 'MCP']) {
-    assert.match(boundary, new RegExp(later, 'i'), `README should defer ${later}`);
+  assert.match(harnessBoundary, /不提前覆盖[^。]{0,80}RAG[^。]{0,30}长期记忆/i);
+  for (const later of ['完整后端服务', '系统化评测治理', '多 Agent 协议']) {
+    assert.match(harnessBoundary, new RegExp(later, 'i'), `README should keep ${later} outside Harness`);
   }
   assert.match(
     boundary,
