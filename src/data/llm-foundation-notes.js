@@ -1,4 +1,7 @@
 import { llm01Note } from './llm-foundation-notes/llm-01.js';
+import { llm02Note } from './llm-foundation-notes/llm-02.js';
+import { llm03Note } from './llm-foundation-notes/llm-03.js';
+import { llm04Note } from './llm-foundation-notes/llm-04.js';
 
 function deepFreeze(value) {
   if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
@@ -6,4 +9,9 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
-export const llmFoundationNotes = deepFreeze({ 'llm-01': llm01Note });
+export const llmFoundationNotes = deepFreeze({
+  'llm-01': llm01Note,
+  'llm-02': llm02Note,
+  'llm-03': llm03Note,
+  'llm-04': llm04Note,
+});
