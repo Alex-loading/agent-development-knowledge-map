@@ -244,3 +244,12 @@
 | `git diff --check` | 0 | 无空白错误 |
 
 正式 contract 还验证 8 lessons、28 resources、24 interview questions；每节 note 与 registry identity 一致且对象互异；递归冻结会继续进入“父对象已浅冻结、子对象未冻结”的结构并冻结子项；所有 section source 都解析到 lesson set、registry 和 evidence；verifiedAt 只使用 2026-07-15/21/22 且不晚于审计日；资源 URL 安全；Agent 机制、Agent Harness 与上下文/RAG/记忆继续使用 explanations fallback。
+
+## 浏览器验收
+
+2026-07-22 在本地静态服务器上使用真实浏览器完成以下验收：
+
+- 桌面端逐页打开 `llm-01` 至 `llm-08`：每页均只有一个 H1，包含导读、6–7 个目录项、逐节依据、常见误区、本章回顾、下一步和继续深挖；页面没有 `.data-diagnostic`，控制台无 error。
+- 在 `llm-08` 点击目录项“先分失败类型：流畅不是正确性的代理”后，对应 H2 获得焦点且页面滚动到该节，验证目录键盘焦点与滚动行为真实生效。
+- 在 390×844 视口抽查 `llm-04`、`llm-06`、`llm-08`：三页 `documentElement.scrollWidth === clientWidth === 390`，目录宽度不溢出，依据链接无横向溢出。
+- 打开 `agent-01`、`harness-01`、`context-01`：三页继续呈现两张“原理札记”，没有知识笔记目录、没有 `.data-diagnostic`，控制台无 error，确认旧模块 fallback 未被新接线破坏。
