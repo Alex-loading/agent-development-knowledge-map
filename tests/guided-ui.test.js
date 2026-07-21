@@ -5,6 +5,7 @@ import { startApp } from '../src/app.js';
 import { createDefaultProgress } from '../src/core/progress.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
+import { renderKnowledgeNote } from '../src/ui/knowledge-note.js';
 import {
   FakeDocument,
   FakeEvent,
@@ -47,7 +48,32 @@ test('lesson detail renders real teaching content and quiz interaction once afte
 
   assert.equal(root.querySelector('h1').textContent, llmFoundation.lessons[0].title);
   assert.ok(root.textContent.includes(llmFoundation.lessons[0].objectives[0]));
-  assert.ok(root.textContent.includes(llmFoundation.lessons[0].explanations[0].heading));
+  const knowledgeNote = root.querySelector('.knowledge-note');
+  const noteToc = knowledgeNote?.querySelector('nav[aria-label="本章目录"]');
+  const firstSection = llmFoundation.lessons[0].knowledgeNote.sections[0];
+  const firstSectionHeading = knowledgeNote?.querySelector(`#llm-01-note-${firstSection.id}`);
+  const resourceSelection = root.querySelector('.resource-selection');
+  const evidenceResource = llmFoundation.resources.find((resource) => (
+    llmFoundation.lessons[0].resourceIds.includes(resource.id) && resource.evidence
+  ));
+  const evidenceResourceItem = resourceSelection?.querySelectorAll('li')
+    .find((item) => item.textContent.includes(evidenceResource.title));
+
+  assert.ok(knowledgeNote, '应渲染知识型长文笔记');
+  assert.ok(noteToc, '应渲染本章目录');
+  assert.equal(firstSectionHeading?.textContent, firstSection.title);
+  assert.ok(firstSectionHeading?.parentNode.querySelectorAll('p').length >= 2, '首节应包含至少两个正文段落');
+  const sourceLink = knowledgeNote.querySelector('a');
+  assert.equal(new URL(sourceLink.getAttribute('href')).protocol, 'https:');
+  assert.ok(!knowledgeNote.textContent.includes('原理札记'), '新版知识笔记不应继续使用旧标签');
+  assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+  assert.ok(!resourceSelection.textContent.includes('精选资料'));
+  assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.role));
+  assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.limitations));
+
+  noteToc.querySelector('button').click();
+  assert.equal(firstSectionHeading.getAttribute('tabindex'), '-1');
+  assert.equal(document.activeElement, firstSectionHeading);
   const form = root.querySelector('form');
   assert.ok(form, '应渲染真实测验表单');
 
@@ -70,6 +96,57 @@ test('lesson detail renders real teaching content and quiz interaction once afte
     },
     message: '测验完成：答对 2 / 2 题，得分 100%',
   }]);
+});
+
+test('lesson detail falls back to legacy explanations when no knowledge note exists', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  renderLessonDetail(root, {
+    course: llmFoundation,
+    lessonId: 'llm-02',
+    progress: createDefaultProgress('llm-foundation'),
+  });
+
+  assert.ok(root.textContent.includes(llmFoundation.lessons[1].explanations[0].heading));
+  const resourceSelection = root.querySelector('.resource-selection');
+  const legacyResource = llmFoundation.resources.find(({ id }) => llmFoundation.lessons[1].resourceIds.includes(id));
+  const legacyResourceItem = resourceSelection.querySelectorAll('li')
+    .find((item) => item.textContent.includes(legacyResource.title));
+
+  assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
+  assert.ok(legacyResourceItem.textContent.includes(`${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`));
+  assert.ok(!resourceSelection.textContent.includes('undefined'));
+});
+
+test('knowledge note keeps body visible and reports missing source references', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const course = { resources: [] };
+  const lesson = {
+    id: 'synthetic-01',
+    knowledgeNote: {
+      introduction: '这段导言仍应显示。',
+      sections: [{
+        id: 'body',
+        title: '主体内容',
+        paragraphs: ['即使资料引用失效，正文也不能消失。', '诊断应保持非阻塞。'],
+        keyPoints: ['先显示正文，再报告数据问题。'],
+        sourceIds: ['missing-source'],
+      }],
+      misconceptions: [],
+      recap: [],
+      nextStep: '继续下一课。',
+    },
+  };
+
+  const note = renderKnowledgeNote(course, lesson);
+
+  assert.ok(note.textContent.includes('即使资料引用失效，正文也不能消失。'));
+  assert.ok(note.querySelector('.data-diagnostic'));
+  assert.ok(note.textContent.includes('missing-source'));
 });
 
 test('completion persists immutable progress, updates recommendation, announces and restores focus', (t) => {

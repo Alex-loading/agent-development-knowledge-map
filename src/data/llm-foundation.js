@@ -1,20 +1,65 @@
+import { llmFoundationNotes } from './llm-foundation-notes.js';
+
 const VERIFIED_AT = '2026-07-15';
+const LLM_01_VERIFIED_AT = '2026-07-21';
 
 const resources = [
-  { id: 'res-ms-ai', title: 'AI for Beginners', url: 'https://github.com/microsoft/AI-For-Beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '基础认知', value: '用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。', verifiedAt: VERIFIED_AT },
-  { id: 'res-ms-genai', title: 'Generative AI for Beginners', url: 'https://github.com/microsoft/generative-ai-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '应用基础', value: '从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。', verifiedAt: VERIFIED_AT },
-  { id: 'res-ms-agents', title: 'AI Agents for Beginners', url: 'https://github.com/microsoft/ai-agents-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: 'Agent 衔接', value: '完成 LLM 基础后继续学习 Agent 模式、工具和多智能体实践。', verifiedAt: VERIFIED_AT },
-  { id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-ms-ai', title: 'AI for Beginners', url: 'https://github.com/microsoft/AI-For-Beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '基础认知', value: '用完整课程区分 AI、机器学习与深度学习，并配有可运行练习。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'cross-check', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['AI 与机器学习的范围关系', '语言建模与自监督预训练', '条件生成与零样本、少样本使用', '损失、梯度下降优化与参数更新', '训练误差和验证误差、过拟合与泛化边界'],
+      limitations: '神经网络章节只支撑课程级的损失、梯度优化和训练/验证最小机制，不构成大模型训练系统保证；LLM 章节还含过时且未可靠归因的模型参数表及拟人表达，不用于当前模型规格或现代 Agent 机制。',
+    },
+  },
+  {
+    id: 'res-ms-genai', title: 'Generative AI for Beginners', url: 'https://github.com/microsoft/generative-ai-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: '应用基础', value: '从生成式 AI 概念走向提示、检索和应用构建，适合开发者主线学习。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['生成式 AI 与 LLM 基础', 'tokenizer 与自回归生成', '模型、服务与应用的边界', '预训练、微调、RAG、部署和 Agent 衔接'],
+      limitations: '“生成式 AI 是深度学习子集”等表述是面向现代主流系统的简化分类；Foundry 流程和具体模型清单具有平台与时间边界，不能当作通用唯一实现。',
+    },
+  },
+  {
+    id: 'res-ms-agents', title: 'AI Agents for Beginners', url: 'https://github.com/microsoft/ai-agents-for-beginners', source: 'Microsoft', language: '多语言', type: 'GitHub 课程', difficulty: '入门', stage: 'Agent 衔接', value: '完成 LLM 基础后继续学习 Agent 模式、工具和多智能体实践。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'cross-check', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['Agent 与裸 LLM 的边界', '环境、工具、知识、记忆和行动组件', '开放式多步骤任务的适用性'],
+      limitations: '不覆盖 LLM 训练、tokenization 或推理机制；经典智能体分类与现代 LLM Agent 工程并列出现，Microsoft Foundry 与 Agent Framework 选型也不代表唯一实现。',
+    },
+  },
+  {
+    id: 'res-hf-llm', title: 'Hugging Face LLM Course', url: 'https://huggingface.co/learn/llm-course/chapter1/1', source: 'Hugging Face', language: '多语言', type: '官方课程', difficulty: '入门到进阶', stage: '模型全链路', value: '覆盖 Transformer、tokenizer、推理、微调、数据与局限，章节结构清楚。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'core', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['LLM 与 Transformer 基础', '自监督预训练和微调', '使用已训练模型推理', 'prefill 与 decode', '偏见、上下文和资源限制'],
+      limitations: '不能单独支撑完整的 AI、机器学习、深度学习领域层级，也不覆盖应用团队的完整职责；本章不把“推理参数固定”归因成该课程的明确原句。',
+    },
+  },
   { id: 'res-hf-agents', title: 'Hugging Face Agents Course', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: 'Agent 衔接', value: '以中文课程连接 LLM、工具、框架、Agentic RAG、观测与评测。', verifiedAt: VERIFIED_AT },
   { id: 'res-karpathy', title: 'Neural Networks: Zero to Hero', url: 'https://github.com/karpathy/nn-zero-to-hero', source: 'Andrej Karpathy', language: '英文', type: 'GitHub + 视频', difficulty: '进阶', stage: '原理实作', value: '从反向传播手写到 tokenizer 与 GPT，代码和直觉紧密对应。', verifiedAt: VERIFIED_AT },
   { id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: VERIFIED_AT },
   { id: 'res-rasbt', title: 'LLMs from Scratch', url: 'https://github.com/rasbt/LLMs-from-scratch', source: 'Sebastian Raschka', language: '英文', type: 'GitHub 教材', difficulty: '进阶', stage: '模型实作', value: '逐章实现数据处理、Attention、GPT、预训练、微调与 LoRA。', verifiedAt: VERIFIED_AT },
   { id: 'res-happy-llm', title: 'Happy-LLM：从零开始构建大模型', url: 'https://github.com/datawhalechina/happy-llm', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '入门到进阶', stage: '中文主线', value: '中文系统讲解 NLP、Transformer、训练、微调并提供动手实现。', verifiedAt: VERIFIED_AT },
   { id: 'res-llm-universe', title: 'LLM Universe：动手学大模型应用开发', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: 'GitHub 课程', difficulty: '入门', stage: '应用开发', value: '面向 Python 开发者讲 API、Prompt、RAG、评估和应用落地。', verifiedAt: VERIFIED_AT },
-  { id: 'res-hello-agents', title: 'Hello-Agents：从零开始构建智能体', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '进阶', stage: 'Agent 衔接', value: '在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-hello-agents', title: 'Hello-Agents：从零开始构建智能体', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: 'GitHub 教材', difficulty: '进阶', stage: 'Agent 衔接', value: '在基础模块之后，以自研框架理解 Agent 原理、范式与多智能体。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'community', role: 'cross-check', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['Agent 不等于裸 LLM', '工具调用与行动闭环', '模型选型和应用验证路径'],
+      limitations: '这是社区二手教材，适合中文解释和工程交叉核验；框架实现、模型示例与其他时敏内容不能替代模型厂商或 SDK 官方语义。',
+    },
+  },
   { id: 'res-openai-cookbook', title: 'OpenAI Cookbook', url: 'https://github.com/openai/openai-cookbook', source: 'OpenAI', language: '英文', type: 'GitHub 示例', difficulty: '入门到进阶', stage: '应用实践', value: '官方 API 示例与指南，适合核对结构化输出、评测和生产实践。', verifiedAt: VERIFIED_AT },
   { id: 'res-openai-evals', title: 'OpenAI Evals', url: 'https://github.com/openai/evals', source: 'OpenAI', language: '英文', type: 'GitHub 框架', difficulty: '进阶', stage: '评测实践', value: '官方开源评测框架与基准注册表，用于学习如何构建、运行和管理面向具体用例的 Evals。', verifiedAt: VERIFIED_AT },
-  { id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-openai-agents', title: 'OpenAI Agents SDK', url: 'https://github.com/openai/openai-agents-python', source: 'OpenAI', language: '英文', type: 'GitHub SDK', difficulty: '进阶', stage: 'Agent 衔接', value: '用官方实现理解 Agent、工具、交接、护栏、会话和追踪。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'official', role: 'extension', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['LLM、instructions 与 tools 的应用编排', '可选 handoffs、guardrails、sessions 与 tracing 组件', '敏感工具配置 needs_approval 后暂停调用并等待人批准或拒绝'],
+      limitations: '审批语义只适用于 OpenAI Agents SDK 中配置了 needs_approval 或 require approval 的工具调用，guardrails 不是权限系统；该资料不支撑模型训练机制，也不代表所有 Agent 框架都自动具备人工审批。',
+    },
+  },
   { id: 'res-tiktoken', title: 'tiktoken', url: 'https://github.com/openai/tiktoken', source: 'OpenAI', language: '英文', type: 'GitHub 工具', difficulty: '进阶', stage: 'Token 实验', value: '实际观察 BPE tokenizer 的编码、解码和 token 预算。', verifiedAt: VERIFIED_AT },
   { id: 'res-anthropic-agents', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方博客', difficulty: '进阶', stage: '系统设计', value: '用工作流与 Agent 的区分理解何时需要自治，以及如何从简单组合开始。', verifiedAt: VERIFIED_AT },
   { id: 'res-stanford-cs336', title: 'Stanford CS336: Language Modeling from Scratch', url: 'https://cs336.stanford.edu/', source: 'Stanford University', language: '英文', type: '大学课程', difficulty: '深挖', stage: '训练系统', value: '从数据、tokenizer、Transformer 到分布式训练与评估，适合深入路线。', verifiedAt: VERIFIED_AT },
@@ -28,7 +73,14 @@ const resources = [
   { id: 'res-limu-transformer', title: 'Transformer《动手学深度学习 v2》', url: 'https://www.bilibili.com/video/BV1Kq4y1H7FL/', source: '跟李沐学AI', language: '中文', type: 'Bilibili 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '从架构讲解进入多头注意力与 Transformer 代码，适合配合 D2L 教材。', verifiedAt: VERIFIED_AT },
   { id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: VERIFIED_AT },
   { id: 'res-owasp-prompt-injection', title: 'LLM Prompt Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html', source: 'OWASP', language: '英文', type: '官方安全指南', difficulty: '进阶', stage: '安全实践', value: '系统梳理直接与间接提示注入、工具风险，以及输入隔离、最小权限、监控和人工确认等纵深防御。', verifiedAt: VERIFIED_AT },
-  { id: 'res-zomi-bili', title: '大模型整体架构与全流程介绍', url: 'https://www.bilibili.com/video/BV1a34y137zi/', source: 'ZOMI酱', language: '中文', type: 'Bilibili 视频', difficulty: '入门到进阶', stage: '全局补充', value: '从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。', verifiedAt: VERIFIED_AT },
+  {
+    id: 'res-zomi-bili', title: '大模型整体架构与全流程介绍', url: 'https://www.bilibili.com/video/BV1a34y137zi/', source: 'ZOMI酱', language: '中文', type: 'Bilibili 视频', difficulty: '入门到进阶', stage: '全局补充', value: '从 AI 系统视角串联数据、训练、微调、推理、部署与应用环节。', verifiedAt: LLM_01_VERIFIED_AT,
+    evidence: {
+      authority: 'expert', role: 'extension', verifiedAt: LLM_01_VERIFIED_AT,
+      coverage: ['视频身份与主题元数据，仅作为课后扩展入口'],
+      limitations: '已核验作者身份和视频元数据，但字幕为空且页面访问返回 412，未读取到视频正文，因此不用于支撑本章任何关键事实；同作者图文也不是该视频逐字稿。',
+    },
+  },
 ];
 
 const quiz = (id, prompt, choices, answerIndex, explanation) => ({
@@ -50,6 +102,7 @@ const lessons = [
       { heading: '开发者站在哪一层', body: '训练阶段通过数据、损失函数与优化算法更新参数；推理阶段固定参数，根据输入逐 token 计算输出。模型开发关注数据、架构、训练效率和对齐，应用开发更关注需求拆解、上下文、工具、验证、延迟和成本。Agent 开发通常从可靠调用现成模型开始，再根据证据决定是否需要检索、微调或更换模型。', keyPoints: ['训练改变参数，推理使用参数', '先用评测定位瓶颈，再选择技术手段'] },
     ],
     resourceIds: ['res-ms-ai', 'res-ms-genai', 'res-hf-llm', 'res-zomi-bili', 'res-ms-agents', 'res-hello-agents', 'res-openai-agents'],
+    knowledgeNote: llmFoundationNotes['llm-01'],
     exercise: { title: '画出自己的 AI 学习边界', brief: '用一张关系图说明领域层级，再为一个资料助理 Agent 选择应用开发路线。', steps: ['画出 AI→机器学习→深度学习，以及生成模型→LLM 的关系并补充交叉说明', '列出训练一个基础模型与调用模型构建 Agent 各自至少四项工作', '写下未来两周只做应用开发时要学与暂缓学的内容'], deliverable: '一张概念关系图和一份不超过 300 字的 Agent 应用开发学习路径。' },
     quiz: [
       quiz('quiz-llm-01-1', '下面哪项最准确地描述 LLM 与深度学习的关系？', ['两者完全等价', 'LLM 通常是基于深度学习的生成模型', '深度学习只是 LLM 的推理接口', 'LLM 包含所有机器学习方法'], 1, 'LLM 通常建立在深度神经网络之上，但深度学习还包括视觉、语音等许多模型。'),
@@ -357,11 +410,17 @@ const interviewQuestions = [
   },
 ];
 
-export const llmFoundation = {
+const deepFreeze = (value) => {
+  if (value === null || typeof value !== 'object') return value;
+  for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
+  return Object.freeze(value);
+};
+
+export const llmFoundation = deepFreeze({
   id: 'llm-foundation',
   title: 'LLM 基础',
   summary: '面向 Agent 与 AI 应用开发者的第一阶段课程：先理解模型，再学会把概率能力装进可验证系统。',
   lessons,
   resources,
   interviewQuestions,
-};
+});
