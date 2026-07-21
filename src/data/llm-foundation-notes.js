@@ -4,9 +4,10 @@ import { llm03Note } from './llm-foundation-notes/llm-03.js';
 import { llm04Note } from './llm-foundation-notes/llm-04.js';
 
 function deepFreeze(value) {
-  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  if (!value || typeof value !== 'object') return value;
   for (const nested of Object.values(value)) deepFreeze(nested);
-  return Object.freeze(value);
+  if (!Object.isFrozen(value)) Object.freeze(value);
+  return value;
 }
 
 export const llmFoundationNotes = deepFreeze({
