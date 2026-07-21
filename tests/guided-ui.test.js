@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { startApp } from '../src/app.js';
 import { createDefaultProgress } from '../src/core/progress.js';
+import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
 import { renderKnowledgeNote } from '../src/ui/knowledge-note.js';
@@ -98,27 +99,48 @@ test('lesson detail renders real teaching content and quiz interaction once afte
   }]);
 });
 
-test('lesson detail falls back to legacy explanations when no knowledge note exists', (t) => {
+test('lesson detail renders released LLM knowledge notes with source-safe deepening resources', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  for (const lessonId of ['llm-02', 'llm-08']) {
+    const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
+    renderLessonDetail(root, {
+      course: llmFoundation,
+      lessonId,
+      progress: createDefaultProgress('llm-foundation'),
+    });
+
+    const knowledgeNote = root.querySelector('.knowledge-note');
+    const resourceSelection = root.querySelector('.resource-selection');
+    const sourceLink = knowledgeNote?.querySelector('a');
+    assert.ok(knowledgeNote, `${lessonId}: 应渲染知识型长文笔记`);
+    assert.equal(knowledgeNote.querySelectorAll('nav[aria-label="本章目录"] button').length, lesson.knowledgeNote.sections.length,
+      `${lessonId}: 目录按钮数必须等于章节数`);
+    assert.equal(sourceLink.getAttribute('target'), '_blank', `${lessonId}: 来源链接应在新窗口打开`);
+    assert.ok(sourceLink.getAttribute('rel').includes('noopener noreferrer'), `${lessonId}: 来源链接必须防止 opener 泄漏`);
+    assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+    assert.equal(root.querySelector('.data-diagnostic'), null, `${lessonId}: 不应出现资料诊断`);
+  }
+});
+
+test('agent mechanism lessons retain legacy explanations without a knowledge note', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const root = document.createElement('div');
   document.body.append(root);
 
   renderLessonDetail(root, {
-    course: llmFoundation,
-    lessonId: 'llm-02',
-    progress: createDefaultProgress('llm-foundation'),
+    course: agentMechanism,
+    lessonId: 'agent-01',
+    progress: createDefaultProgress('agent-mechanism'),
   });
 
-  assert.ok(root.textContent.includes(llmFoundation.lessons[1].explanations[0].heading));
-  const resourceSelection = root.querySelector('.resource-selection');
-  const legacyResource = llmFoundation.resources.find(({ id }) => llmFoundation.lessons[1].resourceIds.includes(id));
-  const legacyResourceItem = resourceSelection.querySelectorAll('li')
-    .find((item) => item.textContent.includes(legacyResource.title));
-
-  assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
-  assert.ok(legacyResourceItem.textContent.includes(`${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`));
-  assert.ok(!resourceSelection.textContent.includes('undefined'));
+  assert.ok(root.textContent.includes(agentMechanism.lessons[0].explanations[0].heading));
+  assert.ok(root.querySelector('.lesson-explanations'));
+  assert.equal(root.querySelector('.knowledge-note'), null);
 });
 
 test('knowledge note keeps body visible and reports missing source references', (t) => {
