@@ -47,9 +47,9 @@ const resources = [
     },
   },
   {
-    id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: WAVE_01_VERIFIED_AT,
+    id: 'res-karpathy-build-gpt', title: "Let's build GPT: from scratch, in code, spelled out.", url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY', source: 'Andrej Karpathy', platform: 'YouTube', language: '英文', type: 'YouTube 视频', difficulty: '进阶', stage: 'Transformer 实作', value: '跟随原作者从 bigram 语言模型逐步实现自注意力、Transformer 块与一个小型 GPT。', verifiedAt: VERIFIED_AT,
     evidence: {
-      authority: 'expert', role: 'extension', verifiedAt: WAVE_01_VERIFIED_AT,
+      authority: 'expert', role: 'extension', verifiedAt: VERIFIED_AT,
       coverage: ['视频身份、作者与从 bigram 到 GPT 教学路线的元数据，作为课后实作入口'],
       limitations: '本轮只核验视频页面和课程元数据，没有取得可核验字幕或逐字正文，因此不用于支撑 token、上下文、Attention 或 Transformer 的任何关键机制。',
     },
@@ -178,9 +178,9 @@ const resources = [
     },
   },
   {
-    id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: WAVE_01_VERIFIED_AT,
+    id: 'res-wangmutou-transformer', title: '以卷积类比串联词嵌入、Attention 与 Transformer', url: 'https://www.bilibili.com/video/BV1XH4y1T76e/', source: '王木头学科学', language: '中文', type: 'Bilibili 视频', difficulty: '入门', stage: 'Transformer 直觉', value: '用个人类比串联词嵌入、位置与 Attention；类比用于建立直觉，不应理解为 Attention 与 CNN 在架构上等价。', verifiedAt: VERIFIED_AT,
     evidence: {
-      authority: 'expert', role: 'extension', verifiedAt: WAVE_01_VERIFIED_AT,
+      authority: 'expert', role: 'extension', verifiedAt: VERIFIED_AT,
       coverage: ['视频身份、主题和以卷积类比解释 embedding、位置与 Attention 的元数据，作为课后扩展入口'],
       limitations: '本轮只取得视频与作者元数据，没有可核验字幕或正文，因此不用于支撑 token、位置表示、Attention 或 Transformer 的关键机制；卷积类比也不能推出 Attention 与 CNN 架构等价。',
     },
