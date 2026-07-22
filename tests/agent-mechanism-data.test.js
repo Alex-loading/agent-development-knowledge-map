@@ -57,6 +57,7 @@ const expectedResourceUrls = new Map([
   ['res-agent-toolformer', 'https://arxiv.org/abs/2302.04761'],
   ['res-agent-openai-function', 'https://developers.openai.com/api/docs/guides/function-calling'],
   ['res-agent-anthropic-tools', 'https://www.anthropic.com/engineering/writing-tools-for-agents'],
+  ['res-agent-aws-idempotent-apis', 'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/'],
   ['res-agent-coala', 'https://arxiv.org/abs/2309.02427'],
   ['res-agent-reflexion', 'https://arxiv.org/abs/2303.11366'],
   ['res-agent-self-refine', 'https://arxiv.org/abs/2303.17651'],
@@ -344,8 +345,8 @@ test('every quiz item has a valid answer and explanation', () => {
   }
 });
 
-test('course has exactly 28 fixed, fully described and platform-resolvable resources', () => {
-  assert.equal(agentMechanism.resources.length, 28);
+test('course has exactly 29 fixed, fully described and platform-resolvable resources', () => {
+  assert.equal(agentMechanism.resources.length, 29);
   assert.deepEqual(
     new Map(agentMechanism.resources.map(({ id, url }) => [id, url])),
     expectedResourceUrls,
@@ -405,12 +406,14 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
     assert.match(byId.get(id).value, /工程经验/);
   }
   assert.match(byId.get('res-agent-openai-function').value, /API.*语义/);
+  assert.equal(byId.get('res-agent-aws-idempotent-apis').source, "AWS Builders' Library");
+  assert.match(byId.get('res-agent-aws-idempotent-apis').value, /请求标识|幂等/);
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('官方课程')));
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('社区补充')));
 });
 
-test('all 28 Agent resources provide complete evidence cards', () => {
-  assert.equal(agentMechanism.resources.length, 28, 'Agent 课程必须维护 28 份资源');
+test('all 29 Agent resources provide complete evidence cards', () => {
+  assert.equal(agentMechanism.resources.length, 29, 'Agent 课程必须维护 29 份资源');
   for (const resource of agentMechanism.resources) {
     const { evidence } = resource;
     assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
@@ -438,6 +441,15 @@ test('all 28 Agent resources provide complete evidence cards', () => {
     'res-agent-openai-function: 时敏 API 语义必须记录 evidence.verifiedAt');
   assert.equal(functionCalling.evidence.verifiedAt, '2026-07-22',
     'res-agent-openai-function: 必须保留本轮官方文档语义核验日期');
+
+  const idempotentApis = agentMechanism.resources.find(
+    ({ id }) => id === 'res-agent-aws-idempotent-apis',
+  );
+  assert.equal(idempotentApis.evidence.authority, 'official');
+  assert.equal(idempotentApis.evidence.role, 'core');
+  assert.equal(idempotentApis.evidence.verifiedAt, '2026-07-22');
+  assert.match(idempotentApis.evidence.coverage.join(' '), /client request identifier|幂等重试|晚到请求/);
+  assert.match(idempotentApis.evidence.limitations, /AWS.*经验.*不证明.*订单/);
 
   const byId = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
   for (const id of ['res-agent-datawhale-bili', 'res-agent-disney-planner-bili']) {

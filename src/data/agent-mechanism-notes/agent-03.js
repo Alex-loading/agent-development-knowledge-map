@@ -5,7 +5,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '上一课把自然语言请求整理成 task contract，明确目标、约束、未知项和成功证据；本课再把其中的“允许动作”变成工具契约。function calling（也称 tool calling）不是让模型取得数据库或操作系统权限，而是由应用把可选工具的名称、用途和参数结构交给模型，模型只在响应中提出一个结构化调用意图。真实能力、凭据和执行入口始终留在宿主程序一侧，因此画职责图时必须把模型、宿主执行器和外部系统分成三个边界。',
       '一份可用声明要让工具职责单一，并把名称、描述、参数类型、必填项、枚举和对象边界写清。OpenAI 当前文档用 JSON Schema 描述 function 参数；Anthropic 的工程经验也强调少而高信号的工具集合、清晰命名和高信息量描述。两者都不意味着 schema 自动获得业务正确性：声明只缩小模型可以表达的调用形状，资源是否存在、操作者是否有权、动作是否合规仍要由宿主另行判断。',
-      '以订单场景为例，查询和取消不应合并成一个带 mode 自由文本的万能工具，因为二者权限与副作用完全不同。可照写的查询契约是：工具名 get_order；用途“读取当前用户可见的单个订单摘要”；参数对象包含 order_id 字符串与 view 枚举 summary、items，required 为 order_id、view，additionalProperties 为 false，strict 为 true；它只读，不接受 user_id 让模型代替已认证主体。返回只含订单状态、可取消性和所选视图的必要条目摘要，不回传支付令牌、完整地址或内部风控备注。',
+      '以订单场景为例，查询和取消不应合并成一个带 mode 自由文本的万能工具，因为二者权限与副作用完全不同。下面是可直接复制并解析的当前 Responses function 工具定义，宿主从认证上下文取得主体，不让模型传 user_id：{"type":"function","name":"get_order","description":"Read one order visible to the authenticated caller.","strict":true,"parameters":{"type":"object","properties":{"order_id":{"type":"string","description":"Stable order identifier."},"view":{"type":"string","enum":["summary","items"],"description":"Response detail level."}},"required":["order_id","view"],"additionalProperties":false}}。它只读，返回仅含订单状态、可取消性和所选视图的必要摘要，不回传支付令牌、完整地址或内部风控备注。',
     ]),
     keyPoints: Object.freeze([
       '模型只能看到工具契约并提出调用，真实权限、凭据和执行能力始终属于宿主与外部系统。',
@@ -61,7 +61,7 @@ const sections = Object.freeze([
     title: '业务、权限与风险校验：决定这个动作此刻能否发生',
     paragraphs: Object.freeze([
       '通过 schema 后，宿主才进入语义层。存在性检查确认 order_id 对应真实且当前可见的资源；跨字段规则检查 reason、channel 与订单状态组合是否允许；权限检查从认证会话取得主体与租户，而不是信任模型参数；风险策略判断退款金额、不可逆性、监管要求和审批门槛。最小权限的含义是工具只获得完成单一职责所需的身份、数据范围和动作能力，并在执行时再次校验，不能把管理员凭据或任意订单范围交给模型。',
-      '取消工具可照写为 cancel_order：用途“请求取消一个经认证主体有权管理且处于可取消状态的订单”；参数对象包含 order_id 字符串、reason 枚举 customer_request、duplicate、delivery_delay，idempotency_key 字符串，以及 approval_token 类型为 string 或 null；四个字段全部 required，additionalProperties 为 false，strict 为 true。宿主从会话解析 actor_id，不让模型传；先校验订单归属与可取消状态，再按金额或履约阶段决定 approval_token 是否必须且是否有效。',
+      '下面是第二份可直接复制并解析的当前 Responses function 工具定义：{"type":"function","name":"cancel_order","description":"Request cancellation of one order after host-side authorization and risk checks.","strict":true,"parameters":{"type":"object","properties":{"order_id":{"type":"string","description":"Stable order identifier."},"reason":{"type":"string","enum":["customer_request","duplicate","delivery_delay"],"description":"Allowed cancellation reason."},"idempotency_key":{"type":"string","description":"Caller-generated identifier for this cancellation intent."},"approval_token":{"type":["string","null"],"description":"Verified approval reference, or null when policy permits no approval."}},"required":["order_id","reason","idempotency_key","approval_token"],"additionalProperties":false}}。在当前 strict 约束里，approval_token 仍列入 required，只是值允许 null；required 约束字段必须出现，nullable 不代表宿主可以跳过审批，实际策略仍要判断此时 null 是否被允许。',
       '高风险调用即使结构完全合法也只能返回 APPROVAL_REQUIRED，retryable 为 false，message 说明需要授权角色，evidenceRef 指向审计事件；没有审批时禁止执行。一次高风险退款的检查表至少包括：调用与会话关联、schema、订单存在性、租户归属、当前状态、金额与政策、操作者权限、审批令牌、幂等键、审计记录以及响应最小暴露。错误结构应让程序明确选择补参、重新授权、等待审批或终止，而不是把模糊异常丢给模型自由猜测。',
     ]),
     keyPoints: Object.freeze([
@@ -79,20 +79,20 @@ const sections = Object.freeze([
     id: 'host-execution-boundary',
     title: '宿主执行：用幂等、超时和审计守住副作用边界',
     paragraphs: Object.freeze([
-      '所有检查通过后，宿主才使用服务端凭据调用真实系统。为把课程字段要求落成可审查实现，本课的订单执行检查表规定：查询动作仍要限制频率与数据范围；取消订单会产生副作用，必须以 idempotency_key 作为同一业务意图的稳定标识，让重复投递返回第一次结果而不是再次取消或重复退款。这是订单示例的工程策略，不是五份来源共同规定的协议；它说明幂等不是“永远重试”，而是使相同意图的重放可辨认，并把参数摘要、调用者、审批和外部事务标识写入审计日志。',
-      '超时尤其容易被误判。连接超时只能说明宿主没有在预算内看到响应，不能证明外部系统没有执行；取消请求可能已提交、正在处理或成功但回包丢失。此时返回 UNKNOWN_OUTCOME，retryable 为 false 或由专门恢复策略决定，保存 idempotency_key 和外部请求引用，先用查询接口核对终态，再决定等待、补偿或人工处理。直接换一个新幂等键重试，会把未知终态变成重复副作用风险。',
-      '执行层还要隔离并发、限制总时长、记录结构化事件，并把底层异常转换为稳定的领域错误。一个调用可处于 rejected、approval-required、running、succeeded、failed 或 unknown-outcome；这些状态由宿主和外部系统证据决定，不由模型措辞决定。Microsoft 视频的字幕材料可交叉说明工具串联、最小权限与错误处理，但其 Semantic Kernel 的 auto 或 required 行为依赖版本，本课不据此规定通用执行语义。',
+      '所有检查通过后，宿主才使用服务端凭据调用真实系统。AWS Builders’ Library 把幂等操作定义为同一请求可以重传或重试而不产生额外副作用，并说明其偏好把调用方提供的唯一 client request identifier 写入 API 契约；同一调用方与同一标识可被识别为重复请求，服务端还要原子地记录标识与变更。本课把 cancel_order 的 idempotency_key 映射到这一职责：同一取消意图重试时复用同一键，同一键却改变参数时拒绝为 IDEMPOTENCY_CONFLICT，而不是仅凭参数哈希猜测调用意图。',
+      'AWS 正文以网络超时说明调用方可能不知道资源是否已经创建，非幂等地直接重试可能重复产生副作用；在幂等契约的有效窗口内，同一 client request identifier 的重试应获得语义等价响应，同时必须考虑晚到请求与标识保留期。订单示例据此把超时回填为 UNKNOWN_OUTCOME 并保留原 idempotency_key；随后查询订单状态或调用账本属于本课程把 AWS 所述 reconciliation 落到订单域的恢复设计，不是 AWS 为订单规定的接口，也不能在没有具体业务证据时自动决定补偿。',
+      '执行层还要隔离并发、限制总时长、记录结构化事件，并把底层异常转换为稳定的领域错误。本课程使用 rejected、approval-required、running、succeeded、failed 与 unknown-outcome 作为订单调用状态；这些名称、审批和补偿策略是课程综合，必须由宿主与外部系统证据决定。Microsoft 视频的字幕材料只交叉说明工具串联、最小权限与错误处理，其 Semantic Kernel 的 auto 或 required 行为依赖版本；AWS 文章也明确其严谨契约有服务端复杂度，不证明每个业务都应照搬。',
     ]),
     keyPoints: Object.freeze([
-      '副作用工具使用稳定幂等键、可信凭据、超时预算与审计记录，重复调用不能靠模型自觉避免。',
-      '超时是未知终态，不是失败证明；应先按原调用引用查询或恢复，不能盲目换键重放。',
+      '副作用工具用调用方请求标识表达一次意图；同一意图重试复用标识，同一标识改变参数应被拒绝。',
+      '超时会造成调用方视角的不确定性；保留原标识并对账，晚到请求和标识保留期必须进入设计。',
     ]),
     callout: Object.freeze({
       kind: 'warning',
       title: '超时后不要立即再做一次',
-      body: '对取消、退款、发送或创建等副作用，先用原幂等键和外部请求引用查终态；否则第二次请求可能把一次意图执行两遍。',
+      body: '网络超时不能证明远端没有执行。若服务提供幂等契约，应复用原请求标识取得语义等价结果；具体订单系统如何查询或对账仍由本课程示例和真实接口另行定义。',
     }),
-    sourceIds: Object.freeze(['res-agent-anthropic-tools', 'res-agent-ms-tool-video', 'res-agent-hf-course']),
+    sourceIds: Object.freeze(['res-agent-aws-idempotent-apis', 'res-agent-anthropic-tools', 'res-agent-ms-tool-video']),
   }),
   Object.freeze({
     id: 'structured-result-observation',
@@ -111,7 +111,7 @@ const sections = Object.freeze([
       title: '结果足够决策即可',
       body: '结构化返回既服务确定性控制器，也服务模型；应保留状态、错误类别与证据引用，删掉秘密、无关字段和污染上下文的大文本。',
     }),
-    sourceIds: Object.freeze(['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-toolformer']),
+    sourceIds: Object.freeze(['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-toolformer']),
   }),
   Object.freeze({
     id: 'order-tool-contract-lab',
@@ -130,7 +130,7 @@ const sections = Object.freeze([
       title: '五类验收表的列',
       body: '输入场景｜语法/schema 结果｜业务/权限/风险结果｜宿主动作｜是否产生副作用｜结构化返回｜下一步；五行分别对应合法、缺参、非法枚举、额外字段、需审批。',
     }),
-    sourceIds: Object.freeze(['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-hf-course', 'res-agent-ms-tool-video']),
+    sourceIds: Object.freeze(['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-hf-course', 'res-agent-ms-tool-video']),
   }),
 ]);
 

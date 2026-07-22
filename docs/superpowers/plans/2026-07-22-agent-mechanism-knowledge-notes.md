@@ -4,7 +4,7 @@
 
 **Goal:** 把 Agent 机制八课升级为来源可追溯、站内可独立学习的知识笔记，并完成测试、浏览器验收、PR 合并与公开部署。
 
-**Architecture:** 每课使用一个纯数据文件，`agent-mechanism-notes.js` 只做八课聚合与递归冻结，`agent-mechanism.js` 负责真实课程和资源 registry 接线。通用 renderer 保持不变；28 份来源卡嵌入 `resource.evidence`，章节引用必须同时解析到全局 registry、当前 lesson 和有效 evidence。
+**Architecture:** 每课使用一个纯数据文件，`agent-mechanism-notes.js` 只做八课聚合与递归冻结，`agent-mechanism.js` 负责真实课程和资源 registry 接线。通用 renderer 保持不变；29 份来源卡嵌入 `resource.evidence`，章节引用必须同时解析到全局 registry、当前 lesson 和有效 evidence。
 
 **Tech Stack:** 原生 ES Modules、Node.js test runner、Fake DOM、GitHub Pages、项目 `.agents/skills/build-learning-module-notes/`。
 
@@ -14,7 +14,7 @@
 
 - `src/data/agent-mechanism-notes/agent-01.js` … `agent-08.js`：单课纯数据知识笔记。
 - `src/data/agent-mechanism-notes.js`：八课 import、ID 映射和递归冻结。
-- `src/data/agent-mechanism.js`：28 份资源 evidence、lesson `knowledgeNote` 接线和课程导出。
+- `src/data/agent-mechanism.js`：29 份资源 evidence、lesson `knowledgeNote` 接线和课程导出。
 - `tests/agent-mechanism-data.test.js`：Agent 课程、来源卡、知识笔记和冻结契约。
 - `tests/data.test.js`：跨模块 fallback 与全局数据回归。
 - `tests/guided-ui.test.js`：通用知识笔记渲染、目录焦点和安全外链。
@@ -54,7 +54,7 @@ const agentNoteExpectations = new Map([
 ]);
 ```
 
-断言应复用 LLM 正式 contract：8 个精确 key、对象身份、5–7 sections、kebab-case ID、2–4 段且每段至少 60 字、至少两个 keyPoints、sourceIds 双重解析、4–6 misconceptions、至少 5 个 recap、逐课阅读量/长度和深层冻结。另增加 28/28 evidence card 的 enum、coverage、limitations 与 `verifiedAt` 合法性断言。
+断言应复用 LLM 正式 contract：8 个精确 key、对象身份、5–7 sections、kebab-case ID、2–4 段且每段至少 60 字、至少两个 keyPoints、sourceIds 双重解析、4–6 misconceptions、至少 5 个 recap、逐课阅读量/长度和深层冻结。另增加 29/29 evidence card 的 enum、coverage、limitations 与 `verifiedAt` 合法性断言。
 
 - [ ] **Step 2: 把跨模块 fallback 收窄为 Harness 与 Context**
 
@@ -88,7 +88,7 @@ git add tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.te
 git commit -m "test: require Agent mechanism knowledge notes"
 ```
 
-### Task 2: 核验 28 份来源并建立 evidence registry
+### Task 2: 核验 29 份来源并建立 evidence registry
 
 **Files:**
 - Modify: `src/data/agent-mechanism.js`
@@ -102,13 +102,13 @@ Run:
 node --input-type=module -e "import('./src/data/agent-mechanism.js').then(({agentMechanism:c})=>console.log(JSON.stringify(c.resources.map(r=>({id:r.id,title:r.title,url:r.url,lessons:c.lessons.filter(l=>l.resourceIds.includes(r.id)).map(l=>l.id)})),null,2)))"
 ```
 
-Expected: 28 个唯一资源，所有 ID 至少被一课引用。
+Expected: 29 个唯一资源，所有 ID 至少被一课引用。
 
 - [ ] **Step 2: 逐正文建立来源访问表**
 
 审计表每项必须记录 `id`、访问类型 `body | metadata | equivalent`、实际访问入口、核验日期、authority、role、coverage、limitations。论文读原文/PDF；OpenAI function calling 读当前官方文档；无字幕视频记录 metadata 限制。不得从现有 `value` 反推正文。
 
-- [ ] **Step 3: 在 registry 中加入 28 张 evidence card**
+- [ ] **Step 3: 在 registry 中加入 29 张 evidence card**
 
 每个资源使用以下真实结构，具体字段必须来自 Step 2 的访问结果：
 
@@ -380,7 +380,7 @@ knowledgeNote: agentMechanismNotes['agent-01'],
 
 - [ ] **Step 3: 完成审计矩阵与量表**
 
-审计必须包含 8 张 outcome→section 覆盖矩阵、28 份来源访问表、每课五类分数、总分、broken refs、证据角色修正、剩余限制和测试表。若某课低于 85 或有 gap，返回原作者修复并重新双审，不能在集成阶段降低断言。
+审计必须包含 8 张 outcome→section 覆盖矩阵、29 份来源访问表、每课五类分数、总分、broken refs、证据角色修正、剩余限制和测试表。若某课低于 85 或有 gap，返回原作者修复并重新双审，不能在集成阶段降低断言。
 
 - [ ] **Step 4: 更新 README**
 
@@ -390,7 +390,7 @@ knowledgeNote: agentMechanismNotes['agent-01'],
 
 Run: `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js`
 
-Expected: 所有测试 PASS，Agent 八课 contract、28 evidence、旧模块 fallback 和 README 声明均为 GREEN。
+Expected: 所有测试 PASS，Agent 八课 contract、29 evidence、旧模块 fallback 和 README 声明均为 GREEN。
 
 - [ ] **Step 6: 运行完整 GREEN**
 
@@ -413,7 +413,7 @@ git commit -m "feat: complete Agent mechanism knowledge notes"
 
 - [ ] **Step 1: 独立最终规格审查**
 
-逐项核对设计范围、八课考核覆盖、28 份来源、实验边界、相邻课程衔接、Harness/Context fallback、README 和所有发布门槛。任何遗漏返回对应作者修正并复审。
+逐项核对设计范围、八课考核覆盖、29 份来源、实验边界、相邻课程衔接、Harness/Context fallback、README 和所有发布门槛。任何遗漏返回对应作者修正并复审。
 
 - [ ] **Step 2: 独立最终质量审查**
 
@@ -442,7 +442,7 @@ git rebase origin/main
 git push -u origin feat/agent-mechanism-knowledge-notes
 ```
 
-创建非草稿 PR，标题 `feat: complete Agent mechanism knowledge notes`，正文列出 8 篇笔记、28 张 evidence、测试和浏览器结果。
+创建非草稿 PR，标题 `feat: complete Agent mechanism knowledge notes`，正文列出 8 篇笔记、29 张 evidence、测试和浏览器结果。
 
 - [ ] **Step 6: 合并并等待 Pages**
 

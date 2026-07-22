@@ -111,6 +111,12 @@ const evidenceByResourceId = {
     limitations: '这是 2025-09-11 的厂商工程经验且在线标题可能调整；效果依赖模型与任务，不能替代本项目权限、业务和回归测试。',
     verifiedAt: VERIFIED_AT,
   },
+  'res-agent-aws-idempotent-apis': {
+    authority: 'official', role: 'core',
+    coverage: ['调用方提供的唯一 client request identifier', '幂等重试与无额外副作用', '网络超时后的不确定性与对账', '同一请求标识的语义等价响应', '晚到请求与请求标识保留期', '同一标识配合不同参数时的校验错误'],
+    limitations: 'AWS 分布式 API 的工程经验，不证明具体订单系统的权限、审批、补偿、错误码或保留期策略；是否采用以及原子性、存储成本和语义窗口仍需按服务验证。',
+    verifiedAt: VERIFIED_AT,
+  },
   'res-agent-coala': {
     authority: 'academic', role: 'core',
     coverage: ['跨 LLM 调用持久化的工作记忆及其当前感知、目标与中间信息', '程序、语义和情景长期记忆', '环境反馈经 grounding procedure 写回工作记忆', '提议、评价、选择、执行与观察组成的概念决策循环'],
@@ -175,6 +181,7 @@ const resources = [
   { id: 'res-agent-toolformer', title: 'Toolformer: Language Models Can Teach Themselves to Use Tools', url: 'https://arxiv.org/abs/2302.04761', source: 'Schick 等', language: '英文', type: '论文', difficulty: '深挖', stage: '工具调用', value: '论文在其评测设定中研究模型学习何时以及如何调用工具的方法；它不等同于生产应用中的 function calling 协议。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-openai-function', title: 'Function Calling', url: 'https://developers.openai.com/api/docs/guides/function-calling', source: 'OpenAI', language: '英文', type: '官方 API 文档', difficulty: '进阶', stage: '工具调用', value: '官方文档用于核对 function calling 的 API 接口语义与消息回填格式；接口提供结构化意图，不保证参数和业务动作正确。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-anthropic-tools', title: 'Writing Tools for Agents', url: 'https://www.anthropic.com/engineering/writing-tools-for-agents', source: 'Anthropic', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '工具设计', value: '厂商团队关于工具命名、描述和返回设计的工程经验，可指导 schema 可用性；实际可靠性仍取决于模型与任务测试。', verifiedAt: VERIFIED_AT },
+  { id: 'res-agent-aws-idempotent-apis', title: 'Making retries safe with idempotent APIs', url: 'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/', source: "AWS Builders' Library", language: '英文', type: '官方工程文章', difficulty: '进阶', stage: '可靠执行', value: 'AWS 分布式 API 工程经验说明如何用调用方请求标识、语义等价响应和晚到请求边界降低重试副作用；具体业务审批与补偿仍需自行设计。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-coala', title: 'Cognitive Architectures for Language Agents', url: 'https://arxiv.org/abs/2309.02427', source: 'Sumers 等', language: '英文', type: '论文', difficulty: '深挖', stage: '状态与记忆', value: '该论文通过提出概念架构与文献综述来组织语言 Agent 研究，用于区分工作记忆、行动空间与决策过程；这种分类不等于实验结论或实现标准。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-reflexion', title: 'Reflexion: Language Agents with Verbal Reinforcement Learning', url: 'https://arxiv.org/abs/2303.11366', source: 'Shinn 等', language: '英文', type: '论文', difficulty: '深挖', stage: '反思恢复', value: '论文在其评测设定中研究把反馈转成语言反思并用于后续尝试的方法，不能据此保证无外部信号的自我批评都会改进。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-self-refine', title: 'Self-Refine: Iterative Refinement with Self-Feedback', url: 'https://arxiv.org/abs/2303.17651', source: 'Madaan 等', language: '英文', type: '论文', difficulty: '深挖', stage: '反思恢复', value: '论文在其评测设定中展示生成、反馈、改写的迭代方式；效果受任务、反馈质量和停止规则影响。', verifiedAt: VERIFIED_AT },
@@ -239,7 +246,7 @@ const lessons = [
       { heading: '模型提出动作，应用负责执行', body: 'Function calling 并不是模型直接进入数据库或操作电脑。应用先把工具名、用途和参数 schema 提供给模型；模型返回工具选择与参数候选；宿主程序再做 schema、业务规则、权限、风险和幂等校验，获准后才调用真实系统。模型输出始终是不可信的动作提案，高风险或不可逆操作还要人工确认，执行责任不能外包给自然语言。', keyPoints: ['结构化调用表示意图，不表示参数正确或已执行', '应用必须在模型之外校验权限、业务规则与副作用'] },
       { heading: '结果回填形成闭环', body: '工具应职责单一，参数名明确，使用必填、类型、枚举和范围减少歧义，并返回 success、data、error code、可重试性和证据引用等结构。执行后的 tool result 必须按调用关联带回模型或控制器，成为新的 observation；否则模型不知道动作成功、失败还是返回空结果，容易凭先验编造后续状态。回填后仍需更新工作状态并重新判断完成或下一动作。', keyPoints: ['工具返回既服务程序判断，也为模型提供环境新证据', '错误要可分类，才能选择重试、修参、换工具或终止'] },
     ],
-    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
+    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
     exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查合法、缺参、枚举、额外字段和高风险五类调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举、额外字段和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、五类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
     quiz: [
       quiz('quiz-agent-03-1', '模型生成合法 JSON 工具调用后，应用下一步应做什么？', ['直接视为已执行', '校验 schema、业务规则、权限与风险后再执行', '让模型假装返回结果', '把所有权限交给模型'], 1, '合法 JSON 只满足语法层，宿主仍要完成参数、业务、权限和副作用校验。'),
