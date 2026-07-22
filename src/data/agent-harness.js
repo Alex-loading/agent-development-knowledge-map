@@ -1,3 +1,5 @@
+import { agentHarnessNotes } from './agent-harness-notes.js';
+
 const VERIFIED_AT = '2026-07-23';
 
 const evidenceByResourceId = {
@@ -257,6 +259,7 @@ function lesson({ order, title, summary, objectives, concepts, explanations, res
     objectives,
     concepts,
     explanations,
+    knowledgeNote: agentHarnessNotes[`harness-${suffix}`],
     resourceIds,
     exercise,
     quiz: quizzes.map((item, index) => ({ id: `quiz-harness-${suffix}-${index + 1}`, ...item })),
