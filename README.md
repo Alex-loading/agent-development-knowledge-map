@@ -147,7 +147,14 @@ npm run serve
 
 然后打开 [http://localhost:4173](http://localhost:4173)。不要直接双击 `index.html`：浏览器对 `file://` 下的 ES Modules 有额外限制。
 
-本项目是原生 ES Modules 静态站，无需构建（no build step）。部署到 GitHub Pages、Netlify、Vercel 或任意静态主机时，直接把**仓库根目录**作为站点根目录；入口是 `index.html`，不要只发布 `src/`。所有站内资源使用相对路径，静态主机必须同时提供 `styles/` 与 `src/`。
+本项目是原生 ES Modules 静态站，无需构建（no build step）。本仓库的**唯一正式部署平台是 Vercel**：生产环境发布仓库根目录，入口是 `index.html`，不要只发布 `src/`；所有站内资源使用相对路径，部署产物必须同时包含 `styles/` 与 `src/`。
+
+部署约定：
+
+- `main` 对应 Vercel Production，功能分支或 Pull Request 对应 Preview；
+- GitHub Pages 必须保持关闭，不作为正式环境或备用发布渠道；
+- 每次发布后必须确认 Vercel 部署状态为 Ready、线上页面可访问，并核对部署提交与目标 `main` 提交一致；
+- 若 Vercel 的 Git 集成暂时不可用，可使用已关联项目的 Vercel CLI 发布，但仍需执行上述验证。
 
 ## 隐私与进度存储
 
