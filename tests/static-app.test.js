@@ -455,14 +455,14 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide records LLM and Agent knowledge-note scope with only Harness and Context fallback', async () => {
+test('release guide records three knowledge-note modules with only Context fallback', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
   const architecture = markdownSection(readme, '架构与数据流');
   const primaryTextbookStatement = markdownParagraphContaining(status, '主教材');
   const fallbackStatement = markdownParagraphContaining(status, '`explanations`');
 
-  for (const title of ['LLM 基础', 'Agent 机制']) {
+  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness']) {
     assert.match(
       primaryTextbookStatement,
       new RegExp(`${escapeRegExp(title)}[^\\n]{0,50}(?:八|8)课[^\\n]{0,50}(?:站内)?知识笔记[^\\n]{0,40}主教材`),
@@ -474,10 +474,10 @@ test('release guide records LLM and Agent knowledge-note scope with only Harness
     /外部(?:学习)?资料[^\n]{0,50}依据[^\n]{0,30}交叉核验[^\n]{0,30}扩展/,
     'README should position external resources as evidence, cross-checks and extensions',
   );
-  for (const title of ['Agent Harness', '上下文、RAG 与记忆']) {
+  for (const title of ['上下文、RAG 与记忆']) {
     assert.ok(fallbackStatement.includes(title), `README should preserve the explanations fallback for ${title}`);
   }
-  for (const title of ['LLM 基础', 'Agent 机制']) {
+  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness']) {
     assert.ok(!fallbackStatement.includes(title),
       `README should not describe ${title} as an explanations fallback`);
   }
@@ -488,6 +488,8 @@ test('release guide records LLM and Agent knowledge-note scope with only Harness
   assert.match(architecture, /`src\/data\/llm-foundation-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
   assert.ok(architecture.includes('`src/data/agent-mechanism-notes/`'));
   assert.match(architecture, /`src\/data\/agent-mechanism-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
+  assert.ok(architecture.includes('`src/data/agent-harness-notes/`'));
+  assert.match(architecture, /`src\/data\/agent-harness-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
 });
 
 test('release guide publishes every active registered course with data-derived counts and canonical routes', async () => {

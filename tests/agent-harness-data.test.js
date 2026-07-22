@@ -18,8 +18,22 @@ const lessonTitles = [
   'Blocked、HITL、Handoff 与运行产物',
 ];
 
+const noteExpectations = new Map([
+  ['harness-01', { minMinutes: 30, maxMinutes: 35, minLength: 4200 }],
+  ['harness-02', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['harness-03', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['harness-04', { minMinutes: 35, maxMinutes: 45, minLength: 5000 }],
+  ['harness-05', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['harness-06', { minMinutes: 40, maxMinutes: 45, minLength: 5200 }],
+  ['harness-07', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['harness-08', { minMinutes: 35, maxMinutes: 45, minLength: 5000 }],
+]);
+const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+const validEvidenceRoles = new Set(['core', 'cross-check', 'extension']);
+
 const resourceUrls = [
   'https://openai.github.io/openai-agents-python/running_agents/',
+  'https://developers.openai.com/api/docs/guides/agents/sandboxes',
   'https://openai.github.io/openai-agents-python/human_in_the_loop/',
   'https://openai.github.io/openai-agents-python/tools/',
   'https://openai.github.io/openai-agents-python/ref/run_state/',
@@ -29,11 +43,12 @@ const resourceUrls = [
   'https://docs.temporal.io/workflow-execution',
   'https://docs.temporal.io/workflow-execution/event',
   'https://docs.temporal.io/encyclopedia/retry-policies',
-  'https://learn.microsoft.com/en-us/azure/azure-functions/durable/programming-model-overview',
+  'https://learn.microsoft.com/en-us/azure/durable-task/common/programming-model-overview',
   'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/',
   'https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/',
   'https://sre.google/sre-book/addressing-cascading-failures/',
   'https://sre.google/sre-book/handling-overload/',
+  'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html',
   'https://gvisor.dev/docs/architecture_guide/intro/',
   'https://docs.docker.com/engine/security/seccomp/',
   'https://docs.docker.com/engine/containers/resource_constraints/',
@@ -45,7 +60,6 @@ const resourceUrls = [
   'https://github.com/agentscope-ai/agentscope-runtime',
   'https://huggingface.co/learn/agents-course/zh-CN/unit2/smolagents/code_agents',
   'https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter6/%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E6%A1%86%E6%9E%B6%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5.md',
-  'https://www.bilibili.com/video/BV1HfHgzuEPn/',
   'https://jingxuan.douyin.com/m/video/7646732508339457334',
 ];
 
@@ -78,6 +92,15 @@ const interviewTitles = [
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
+}
+
+function assertDeepFrozen(value, label, seen = new Set()) {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  assert.ok(Object.isFrozen(value), `${label}: 公开课程数据及其嵌套结构必须被冻结`);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    assertDeepFrozen(nestedValue, `${label}.${key}`, seen);
+  }
 }
 
 test('Agent Harness exposes eight ordered substantive lessons and sixteen quizzes', () => {
@@ -130,6 +153,131 @@ test('Agent Harness exposes eight ordered substantive lessons and sixteen quizze
   }
 });
 
+test('every Harness lesson has a source-grounded long-form knowledge note', async () => {
+  const { agentHarnessNotes } = await import('../src/data/agent-harness-notes.js');
+  const resourcesById = new Map(agentHarness.resources.map((resource) => [resource.id, resource]));
+
+  assert.deepEqual(Object.keys(agentHarnessNotes), lessonIds,
+    '笔记注册表必须覆盖且只覆盖八节 Harness 课程');
+  assert.deepEqual(
+    agentHarness.lessons.filter((lesson) => lesson.knowledgeNote).map((lesson) => lesson.id),
+    lessonIds,
+    '八节 Harness 课程都必须提供 knowledgeNote',
+  );
+  assert.equal(new Set(Object.values(agentHarnessNotes)).size, lessonIds.length,
+    '每节 Harness 课程必须使用不同的 knowledgeNote 对象');
+
+  for (const lesson of agentHarness.lessons) {
+    const expectation = noteExpectations.get(lesson.id);
+    const note = lesson.knowledgeNote;
+    assert.ok(expectation, `${lesson.id}: 必须有知识笔记发布要求`);
+    assert.ok(note, `${lesson.id}: 必须提供 knowledgeNote`);
+    assert.equal(note, agentHarnessNotes[lesson.id],
+      `${lesson.id}: knowledgeNote 必须引用注册表中的同一对象`);
+    assert.ok(typeof note.introduction === 'string' && note.introduction.trim().length > 0,
+      `${lesson.id}: introduction 不能为空`);
+    assert.ok(typeof note.nextStep === 'string' && note.nextStep.trim().length > 0,
+      `${lesson.id}: nextStep 不能为空`);
+    assert.ok(Array.isArray(note.sections), `${lesson.id}: sections 必须为数组`);
+
+    const sectionIds = note.sections.map(({ id }) => id);
+    const bodyLength = [
+      note.introduction,
+      ...note.sections.flatMap(({ paragraphs }) => paragraphs),
+      note.nextStep,
+    ].reduce((total, value) => total + value.trim().length, 0);
+    assert.ok(Number.isInteger(note.readingMinutes)
+      && note.readingMinutes >= expectation.minMinutes
+      && note.readingMinutes <= expectation.maxMinutes,
+    `${lesson.id}: 阅读时长应为 ${expectation.minMinutes}–${expectation.maxMinutes} 分钟`);
+    assert.ok(note.sections.length >= 5 && note.sections.length <= 7,
+      `${lesson.id}: 应包含 5–7 个递进章节`);
+    assertUnique(sectionIds, `${lesson.id}: knowledgeNote section id`);
+    assert.ok(bodyLength >= expectation.minLength && bodyLength <= 9000,
+      `${lesson.id}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
+
+    const lessonResourceIds = new Set(lesson.resourceIds);
+    const lessonEvidenceIds = new Set(
+      lesson.resourceIds.filter((id) => resourcesById.get(id)?.evidence),
+    );
+    for (const section of note.sections) {
+      assert.match(section.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        `${lesson.id}: section id 必须为 kebab-case`);
+      assert.ok(typeof section.title === 'string' && section.title.trim().length >= 4,
+        `${lesson.id}:${section.id}: title 至少需要 4 个非空字符`);
+      assert.ok(Array.isArray(section.paragraphs)
+        && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
+      `${lesson.id}:${section.id}: 需要 2–4 个正文段落`);
+      assert.ok(section.paragraphs.every((paragraph) => (
+        typeof paragraph === 'string' && paragraph.trim().length >= 60
+      )), `${lesson.id}:${section.id}: 每个正文段落至少需要 60 个字符`);
+      assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
+        `${lesson.id}:${section.id}: 至少需要 2 个要点`);
+      assert.ok(section.keyPoints.every((keyPoint) => (
+        typeof keyPoint === 'string' && keyPoint.trim().length > 0
+      )), `${lesson.id}:${section.id}: 每个要点必须是非空字符串`);
+      assert.ok(Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
+        `${lesson.id}:${section.id}: 至少需要 1 个来源`);
+      assert.ok(section.sourceIds.every((id) => resourcesById.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部存在于全局资源库`);
+      assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于 lesson.resourceIds`);
+      assert.ok(section.sourceIds.every((id) => lessonEvidenceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于当前 lesson 的有效 evidence set`);
+    }
+    assert.ok(Array.isArray(note.misconceptions)
+      && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
+    `${lesson.id}: 需要 4–6 个常见误区`);
+    assert.ok(note.misconceptions.every((misconception) => (
+      typeof misconception?.claim === 'string' && misconception.claim.trim().length > 0
+      && typeof misconception.correction === 'string' && misconception.correction.trim().length > 0
+    )), `${lesson.id}: 每个误区必须具有非空 claim 和 correction`);
+    assert.ok(Array.isArray(note.recap) && note.recap.length >= 5,
+      `${lesson.id}: recap 至少需要 5 个回顾要点`);
+    assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${lesson.id}: 每个 recap 项必须是非空字符串`);
+  }
+
+  assertDeepFrozen(agentHarnessNotes, 'agentHarnessNotes');
+});
+
+test('all 29 Harness resources provide complete evidence cards', () => {
+  assert.equal(agentHarness.resources.length, 29, 'Harness 课程必须维护 29 份最终资源');
+  for (const resource of agentHarness.resources) {
+    const { evidence } = resource;
+    assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(evidence.authority), `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validEvidenceRoles.has(evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(evidence.coverage) && evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(evidence.coverage.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${resource.id}: evidence.coverage 必须只包含非空字符串`);
+    assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.trim().length >= 15,
+      `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+    assert.equal(evidence.verifiedAt, '2026-07-23',
+      `${resource.id}: 必须记录本轮正文或元数据核验日期`);
+    assertDeepFrozen(evidence, `${resource.id}.evidence`);
+  }
+
+  const byId = new Map(agentHarness.resources.map((resource) => [resource.id, resource]));
+  assert.equal(byId.get('res-harness-openai-sandboxes').evidence.role, 'core');
+  assert.match(byId.get('res-harness-openai-sandboxes').evidence.coverage.join(' '),
+    /控制面|control plane.*执行面|compute/i);
+  assert.equal(byId.get('res-harness-aws-sqs-visibility').evidence.role, 'core');
+  assert.match(byId.get('res-harness-aws-sqs-visibility').evidence.coverage.join(' '),
+    /visibility|不可见.*删除|delete.*redelivery|重新可见/i);
+  assert.equal(byId.has('res-harness-bilibili'), false,
+    '标题、作者、简介和正文均无法核验的 Bilibili 候选不得留在正式 registry');
+
+  const douyin = byId.get('res-harness-douyin');
+  assert.equal(douyin.title, '十分钟拆解Agent Skill如何让AI稳定执行任务');
+  assert.equal(douyin.source, '老傅1024');
+  assert.equal(douyin.evidence.authority, 'community');
+  assert.equal(douyin.evidence.role, 'extension');
+  assert.match(douyin.evidence.coverage.join(' '), /标题|作者|日期|时长|简介|元数据/);
+  assert.match(douyin.evidence.limitations, /字幕|正文/);
+});
+
 test('the lifecycle lesson uses the complete normative run state vocabulary', () => {
   const lifecycleLesson = agentHarness.lessons[0];
   const lifecycleCopy = JSON.stringify(lifecycleLesson.explanations);
@@ -163,13 +311,13 @@ test('only lessons one, six and seven map the specified experiments', () => {
   );
 });
 
-test('resources are the exact 28 verified HTTPS entries with complete metadata', () => {
-  assert.equal(agentHarness.resources.length, 28);
+test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
+  assert.equal(agentHarness.resources.length, 29);
   assert.deepEqual(agentHarness.resources.map(({ url }) => url), resourceUrls);
   for (const resource of agentHarness.resources) {
     assert.match(resource.id, /^res-harness-/);
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-20', resource.id);
+    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
