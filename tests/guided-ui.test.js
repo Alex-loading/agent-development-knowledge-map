@@ -169,13 +169,54 @@ test('Agent mechanism renders released knowledge notes with source-safe deepenin
   }
 });
 
-test('Harness and Context lessons retain legacy explanations without a knowledge note', (t) => {
+test('Agent Harness renders first, middle and last knowledge notes with source-safe evidence cards', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const root = document.createElement('div');
   document.body.append(root);
 
-  for (const course of [agentHarness, contextRagMemory]) {
+  for (const lessonId of ['harness-01', 'harness-04', 'harness-08']) {
+    const lesson = agentHarness.lessons.find(({ id }) => id === lessonId);
+    renderLessonDetail(root, {
+      course: agentHarness,
+      lessonId,
+      progress: createDefaultProgress('agent-harness'),
+    });
+
+    const knowledgeNote = root.querySelector('.knowledge-note');
+    const resourceSelection = root.querySelector('.resource-selection');
+    const sourceLink = knowledgeNote?.querySelector('a');
+    const evidenceResource = agentHarness.resources.find((resource) => (
+      lesson.resourceIds.includes(resource.id) && resource.evidence
+    ));
+    assert.ok(lesson.knowledgeNote, `${lessonId}: 应发布 Harness 知识笔记数据`);
+    assert.ok(knowledgeNote, `${lessonId}: 应渲染知识型长文笔记`);
+    assert.equal(
+      knowledgeNote.querySelectorAll('nav[aria-label="本章目录"] button').length,
+      lesson.knowledgeNote.sections.length,
+      `${lessonId}: 目录按钮数必须等于章节数`,
+    );
+    assert.equal(sourceLink?.getAttribute('target'), '_blank', `${lessonId}: 来源链接应在新窗口打开`);
+    assert.ok(sourceLink?.getAttribute('rel').includes('noopener noreferrer'),
+      `${lessonId}: 来源链接必须防止 opener 泄漏`);
+    assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+    assert.ok(evidenceResource, `${lessonId}: 必须有可展示来源卡的课程资源`);
+    const evidenceResourceItem = resourceSelection.querySelectorAll('li')
+      .find((item) => item.textContent.includes(evidenceResource.title));
+    assert.ok(evidenceResourceItem, `${lessonId}: 应渲染关联资源的来源卡`);
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.role));
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.limitations));
+    assert.equal(root.querySelector('.data-diagnostic'), null, `${lessonId}: 不应出现资料诊断`);
+  }
+});
+
+test('Context lessons retain legacy explanations without a knowledge note', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  for (const course of [contextRagMemory]) {
     const lesson = course.lessons[0];
     renderLessonDetail(root, {
       course,

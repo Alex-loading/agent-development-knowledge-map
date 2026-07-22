@@ -206,15 +206,16 @@ test('all 28 LLM resources provide complete evidence cards', () => {
   }
 });
 
-test('other active module courses retain explanation fallback without knowledge notes', () => {
-  for (const course of [agentHarness, contextRagMemory]) {
-    for (const lesson of course.lessons) {
-      assert.equal(lesson.knowledgeNote, undefined, `${course.id}:${lesson.id}: 不应启用 knowledgeNote`);
-      assert.ok(
-        Array.isArray(lesson.explanations) && lesson.explanations.length >= 2,
-        `${course.id}:${lesson.id}: 必须保留 explanations 作为 fallback`,
-      );
-    }
+test('only Context, RAG and Memory retains explanation fallback without knowledge notes', () => {
+  assert.ok(agentHarness.lessons.every((lesson) => lesson.knowledgeNote),
+    'Agent Harness 八课必须全部启用 knowledgeNote');
+  for (const lesson of contextRagMemory.lessons) {
+    assert.equal(lesson.knowledgeNote, undefined,
+      `${contextRagMemory.id}:${lesson.id}: 不应启用 knowledgeNote`);
+    assert.ok(
+      Array.isArray(lesson.explanations) && lesson.explanations.length >= 2,
+      `${contextRagMemory.id}:${lesson.id}: 必须保留 explanations 作为 fallback`,
+    );
   }
 });
 

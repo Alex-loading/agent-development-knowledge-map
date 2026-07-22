@@ -10,14 +10,14 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 - **LLM 基础模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
 - **Agent 机制模块已完成**：8 节课程、29 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
-- **Agent Harness 模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖宿主 Runner、状态与事件、工具治理、隔离、预算、可靠恢复、并发调度和人工接力。
+- **Agent Harness 模块已完成**：8 节课程、29 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖宿主 Runner、状态与事件、工具治理、隔离、预算、可靠恢复、并发调度和人工接力。
 - **上下文、RAG 与记忆模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖上下文生命周期、预算分配、会话压缩、语料与索引、混合检索、证据打包和长期记忆治理。
 
 四个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余四个目录模块仍未开放，范围见“模块路线图与边界”。
 
-**LLM 基础与 Agent 机制八课均以站内知识笔记为主教材**：学习者可以直接沿两条八课长文主线建立知识体系，外部学习资料则作为依据、交叉核验和扩展阅读。
+**LLM 基础、Agent 机制与 Agent Harness 的八课均以站内知识笔记为主教材**：学习者可以直接沿三条八课长文主线建立知识体系，外部学习资料则作为依据、交叉核验和扩展阅读。
 
-Agent Harness 与上下文、RAG 与记忆仍由原有 `explanations` 提供站内讲解并保留通用 fallback，尚未迁移为同等长文。
+上下文、RAG 与记忆仍由原有 `explanations` 提供站内讲解并保留通用 fallback，尚未迁移为同等长文。
 
 ## 功能导览
 
@@ -179,7 +179,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 ```
 
 - `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
-- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js` 与 `src/data/context-rag-memory.js` 分别保存四个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。LLM 基础与 Agent 机制的八课长文分别保存在 `src/data/llm-foundation-notes/` 与 `src/data/agent-mechanism-notes/`；`src/data/llm-foundation-notes.js` 是 LLM 聚合入口，`src/data/agent-mechanism-notes.js` 是 Agent 聚合入口，两者均负责接线与递归冻结。
+- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js` 与 `src/data/context-rag-memory.js` 分别保存四个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。前三个模块的八课长文分别保存在 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/` 与 `src/data/agent-harness-notes/`；`src/data/llm-foundation-notes.js` 是 LLM 聚合入口，`src/data/agent-mechanism-notes.js` 是 Agent 聚合入口，`src/data/agent-harness-notes.js` 是 Harness 聚合入口，三者负责精确接线与递归冻结。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，`src/core/context-rag-memory.js` 负责上下文组装、混合检索/证据打包与记忆生命周期，三者均不查询 DOM。
 - `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js`、`src/ui/harness-experiments.js` 与 `src/ui/context-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
@@ -223,6 +223,16 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 │   │   │   ├── agent-07.js    # 第七课知识笔记纯数据
 │   │   │   └── agent-08.js    # 第八课知识笔记纯数据
 │   │   ├── agent-harness.js   # Harness 课程、资源、面试题
+│   │   ├── agent-harness-notes.js # Harness 八课知识笔记聚合入口
+│   │   ├── agent-harness-notes/
+│   │   │   ├── harness-01.js  # 第一课知识笔记纯数据
+│   │   │   ├── harness-02.js  # 第二课知识笔记纯数据
+│   │   │   ├── harness-03.js  # 第三课知识笔记纯数据
+│   │   │   ├── harness-04.js  # 第四课知识笔记纯数据
+│   │   │   ├── harness-05.js  # 第五课知识笔记纯数据
+│   │   │   ├── harness-06.js  # 第六课知识笔记纯数据
+│   │   │   ├── harness-07.js  # 第七课知识笔记纯数据
+│   │   │   └── harness-08.js  # 第八课知识笔记纯数据
 │   │   └── context-rag-memory.js # Context/RAG/Memory 课程数据
 │   ├── core/                  # 无 DOM 的领域逻辑与存储适配器
 │   │   ├── agent-mechanism.js # Agent loop、工具契约、计划恢复判定
@@ -298,9 +308,27 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 `ProgressState` 仍是一个专用键内的扁平记录；上述全局 ID、按当前课程过滤与模块级临时 UI 状态共同保证四个已开放模块不会互相污染。
 
+## 知识模块从 0 到 1 的复用流程
+
+后续完整模块统一从项目 Skill `.agents/skills/build-agent-learner-module/` 启动。它把早期模块开发中的跨平台资料搜集、课程与网站框架搭建，与后续验证过的来源审计、长文主教材、双重审查、浏览器验收和 Vercel 发布串成一个阶段门流程；`.agents/skills/build-learning-module-notes/` 继续作为逐课知识笔记的必需子 Skill。
+
+调用 `$build-agent-learner-module` 后按以下顺序推进：
+
+1. 读取当前仓库、模块依赖、注册表、已有模块、测试基线和 `AGENTS.md`，不复用旧计划中的过期部署规则。
+2. 先定义学习者入口能力、最终能力、综合交付物、模块边界和相邻模块接口；产品先修关系不可为了赶进度被改写。
+3. 将官方/标准、论文/原始工作、工程/GitHub、中文/视频导航拆成只读并行调研，由主代理直接复核正文、去重并建立证据账本；子代理摘要和搜索结果只作线索。
+4. 先冻结核心主张、版本、访问失败、冲突和证据缺口，再从知识依赖推导课程。模块 1、2 的八课、28/29 个资源和三项实验是成熟参考中心，不是凑数指标；课数、资源数和实验数按复杂度说明理由。
+5. 用 Skill 模板固化规格、覆盖矩阵、所有权与验收门，再在隔离 worktree 中按 TDD 实施。不同作者只处理互不重叠的资料或单课文件，共享 registry 和聚合入口由单一集成人负责。
+6. 每课必须调用 `$build-learning-module-notes`，完成来源卡、考核/练习覆盖、可解析 `sourceIds`、测试审计和质量评分；低于 85/100、存在断裂引用或关键证据缺口时保持阻塞，不发布看似完整的正文。
+7. 每项任务按作者 → 规格审查 → 质量审查推进；缺陷退回原作者并复审。课程数据、纯逻辑、实验 UI、通用注册与文档按文件边界集成。
+8. 开发期间模块保持 `planned` 且不注册；只有知识内容、目标测试、全量回归、旧模块兼容和真实浏览器矩阵全部通过，才最后加入 registry 并切换为 `active`。
+9. 同步最新 `main`、通过一个 PR 和 Vercel Preview 后合并；Production 只有在状态为 Ready、线上关键路由可访问且部署 Git SHA 与目标 `main` 完全一致时才算完成。GitHub Pages 必须继续关闭。
+
+若证据、先修依赖或时间无法满足发布门，交付已完成的研究包、课程图、规格、测试状态、精确 blocker 和最小安全下一步；不能通过删减核验、提前激活或改写依赖来制造“已完成”。详细研究、数据、所有权和发布契约以该 Skill 的三个 references 为准。
+
 ## 知识笔记复用流程
 
-LLM 基础八课建立了第一版模板，Agent 机制八课则完成了首次跨模块复用与迭代：两者的单课纯数据分别位于 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/`，并由对应聚合入口统一接线；可复用的项目 Skill 位于 `.agents/skills/build-learning-module-notes/`。后续课程或模块可以沿用这套协议与工具，但每次仍必须重新核验目标课程、资源注册表和每一份来源正文，不能把前两个模块的证据判断直接复制到新主题。Agent Harness 与上下文、RAG 与记忆当前仍保留 `explanations` fallback，迁移时也必须逐模块完成同等审计后才能改称长文主教材。
+LLM 基础八课建立了第一版模板，Agent 机制完成了首次跨模块复用，Agent Harness 又把来源补强、逐课双审和复杂度浮动扩展到运行时工程主题。三个模块的单课纯数据分别位于 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/` 与 `src/data/agent-harness-notes/`，并由对应聚合入口统一接线；可复用的项目 Skill 位于 `.agents/skills/build-learning-module-notes/`。后续课程或模块可以沿用这套协议与工具，但每次仍必须重新核验目标课程、资源注册表和每一份来源正文，不能把前三个模块的证据判断直接复制到新主题。上下文、RAG 与记忆当前仍保留 `explanations` fallback，迁移时也必须完成同等审计后才能改称长文主教材。
 
 制作或重做知识笔记时，先调用 `$build-learning-module-notes` Skill，再按以下顺序推进：
 
