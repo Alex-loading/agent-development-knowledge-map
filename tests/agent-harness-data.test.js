@@ -334,6 +334,7 @@ test('every resource states both its learning use and the evidence boundary for 
 
   for (const id of [
     'res-harness-openai-running',
+    'res-harness-openai-sandboxes',
     'res-harness-openai-hitl',
     'res-harness-openai-tools',
     'res-harness-openai-run-state',
@@ -379,11 +380,12 @@ test('every resource states both its learning use and the evidence boundary for 
     'res-harness-agentscope-runtime',
     'res-harness-smolagents-code',
     'res-harness-hello-agents-framework',
-    'res-harness-bilibili',
     'res-harness-douyin',
   ]) {
     assert.match(byId.get(id).value, /(?:学习导航|演示).*不承担.*可靠性.*安全性.*结论/, id);
   }
+  assert.match(byId.get('res-harness-aws-sqs-visibility').value,
+    /Amazon SQS.*具体实现语义.*不(?:是|代表).*统一协议.*不保证.*exactly-once/i);
 });
 
 test('lesson references resolve resources and interviews in both directions', () => {
