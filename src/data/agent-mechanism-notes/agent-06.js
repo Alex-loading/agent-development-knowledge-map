@@ -138,7 +138,7 @@ const misconceptions = Object.freeze([
   }),
   Object.freeze({
     claim: '只要工具名和参数相同，就应永久禁止重复调用。',
-    correction: '合理重试还取决于 state/version、result class、退避窗口和对账结果；只有完整指纹重复且无可验证进展才应累计停止阈值。',
+    correction: 'actionKey 相同且没有真实 state/prerequisite 进展时持续累计；resultClass 只进入 outcomeKey 供诊断，不能重置局部或全局预算。只有真实 state/version 或前置条件变化才允许把调用视为新尝试并清局部计数，而且仍受总硬预算约束。',
   }),
   Object.freeze({
     claim: 'blocked 与 handoff 表示 Agent 设计失败，应该隐藏并继续尝试。',

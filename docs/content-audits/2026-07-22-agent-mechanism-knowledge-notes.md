@@ -162,7 +162,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | 下方“`agent-05` 策略棋盘与恢复语义 probe”完整 one-liner | 0 | 三策略的 actions/artifacts/dependencies/checkpoints/budgets 共享并解析同一组 step ID；三类恢复记录、timeout 对账、分解粒度、权限传播与实验边界断言通过 |
 | 下方“`agent-05` 版本化步骤与迟到完成 probe”完整 one-liner | 0 | 解析七状态与 stepId、planVersion、stepVersion、attempt、stableIntent、fencingToken 六元 claim key；old plan、same-plan old stepVersion、same-step old attempt、wrong stableIntent、stale fencing 五反例均 observation-only，不能发布 artifact、满足 checkpoint 或解锁依赖；只有当前六项完整 tuple 可发布；副作用反例保持 `actCount: 1` |
 | 下方“`agent-06` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 39 分钟；正文 8806；7 节；最短段 126；7 个来源三重解析；6 个误区、11 recap；深层冻结；`brokenReferenceCount: 0` |
-| 下方“`agent-06` 语义 probe”完整 one-liner | 0 | semantic-mismatch 空/非空子类、PASS/FAIL/UNKNOWN、UNKNOWN 零提交、actionKey/outcomeKey、timeout/conflict 交替仍到限停止、真实版本只清局部计数且硬预算不清零均通过 |
+| 下方 `agent-06` 三条语义 probe | 0 | 确定性 classifier 的 empty/nonempty-irrelevant/matched 三案例；PASS/FAIL/UNKNOWN 与 stale PASS/FAIL；actionKey/outcomeKey、结果交替到限、真实版本只清局部且硬预算不清零均通过 |
 
 ### `agent-02` 可复制 contract/source/freeze probe
 
@@ -274,7 +274,7 @@ node --input-type=module -e 'import assert from "node:assert/strict";const [{age
 
 - `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-06-1..3` 的 `shortAnswer`、全部 `deepDive`、`misconceptions` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均映射到矩阵所列七节；课程字段只规定覆盖与交付，不作为资源证据。
 - `sections → evidence → 产出`：第 1 节以 AgentBench/τ-bench 支撑可观察轨迹与数据库/政策终态，六类路由和 empty-result 子类明确为课程综合；第 2 节只用 AWS 支撑 caller intent、超时不确定性、幂等与对账；第 3 节比较四项反思研究；第 4 节将 CRITIC/τ-bench 限定到工具 critique 与终态验证，并给出 PASS/FAIL/VALIDATION_UNKNOWN；第 5 节只用 AgentBench/AWS 支撑问题背景，actionKey/outcomeKey 与全局预算仍为综合；第 6/7 节交付 JSON 与可执行 probe。source ID 全部三重解析。
-- `恢复语义`：semantic-mismatch 覆盖 empty 与非空但不相关、expected-vs-actual、external validator mismatch 和 provenance 冲突；UNKNOWN 不提交或继续副作用；写 timeout 按 UNKNOWN_OUTCOME → reconcile → confirmed-not-executed 才重放；permission 零自动重试；capability 有 clarify/degrade/approved-tool/handoff。结果类别交替不重置同 action 无进展与全局硬预算，真实版本变化只清局部计数。
+- `恢复语义`：确定性 classifier 实际区分 empty、nonempty-irrelevant 与 provenance-valid matched；validator 先做 provenance/version gate，stale PASS/FAIL 都变为 UNKNOWN 且零提交；写 timeout 按 UNKNOWN_OUTCOME → reconcile → confirmed-not-executed 才重放。actionKey 相同且无真实进展就持续累计，resultClass 只进入 outcomeKey 诊断且不重置预算；真实版本变化只清局部计数。
 - `质量自评`：覆盖 25/25；结构 20/20；来源 25/25；教学 19/20（六行 JSON、验证三态和双键/硬预算反例 probe 可复现，仍待页面验收）；数据契约 9/10（正文 8806 字符、39 分钟、纯数据、稳定 ID、无 HTML、深层冻结）。总分 `98/100`，`brokenReferenceCount: 0`；coverage gap：无阻塞缺口，真实系统仍需实现事件/intent 原子持久化、对账、鉴权、validator 治理与人工队列；状态 `ready-for-integration`，模块仍为 `publicationReady: false`。
 
 ### `agent-06` 可复制 contract 与语义 probe
@@ -287,6 +287,14 @@ node --input-type=module -e 'import assert from "node:assert/strict";const [{age
 
 本轮真实输出：`{"readingMinutes":39,"body":8806,"sections":7,"minParagraph":126,"sources":["res-agent-agentbench","res-agent-tau-bench","res-agent-aws-idempotent-apis","res-agent-reflexion","res-agent-self-refine","res-agent-no-self-correct","res-agent-critic"],"misconceptions":6,"recap":11,"deepFrozen":true,"brokenReferenceCount":0}`。
 
+semantic-mismatch 使用最小确定性分类器实际运行三个案例，而不是把预期字符串直接当作布尔条件：
+
+```bash
+node --input-type=module -e 'import assert from "node:assert/strict";const classify=({items,goalPredicate,completionPredicate,provenanceValid})=>{if(items.length===0)return {class:"semantic-mismatch",subtype:"empty-result"};const relevant=items.some(item=>goalPredicate(item)&&completionPredicate(item));if(!relevant)return {class:"semantic-mismatch",subtype:"nonempty-irrelevant"};if(!provenanceValid)return {class:"semantic-mismatch",subtype:"invalid-provenance"};return {class:"matched",subtype:null}};const goal=item=>item.ticketId===42,complete=item=>item.status==="closed";const empty=classify({items:[],goalPredicate:goal,completionPredicate:complete,provenanceValid:true});const irrelevant=classify({items:[{ticketId:7,status:"open"}],goalPredicate:goal,completionPredicate:complete,provenanceValid:true});const matched=classify({items:[{ticketId:42,status:"closed"}],goalPredicate:goal,completionPredicate:complete,provenanceValid:true});assert.deepEqual(empty,{class:"semantic-mismatch",subtype:"empty-result"});assert.deepEqual(irrelevant,{class:"semantic-mismatch",subtype:"nonempty-irrelevant"});assert.deepEqual(matched,{class:"matched",subtype:null});console.log(JSON.stringify({empty,nonemptyIrrelevant:irrelevant,matched}))'
+```
+
+本轮真实输出：`{"empty":{"class":"semantic-mismatch","subtype":"empty-result"},"nonemptyIrrelevant":{"class":"semantic-mismatch","subtype":"nonempty-irrelevant"},"matched":{"class":"matched","subtype":null}}`。
+
 以下命令解析验证状态机、控制约束和六类决策表；它验证 semantic-mismatch 的空/非空子类、UNKNOWN 零提交、结果类别交替仍触发上限，以及真实版本变化只清局部计数而不清全局硬预算：
 
 ```bash
@@ -295,10 +303,10 @@ node --input-type=module -e 'import assert from "node:assert/strict";const {agen
 
 本轮真实输出：`{"classes":["transport","parameter","semantic-mismatch","business-conflict","permission","capability"],"semanticSubtype":true,"validatorStates":["PASS","FAIL","VALIDATION_UNKNOWN"],"validationUnknown":{"commitCount":0,"downstreamSideEffectCount":0,"exit":"blocked-or-handoff"},"alternatingOutcomes":{"actionKeys":1,"outcomeKeys":2,"globalRecoveryAttempts":3,"noProgressOnActionKey":3,"terminal":"blocked"},"realVersionChangesActionKeyAndResetsLocal":true,"hardBudgetAfterVersionChange":{"attempts":3,"time":30,"cost":3}}`。
 
-验证器三态再用可执行转移函数验证 PASS 发布、FAIL 结构化修订、UNKNOWN 与 stale PASS 零提交：
+验证器转移函数先执行 provenance/version gate，再解释 PASS/FAIL；因此 stale PASS 与 stale FAIL 都归一化为 VALIDATION_UNKNOWN 且零提交：
 
 ```bash
-node --input-type=module -e 'import assert from "node:assert/strict";const apply=({state,approvedProvenance=true,versionsMatch=true})=>{const runtime={commitCount:0,downstreamSideEffectCount:0};if(state==="PASS"&&approvedProvenance&&versionsMatch){runtime.commitCount+=1;runtime.downstreamSideEffectCount+=1;return {decision:"publish",runtime}}if(state==="FAIL")return {decision:"structured-feedback-and-bounded-revision",runtime};return {decision:"blocked-or-handoff",runtime}};const pass=apply({state:"PASS"}),fail=apply({state:"FAIL"}),unknown=apply({state:"VALIDATION_UNKNOWN"}),stalePass=apply({state:"PASS",versionsMatch:false});assert.deepEqual(pass,{decision:"publish",runtime:{commitCount:1,downstreamSideEffectCount:1}});assert.deepEqual(fail,{decision:"structured-feedback-and-bounded-revision",runtime:{commitCount:0,downstreamSideEffectCount:0}});assert.deepEqual(unknown,{decision:"blocked-or-handoff",runtime:{commitCount:0,downstreamSideEffectCount:0}});assert.deepEqual(stalePass,unknown);console.log(JSON.stringify({pass:pass.decision,fail:fail.decision,unknown:{...unknown.runtime,exit:unknown.decision},stalePass:stalePass.decision}))'
+node --input-type=module -e 'import assert from "node:assert/strict";const apply=({state,approvedProvenance=true,versionsMatch=true})=>{const runtime={commitCount:0,downstreamSideEffectCount:0};if(!approvedProvenance||!versionsMatch)return {normalizedState:"VALIDATION_UNKNOWN",decision:"blocked-or-handoff",runtime};if(state==="PASS"){runtime.commitCount+=1;runtime.downstreamSideEffectCount+=1;return {normalizedState:"PASS",decision:"publish",runtime}}if(state==="FAIL")return {normalizedState:"FAIL",decision:"structured-feedback-and-bounded-revision",runtime};return {normalizedState:"VALIDATION_UNKNOWN",decision:"blocked-or-handoff",runtime}};const pass=apply({state:"PASS"}),fail=apply({state:"FAIL"}),unknown=apply({state:"VALIDATION_UNKNOWN"}),stalePass=apply({state:"PASS",versionsMatch:false}),staleFail=apply({state:"FAIL",versionsMatch:false});assert.equal(pass.decision,"publish");assert.equal(fail.decision,"structured-feedback-and-bounded-revision");assert.deepEqual(unknown.runtime,{commitCount:0,downstreamSideEffectCount:0});assert.deepEqual(stalePass,unknown);assert.deepEqual(staleFail,unknown);console.log(JSON.stringify({pass:pass.decision,fail:fail.decision,unknown:{...unknown.runtime,exit:unknown.decision},stalePass:stalePass.normalizedState,staleFail:staleFail.normalizedState}))'
 ```
 
-本轮真实输出：`{"pass":"publish","fail":"structured-feedback-and-bounded-revision","unknown":{"commitCount":0,"downstreamSideEffectCount":0,"exit":"blocked-or-handoff"},"stalePass":"blocked-or-handoff"}`。
+本轮真实输出：`{"pass":"publish","fail":"structured-feedback-and-bounded-revision","unknown":{"commitCount":0,"downstreamSideEffectCount":0,"exit":"blocked-or-handoff"},"stalePass":"VALIDATION_UNKNOWN","staleFail":"VALIDATION_UNKNOWN"}`。
