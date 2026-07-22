@@ -2,10 +2,10 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份原始基线资源与 1 份 Task 5 规格审查补充资源、24 道面试题和 3 个交互实验。当前 registry 因证据完整性修订共 29 份；来源正文核验与 resource evidence registry 已完成。`agent-01` 至 `agent-05` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-06..08` 仍待写作，八课均尚未完成统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份原始基线资源与 1 份 Task 5 规格审查补充资源、24 道面试题和 3 个交互实验。当前 registry 因证据完整性修订共 29 份；来源正文核验与 resource evidence registry 已完成。`agent-01` 至 `agent-06` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-07..08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
-- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..05` 待集成，`agent-06..08` 待写作）
+- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..06` 待集成，`agent-07..08` 待写作）
 - `brokenReferenceCount: 0`
 - 原始来源审计覆盖 28 份基线；Task 5 规格审查后另行访问并新增 AWS official/core 来源，当前 29 项 registry metadata 均已核验并记录 `2026-07-22`。回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
@@ -101,6 +101,14 @@ Task 7 的 timeout 注入是 assessed exercise outcome，而且要求学习者�
 
 页面 `plan-recovery` 仍是本地确定性教学状态机，不调用真实模型、数据源或论文实现，也不是任何规划方法或生产可靠性的评测。核心函数新增可选可信输入 `operationKind` 与 `reconciliationStatus`：默认 `read-only/not-required` 保持供应商查询教学；`side-effect + unknown` 返回 reconcile，`cannot-reconcile` 返回 handoff，只有 `confirmed-not-executed` 且预算仍有余量才 retry。UI 不增加控件，直接声明实验固定为只读供应商查询，默认 retry 不得外推到副作用。本课没有 publication blocker；剩余限制是生产系统必须自行实现持久化 claim、真实 CAS/fencing、评价器、依赖图、预算、幂等/审计和业务完成谓词。
 
+## `agent-06` 反思证据边界与 AWS 来源复用
+
+本课四项反思研究按反馈条件而不是按论文标题串联：Reflexion 的 Actor–Evaluator–Reflection 使用环境、启发式/LLM evaluator 或测试信号并跨 trial 保存语言经验；Self-Refine 在任务化评价维度下执行生成、反馈、修订，许多任务属于输出编辑；《Large Language Models Cannot Self-Correct Reasoning Yet》针对无外部反馈的内在推理自修正并保留 oracle、等成本与提示公平对照；CRITIC 在搜索、代码、计算器和毒性 API 等特定任务中引入工具 critique。正文没有把任一结果外推为生产可靠性保证，也没有把无反馈反证错误地扩大成“任何迭代都无效”。AgentBench 只支撑其环境中的可观察动作、重复、TLE 和终止失败；τ-bench 只支撑其模拟领域中政策与数据库终态共同判分。
+
+写工单 timeout 是 assessed interview 与 exercise outcome，而原六个 `agent-06.resourceIds` 不直接支撑响应缺失后的副作用终态不确定性。因此本课复用已核验且存在于最终 29 项 registry 的 `res-agent-aws-idempotent-apis`，只支撑宿主调用方持久化稳定 client request identifier/idempotency key、网络 timeout 的 UNKNOWN_OUTCOME、同 intent 对账、确认未执行后才重放，以及晚到请求边界；不把工单状态机、权限、补偿、错误码、预算或六类决策表归因给 AWS。该变更只扩展 `agent-06.resourceIds`，没有新增或改写全局来源，总数仍为 28 份基线加 1 份 AWS 补充。
+
+六类分类、事件字段、验证层级、预算、完整动作指纹 `tool + canonical params + relevant state/version + result class`、无进展阈值和工单 decision-table JSON 均明确标为 `course synthesis`。权限拒绝的 automaticRetries 固定为 0；能力不足只走澄清、获准降级、获准替代工具或 handoff；写 timeout 必须先 UNKNOWN_OUTCOME、再 reconcile，只有确认未执行且授权/预算仍有效才可用同一 intent 重放。semantic probe 只执行本地确定性规则，不运行或比较任何论文方法或模型能力。本课没有 publication blocker；真实系统仍需实现持久化事件与 intent 映射、原子性、鉴权、对账 API、验证器版本治理和人工队列，并用自身轨迹校准预算与阈值。
+
 ## 论文冲突与互补
 
 Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` 的闭环实际使用环境、评价器或测试信号并允许跨 trial 记忆；`res-agent-no-self-correct` 检验的是没有外部反馈时的内在自修正，发现部分推理设置会退化，因此两者并不直接矛盾。`res-agent-self-refine` 支持有明确评价维度的生成/编辑迭代，不能被扩大成任意推理自纠错；`res-agent-critic` 则说明在其特定任务中引入可查询工具的外部 critique 能提供不同于自评的证据，但工具自身仍可能错误或有偏。
@@ -109,7 +117,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 逐课 coverage matrix 骨架
 
-以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 至 `agent-05` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-06..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
+以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 至 `agent-06` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-07..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -118,18 +126,19 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | `agent-03` | objectives[0..1] 与 concepts[0..4] → `tool-declaration-contract`、`model-proposes-function-call`、`syntax-and-schema-validation`、`business-permission-risk-validation`、`host-execution-boundary`、`structured-result-observation` | quiz[0] → 第 2/3/4 节；quiz[1] → `structured-result-observation` | `iq-agent-03-1` short/deepDive/misconception/followUp → 第 2/4/5/6 节；`iq-agent-03-2` 全字段 → 第 1/3/4/7 节；`iq-agent-03-3` 全字段 → 第 5/6 节 | exercise.steps[0..1]、deliverable → `order-tool-contract-lab`；completionCriteria[0] → 第 1/2/4/5/6 节，completionCriteria[1] → 第 1/4/6/7 节 | 七节按声明→模型提案→结构校验→业务/权限/风险→宿主 envelope→结果关联→订单实验递进；两份完整 Responses schema 仅接收业务意图，宿主注入可信身份/intent/幂等/审批字段；统一结果加入 recoveryAction，并给出五类完整可解析 JSON | OpenAI 核心支撑五步、schema、strict、nullable-required 与 call_id；Anthropic 核心支撑工具命名、边界、返回和评测；AWS 核心支撑宿主作为 API caller 使用 client request identifier、幂等重试、超时不确定性、语义等价响应与晚到请求；Toolformer 只交叉核验训练研究并保留边界；HF 与 Microsoft 仅作课程循环、最小权限和错误处理交叉核验 | 98（25/20/25/19/9） | ready-for-integration |
 | `agent-04` | objectives[0..1] 与 concepts[0..4] → `state-read-and-termination-priority`、`decide-from-observable-state`、`validate-and-act-boundary`、`observe-and-update-state`、`progress-and-repetition-detection`、`react-boundary-and-observable-logging` | quiz[0] → `observe-and-update-state`；quiz[1] → `progress-and-repetition-detection` | `iq-agent-04-1` short/deepDive/misconception/followUp → 第 1/3/4/5/7 节；`iq-agent-04-2` 全字段 → 第 2/6 节；`iq-agent-04-3` 全字段 → 第 4/5/7 节 | exercise.steps[0..1]、deliverable → `minimal-loop-and-deterministic-lab`；completionCriteria[0] → 第 1–5/7 节，completionCriteria[1] → 第 2/6 节 | failed-first→一次性 reconciliation receipt→原子预算→全候选指纹→call-tool 校验→writer lease/CAS/唯一 claim→观察/action 指纹；重放 observation 只消费一次并进入正常控制流，winner 释放 lease 后 loser 仍被 claim 拦截，stale CAS 不可 act | ReAct 原论文支撑交错 reasoning/action/observation；OpenAI/Anthropic 支撑 run、环境反馈、最大迭代与人工介入；AgentBench 支撑其评测中的重复/终止失败；receipt、lease、CAS、claim、预算与阈值均为课程工程综合 | 97（25/20/25/18/9） | ready-for-integration |
 | `agent-05` | objectives[0..1] 与 concepts[0..4] → `choose-planning-by-task-structure`、`decompose-into-verifiable-work`、`plans-as-executable-dataflow`、`search-planning-and-evaluation-cost`、`observation-driven-replanning` | quiz[0] → 第 1/2/6 节；quiz[1] → 第 5/7 节 | `iq-agent-05-1` 全字段 → 第 1/6 节；`iq-agent-05-2` 全字段 → 第 2/3 节；`iq-agent-05-3` 全字段 → 第 5/7 节 | exercise.steps[0]、deliverable 三策略 → `supplier-research-strategy-board`；steps[1]、修订记录 → `failure-injections-and-lab-boundary`；completionCriteria[0] → 第 1/6 节，completionCriteria[1] → 第 2/5/7 节 | 七节按策略选择→可验证分解→版本化数据流与迟到完成隔离→ToT 搜索成本→观察驱动修订→供应商三策略棋盘→三类注入递进；每张策略卡的五类字段共享 step ID；pending→ready→running→终态使用原子 claim 和 CAS/fencing；timeout 副作用按对账状态分流 | ReAct 支撑行动/观察交错；Plan-and-Solve、ReWOO、ToT 只支撑各论文机制与实验边界；Microsoft 字幕仅交叉核验结构化计划/校验；复用 Task 5 已核验 AWS 来源只支撑 client idempotency、timeout unknown outcome 与 retry 前 reconciliation。版本协议、触发分类、棋盘与预算均标为 `course synthesis`；metadata-only Bilibili 不作章节 evidence | 97（25/20/24/19/9） | ready-for-integration |
-| `agent-06` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-06-1..3` | 待映射失败恢复表 | 待 Task 8 填写 | 待 Task 8 绑定 | — | pending |
+| `agent-06` | objectives[0..1] 与 concepts[0..4] → `observe-before-recover`、`retry-budget-and-unknown-outcome`、`reflection-needs-feedback`、`external-validation-stack`、`fingerprint-and-progress-detection` | quiz[0] → 第 1/2/6 节；quiz[1] → 第 3/4/7 节 | `iq-agent-06-1` 全字段 → 第 1/2/6 节；`iq-agent-06-2` 全字段 → 第 3/4/7 节；`iq-agent-06-3` 全字段 → 第 5/7 节 | exercise.steps[0] → `observe-before-recover`、`ticket-recovery-decision-table`；steps[1] 与 deliverable → 第 2/5/6/7 节；completionCriteria[0] → 第 1/2/5/6 节，completionCriteria[1] → 第 3/4/7 节 | 七节按证据保存与六类路由→预算/幂等/unknown→四论文反馈条件→外部验证栈→指纹进展→六行工单 JSON 表→runbook/probe 递进；写 timeout、权限与能力分别产生确定出口，不把所有错误交给 reflection | Reflexion/Self-Refine/无反馈反证/CRITIC 按反馈与任务条件并列；AgentBench/τ-bench 只支撑可观察轨迹与数据库/政策终态；复用 AWS 只支撑 caller intent、timeout unknown outcome 与 retry 前 reconciliation。六类路由、预算、指纹、工单协议和 probe 均为 `course synthesis` | 98（25/20/25/19/9） | ready-for-integration |
 | `agent-07` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-07-1..3` | 待映射状态/日志/context 设计 | 待 Task 9 填写 | 待 Task 9 绑定 | — | pending |
 | `agent-08` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-08-1..3` | 待映射综合状态机与三类轨迹 | 待 Task 10 填写 | 待 Task 10 绑定 | — | pending |
 
 ## 当前测试审计
 
-`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 至 `agent-05` 已有通过单课 probe 的独立文件，但尚未接入，`agent-06..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
+`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 至 `agent-06` 已有通过单课 probe 的独立文件，但尚未接入，`agent-07..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
 
 | command | exit code | result |
 | --- | ---: | --- |
 | `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、29 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
-| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 至 `agent-05` 独立文件已完成但不改变上述集成状态 |
+| `node --test --test-name-pattern='contains eight\|29 fixed\|evidence cards\|references resolve\|interview bank\|identifiers' tests/agent-mechanism-data.test.js` | 0 | 6 项命中测试全部通过，6 项因名称不匹配跳过；29 项资源、evidence、双向引用、面试与 ID 完整性通过，新增的 agent-06 → AWS 关联可解析 |
+| `npm test -- --test-name-pattern='Agent mechanism\|Agent'` | 1 | 共 261 项，11 通过、245 跳过、5 个预期 RED：公开课程仍未接八课 `knowledgeNote`、缺聚合 registry/冻结、Agent UI 笔记和 README 发布声明；agent-06 独立文件、资源 evidence 与 Agent 实验回归通过 |
 | `npm test` | 1 | 共 261 项，256 通过、5 个预期 RED，均与上一行的 Agent 笔记集成缺口相同；新增副作用超时对账反例均通过，Agent 29 份资源与其他模块回归均通过 |
 | `node --test tests/agent-mechanism.test.js` | 0 | 26/26 通过；包含 read-only 默认兼容、side-effect unknown→reconcile、cannot-reconcile→handoff、confirmed-not-executed 且有预算→retry、无重复 act、枚举校验和输入不突变 |
 | `node --test tests/ui-interactions.test.js` | 0 | 43/43 通过；plan-recovery caveat 明示固定只读供应商查询，retry 仅适用于无副作用读操作，原交互分支与 reset 均保持通过 |
@@ -257,3 +266,24 @@ node --input-type=module -e 'import assert from "node:assert/strict";const [{age
 - `sections → evidence → 产出`：第 1 节比较 reactive、plan-and-execute 与混合策略；第 2 节把模糊动作转为输入/动作/artifact/dependency/checkpoint/failure exit/budget，明确工具能力、上下文预算、错误隔离与失败轨迹决定何时拆分或合并；第 3 节分别保留 Plan-and-Solve 静态推理与 ReWOO 固定蓝图的边界，并把版本化步骤落实为七状态、原子 claim、CAS/fencing 和迟到完成隔离；第 4 节只在 ToT 三个特制任务范围内解释候选、评价、BFS/DFS 与搜索成本；第 5 节将 observation 差异映射为局部修订或整体重规划，并明确整组规则均属 course synthesis；第 6 节三份策略卡的五类字段全部按 step ID 对齐；第 7 节给出三类恢复记录与 stable intent 定义，并复用 AWS 只支撑 timeout unknown outcome 的安全对账。
 - `论文与实验边界`：没有把论文收益外推为“规划必然更好”；ReAct、Plan-and-Solve、ReWOO、ToT 均保留任务、模型、工具和评测限制，Microsoft 字幕保留旧版本限制，metadata-only Bilibili 未进入任何章节。权限传播、重规划阈值、最小状态变化、冷却、最大次数、step 生命周期与并发协议全部明标为 course synthesis，不归因 ReAct/ReWOO。`plan-recovery` 固定为本地只读供应商查询；UI 的 retry 只适用于无副作用读操作，不测量方法能力或生产可靠性。
 - `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试全字段、exercise 两步、deliverable 与两个完成标准均可追踪）；结构 20/20（七节由策略选择、分解、版本化数据流与搜索推进到动态修订和同一案例交付，并连接 agent-06）；来源 24/25（六个实际章节来源全部三重解析，AWS 复用边界清楚；具体计划 schema、版本协议与重规划分类没有单一行业规范，故明确作为课程综合）；教学 19/20（三策略 step ID、五类 stale tuple、六项全匹配的有效 tuple、恢复 JSON 和副作用反例均有可执行 probe，仍待页面集成验收）；数据契约 9/10（正文 8330 字符且不超过 9000，纯数据、稳定 ID、无 HTML、深层冻结）。总分 `97/100`，`brokenReferenceCount: 0`；coverage gap：无阻塞缺口，真实系统仍需实现持久化 claim、真实 CAS/fencing，并校准预算、评价器、对账与业务完成谓词；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
+
+### `agent-06` 单课质量与可追溯性
+
+- `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-06-1..3` 的 `shortAnswer`、全部 `deepDive`、`misconceptions` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均映射到矩阵所列七节；课程字段只规定覆盖与交付，不作为资源证据。
+- `sections → evidence → 产出`：第 1 节以 AgentBench/τ-bench 支撑可观察轨迹与数据库/政策终态，六类路由明确为课程综合；第 2 节只用 AWS 支撑 caller intent、超时不确定性、幂等与对账；第 3 节精确比较 Reflexion、Self-Refine、无外部反馈反证与 CRITIC 的反馈条件；第 4 节将 CRITIC/τ-bench 限定到工具 critique 与终态验证；第 5 节只用 AgentBench/AWS 支撑重复轨迹与请求关联，完整指纹和阈值仍为课程综合；第 6/7 节交付六行可解析 JSON 与本地 deterministic probe。所有章节 source ID 均解析到全局 registry、agent-06 lesson 和 evidence set。
+- `恢复语义`：决策表六类均包含 observableEvidence、sideEffectRisk、allowedRecovery、budget、idempotency 与 terminalExit；写 update timeout 必须按 UNKNOWN_OUTCOME → reconcile-by-stable-intent → confirmed-not-executed 后才有限重放；permission 的 automaticRetries 为 0；capability 提供 clarify/degrade/approved-tool/handoff；动作指纹同时比较 tool、canonical params、relevant state/version 与 result class，键序变化不产生新指纹，环境版本或结果类别变化会产生新指纹。
+- `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz、三题面试全字段、exercise 两步、deliverable 与两个完成标准均可追踪）；结构 20/20（七节由错误证据、有限恢复、论文张力推进到验证、死循环控制、决策表和 runbook，并连接 agent-07）；来源 25/25（七个章节来源全部三重解析，论文边界逐项保留，AWS 证据门和复用历史透明）；教学 19/20（同一工单案例、六行 JSON 和反例 probe 可直接复现，仍待页面集成验收）；数据契约 9/10（正文 8101 字符且不超过 9000，39 分钟、纯数据、稳定 ID、无 HTML、深层冻结）。总分 `98/100`，`brokenReferenceCount: 0`；coverage gap：无阻塞缺口，真实系统仍需实现事件/intent 原子持久化、对账、鉴权、验证器治理与人工队列；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
+
+### `agent-06` 可复制 contract 与语义 probe
+
+指标命令实际导入独立笔记、解析 lesson/resource/evidence 并递归检查冻结；本轮真实输出为：
+
+```text
+{"body":8101,"readingMinutes":39,"sections":7,"minParagraph":176,"sources":["res-agent-agentbench","res-agent-tau-bench","res-agent-aws-idempotent-apis","res-agent-reflexion","res-agent-self-refine","res-agent-no-self-correct","res-agent-critic"],"misconceptions":6,"recap":11,"deepFrozen":true,"brokenReferenceCount":0}
+```
+
+语义 probe 从 `ticket-recovery-decision-table` 第二段截取首个 `[` 到最后一个 `]` 并执行 `JSON.parse`，断言六类和六个必需字段；然后检查 transport 写分支的 UNKNOWN/reconcile/retry 顺序、permission 零自动重试、capability 出口，并以排序后的参数对象、stateVersion 和 resultClass 计算指纹。本轮真实输出为：
+
+```text
+{"classes":["transport","parameter","empty-result","business-conflict","permission","capability"],"writeTimeoutOrder":["write:mark-UNKNOWN_OUTCOME","write:reconcile-by-stable-intent","write:retry-only-if-confirmed-not-executed"],"permissionAutomaticRetries":0,"capabilityExits":["clarify-goal","offer-approved-degraded-output","select-capable-approved-tool","handoff"],"stableFingerprintForKeyOrder":true,"stateVersionChangesFingerprint":true,"resultClassChangesFingerprint":true,"labBoundary":true}
+```

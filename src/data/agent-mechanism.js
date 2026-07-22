@@ -300,7 +300,7 @@ const lessons = [
       { heading: '先分类再恢复', body: '工具失败后先保存原始 error code、参数、是否产生副作用和可重试标记，再分类处理：临时传输错误可指数退避并有限重试；参数错误依据结构化反馈修参；空结果或业务冲突要换查询或重规划；权限不足应 blocked 并请求授权；能力边界则澄清、降级或 handoff。任何重试都要用幂等键、次数和成本预算保护，不能把所有异常都交给模型自由猜。', keyPoints: ['恢复策略由错误类型和副作用决定', 'blocked 与 handoff 是正常受控结果，不是必须隐藏的失败'] },
       { heading: '反思需要可校准反馈', body: 'Reflection 可以把失败轨迹压缩为下一次尝试的约束，Self-Refine、Reflexion 等工作展示了特定设置中的迭代方法，但模型只凭自身文本批评可能重复原错误甚至降低质量。测试、解析器、数据库状态、规则检查或人工反馈等外部验证通常更强，因为它们提供独立、可观察的信号。系统还应记录动作指纹、失败原因和状态差异；同一动作无进展达到阈值就换策略、阻塞或交接。', keyPoints: ['反思是恢复候选，不是自动正确性证明', '外部信号、动作去重和进展检测共同限制失败循环'] },
     ],
-    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench'],
+    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-aws-idempotent-apis'],
     exercise: { title: '构建失败决策表', brief: '为一个会查询并更新工单的 Agent 设计从错误观察到恢复或终止的确定性决策表。', steps: ['为传输、参数、空结果、业务冲突、权限和能力失败写出可观察信号与副作用风险', '为每类选择有限重试、修参、换工具、重规划、澄清、blocked 或 handoff，并加入动作指纹去重'], deliverable: '一张包含错误证据、预算、幂等要求和终止出口的恢复决策表。' },
     quiz: [
       quiz('quiz-agent-06-1', '权限不足的工具调用最合理的默认处理是什么？', ['不断重试', '记录证据并 blocked，按设计请求授权或 handoff', '让模型伪造权限', '删除错误日志'], 1, '权限错误不会因重复相同调用自然消失，应明确阻塞原因并进入授权或交接路径。'),
