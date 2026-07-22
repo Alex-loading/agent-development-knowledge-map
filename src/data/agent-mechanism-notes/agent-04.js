@@ -4,12 +4,12 @@ const sections = Object.freeze([
     title: '先读状态、再判终止：循环的第一步不是调用模型',
     paragraphs: Object.freeze([
       '上一课已经把单次工具调用拆成模型提案、宿主校验、真实执行和 observation 回填；Agent loop 要做的，是让这些步骤在同一份任务状态上有序重复。每轮开始先读取不可变的 task contract、当前 working state、最近事件和剩余预算，形成一份只含本轮决策所需信息的 state view。模型不是状态真相的拥有者：完成证据、审批结果、工具终态和预算计数都由宿主从可验证记录计算，不能靠模型说“应该已经好了”来更新。',
-      '读取后立即运行确定性的终止检查，而且优先级必须写进代码与测试。本课程采用 done → failed → handoff → blocked → budget-exhausted 的顺序：已有完成证据时即使同时出现阻塞或预算耗尽也返回 done；不可恢复的系统不变量破坏返回 failed；风险或失败阈值要求把控制权转给人或其他执行者时返回 handoff；缺少必需输入、权限或依赖时返回 blocked；前四项都不成立才检查步数、时间或成本预算。优先级是本课程工程约定，不是 ReAct 论文标准，但它消除了同一状态多种解释造成的不确定性。',
+      '读取后立即运行确定性的终止检查，而且优先级必须写进代码与测试。本课程采用 failed → done → handoff → blocked → budget-exhausted 的安全优先顺序：先检查不可恢复的系统不变量、硬安全约束或宿主故障，命中即返回 failed，即使状态里同时残留 goalSatisfied 也不能用 done 掩盖致命冲突；没有 fatal 条件时，才依据外部完成证据返回 done。之后依次处理人工交接、缺少必需输入/权限/依赖的 blocked，以及步数、时间或成本预算耗尽。这个排序是课程工程约定，不是 ReAct 论文标准，却能让冲突状态得到唯一且安全的解释。',
       'Anthropic 的工程正文要求 Agent 每步从环境取得 ground truth 来评估进展，并在检查点或阻塞时请求人工反馈，还建议设置最大迭代等停止条件；OpenAI 的工程指南把 run 描述为持续到工具调用、结构化输出、错误或最大轮次等退出条件的循环，并把超出失败阈值和高风险动作列为人工介入触发器。两者支撑“外部证据、硬预算、人工出口”这一原则，却没有定义上述五状态的字段或优先级；五状态枚举和排序是为了完成本课交付物而显式给出的课程综合。',
     ]),
     keyPoints: Object.freeze([
       '每轮先从可信记录构造 state view，再执行确定性的终止检查；模型自述不能充当完成证据。',
-      '课程约定 done → failed → handoff → blocked → budget-exhausted，优先级必须编码并测试。',
+      '课程约定 failed → done → handoff → blocked → budget-exhausted；fatal 与完成证据冲突时必须返回 failed。',
     ]),
     callout: Object.freeze({
       kind: 'warning',
@@ -41,12 +41,12 @@ const sections = Object.freeze([
     id: 'validate-and-act-boundary',
     title: 'Validate 与 Act：校验通过才跨越副作用边界',
     paragraphs: Object.freeze([
-      'decide 之后必须先 validate，再 act。宿主依次检查动作类型是否在允许空间内、工具参数是否满足 schema、业务资源与跨字段关系是否成立、认证主体是否有权、风险是否需要审批、预算是否足够，以及副作用调用是否携带宿主持久化的稳定 intent 与幂等映射。结构失败不是工具失败：前者生成 validation observation 供下一轮修参，后者才是外部系统实际返回的执行结果；把二者混为“再试一次”会制造无意义重复。',
+      'decide 产出 call-tool 候选后必须先 validate，再 act；finish、handoff、fail、ask-user 则走各自的宿主验证或状态写入分支，不能误入工具执行链。宿主依次检查动作类型是否在允许空间内、工具参数是否满足 schema、业务资源与跨字段关系是否成立、认证主体是否有权、风险是否需要审批、预算是否足够，以及副作用调用是否携带宿主持久化的稳定 intent 与幂等映射。结构失败不是工具失败：前者生成 validation observation 供下一轮修参，后者才是外部系统实际返回的执行结果；把二者混为“再试一次”会制造无意义重复。',
       'act 是唯一允许越过真实系统边界的步骤。控制器使用受限凭据执行获准动作，为调用分配 event id，并在外部调用前持久化动作名、规范化参数摘要、状态版本、宿主稳定 intent、幂等映射与开始时间；进程重启后先查事件和外部请求终态，复用原 intent 对账，而不是盲目重做已有副作用。这里复用了上一课已建立的宿主执行边界。遇到高风险动作则先返回 handoff 或 approval-waiting，而不是让模型自行批准；若校验发现不可恢复的不变量破坏，控制器写入 fatal error 并在下一次终止检查返回 failed；若只是缺少用户输入或权限，写入 blocker 并返回 blocked 或 handoff。',
       'OpenAI 指南的 run loop、工具风险与人工介入建议，以及 Anthropic 对清晰工具、环境反馈和受控自治的经验，都支持在模型之外保留执行边界。本段的 validate 顺序、事件字段和错误分流则是课程工程综合，用来回答面试中的“最小 loop 如何避免 while(true) 盲目调用”。它们不应被说成两个厂商共同发布的协议；真实系统还必须把授权、审计、超时、补偿和隐私要求落到自己的服务契约。',
     ]),
     keyPoints: Object.freeze([
-      '固定执行链是 decide → validate → act；结构错误、业务拒绝和真实工具失败必须生成不同 observation。',
+      '只有 call-tool 走 decide → validate → act；其他候选走专属分支，结构错误、业务拒绝和真实工具失败必须生成不同 observation。',
       '副作用只在宿主边界内执行，高风险、可信身份、幂等与审计不能交给模型自行决定。',
     ]),
     callout: Object.freeze({
@@ -61,7 +61,7 @@ const sections = Object.freeze([
     title: 'Observe 与 Update：工具结果先回填，再进入下一轮',
     paragraphs: Object.freeze([
       'act 返回后，宿主把结果规范化为 observation：至少包含 call id、success、结果类别、最小必要 data、结构化 error、证据引用和时间或外部版本。Observation 是环境对动作的回答，不是模型对结果的猜测；空结果、权限拒绝、瞬态超时、未知副作用终态和业务成功必须可区分。随后先把 observation 追加到事件日志，再依据它计算 state diff，例如新增已确认事实、改变待办项、登记 blocker、扣减预算或更新完成证据。',
-      'update 只能由可观察结果驱动。一次调用已提交不等于工具成功，工具返回 success 也不必然等于业务目标完成；控制器要把 call submitted、action succeeded 和 goal satisfied 分开。下一轮读取的是更新后的 state version 与相关 observation，因此固定因果链必须是 decide → validate → act → observe → update；若跳过回填，模型仍停留在调用前 belief，最容易重复旧动作、编造成功或错误地继续旧计划。',
+      'update 只能由可观察结果驱动。一次调用已提交不等于工具成功，工具返回 success 也不必然等于业务目标完成；控制器要把 call submitted、action succeeded 和 goal satisfied 分开。下一轮读取的是更新后的 state version 与相关 observation，因此 call-tool 路径必须维持 decide → validate → act → observe → update；若跳过回填，模型仍停留在调用前 belief，最容易重复旧动作、编造成功或错误地继续旧计划。',
       'ReAct 论文中的 action 允许模型与 Wikipedia API、文本环境或网页购物环境交互，并把 observation 放回后续轨迹；Anthropic 也把每步工具结果或代码执行称作评估进展所需的环境 ground truth。这两份材料共同支撑“行动后吸收观察”的机制。事件日志字段、三层完成语义和 state diff 仍是课程综合；它们负责把论文直觉变成可恢复、可测试的宿主程序，而不是声称原论文已经规定现代生产日志 schema。',
     ]),
     keyPoints: Object.freeze([
@@ -81,7 +81,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '无限工具调用通常不是单一的“模型随机性”问题，而是控制器缺少可判定出口：工具结果未回填使 belief 不变，错误都被标成可重试，完成谓词永远不成立，预算没有硬上限，或状态更新把真实变化丢失。AgentBench 在其八类环境与所测模型的设定中把达到预设最大交互轮次或多轮重复生成归为 Task Limit Exceeded，并分析了末段重复内容与动作循环；这说明重复和终止失败是可观察轨迹问题，但其特定百分比和旧模型结果不能外推为所有生产 Agent 的发生率。',
       '工程上可为每次动作计算指纹：tool name + canonicalized params + relevant state/version + result class。canonicalized 表示对象键排序、默认值显式化并删去时间戳等无关噪声；relevant state/version 只选会改变该动作意义的事实、游标、权限或外部版本；result class 使用 success-empty、validation-error、permission-denied、timeout 等稳定类别，而不是整段错误文本。随后同时比较 state diff：只有指纹重复、相关状态没有实质进展且连续次数达到配置阈值，才阻止再次执行并选择修参、换工具、blocked 或 handoff。',
-      '这个规则不能退化成“同工具同参数永远不许再调”。搜索任务可把新增且去重后的有效证据数、尚未覆盖的必要问题数、已推进游标或已探索查询簇作为进展指标，而不是把回复字数变化当进展；若这些值都不变，重复搜索才累计无进展。环境版本改变、审批刚到位、退避窗口结束、搜索游标推进或先前未知终态已完成对账时，相关 state/version 变化会产生新指纹或清零计数，合理重试仍可发生。Lilian Weng 的综述在转述相关 Agent 研究时也把连续相同动作导致相同 observation 视为应停止的低效轨迹信号；本课程加入状态版本、结果类别和业务进展指标以降低误杀，属于工程综合而非 ReAct 论文定义。',
+      '这个规则不能退化成“同工具同参数永远不许再调”。搜索任务可把新增且去重后的有效证据数、尚未覆盖的必要问题数、已推进游标或已探索查询簇作为进展指标，而不是把回复字数变化当进展；若这些值都不变，重复搜索才累计无进展。即使 tool、规范化 params 与 result class 相同，只要相关 state/version 改变，完整动作指纹随之改变，或控制器基于真实 state diff 清零无进展计数，因此环境版本、审批、退避窗口、搜索游标或对账结果变化后可以合理重试；状态变化后的记录属于新指纹，不是旧指纹重放。Lilian Weng 的综述在转述相关 Agent 研究时也把连续相同动作导致相同 observation 视为应停止的低效轨迹信号；状态版本、结果类别和业务进展指标是课程为降低误杀所作的工程综合。',
     ]),
     keyPoints: Object.freeze([
       '动作指纹至少含 tool、规范化 params、相关 state/version 与 result class，并与真实 state diff 联合判断。',
@@ -117,9 +117,9 @@ const sections = Object.freeze([
     id: 'minimal-loop-and-deterministic-lab',
     title: '控制循环交付：可照抄伪代码与确定性决策台',
     paragraphs: Object.freeze([
-      '下面的伪代码可直接作为本课 deliverable；terminal_check 必须在 decide 之前，工具结果必须在下一轮前回填：function run_agent(task) { state = load_state(task.id); while (true) { view = read_state_view(task.contract, state); terminal = terminal_check(view, priority=[done, failed, handoff, blocked, budget-exhausted]); if (terminal) return terminal; candidate = decide(view); validation = validate(candidate, view.allowed_actions, view.permissions, view.risk_policy); if (!validation.ok) { obs = observation_from_validation(candidate, validation); append_event(obs); state = update_state(state, obs); if (validation.fatal) state.failed = true; continue; } action = act(candidate, host_identity, stable_intent); obs = normalize_observation(action.call_id, action.result); append_event(obs); next = update_state(state, obs); progress = compare_relevant_state(state, next); fingerprint = hash(action.tool, canonicalize(action.params), relevant_version(state), classify(obs)); next = update_progress(next, fingerprint, progress); state = next; } }。所有出口都由 terminal_check 返回结构化 status、reason 与 evidenceRef。',
-      '实现第二步是把失败路径写全：done 需要 completion predicate 的证据；failed 只用于不可恢复不变量或宿主故障；budget-exhausted 覆盖 max turns、deadline 或成本硬上限；blocked 表示缺少必需信息、权限或外部依赖且当前不能自行解除；handoff 表示把任务、状态、最近 observation、未决副作用和建议下一步移交给人或另一受控执行者。每轮都严格遵守 decide → validate → act → observe → update；validate 拒绝也要形成 observation 和状态更新，才能避免在下一轮原样重提。',
-      '页面中的 agent-loop 决策台只运行本地确定性规则：goalSatisfied 优先于 blocked 与步骤预算，blocked 又优先于 budget-exhausted，否则 continue。它不调用真实模型或第三方 API，不模拟 ReAct 论文评测，也没有展示 failed、handoff、时间预算、成本预算和重复指纹；你需要在伪代码中补全这些出口，再切换 goalSatisfied、blocked、stepsUsed 与 maxSteps 验证现有优先级。最后新增两条测试：相同指纹但 state version 改变时允许重试；相同指纹、无进展且到阈值时返回 handoff 或 blocked。',
+      '下面的伪代码可直接作为本课 deliverable；循环开头先恢复未决副作用，再做 failed-first 终止检查，并真正分流模型候选：function run_agent(task) { state = load_state(task.id); while (true) { recovery = reconcile_pending(task.id, { reuse_original_intent: true, do_not_repeat_side_effect: true }); if (recovery.observation) { append_event(recovery.observation); state = update_state(state, recovery.observation); continue; } if (recovery.unknown) { state = record_handoff_request(state, "pending-side-effect-needs-reconciliation"); continue; } view = read_state_view(task.contract, state); terminal = terminal_check(view, priority=[failed, done, handoff, blocked, budget-exhausted]); if (terminal) return terminal; candidate = decide(view); if (candidate.type === "finish-candidate") { verdict = verify_completion(candidate, view.completion_predicate); obs = observation_from_completion_check(verdict); append_event(obs); state = update_state(state, obs); continue; } if (candidate.type === "handoff-candidate") { state = record_handoff_request(state, candidate); continue; } if (candidate.type === "fail-candidate") { verdict = verify_unrecoverable_failure(candidate, view); obs = observation_from_failure_check(verdict); append_event(obs); state = update_state(state, obs); if (verdict.fatal) state.failed = true; continue; } if (candidate.type === "ask-user") { state = record_blocker_and_request(state, candidate.question); continue; } if (candidate.type !== "call-tool") { obs = invalid_candidate_observation(candidate); append_event(obs); state = update_state(state, obs); continue; } validation = validate(candidate, view.allowed_actions, view.permissions, view.risk_policy); if (!validation.ok) { obs = observation_from_validation(candidate, validation); append_event(obs); state = update_state(state, obs); if (validation.fatal) state.failed = true; continue; } stable_intent = get_or_create_intent(task, candidate); pending = persist_pending_action({ task_id: task.id, candidate, stable_intent, idempotency_mapping: stable_intent }); raw = act(candidate, host_identity, stable_intent); obs = normalize_observation(pending.call_id, raw); persist_action_result(pending, obs); append_event(obs); next = update_state(state, obs); progress = compare_relevant_state(state, next); fingerprint = hash(candidate.tool, canonicalize(candidate.params), relevant_version(state), classify(obs)); state = update_progress(next, fingerprint, progress); } }。只有 call-tool 进入 validate → act → observe → update；所有出口由 terminal_check 返回 status、reason 与 evidenceRef。',
+      '实现第二步是把失败路径写全：done 需要 completion predicate 的证据；failed 只用于不可恢复不变量或宿主故障；budget-exhausted 覆盖 max turns、deadline 或成本硬上限；blocked 表示缺少必需信息、权限或外部依赖且当前不能自行解除；handoff 表示把任务、状态、最近 observation、未决副作用和建议下一步移交给人或另一受控执行者。只有 call-tool 候选严格进入 decide → validate → act → observe → update；validate 拒绝也要形成 observation 和状态更新，才能避免在下一轮原样重提。',
+      '页面中的 agent-loop 决策台只运行本地确定性子集：它没有 failed 与 handoff，所以 goalSatisfied 优先于 blocked 与步骤预算、blocked 又优先于 budget-exhausted，与完整控制器的 failed-first 规则并不矛盾。它不调用真实模型或第三方 API，也不模拟 ReAct 评测。验收时除切换页面四个输入外，还要为完整控制器加入三条测试：fatal 与 goalSatisfied 同时为 true 时返回 failed；tool、规范化 params、result class 相同但 relevant state version 改变时，完整 fingerprint 改变并允许重试；完整指纹重复、无进展且达到阈值时才返回 handoff 或 blocked。',
     ]),
     keyPoints: Object.freeze([
       '交付伪代码包含 done、failed、handoff、blocked、budget-exhausted，并严格执行终止优先的完整因果链。',
@@ -168,9 +168,9 @@ export const agent04Note = Object.freeze({
   misconceptions,
   recap: Object.freeze([
     'Agent loop 是宿主控制程序，不是模型自己反复续写；每轮从 task contract、可信状态、事件和剩余预算构造 state view。',
-    '终止检查必须早于 decide；课程优先级为 done、failed、handoff、blocked、budget-exhausted，并用测试固定冲突状态的唯一结果。',
+    '终止检查必须早于 decide；课程优先级为 failed、done、handoff、blocked、budget-exhausted，fatal 与完成证据冲突时以 failed 为准。',
     '模型只负责基于可观察状态提出结构化候选，finish、fail 或 handoff 建议都需要宿主复核。',
-    '每轮固定因果链为 decide → validate → act → observe → update，任何拒绝或结果都要形成 observation。',
+    '只有 call-tool 路径进入 decide → validate → act → observe → update，其他候选由宿主复核或写入状态后回到终止检查。',
     '工具输出用 call id 关联写入事件日志，再驱动 state diff；提交、动作成功与业务目标完成必须分开。',
     '动作指纹至少包含 tool、规范化 params、相关 state/version 和 result class，并与无进展计数联合使用。',
     '重复动作只有在相关状态不变且达到阈值时才阻止；环境、权限、游标或版本变化后允许有依据的重试。',
