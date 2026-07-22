@@ -1,0 +1,183 @@
+const sections = Object.freeze([
+  Object.freeze({
+    id: 'state-read-and-termination-priority',
+    title: '先读状态、再判终止：循环的第一步不是调用模型',
+    paragraphs: Object.freeze([
+      '上一课已经把单次工具调用拆成模型提案、宿主校验、真实执行和 observation 回填；Agent loop 要做的，是让这些步骤在同一份任务状态上有序重复。每轮开始先读取不可变的 task contract、当前 working state、最近事件和剩余预算，形成一份只含本轮决策所需信息的 state view。模型不是状态真相的拥有者：完成证据、审批结果、工具终态和预算计数都由宿主从可验证记录计算，不能靠模型说“应该已经好了”来更新。',
+      '读取后立即运行确定性的终止检查，而且优先级必须写进代码与测试。本课程采用 failed → done → handoff → blocked → budget-exhausted 的安全优先顺序：先检查不可恢复的系统不变量、硬安全约束或宿主故障，命中即返回 failed，即使状态里同时残留 goalSatisfied 也不能用 done 掩盖致命冲突；没有 fatal 条件时，才依据外部完成证据返回 done。之后依次处理人工交接、缺少必需输入/权限/依赖的 blocked，以及步数、时间或成本预算耗尽。这个排序是课程工程约定，不是 ReAct 论文标准，却能让冲突状态得到唯一且安全的解释。',
+      'Anthropic 的工程正文要求 Agent 每步从环境取得 ground truth 来评估进展，并在检查点或阻塞时请求人工反馈，还建议设置最大迭代等停止条件；OpenAI 的工程指南把 run 描述为持续到工具调用、结构化输出、错误或最大轮次等退出条件的循环，并把超出失败阈值和高风险动作列为人工介入触发器。两者支撑“外部证据、硬预算、人工出口”这一原则，却没有定义上述五状态的字段或优先级；五状态枚举和排序是为了完成本课交付物而显式给出的课程综合。',
+    ]),
+    keyPoints: Object.freeze([
+      '每轮先从可信记录构造 state view，再执行确定性的终止检查；模型自述不能充当完成证据。',
+      '课程约定 failed → done → handoff → blocked → budget-exhausted；fatal 与完成证据冲突时必须返回 failed。',
+    ]),
+    callout: Object.freeze({
+      kind: 'warning',
+      title: '终止检查必须早于 decide',
+      body: '目标已经完成或任务已经阻塞时再调用一次模型，既浪费预算，也可能产生不该发生的副作用；先终止是控制器职责，不是提示词建议。',
+    }),
+    sourceIds: Object.freeze(['res-agent-anthropic-effective', 'res-agent-openai-guide', 'res-agent-agentbench']),
+  }),
+  Object.freeze({
+    id: 'decide-from-observable-state',
+    title: 'Decide：基于可观察状态选择一个受约束动作',
+    paragraphs: Object.freeze([
+      '终止检查返回 continue 后，控制器才请求模型决定下一步。decide 的输入至少包括目标摘要、硬约束、当前事实与未知项、最近相关 observation、可用工具声明、允许的恢复动作和剩余预算；输出则应是可验证的结构化候选，例如 call-tool、ask-user、finish-candidate、handoff-candidate 或 fail-candidate，而不是一段可被任意解释的散文。模型可以建议结束，但宿主仍要用 completion predicate 核验；模型可以建议工具，宿主仍按上一课的 ACI 边界校验。',
+      'ReAct 原论文研究的是让语言模型交错生成自然语言 reasoning trace 与任务特定 action：reasoning trace 用来跟踪或调整计划、处理例外，action 则连接知识库或交互环境取得新信息。论文在 HotpotQA、FEVER、ALFWorld 和 WebShop 等设定中比较 ReAct、CoT 与只行动基线；因此它能支撑“行动把外部信息带回后续决策”这一机制，但不能证明所有生产 Agent 都应暴露长篇推理，也不能定义本课程的 JSON 动作枚举、权限检查或终止优先级。',
+      '普通 chain-of-thought 主要在文本内部展开中间推理，并不要求宿主执行环境动作或把新的 observation 插回下一轮；ReAct 的区分点是 reasoning 与 task-specific actions 在论文轨迹中交错，外部反馈能够改变后续步骤。如果任务不需要外部新证据，一次结构化输出或固定 workflow 往往更直接；只有当下一动作确实依赖最新环境反馈时，循环式 decide 才值得承担额外调用、延迟和错误累积成本。',
+    ]),
+    keyPoints: Object.freeze([
+      'decide 只选择候选动作，完成、失败和交接仍由宿主根据外部谓词确认。',
+      'ReAct 区别于普通 CoT 的核心是任务动作与环境 observation 进入后续决策，而不是推理文本更长。',
+    ]),
+    callout: Object.freeze({
+      kind: 'intuition',
+      title: '模型是策略提议者，控制器是裁判',
+      body: '模型根据 state view 提议下一动作；控制器决定该动作是否允许、是否执行、结果如何记账，以及是否已经到达任何出口。',
+    }),
+    sourceIds: Object.freeze(['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide']),
+  }),
+  Object.freeze({
+    id: 'validate-and-act-boundary',
+    title: 'Validate 与 Act：校验通过才跨越副作用边界',
+    paragraphs: Object.freeze([
+      'decide 产出 call-tool 候选后必须先 validate，再 act；finish、handoff、fail、ask-user 则走各自的宿主验证或状态写入分支，不能误入工具执行链。宿主依次检查动作类型是否在允许空间内、工具参数是否满足 schema、业务资源与跨字段关系是否成立、认证主体是否有权、风险是否需要审批、预算是否足够，以及副作用调用是否携带宿主持久化的稳定 intent 与幂等映射。结构失败不是工具失败：前者生成 validation observation 供下一轮修参，后者才是外部系统实际返回的执行结果；把二者混为“再试一次”会制造无意义重复。',
+      'act 是唯一允许越过真实系统边界的步骤。控制器使用受限凭据执行获准动作，为调用分配 event id，并在外部调用前持久化动作名、规范化参数摘要、状态版本、宿主稳定 intent、幂等映射与开始时间；进程重启后先查事件和外部请求终态，复用原 intent 对账，而不是盲目重做已有副作用。这里复用了上一课已建立的宿主执行边界。遇到高风险动作则先返回 handoff 或 approval-waiting，而不是让模型自行批准；若校验发现不可恢复的不变量破坏，控制器写入 fatal error 并在下一次终止检查返回 failed；若只是缺少用户输入或权限，写入 blocker 并返回 blocked 或 handoff。',
+      'OpenAI 指南的 run loop、工具风险与人工介入建议，以及 Anthropic 对清晰工具、环境反馈和受控自治的经验，都支持在模型之外保留执行边界。本段的 validate 顺序、事件字段和错误分流则是课程工程综合，用来回答面试中的“最小 loop 如何避免 while(true) 盲目调用”。它们不应被说成两个厂商共同发布的协议；真实系统还必须把授权、审计、超时、补偿和隐私要求落到自己的服务契约。',
+    ]),
+    keyPoints: Object.freeze([
+      '只有 call-tool 走 decide → validate → act；其他候选走专属分支，结构错误、业务拒绝和真实工具失败必须生成不同 observation。',
+      '副作用只在宿主边界内执行，高风险、可信身份、幂等与审计不能交给模型自行决定。',
+    ]),
+    callout: Object.freeze({
+      kind: 'boundary',
+      title: 'Act 不是“模型输出了动作”',
+      body: '模型输出只是候选；只有宿主完成校验并实际调用外部系统，才发生 act。这个区分决定了错误分类、审计和恢复能否成立。',
+    }),
+    sourceIds: Object.freeze(['res-agent-openai-guide', 'res-agent-anthropic-effective']),
+  }),
+  Object.freeze({
+    id: 'observe-and-update-state',
+    title: 'Observe 与 Update：工具结果先回填，再进入下一轮',
+    paragraphs: Object.freeze([
+      'act 返回后，宿主把结果规范化为 observation：至少包含 call id、success、结果类别、最小必要 data、结构化 error、证据引用和时间或外部版本。Observation 是环境对动作的回答，不是模型对结果的猜测；空结果、权限拒绝、瞬态超时、未知副作用终态和业务成功必须可区分。随后先把 observation 追加到事件日志，再依据它计算 state diff，例如新增已确认事实、改变待办项、登记 blocker、扣减预算或更新完成证据。',
+      'update 只能由可观察结果驱动。一次调用已提交不等于工具成功，工具返回 success 也不必然等于业务目标完成；控制器要把 call submitted、action succeeded 和 goal satisfied 分开。下一轮读取的是更新后的 state version 与相关 observation，因此 call-tool 路径必须维持 decide → validate → act → observe → update；若跳过回填，模型仍停留在调用前 belief，最容易重复旧动作、编造成功或错误地继续旧计划。',
+      'ReAct 论文中的 action 允许模型与 Wikipedia API、文本环境或网页购物环境交互，并把 observation 放回后续轨迹；Anthropic 也把每步工具结果或代码执行称作评估进展所需的环境 ground truth。这两份材料共同支撑“行动后吸收观察”的机制。事件日志字段、三层完成语义和 state diff 仍是课程综合；它们负责把论文直觉变成可恢复、可测试的宿主程序，而不是声称原论文已经规定现代生产日志 schema。',
+    ]),
+    keyPoints: Object.freeze([
+      '工具结果必须以 call id 关联写入事件日志，并在进入下一轮前驱动 working state 更新。',
+      'submitted、action succeeded 与 goal satisfied 是三种不同证据，只有完成谓词成立才返回 done。',
+    ]),
+    callout: Object.freeze({
+      kind: 'example',
+      title: '搜索空结果仍是一条 observation',
+      body: 'success=true、items=[] 说明查询执行成功但没有命中；它应更新“已查范围”和策略，而不能被写成工具失败，也不能被忽略后原样再搜。',
+    }),
+    sourceIds: Object.freeze(['res-agent-react-paper', 'res-agent-anthropic-effective', 'res-agent-lilian-weng']),
+  }),
+  Object.freeze({
+    id: 'progress-and-repetition-detection',
+    title: '进展与重复检测：阻止无进展循环，也允许有新证据的重试',
+    paragraphs: Object.freeze([
+      '无限调用常因结果未回填、错误全标可重试、完成谓词失效、预算不硬或状态丢失，而非单纯模型随机。AgentBench 在其八环境和所测模型中把达到最大交互轮次或多轮重复归为 Task Limit Exceeded；它证明重复是可观察轨迹，却不能把旧模型比例外推到所有生产 Agent。',
+      '动作指纹可取 tool + canonicalized params + relevant state/version + result class。参数需排序键、显式默认值并去除时间戳噪声；状态版本只选会改变动作意义的事实、游标、权限或外部版本；结果用 success-empty、validation-error、permission-denied、timeout 等稳定类别。只有指纹重复、相关 state diff 无进展且达到阈值，才改走修参、换工具、blocked 或 handoff。',
+      '规则不能退化成“同工具同参数永远不许再调”。搜索任务应以新增去重证据、未覆盖问题、游标或查询簇变化衡量进展，不能用回复字数充数。即使 tool、规范化 params 与 result class 相同，相关 state/version 改变也会形成新完整指纹或清零无进展计数，所以审批、版本、游标、退避窗口或对账结果变化后可合理重试。Lilian Weng 的综述把连续相同动作得到相同 observation 视为低效轨迹信号；加入状态版本、结果类别和业务指标是课程为降低误杀所作的综合。',
+    ]),
+    keyPoints: Object.freeze([
+      '动作指纹至少含 tool、规范化 params、相关 state/version 与 result class，并与真实 state diff 联合判断。',
+      '仅在“重复 + 无状态进展 + 达到阈值”同时成立时阻止；环境变化后应允许有依据的重试。',
+    ]),
+    callout: Object.freeze({
+      kind: 'warning',
+      title: 'temperature=0 不能修复循环',
+      body: '确定性采样仍会在相同 belief、相同错误分类和缺失出口下稳定重复；修复点是回填、状态、错误类别、进展指标与硬预算。',
+    }),
+    sourceIds: Object.freeze(['res-agent-agentbench', 'res-agent-lilian-weng', 'res-agent-anthropic-effective']),
+  }),
+  Object.freeze({
+    id: 'react-boundary-and-observable-logging',
+    title: 'ReAct 的准确边界：保留环境闭环，不依赖隐藏思维链',
+    paragraphs: Object.freeze([
+      'ReAct 原论文的具体设定确实使用可见的自然语言 reasoning traces，并让它们与任务特定 action、环境 observation 交错；知识密集任务接入简化 Wikipedia API，交互决策任务包括 ALFWorld 与 WebShop，模型和 few-shot 轨迹也属于论文当时的实验条件。因此准确表述是“论文在这些设定中研究交错 reasoning 与 acting”，而不是“ReAct 是所有 Agent 的标准运行时”或“论文证明任何模型在任何工具环境都更可靠”。',
+      '现代生产实现不应把获取、展示或持久化模型隐藏思维链当作控制器依赖。可观察日志应记录 decision summary、所选 action、规范化参数摘要、validation 结果、observation、state diff、预算变化和 terminal decision；decision summary 只写可审查的任务理由，例如“需查询订单状态以验证取消是否生效”，不要求逐 token 暴露内部推理。这个日志政策是课程基于可观察性与隐私边界的工程综合，不声称 ReAct 论文提出了现代隐藏推理政策。',
+      '普通 CoT 可只展开文本推理而不执行动作；ReAct 论文把 reasoning trace、任务动作和 observation 交错，让后续步骤吸收新证据；生产控制器可保留环境闭环，同时只暴露结构化动作与简短摘要。是否采用取决于任务是否需要外部反馈，不能给一次性文本任务强套多轮循环。',
+    ]),
+    keyPoints: Object.freeze([
+      'ReAct 结论必须限定在论文的模型、few-shot 轨迹、动作空间与四类任务设定内。',
+      '生产日志记录可观察 decision summary、action、observation 与 state diff，不获取或依赖隐藏思维链。',
+    ]),
+    callout: Object.freeze({
+      kind: 'boundary',
+      title: '可观察摘要不等于隐藏推理',
+      body: '“为什么此刻需要这个动作”的短摘要可供审计；模型未公开的内部推理不是协议字段，也不是完成证据或恢复依据。',
+    }),
+    sourceIds: Object.freeze(['res-agent-react-paper', 'res-agent-lilian-weng']),
+  }),
+  Object.freeze({
+    id: 'minimal-loop-and-deterministic-lab',
+    title: '控制循环交付：可照抄伪代码与确定性决策台',
+    paragraphs: Object.freeze([
+      '伪代码：function run_agent(task, worker_id) { state=load_state(task.id); while(true) { recovery=reconcile_pending(task.id,{reuse_original_intent:true,do_not_repeat_side_effect:true}); if(recovery.observation){receipt=mark_pending_reconciled_and_record_observation(task.id,recovery.pending_id,recovery.observation,{evidenceRef:recovery.evidenceRef});state=apply_reconciliation_receipt(state,receipt,{threshold:task.recovery_threshold,already_consumed:receipt.already_consumed});} if(recovery.unknown){quarantined=mark_pending_requires_human(task.id,recovery.pending_id,{auto_reconcile:false,evidenceRef:recovery.evidenceRef});state=record_handoff_request(state,{reason:"unknown-side-effect-outcome",pending:quarantined});return terminal_result("handoff","pending-side-effect-needs-human-reconciliation",quarantined.evidenceRef);} view=read_state_view(task.contract,state); terminal=terminal_check(view,priority=[failed, done, handoff, blocked, budget-exhausted]); if(terminal)return terminal; charge=atomic_reserve_and_charge_budget(task.id,{turns:1,cost:task.decision_cost_limit,expected_state_version:view.state_version}); if(!charge.ok){state=record_budget_exhausted(state,charge.evidenceRef);continue;} candidate=decide(view); decision_fp=hash(candidate.type,canonicalize(candidate.payload),relevant_version(state)); state=update_decision_progress(state,decision_fp,relevant_state_changed_since_last_attempt(state)); if(state.no_progress_count>=task.no_progress_threshold){state=record_handoff_request(state,"repeated-candidate-without-progress");continue;} if(candidate.type==="finish-candidate"){verdict=verify_completion(candidate,view.completion_predicate);state=record_observation(state,observation_from_completion_check(verdict));continue;} if(candidate.type==="handoff-candidate"){state=record_handoff_request(state,candidate);continue;} if(candidate.type==="fail-candidate"){verdict=verify_unrecoverable_failure(candidate,view);state=record_observation(state,observation_from_failure_check(verdict));if(verdict.fatal)state.failed=true;continue;} if(candidate.type==="ask-user"){state=record_blocker_and_request(state,candidate.question);continue;} if(candidate.type!=="call-tool"){state=record_observation(state,invalid_candidate_observation(candidate));continue;} validation=validate(candidate,view); if(!validation.ok){state=record_observation(state,observation_from_validation(candidate,validation));if(validation.fatal)state.failed=true;continue;} lease=acquire_task_writer_lease(task.id,worker_id); if(!lease.ok){state=reconcile_or_handoff_existing_claim(state,candidate);continue;} stable_intent=get_or_create_intent(task, candidate); pending=claim_and_persist_pending_action({task_id:task.id,stable_intent,unique_key:[task.id,stable_intent],expected_state_version:view.state_version,lease_token:lease.token,idempotency_mapping:stable_intent}); if(!pending.claimed){release_lease(lease);state=reconcile_or_handoff_existing_claim(state,candidate);continue;} tool=trusted_tool_registry.require(candidate.tool);if(!tool.supports_idempotency){gate=serialize_and_reconcile_before_act(pending,lease);if(!gate.safe_to_act){release_lease(lease);state=record_handoff_request(state,gate.evidenceRef);continue;}} if(!holds_writer_lease(lease)||!cas_task_state_version(task.id,view.state_version,lease.token)){release_lease(lease);state=reconcile_or_handoff_existing_claim(state,candidate);continue;} raw=act(candidate,host_identity,stable_intent); obs=normalize_observation(pending.call_id,raw); persist_action_result(pending,obs); next=update_state(state,obs); progress=compare_relevant_state(state,next); fingerprint=hash(candidate.tool,canonicalize(candidate.params),relevant_version(state),classify(obs)); state=update_progress(next,fingerprint,progress); if(state.no_progress_count>=task.no_progress_threshold)state=record_handoff_request(state,"repeated-action-without-progress"); release_lease(lease); } }。unknown 会封存 pending 后直接 handoff；decide 前的原子计费使 finish 拒绝、非 fatal fail、invalid candidate 与 validation reject 都消耗预算。',
+      'candidate 仅提交 tool/params；幂等能力只读宿主 registry。副作用还需 lease、state-version CAS 与唯一 claim；失去资格者只可对账/handoff。外部幂等只是第二防线；registry 标记不支持时须串行对账，确认安全前不得 act。',
+      '页面实验只演示 goalSatisfied、blocked 与步数预算，不调用模型或工具。完整控制器另测 fatal 冲突、state-version 新指纹、重复拒绝的有界终止，以及 winner 释放 lease 后 loser 仍被唯一 claim 拦截和 stale CAS 不可 act。',
+    ]),
+    keyPoints: Object.freeze([
+      '交付伪代码包含 done、failed、handoff、blocked、budget-exhausted，并严格执行终止优先的完整因果链。',
+      'agent-loop 页面是本地确定性终止优先级教学模拟，不是真实模型、生产控制器或 ReAct 能力评测。',
+    ]),
+    callout: Object.freeze({
+      kind: 'example',
+      title: '验收轨迹至少覆盖五种出口',
+      body: '为同一 task contract 分别构造完成证据、致命不变量、人工交接、外部阻塞和预算耗尽；另加一条正常 continue→工具 observation→状态进展轨迹。',
+    }),
+    sourceIds: Object.freeze(['res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench']),
+  }),
+]);
+
+const misconceptions = Object.freeze([
+  Object.freeze({
+    claim: 'Agent loop 就是 while(true) 反复调用模型和工具，模型自然会知道什么时候停。',
+    correction: '循环必须在每轮 decide 前检查外部完成证据、失败、交接、阻塞与硬预算；缺少确定出口会把控制缺陷变成无限调用。',
+  }),
+  Object.freeze({
+    claim: '模型输出 finish 或说“任务完成”就可以直接返回 done。',
+    correction: 'finish 只是候选动作；宿主要用工具终态、产物校验或测试等 completion predicate 复核，模型自述不能替代环境证据。',
+  }),
+  Object.freeze({
+    claim: 'ReAct 的要点是向用户展示更长、更详细的思维链。',
+    correction: '论文要点是在其设定中交错 reasoning trace、任务动作与 observation；生产系统可以记录短决策摘要，不应获取或依赖隐藏思维链。',
+  }),
+  Object.freeze({
+    claim: '同一个工具和参数调用过一次后就应永久禁止重复。',
+    correction: '只有动作指纹重复、相关状态无进展且达到阈值才阻止；权限、游标、审批、外部版本或退避窗口改变后，重试可能合理。',
+  }),
+  Object.freeze({
+    claim: '把 temperature 调成零就不会无限工具调用。',
+    correction: '相同 belief、错误分类和缺失出口会产生确定性重复；真正修复点是 observation 回填、state diff、进展指标、错误路由和硬预算。',
+  }),
+  Object.freeze({
+    claim: '页面 agent-loop 决策台已经实现并验证了真实 ReAct Agent。',
+    correction: '该实验只运行 goalSatisfied、blocked 与步骤预算的本地确定性优先级，不调用模型、工具或论文环境，也不代表生产可靠性。',
+  }),
+]);
+
+export const agent04Note = Object.freeze({
+  readingMinutes: 37,
+  introduction: '上一课完成了单次工具调用的可信边界，本章把它放进一个可观察、可预算、可终止的控制程序。你将从可信状态读取开始，依次实现终止检查、decide、validate、act、observe、update 与进展检测，手写包含五类出口的最小 Agent loop；同时准确理解 ReAct 论文的环境交互设定，并把可观察决策摘要与模型隐藏推理分开。',
+  sections,
+  misconceptions,
+  recap: Object.freeze([
+    'Agent loop 是宿主控制程序，不是模型自己反复续写；每轮从 task contract、可信状态、事件和剩余预算构造 state view。',
+    '终止检查必须早于 decide；课程优先级为 failed、done、handoff、blocked、budget-exhausted，fatal 与完成证据冲突时以 failed 为准。',
+    '模型只负责基于可观察状态提出结构化候选，finish、fail 或 handoff 建议都需要宿主复核。',
+    '只有 call-tool 路径进入 decide → validate → act → observe → update，其他候选由宿主复核或写入状态后回到终止检查。',
+    '工具输出用 call id 关联写入事件日志，再驱动 state diff；提交、动作成功与业务目标完成必须分开。',
+    '动作指纹至少包含 tool、规范化 params、相关 state/version 和 result class，并与无进展计数联合使用。',
+    '重复动作只有在相关状态不变且达到阈值时才阻止；环境、权限、游标或版本变化后允许有依据的重试。',
+    '无限调用常来自无完成证据、结果未回填、错误分类错误、进展检测缺失或预算不硬，不是 temperature 单独造成。',
+    'ReAct 论文在其问答、事实核验和交互环境中交错 reasoning、action、observation；结论不能外推成通用生产保证。',
+    '生产日志记录 decision summary、action、validation、observation、state diff、预算与终止决定，不获取或依赖隐藏思维链。',
+    'agent-loop 决策台只是本地确定性终止优先级教学模拟，不是真实模型调用或 ReAct 评测。',
+  ]),
+  nextStep: '一个可终止循环仍可能在长任务中短视地逐步反应。下一课将把 plan 视为可验证的行动假设，比较 reactive、plan-and-execute 与搜索式规划，并依据新 observation 调整依赖、验证点和恢复动作；本课的 state diff、进展指纹、硬预算和结构化出口会成为判断何时继续原计划、何时重规划的控制信号。',
+});

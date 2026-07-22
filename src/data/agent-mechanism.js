@@ -1,4 +1,166 @@
-const VERIFIED_AT = '2026-07-20';
+import { agentMechanismNotes } from './agent-mechanism-notes.js';
+
+const VERIFIED_AT = '2026-07-22';
+
+const evidenceByResourceId = {
+  'res-agent-anthropic-effective': {
+    authority: 'official', role: 'core',
+    coverage: ['Agent 与 workflow 的控制权差异', '提示链、路由、并行、编排器与评估器模式', '自治成本与工具设计', '逐步取得环境 ground truth 并据此判断进展', '阻塞时请求人工反馈与最大迭代等停止条件'],
+    limitations: 'Anthropic 团队的在线工程经验，不是跨模型、跨任务的对照实验；正文未定义 task contract 字段、硬约束/软偏好、未知项四路由或三层业务完成语义，页面内容仍可能随产品实践演进。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-openai-guide': {
+    authority: 'official', role: 'core',
+    coverage: ['Agent 的适用条件与模型、工具、指令组成', '单 Agent 与多 Agent 编排', '将操作文档改写为清晰步骤、动作、输出与缺失信息分支', 'run-loop 的结构化输出、错误和最大轮次等退出条件', '护栏、评测与按可撤销性、权限、财务影响评估工具风险', '失败阈值或高风险动作触发人工介入'],
+    limitations: '工程指南不是 API 规范；正文没有定义本课 task contract 的精确字段、硬约束/软偏好分类、未知项四路由或 submitted/action-succeeded/business-goal-achieved 三层语义，示例模型与产品实现具有时效性。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-berkeley-course': {
+    authority: 'academic', role: 'extension',
+    coverage: ['Agent 推理、规划和工具的课程知识路线', '基础设施、评测、安全与多 Agent 的主题导航'],
+    limitations: '只核验公开课程页和 syllabus，未把逐讲正文作为本模块证据；不能据课程目录推断机制细节或性能结论。',
+  },
+  'res-agent-hf-course': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['Agent 基础概念', 'Think–Act–Observe 循环', '工具与动作', 'smolagents 实践路线'],
+    limitations: '仓库 main 分支持续更新，框架示例用于教学而不证明一般可靠性；具体接口必须按所用版本复核。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-ms-course': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['Agent、环境和工具基础', 'Agent 的适用与不适用情形', '课程实现路线与框架入口'],
+    limitations: '核验时课程已扩展为 18 lessons，并转向 Microsoft Agent Framework 与 Foundry V2；旧视频代码和当前课程版本不可混用。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-hello-agents': {
+    authority: 'community', role: 'cross-check',
+    coverage: ['传统与 LLM Agent 及感知环境、依据内部状态行动的闭环', '旅行目标分解、工具补齐信息缺口与用户反馈成为新约束后的动态修正', '带时间与 metadata 的消息历史示例', '框架分层、统一工具抽象与最大工具迭代示例'],
+    limitations: '社区教材适合作为中文实践对照，但旅行案例和教学框架不是 task contract 标准，也没有定义 state/transcript/event log 的三分法或三层业务完成谓词；框架与接口版本语义需要另行核验。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-dlai-agentic': {
+    authority: 'expert', role: 'extension',
+    coverage: ['反思、工具、规划与多 Agent 的课程路线', '评测、错误分析和部署主题导航'],
+    limitations: '只访问课程介绍与 outline，未取得完整讲义或字幕；只能提供学习路线，不能承担机制效果或生产可靠性主张。',
+  },
+  'res-agent-lilian-weng': {
+    authority: 'expert', role: 'cross-check',
+    coverage: ['规划与任务分解', 'ReAct', '短期与长期记忆', '工具使用和 Agent 挑战'],
+    limitations: '这是 2023 年的二手技术综述；论文结果、模型版本和实验数字需要回到原始工作核验，不代表当前实现标准。',
+  },
+  'res-agent-lihongyi': {
+    authority: 'expert', role: 'core',
+    coverage: ['目标、观察与动作的 Agent 直觉', '借助环境反馈调整行为', '工具使用', '规划、树搜索和 world model 的教学比较'],
+    limitations: '正文来自第三方繁体中文字幕，可能有转写误差；涉及 2023–2025 年论文、模型和 benchmark 的数字不能脱离年份与原始实验引用。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-datawhale-bili': {
+    authority: 'community', role: 'extension',
+    coverage: ['视频标题、作者、时长与所属课程等导航元数据'],
+    limitations: 'Bilibili 字幕数组为空，未取得可访问正文；不得从标题或简介推断 Agent 机制，也不能用本资源支撑任何实质章节。',
+  },
+  'res-agent-disney-planner-bili': {
+    authority: 'community', role: 'extension',
+    coverage: ['视频标题、作者、时长与简介等导航元数据'],
+    limitations: 'Bilibili 字幕数组为空，未取得讲解正文；简介不等于讲解，且百度云比赛合作语境可能过时，不能作为规划机制证据。',
+  },
+  'res-agent-ms-tool-video': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['外部工具扩展', '工具串联', '最小权限与错误处理', 'Semantic Kernel 的工具选择行为'],
+    limitations: '正文来自含三重重复的自动字幕，需去噪理解；Semantic Kernel 的 auto/required 行为依赖具体版本，不能当作通用协议。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-ms-plan-video': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['复杂任务拆分为子任务', '多 Agent 分派', '结构化计划', 'Pydantic 校验与执行示例'],
+    limitations: '自动字幕有转写噪声；视频对应旧 Chapter 7 与 Pydantic 示例，必须和当前 18 课课程及最新框架版本分开看待。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-react-paper': {
+    authority: 'academic', role: 'core',
+    coverage: ['reason–act–observe 交替', '环境反馈进入后续决策', 'ReAct、CoT 与 Act 对照', '问答与交互环境实验'],
+    limitations: '实验使用 PaLM-540B、少量人工轨迹和受限动作空间；结果不构成通用控制器、生产安全或所有任务优势的证明。',
+  },
+  'res-agent-tot-paper': {
+    authority: 'academic', role: 'core',
+    coverage: ['thought 单元', '候选生成与状态评价', 'BFS 与 DFS', '前瞻、回溯和搜索式规划'],
+    limitations: '仅在三个特制任务中评估，搜索成本较高且依赖正确的问题分解与评价器；不能直接外推到开放环境。',
+  },
+  'res-agent-plan-solve': {
+    authority: 'academic', role: 'core',
+    coverage: ['先计划后求解', '子任务分解', 'Plan-and-Solve 与 PS+ 提示', '推理错误分类'],
+    limitations: '研究对象是静态推理提示，不包含环境动作、工具调用或动态重规划；不能证明初始计划在变化环境中始终有效。',
+  },
+  'res-agent-rewoo': {
+    authority: 'academic', role: 'core',
+    coverage: ['Planner–Worker–Solver 架构', '证据占位符', '推理与观察解耦', 'token 效率和工具失败讨论'],
+    limitations: '预先生成的固定蓝图减少在线适应性，不适合步骤强依赖新观察的任务；实验效率收益受其任务和模型设置限制。',
+  },
+  'res-agent-toolformer': {
+    authority: 'academic', role: 'cross-check',
+    coverage: ['自监督 API 调用标注', '调用时机与参数学习', '工具结果并入生成', '五类工具实验'],
+    limitations: '论文不覆盖工具链、交互修订、权限校验和副作用治理；研究目标不等同于生产应用的 function calling 协议。',
+  },
+  'res-agent-openai-function': {
+    authority: 'official', role: 'core',
+    coverage: ['五步 tool-call 生命周期', 'JSON Schema 工具定义', 'call_id 与 function_call_output 回填', '并行调用、strict 与工具建议'],
+    limitations: '当前文档含 GPT-5.6、Responses API、GPT-5.4+ tool_search 等时敏语义；结构化输出不保证参数满足业务规则，也不保证动作安全或成功。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-anthropic-tools': {
+    authority: 'official', role: 'core',
+    coverage: ['工具契约', '少而高信号的工具集合', '命名、描述和 schema', '返回上下文、token 效率与评测迭代'],
+    limitations: '这是 2025-09-11 的厂商工程经验且在线标题可能调整；效果依赖模型与任务，不能替代本项目权限、业务和回归测试。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-aws-idempotent-apis': {
+    authority: 'official', role: 'core',
+    coverage: ['调用方提供的唯一 client request identifier', '幂等重试与无额外副作用', '网络超时后的不确定性与对账', '同一请求标识的语义等价响应', '晚到请求与请求标识保留期', '同一标识配合不同参数时的校验错误'],
+    limitations: 'AWS 分布式 API 的工程经验，不证明具体订单系统的权限、审批、补偿、错误码或保留期策略；是否采用以及原子性、存储成本和语义窗口仍需按服务验证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-coala': {
+    authority: 'academic', role: 'core',
+    coverage: ['跨 LLM 调用持久化的工作记忆及其当前感知、目标与中间信息', '程序、语义和情景长期记忆', '环境反馈经 grounding procedure 写回工作记忆', '提议、评价、选择、执行与观察组成的概念决策循环'],
+    limitations: '论文提出概念架构并综述文献，没有新增基准实验；它没有规定生产 state schema、transcript/event log 职责、task contract 或业务完成谓词，分类用于组织设计空间而不是实现标准或性能保证。',
+  },
+  'res-agent-reflexion': {
+    authority: 'academic', role: 'core',
+    coverage: ['Actor–Evaluator–Reflection 闭环', '语言反馈', '情景记忆', '跨 trial 的改进'],
+    limitations: '方法依赖环境信号、启发式或 LLM 评价，并在部分任务使用单元测试且需要多次尝试；不证明无外部反馈自评可靠。',
+  },
+  'res-agent-self-refine': {
+    authority: 'academic', role: 'cross-check',
+    coverage: ['同一模型生成、反馈与修订', '迭代停止', '可操作反馈', '七类任务中的输出改进'],
+    limitations: '结果依赖任务化提示与评价标准，许多任务属于输出编辑；不能等同于任意推理错误都能被可靠自纠正。',
+  },
+  'res-agent-no-self-correct': {
+    authority: 'academic', role: 'core',
+    coverage: ['内在自修正定义', '无外部反馈时的性能退化', 'oracle 反馈对照', '等成本和提示公平比较'],
+    limitations: '论文集中研究推理正确性，不应外推为风格、偏好或安全任务都无法迭代；其反方证据针对无外部反馈条件。',
+  },
+  'res-agent-critic': {
+    authority: 'academic', role: 'core',
+    coverage: ['工具交互验证', '外部 critique', 'verify–correct 循环', '搜索、代码、计算器与毒性 API 实验'],
+    limitations: '外部工具本身可能错误、有偏、延迟，并带来隐私和安全风险；改进依赖工具与提示设置，不是通用正确性保证。',
+  },
+  'res-agent-agentbench': {
+    authority: 'academic', role: 'core',
+    coverage: ['八类交互环境', '29 个模型评测', '完成格式、动作、超时与终止', '重复和长程规划失败'],
+    limitations: '评测使用简化提示，未覆盖搜索、反思和多次尝试；环境与模型版本具有时效，结果不代表真实业务可靠性。',
+  },
+  'res-agent-tau-bench': {
+    authority: 'academic', role: 'core',
+    coverage: ['Agent、工具与用户的动态交互', '数据库终态判分', '领域政策', 'pass^k 可靠性'],
+    limitations: '使用模拟用户和两个简化领域，并假设唯一数据库结果；真实单次服务限制与跨 trial 反思不能由该评测直接推出。',
+  },
+  'res-agent-douyin-claude-code': {
+    authority: 'community', role: 'extension',
+    coverage: ['间接文字材料中的 LLM 工具编排', 'ReAct 循环', 'Plan-and-Execute 与重规划', '状态和 LangGraph 示例'],
+    limitations: '原抖音视频受防自动化限制且无可访问字幕；coverage 来自明确源于视频的间接修订文字版，并非原视频正文，GPT-4o、Cursor、Manus 与 LangGraph 均为 2025 语境。',
+    verifiedAt: VERIFIED_AT,
+  },
+};
 
 const resources = [
   { id: 'res-agent-anthropic-effective', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '机制总览', value: '厂商团队总结的工程经验，用于比较 workflow 与 Agent、从简单方案逐步增加自治；它不是跨模型、跨场景都成立的普适论文结论。', verifiedAt: VERIFIED_AT },
@@ -21,6 +183,7 @@ const resources = [
   { id: 'res-agent-toolformer', title: 'Toolformer: Language Models Can Teach Themselves to Use Tools', url: 'https://arxiv.org/abs/2302.04761', source: 'Schick 等', language: '英文', type: '论文', difficulty: '深挖', stage: '工具调用', value: '论文在其评测设定中研究模型学习何时以及如何调用工具的方法；它不等同于生产应用中的 function calling 协议。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-openai-function', title: 'Function Calling', url: 'https://developers.openai.com/api/docs/guides/function-calling', source: 'OpenAI', language: '英文', type: '官方 API 文档', difficulty: '进阶', stage: '工具调用', value: '官方文档用于核对 function calling 的 API 接口语义与消息回填格式；接口提供结构化意图，不保证参数和业务动作正确。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-anthropic-tools', title: 'Writing Tools for Agents', url: 'https://www.anthropic.com/engineering/writing-tools-for-agents', source: 'Anthropic', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '工具设计', value: '厂商团队关于工具命名、描述和返回设计的工程经验，可指导 schema 可用性；实际可靠性仍取决于模型与任务测试。', verifiedAt: VERIFIED_AT },
+  { id: 'res-agent-aws-idempotent-apis', title: 'Making retries safe with idempotent APIs', url: 'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/', source: "AWS Builders' Library", language: '英文', type: '官方工程文章', difficulty: '进阶', stage: '可靠执行', value: 'AWS 分布式 API 工程经验说明如何用调用方请求标识、语义等价响应和晚到请求边界降低重试副作用；具体业务审批与补偿仍需自行设计。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-coala', title: 'Cognitive Architectures for Language Agents', url: 'https://arxiv.org/abs/2309.02427', source: 'Sumers 等', language: '英文', type: '论文', difficulty: '深挖', stage: '状态与记忆', value: '该论文通过提出概念架构与文献综述来组织语言 Agent 研究，用于区分工作记忆、行动空间与决策过程；这种分类不等于实验结论或实现标准。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-reflexion', title: 'Reflexion: Language Agents with Verbal Reinforcement Learning', url: 'https://arxiv.org/abs/2303.11366', source: 'Shinn 等', language: '英文', type: '论文', difficulty: '深挖', stage: '反思恢复', value: '论文在其评测设定中研究把反馈转成语言反思并用于后续尝试的方法，不能据此保证无外部信号的自我批评都会改进。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-self-refine', title: 'Self-Refine: Iterative Refinement with Self-Feedback', url: 'https://arxiv.org/abs/2303.17651', source: 'Madaan 等', language: '英文', type: '论文', difficulty: '深挖', stage: '反思恢复', value: '论文在其评测设定中展示生成、反馈、改写的迭代方式；效果受任务、反馈质量和停止规则影响。', verifiedAt: VERIFIED_AT },
@@ -29,7 +192,7 @@ const resources = [
   { id: 'res-agent-agentbench', title: 'AgentBench: Evaluating LLMs as Agents', url: 'https://arxiv.org/abs/2308.03688', source: 'Liu 等', language: '英文', type: '论文', difficulty: '深挖', stage: '综合验证', value: '论文在其评测设定中构建多环境 Agent 基准并报告结果，用于观察长轨迹失败类型，不代表真实业务可靠性。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-tau-bench', title: 'τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains', url: 'https://arxiv.org/abs/2406.12045', source: 'Yao 等', language: '英文', type: '论文', difficulty: '深挖', stage: '综合验证', value: '论文在其评测设定中评估工具、规则与用户交互任务，适合说明完成判定需要状态证据而不是流畅回答。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-douyin-claude-code', title: 'Claude Code 实作演示补充', url: 'https://www.douyin.com/video/7529703060969508130', source: '抖音创作者', platform: '抖音', language: '中文', type: '社区补充短视频', difficulty: '入门', stage: '实作补充', value: '该短视频仅作真实编码 Agent 操作节奏的实作补充，不作为机制事实依据；课程结论应以可复现实验、官方语义和论文边界为准。', verifiedAt: VERIFIED_AT },
-];
+].map((resource) => ({ ...resource, evidence: evidenceByResourceId[resource.id] }));
 
 const quiz = (id, prompt, choices, answerIndex, explanation) => ({
   id,
@@ -43,6 +206,7 @@ const lessons = [
   {
     id: 'agent-01', moduleId: 'agent-mechanism', order: 1, title: 'Agent、Workflow 与普通 LLM 应用', durationMinutes: 80,
     summary: '从控制权和行动闭环出发，判断何时使用普通调用、确定性 Workflow 或拥有有限自治权的 Agent。',
+    knowledgeNote: agentMechanismNotes['agent-01'],
     objectives: ['用控制权、路径确定性和环境反馈区分 LLM 应用、Workflow 与 Agent', '描述最小单 Agent 的目标、状态、动作、观察和终止组件'],
     concepts: ['Agency 连续谱', 'Workflow', '动作空间', '环境观察', '终止条件'],
     explanations: [
@@ -61,6 +225,7 @@ const lessons = [
   {
     id: 'agent-02', moduleId: 'agent-mechanism', order: 2, title: '目标、约束与任务状态', durationMinutes: 85,
     summary: '把模糊请求改写成可执行任务契约，并让完成判断依赖可观察证据而不是模型自信。',
+    knowledgeNote: agentMechanismNotes['agent-02'],
     objectives: ['把用户意图整理为目标、约束、成功证据和未知项', '区分工作状态、对话记录、事实、假设与环境观察'],
     concepts: ['Task contract', '硬约束与软偏好', '成功证据', '工作状态', '未知项'],
     explanations: [
@@ -79,13 +244,14 @@ const lessons = [
   {
     id: 'agent-03', moduleId: 'agent-mechanism', order: 3, title: '工具调用与 Agent–Computer Interface', durationMinutes: 100,
     summary: '掌握模型提出结构化动作、应用校验和执行、结果作为观察回填的完整工具调用协议。',
+    knowledgeNote: agentMechanismNotes['agent-03'],
     objectives: ['解释 function calling 从工具声明到 observation 回填的生命周期', '设计职责单一、约束清楚且错误结构化的工具 schema'],
     concepts: ['Function calling', 'Tool schema', '宿主执行器', '结构化错误', '最小权限'],
     explanations: [
       { heading: '模型提出动作，应用负责执行', body: 'Function calling 并不是模型直接进入数据库或操作电脑。应用先把工具名、用途和参数 schema 提供给模型；模型返回工具选择与参数候选；宿主程序再做 schema、业务规则、权限、风险和幂等校验，获准后才调用真实系统。模型输出始终是不可信的动作提案，高风险或不可逆操作还要人工确认，执行责任不能外包给自然语言。', keyPoints: ['结构化调用表示意图，不表示参数正确或已执行', '应用必须在模型之外校验权限、业务规则与副作用'] },
       { heading: '结果回填形成闭环', body: '工具应职责单一，参数名明确，使用必填、类型、枚举和范围减少歧义，并返回 success、data、error code、可重试性和证据引用等结构。执行后的 tool result 必须按调用关联带回模型或控制器，成为新的 observation；否则模型不知道动作成功、失败还是返回空结果，容易凭先验编造后续状态。回填后仍需更新工作状态并重新判断完成或下一动作。', keyPoints: ['工具返回既服务程序判断，也为模型提供环境新证据', '错误要可分类，才能选择重试、修参、换工具或终止'] },
     ],
-    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
+    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
     exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查合法、缺参、枚举、额外字段和高风险五类调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举、额外字段和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、五类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
     quiz: [
       quiz('quiz-agent-03-1', '模型生成合法 JSON 工具调用后，应用下一步应做什么？', ['直接视为已执行', '校验 schema、业务规则、权限与风险后再执行', '让模型假装返回结果', '把所有权限交给模型'], 1, '合法 JSON 只满足语法层，宿主仍要完成参数、业务、权限和副作用校验。'),
@@ -97,13 +263,14 @@ const lessons = [
   {
     id: 'agent-04', moduleId: 'agent-mechanism', order: 4, title: 'Agent Loop 与 ReAct', durationMinutes: 100,
     summary: '把 decide、act、observe、update 和 terminate 写成受预算约束的控制循环，并理解 ReAct 的可观察机制。',
+    knowledgeNote: agentMechanismNotes['agent-04'],
     objectives: ['手写带工具结果回填和多类终止状态的最小 Agent loop', '解释 ReAct 与仅生成推理文本的 chain-of-thought 的机制差别'],
     concepts: ['Decide–Act–Observe', 'ReAct', '状态更新', '循环预算', '停止条件'],
     explanations: [
       { heading: '最小循环是控制程序', body: '一个最小 Agent loop 每轮读取目标与当前状态，先检查是否已有完成证据、是否 blocked、预算是否耗尽，再让模型选择受允许的动作；宿主校验并执行动作，把 observation 追加到事件日志并更新工作状态，然后进入下一轮。done、blocked、failed、budget-exhausted 和 handoff 都应成为显式返回值，max turns、时间或成本预算用于阻止无限执行。', keyPoints: ['终止检查与动作执行同样属于循环核心', '状态只能依据动作结果更新，不能先假定成功'] },
       { heading: 'ReAct 让推理与环境反馈交错', body: '普通 chain-of-thought 描述模型内部生成的推理文本，并不要求系统执行动作或取得新证据；ReAct 则把任务相关的推理摘要、结构化 action 和环境 observation 交错组织，让下一步能根据真实反馈调整。产品日志应记录可观察决策摘要、工具参数和结果，而不是索取或暴露隐藏推理。若状态不变却重复同一调用，通常说明缺少进展检测、错误分类或停止预算。', keyPoints: ['ReAct 的关键是行动后吸收 observation，不是展示长篇思维过程', '重复动作、状态无进展和预算耗尽都应触发停止或恢复策略'] },
     ],
-    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
+    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
     exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。', experiment: 'agent-loop' },
     quiz: [
       quiz('quiz-agent-04-1', '最小 Agent loop 中，工具执行后必须先做什么再进入下一轮？', ['删除原始目标', '把结果记录为 observation 并更新状态', '自动扩大预算', '重新加载模型参数'], 1, '环境结果必须先进入事件日志和工作状态，下一轮决策才能建立在新证据上。'),
@@ -115,13 +282,14 @@ const lessons = [
   {
     id: 'agent-05', moduleId: 'agent-mechanism', order: 5, title: '规划、任务分解与重规划', durationMinutes: 105,
     summary: '把计划视为可验证的行动假设，比较即时反应、先规划后执行与搜索策略，并在新观察下重规划。',
+    knowledgeNote: agentMechanismNotes['agent-05'],
     objectives: ['依据任务长度、依赖和反馈频率选择 reactive 或 plan-and-execute', '把复杂目标分解为有产物、有依赖、有验证点的步骤并动态修订'],
     concepts: ['Reactive', 'Plan-and-execute', '任务分解', '重规划', '搜索式规划'],
     explanations: [
       { heading: '按任务结构选择规划策略', body: 'Reactive 策略每轮依据最新 observation 决定下一动作，适合短任务或环境变化频繁的场景，但可能短视和重复。Plan-and-execute 先生成里程碑再逐步执行，适合依赖清楚的长任务，代价是初始计划可能很快过时。Plan-and-Solve 强调先列计划，ReWOO 探索规划与观察解耦，Tree of Thoughts 搜索多个候选思路；方法越重，模型调用、评价误差和延迟也越高。', keyPoints: ['规划深度应与任务依赖和错误成本匹配', '不存在对所有任务最优的单一规划范式'] },
       { heading: '好分解必须可执行和可验证', body: '合理子任务应产生明确产物，依赖关系可排序，粒度足以由一个工具或短循环完成，并在边界设置验证点；“研究一下”“处理数据”这类动作无法判断进展。计划只是基于当前 belief 的假设，新约束、空结果、权限变化或关键步骤失败后，应依据 observation 替换步骤、调整依赖或整体重规划，而不是永远服从初始文本。重规划也要受次数和成本预算限制。', keyPoints: ['用产物、依赖、动作和验收标准检查分解质量', '新证据优先于旧计划，同时必须限制重规划震荡'] },
     ],
-    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper'],
+    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper', 'res-agent-aws-idempotent-apis'],
     exercise: { title: '计划与重规划棋盘', brief: '为供应商研究任务分别设计 reactive、plan-and-execute 与混合策略，并注入数据源故障。', steps: ['为三种策略列出动作、产物、依赖、验证点和预算，说明各自适用条件', '在实验中注入空结果、超时和新约束，决定重试、换动作、替换步骤、重规划或阻塞'], deliverable: '三份策略草图和一份基于 observation 的计划修订记录。', experiment: 'plan-recovery' },
     quiz: [
       quiz('quiz-agent-05-1', '哪种情况更适合先规划后执行？', ['只有一步且环境快速变化', '多个有明确依赖和中间产物的步骤', '没有任何可验证结果', '动作空间只有一个固定函数'], 1, '有依赖的长任务受益于里程碑和验证点；极短或变化频繁的任务通常更适合 reactive。'),
@@ -133,13 +301,14 @@ const lessons = [
   {
     id: 'agent-06', moduleId: 'agent-mechanism', order: 6, title: '失败恢复、反思与外部验证', durationMinutes: 110,
     summary: '按失败类型选择有限恢复动作，用外部证据校准反思，并防止同一失败动作反复执行。',
+    knowledgeNote: agentMechanismNotes['agent-06'],
     objectives: ['区分传输、参数、业务、语义、权限和能力失败并选择恢复动作', '说明 reflection 的适用条件与外部验证相对无依据自评的优势'],
     concepts: ['错误分类', '重试预算', 'Reflection', '外部验证', 'Blocked 与 handoff'],
     explanations: [
       { heading: '先分类再恢复', body: '工具失败后先保存原始 error code、参数、是否产生副作用和可重试标记，再分类处理：临时传输错误可指数退避并有限重试；参数错误依据结构化反馈修参；空结果或业务冲突要换查询或重规划；权限不足应 blocked 并请求授权；能力边界则澄清、降级或 handoff。任何重试都要用幂等键、次数和成本预算保护，不能把所有异常都交给模型自由猜。', keyPoints: ['恢复策略由错误类型和副作用决定', 'blocked 与 handoff 是正常受控结果，不是必须隐藏的失败'] },
       { heading: '反思需要可校准反馈', body: 'Reflection 可以把失败轨迹压缩为下一次尝试的约束，Self-Refine、Reflexion 等工作展示了特定设置中的迭代方法，但模型只凭自身文本批评可能重复原错误甚至降低质量。测试、解析器、数据库状态、规则检查或人工反馈等外部验证通常更强，因为它们提供独立、可观察的信号。系统还应记录动作指纹、失败原因和状态差异；同一动作无进展达到阈值就换策略、阻塞或交接。', keyPoints: ['反思是恢复候选，不是自动正确性证明', '外部信号、动作去重和进展检测共同限制失败循环'] },
     ],
-    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench'],
+    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-aws-idempotent-apis'],
     exercise: { title: '构建失败决策表', brief: '为一个会查询并更新工单的 Agent 设计从错误观察到恢复或终止的确定性决策表。', steps: ['为传输、参数、空结果、业务冲突、权限和能力失败写出可观察信号与副作用风险', '为每类选择有限重试、修参、换工具、重规划、澄清、blocked 或 handoff，并加入动作指纹去重'], deliverable: '一张包含错误证据、预算、幂等要求和终止出口的恢复决策表。' },
     quiz: [
       quiz('quiz-agent-06-1', '权限不足的工具调用最合理的默认处理是什么？', ['不断重试', '记录证据并 blocked，按设计请求授权或 handoff', '让模型伪造权限', '删除错误日志'], 1, '权限错误不会因重复相同调用自然消失，应明确阻塞原因并进入授权或交接路径。'),
@@ -151,6 +320,7 @@ const lessons = [
   {
     id: 'agent-07', moduleId: 'agent-mechanism', order: 7, title: '上下文与工作记忆', durationMinutes: 95,
     summary: '把完整轨迹整理成事件日志、状态快照和下一轮最小上下文，保留来源、约束与未决失败。',
+    knowledgeNote: agentMechanismNotes['agent-07'],
     objectives: ['区分 transcript、event log、state、working memory 与 context', '在压缩长轨迹时保留硬约束、观察来源、产物引用和未解决问题'],
     concepts: ['Transcript', 'Event log', 'Working state', 'Context assembly', 'Belief 与 observation'],
     explanations: [
@@ -169,6 +339,7 @@ const lessons = [
   {
     id: 'agent-08', moduleId: 'agent-mechanism', order: 8, title: '单 Agent 综合设计与面试压力测试', durationMinutes: 120,
     summary: '综合设计一个只读仓库诊断 Agent，并在机制、框架价值和后续模块边界上接受压力测试。',
+    knowledgeNote: agentMechanismNotes['agent-08'],
     objectives: ['交付包含任务契约、状态、工具、循环、恢复与终止的单 Agent 设计', '解释不用框架的最小实现以及 Harness、RAG、MCP 和多 Agent 的接口边界'],
     concepts: ['端到端设计', '状态机', '框架抽象', 'Handoff', '模块边界'],
     explanations: [

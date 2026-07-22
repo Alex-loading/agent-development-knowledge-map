@@ -22,6 +22,20 @@ const expectedLessonTitles = [
   '单 Agent 综合设计与面试压力测试',
 ];
 
+const agentNoteExpectations = new Map([
+  ['agent-01', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['agent-02', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['agent-03', { minMinutes: 30, maxMinutes: 40, minLength: 4500 }],
+  ['agent-04', { minMinutes: 30, maxMinutes: 40, minLength: 4500 }],
+  ['agent-05', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+  ['agent-06', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['agent-07', { minMinutes: 30, maxMinutes: 35, minLength: 4200 }],
+  ['agent-08', { minMinutes: 35, maxMinutes: 40, minLength: 5000 }],
+]);
+const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+const validEvidenceRoles = new Set(['core', 'cross-check', 'extension']);
+const allowedResourceVerificationDates = new Set(['2026-07-20', '2026-07-22']);
+
 const expectedResourceUrls = new Map([
   ['res-agent-anthropic-effective', 'https://www.anthropic.com/engineering/building-effective-agents'],
   ['res-agent-openai-guide', 'https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents/'],
@@ -43,6 +57,7 @@ const expectedResourceUrls = new Map([
   ['res-agent-toolformer', 'https://arxiv.org/abs/2302.04761'],
   ['res-agent-openai-function', 'https://developers.openai.com/api/docs/guides/function-calling'],
   ['res-agent-anthropic-tools', 'https://www.anthropic.com/engineering/writing-tools-for-agents'],
+  ['res-agent-aws-idempotent-apis', 'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/'],
   ['res-agent-coala', 'https://arxiv.org/abs/2309.02427'],
   ['res-agent-reflexion', 'https://arxiv.org/abs/2303.11366'],
   ['res-agent-self-refine', 'https://arxiv.org/abs/2303.17651'],
@@ -84,6 +99,24 @@ function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
 }
 
+function assertDeepFrozen(value, label, seen = new Set()) {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  assert.ok(Object.isFrozen(value), `${label}: 公开课程数据及其嵌套结构必须被冻结`);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    assertDeepFrozen(nestedValue, `${label}.${key}`, seen);
+  }
+}
+
+function assertValidDateOnOrBefore(value, latestDate, label) {
+  assert.equal(typeof value, 'string', `${label}: 必须为 YYYY-MM-DD 字符串`);
+  assert.match(value, /^\d{4}-\d{2}-\d{2}$/, `${label}: 必须严格使用 YYYY-MM-DD`);
+  const [year, month, day] = value.split('-').map(Number);
+  const normalized = new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10);
+  assert.equal(normalized, value, `${label}: 必须是真实存在的日期`);
+  assert.ok(value <= latestDate, `${label}: 不得晚于 ${latestDate}`);
+}
+
 test('Agent mechanism contains eight ordered complete lessons', () => {
   assert.equal(agentMechanism.id, 'agent-mechanism');
   assert.equal(agentMechanism.title, 'Agent 机制');
@@ -112,6 +145,111 @@ test('Agent mechanism contains eight ordered complete lessons', () => {
     assert.ok(lesson.completionCriteria.length >= 2, lesson.id);
     assert.equal(lesson.interviewQuestionIds.length, 3, lesson.id);
   }
+});
+
+test('every Agent mechanism lesson has a source-grounded long-form knowledge note', () => {
+  const resourcesById = new Map(
+    agentMechanism.resources.map((resource) => [resource.id, resource]),
+  );
+  assert.deepEqual(
+    agentMechanism.lessons.filter((lesson) => lesson.knowledgeNote).map((lesson) => lesson.id),
+    expectedLessonIds,
+    '八节 Agent 课程都必须提供 knowledgeNote',
+  );
+  assert.equal(
+    new Set(agentMechanism.lessons.map((lesson) => lesson.knowledgeNote)).size,
+    expectedLessonIds.length,
+    '每节 Agent 课程必须使用不同的 knowledgeNote 对象',
+  );
+
+  for (const lesson of agentMechanism.lessons) {
+    const expectation = agentNoteExpectations.get(lesson.id);
+    const note = lesson.knowledgeNote;
+    assert.ok(expectation, `${lesson.id}: 必须有知识笔记发布要求`);
+    assert.ok(note, `${lesson.id}: 必须提供 knowledgeNote`);
+    assert.ok(typeof note.introduction === 'string' && note.introduction.trim().length > 0,
+      `${lesson.id}: introduction 不能为空`);
+    assert.ok(typeof note.nextStep === 'string' && note.nextStep.trim().length > 0,
+      `${lesson.id}: nextStep 不能为空`);
+    assert.ok(Array.isArray(note.sections), `${lesson.id}: sections 必须为数组`);
+
+    const sectionIds = note.sections.map(({ id }) => id);
+    const bodyLength = [
+      note.introduction,
+      ...note.sections.flatMap(({ paragraphs }) => paragraphs),
+      note.nextStep,
+    ].reduce((total, value) => total + (typeof value === 'string' ? value.trim().length : 0), 0);
+    assert.ok(
+      Number.isInteger(note.readingMinutes)
+        && note.readingMinutes >= expectation.minMinutes
+        && note.readingMinutes <= expectation.maxMinutes,
+      `${lesson.id}: 阅读时长应为 ${expectation.minMinutes}–${expectation.maxMinutes} 分钟`,
+    );
+    assert.ok(note.sections.length >= 5 && note.sections.length <= 7,
+      `${lesson.id}: 应包含 5–7 个递进章节`);
+    assertUnique(sectionIds, `${lesson.id}: knowledgeNote section id`);
+    assert.ok(bodyLength >= expectation.minLength && bodyLength <= 9000,
+      `${lesson.id}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
+
+    const lessonResourceIds = new Set(lesson.resourceIds);
+    const lessonEvidenceIds = new Set(
+      lesson.resourceIds.filter((id) => resourcesById.get(id)?.evidence),
+    );
+    for (const section of note.sections) {
+      assert.match(section.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        `${lesson.id}: section id 必须为 kebab-case`);
+      assert.ok(typeof section.title === 'string' && section.title.trim().length >= 4,
+        `${lesson.id}:${section.id}: title 至少需要 4 个非空字符`);
+      assert.ok(Array.isArray(section.paragraphs)
+        && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
+      `${lesson.id}:${section.id}: 需要 2–4 个正文段落`);
+      assert.ok(section.paragraphs.every((paragraph) => (
+        typeof paragraph === 'string' && paragraph.trim().length >= 60
+      )), `${lesson.id}:${section.id}: 每个正文段落至少需要 60 个字符`);
+      assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
+        `${lesson.id}:${section.id}: 至少需要 2 个要点`);
+      assert.ok(section.keyPoints.every((keyPoint) => (
+        typeof keyPoint === 'string' && keyPoint.trim().length > 0
+      )), `${lesson.id}:${section.id}: 每个要点必须是非空字符串`);
+      assert.ok(Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
+        `${lesson.id}:${section.id}: 至少需要 1 个来源`);
+      assert.ok(section.sourceIds.every((id) => resourcesById.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部存在于全局资源库`);
+      assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于 lesson.resourceIds`);
+      assert.ok(section.sourceIds.every((id) => lessonEvidenceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于当前 lesson 的有效 evidence set`);
+    }
+    assert.ok(Array.isArray(note.misconceptions)
+      && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
+    `${lesson.id}: 需要 4–6 个常见误区`);
+    assert.ok(note.misconceptions.every((misconception) => (
+      typeof misconception?.claim === 'string' && misconception.claim.trim().length > 0
+      && typeof misconception.correction === 'string' && misconception.correction.trim().length > 0
+    )), `${lesson.id}: 每个误区必须具有非空 claim 和 correction`);
+    assert.ok(Array.isArray(note.recap) && note.recap.length >= 5,
+      `${lesson.id}: recap 至少需要 5 个回顾要点`);
+    assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${lesson.id}: 每个 recap 项必须是非空字符串`);
+  }
+});
+
+test('Agent mechanism note registry exactly matches public lesson note identities and is deeply frozen', async () => {
+  const { agentMechanismNotes } = await import('../src/data/agent-mechanism-notes.js');
+
+  assert.deepEqual(
+    Object.keys(agentMechanismNotes),
+    expectedLessonIds,
+    '笔记注册表必须覆盖且只覆盖八节 Agent 课程',
+  );
+  for (const lesson of agentMechanism.lessons) {
+    assert.equal(
+      lesson.knowledgeNote,
+      agentMechanismNotes[lesson.id],
+      `${lesson.id}: knowledgeNote 必须引用注册表中的同一对象`,
+    );
+  }
+  assertDeepFrozen(agentMechanismNotes, 'agentMechanismNotes');
 });
 
 test('only the three specified lessons expose interactive experiments', () => {
@@ -158,6 +296,16 @@ test('Agent course data is deeply frozen against representative mutations', () =
   ];
   for (const value of representativeValues) assert.equal(Object.isFrozen(value), true);
 
+  for (const candidate of agentMechanism.resources) {
+    assert.ok(candidate.evidence, `${candidate.id}: 冻结验证前必须提供 evidence`);
+    assertDeepFrozen(candidate.evidence, `${candidate.id}.evidence`);
+  }
+  for (const candidate of agentMechanism.lessons) {
+    assert.ok(candidate.knowledgeNote, `${candidate.id}: 冻结验证前必须提供 knowledgeNote`);
+    assertDeepFrozen(candidate.knowledgeNote, `${candidate.id}.knowledgeNote`);
+  }
+  assertDeepFrozen(agentMechanism, 'agentMechanism');
+
   const snapshot = structuredClone(agentMechanism);
   assert.throws(() => { agentMechanism.title = '被篡改'; }, TypeError);
   assert.throws(() => { agentMechanism.lessons.push(lesson); }, TypeError);
@@ -197,8 +345,8 @@ test('every quiz item has a valid answer and explanation', () => {
   }
 });
 
-test('course has exactly 28 fixed, fully described and platform-resolvable resources', () => {
-  assert.equal(agentMechanism.resources.length, 28);
+test('course has exactly 29 fixed, fully described and platform-resolvable resources', () => {
+  assert.equal(agentMechanism.resources.length, 29);
   assert.deepEqual(
     new Map(agentMechanism.resources.map(({ id, url }) => [id, url])),
     expectedResourceUrls,
@@ -206,7 +354,9 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
 
   for (const resource of agentMechanism.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-20', resource.id);
+    assertValidDateOnOrBefore(resource.verifiedAt, '2026-07-22', `${resource.id}: verifiedAt`);
+    assert.ok(allowedResourceVerificationDates.has(resource.verifiedAt),
+      `${resource.id}: verifiedAt 必须属于已知真实核验日期集合`);
     for (const field of ['id', 'title', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
@@ -256,8 +406,65 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
     assert.match(byId.get(id).value, /工程经验/);
   }
   assert.match(byId.get('res-agent-openai-function').value, /API.*语义/);
+  assert.equal(byId.get('res-agent-aws-idempotent-apis').source, "AWS Builders' Library");
+  assert.match(byId.get('res-agent-aws-idempotent-apis').value, /请求标识|幂等/);
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('官方课程')));
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('社区补充')));
+});
+
+test('all 29 Agent resources provide complete evidence cards', () => {
+  assert.equal(agentMechanism.resources.length, 29, 'Agent 课程必须维护 29 份资源');
+  for (const resource of agentMechanism.resources) {
+    const { evidence } = resource;
+    assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(evidence.authority), `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validEvidenceRoles.has(evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(evidence.coverage) && evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(evidence.coverage.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${resource.id}: evidence.coverage 必须只包含非空字符串`);
+    assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.trim().length >= 15,
+      `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+    if (evidence.verifiedAt !== undefined) {
+      assertValidDateOnOrBefore(
+        evidence.verifiedAt,
+        '2026-07-22',
+        `${resource.id}: evidence.verifiedAt`,
+      );
+    }
+  }
+
+  const functionCalling = agentMechanism.resources.find(
+    ({ id }) => id === 'res-agent-openai-function',
+  );
+  assert.ok(functionCalling.evidence.verifiedAt,
+    'res-agent-openai-function: 时敏 API 语义必须记录 evidence.verifiedAt');
+  assert.equal(functionCalling.evidence.verifiedAt, '2026-07-22',
+    'res-agent-openai-function: 必须保留本轮官方文档语义核验日期');
+
+  const idempotentApis = agentMechanism.resources.find(
+    ({ id }) => id === 'res-agent-aws-idempotent-apis',
+  );
+  assert.equal(idempotentApis.evidence.authority, 'official');
+  assert.equal(idempotentApis.evidence.role, 'core');
+  assert.equal(idempotentApis.evidence.verifiedAt, '2026-07-22');
+  assert.match(idempotentApis.evidence.coverage.join(' '), /client request identifier|幂等重试|晚到请求/);
+  assert.match(idempotentApis.evidence.limitations, /AWS.*经验.*不证明.*订单/);
+
+  const byId = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
+  for (const id of ['res-agent-datawhale-bili', 'res-agent-disney-planner-bili']) {
+    const { evidence } = byId.get(id);
+    assert.equal(evidence.authority, 'community', `${id}: 已验证社区发布者`);
+    assert.equal(evidence.role, 'extension', `${id}: metadata-only 不得升级角色`);
+    assert.match(evidence.coverage.join(' '), /标题|作者|时长|导航|元数据/,
+      `${id}: coverage 只能描述已访问元数据`);
+    assert.match(evidence.limitations, /字幕.*空|未取得.*正文/,
+      `${id}: 必须公开无字幕正文限制`);
+  }
+  assert.equal(byId.get('res-agent-douyin-claude-code').evidence.role, 'extension');
+  assert.match(byId.get('res-agent-douyin-claude-code').evidence.limitations,
+    /间接.*文字版|并非原视频正文/,
+    '抖音材料必须声明 equivalent 文字材料的间接边界');
 });
 
 test('lesson references resolve to all resources and interviews in both directions', () => {

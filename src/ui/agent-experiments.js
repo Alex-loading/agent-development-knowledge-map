@@ -338,6 +338,8 @@ export function renderPlanRecoveryExperiment() {
         observation: observation.value,
         retriesUsed: readInteger(retriesUsed),
         maxRetries: readInteger(maxRetries),
+        operationKind: 'read-only',
+        reconciliationStatus: 'not-required',
       });
       setDecision(result, decision.action, [
         { term: '动作', value: decision.action },
@@ -389,7 +391,7 @@ export function renderPlanRecoveryExperiment() {
     agentLabHeader('03', 'plan-recovery-title', '计划恢复棋盘', '注入执行观察并切换策略，比较重试、换动作、替换步骤、重规划和阻塞。'),
     element('p', {
       className: 'experiment-caveat',
-      text: '本台是确定性教学模拟，只运行本地决策表；不调用真实模型，也不调用第三方 API。它不模拟真实模型的规划能力，也不能证明模型会按此方式规划。',
+      text: '本台是确定性教学模拟，只运行本地决策表；不调用真实模型，也不调用第三方 API。实验操作固定为无副作用的只读供应商查询，因此 timeout 后的 retry 仅适用于无副作用读操作；副作用动作必须先对账。它不模拟真实模型的规划能力，也不能证明模型会按此方式规划。',
     }),
     element('div', { className: 'experiment-grid' }, [
       element('div', { className: 'experiment-controls agent-controls' }, [

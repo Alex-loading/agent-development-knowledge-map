@@ -957,6 +957,8 @@ test('loop and plan labs visibly state their deterministic teaching boundaries',
   }
   const planCaveat = document.querySelector('.plan-recovery-lab .experiment-caveat');
   assert.match(planCaveat.textContent, /不(?:模拟|证明)[^。]*真实模型[^。]*规划能力/);
+  assert.match(planCaveat.textContent, /固定为[^。]*只读[^。]*供应商查询/);
+  assert.match(planCaveat.textContent, /retry[^。]*仅适用于[^。]*无副作用读操作/);
 });
 
 test('Agent loop lab exposes core decisions, invalid input and a focused reset state', (t) => {
