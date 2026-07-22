@@ -172,9 +172,11 @@ test('every Agent mechanism lesson has a source-grounded long-form knowledge not
     assert.ok(Array.isArray(note.sections), `${lesson.id}: sections 必须为数组`);
 
     const sectionIds = note.sections.map(({ id }) => id);
-    const bodyLength = note.introduction.length
-      + note.sections.flatMap(({ paragraphs }) => paragraphs).join('').length
-      + note.nextStep.length;
+    const bodyLength = [
+      note.introduction,
+      ...note.sections.flatMap(({ paragraphs }) => paragraphs),
+      note.nextStep,
+    ].reduce((total, value) => total + (typeof value === 'string' ? value.trim().length : 0), 0);
     assert.ok(
       Number.isInteger(note.readingMinutes)
         && note.readingMinutes >= expectation.minMinutes
@@ -200,7 +202,7 @@ test('every Agent mechanism lesson has a source-grounded long-form knowledge not
         && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
       `${lesson.id}:${section.id}: 需要 2–4 个正文段落`);
       assert.ok(section.paragraphs.every((paragraph) => (
-        typeof paragraph === 'string' && paragraph.length >= 60
+        typeof paragraph === 'string' && paragraph.trim().length >= 60
       )), `${lesson.id}:${section.id}: 每个正文段落至少需要 60 个字符`);
       assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
         `${lesson.id}:${section.id}: 至少需要 2 个要点`);
@@ -415,7 +417,7 @@ test('all 28 Agent resources provide complete evidence cards', () => {
       `${resource.id}: evidence.coverage 不能为空`);
     assert.ok(evidence.coverage.every((item) => typeof item === 'string' && item.trim().length > 0),
       `${resource.id}: evidence.coverage 必须只包含非空字符串`);
-    assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.length >= 15,
+    assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.trim().length >= 15,
       `${resource.id}: evidence.limitations 至少需要 15 个字符`);
     if (evidence.verifiedAt !== undefined) {
       assertValidDateOnOrBefore(

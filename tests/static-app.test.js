@@ -477,8 +477,10 @@ test('release guide records LLM and Agent knowledge-note scope with only Harness
   for (const title of ['Agent Harness', '上下文、RAG 与记忆']) {
     assert.ok(fallbackStatement.includes(title), `README should preserve the explanations fallback for ${title}`);
   }
-  assert.ok(!fallbackStatement.includes('Agent 机制'),
-    'README should not describe Agent mechanism as an explanations fallback');
+  for (const title of ['LLM 基础', 'Agent 机制']) {
+    assert.ok(!fallbackStatement.includes(title),
+      `README should not describe ${title} as an explanations fallback`);
+  }
   assert.match(fallbackStatement, /尚未迁移[^\n]{0,20}同等长文/);
   assert.doesNotMatch(readme, /这个试点目前只覆盖 `llm-01`/);
   assert.doesNotMatch(readme, /LLM 第一课知识笔记试点/);
