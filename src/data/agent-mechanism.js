@@ -282,7 +282,7 @@ const lessons = [
       { heading: '按任务结构选择规划策略', body: 'Reactive 策略每轮依据最新 observation 决定下一动作，适合短任务或环境变化频繁的场景，但可能短视和重复。Plan-and-execute 先生成里程碑再逐步执行，适合依赖清楚的长任务，代价是初始计划可能很快过时。Plan-and-Solve 强调先列计划，ReWOO 探索规划与观察解耦，Tree of Thoughts 搜索多个候选思路；方法越重，模型调用、评价误差和延迟也越高。', keyPoints: ['规划深度应与任务依赖和错误成本匹配', '不存在对所有任务最优的单一规划范式'] },
       { heading: '好分解必须可执行和可验证', body: '合理子任务应产生明确产物，依赖关系可排序，粒度足以由一个工具或短循环完成，并在边界设置验证点；“研究一下”“处理数据”这类动作无法判断进展。计划只是基于当前 belief 的假设，新约束、空结果、权限变化或关键步骤失败后，应依据 observation 替换步骤、调整依赖或整体重规划，而不是永远服从初始文本。重规划也要受次数和成本预算限制。', keyPoints: ['用产物、依赖、动作和验收标准检查分解质量', '新证据优先于旧计划，同时必须限制重规划震荡'] },
     ],
-    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper'],
+    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper', 'res-agent-aws-idempotent-apis'],
     exercise: { title: '计划与重规划棋盘', brief: '为供应商研究任务分别设计 reactive、plan-and-execute 与混合策略，并注入数据源故障。', steps: ['为三种策略列出动作、产物、依赖、验证点和预算，说明各自适用条件', '在实验中注入空结果、超时和新约束，决定重试、换动作、替换步骤、重规划或阻塞'], deliverable: '三份策略草图和一份基于 observation 的计划修订记录。', experiment: 'plan-recovery' },
     quiz: [
       quiz('quiz-agent-05-1', '哪种情况更适合先规划后执行？', ['只有一步且环境快速变化', '多个有明确依赖和中间产物的步骤', '没有任何可验证结果', '动作空间只有一个固定函数'], 1, '有依赖的长任务受益于里程碑和验证点；极短或变化频繁的任务通常更适合 reactive。'),
