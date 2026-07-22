@@ -352,7 +352,8 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
 
   for (const resource of agentMechanism.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-20', resource.id);
+    assertValidDateOnOrBefore(resource.verifiedAt, '2026-07-22', `${resource.id}: verifiedAt`);
+    assert.equal(resource.verifiedAt, '2026-07-22', `${resource.id}: 本轮 metadata 核验日期`);
     for (const field of ['id', 'title', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
@@ -433,6 +434,23 @@ test('all 28 Agent resources provide complete evidence cards', () => {
   );
   assert.ok(functionCalling.evidence.verifiedAt,
     'res-agent-openai-function: 时敏 API 语义必须记录 evidence.verifiedAt');
+  assert.equal(functionCalling.evidence.verifiedAt, '2026-07-22',
+    'res-agent-openai-function: 必须保留本轮官方文档语义核验日期');
+
+  const byId = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
+  for (const id of ['res-agent-datawhale-bili', 'res-agent-disney-planner-bili']) {
+    const { evidence } = byId.get(id);
+    assert.equal(evidence.authority, 'community', `${id}: 已验证社区发布者`);
+    assert.equal(evidence.role, 'extension', `${id}: metadata-only 不得升级角色`);
+    assert.match(evidence.coverage.join(' '), /标题|作者|时长|导航|元数据/,
+      `${id}: coverage 只能描述已访问元数据`);
+    assert.match(evidence.limitations, /字幕.*空|未取得.*正文/,
+      `${id}: 必须公开无字幕正文限制`);
+  }
+  assert.equal(byId.get('res-agent-douyin-claude-code').evidence.role, 'extension');
+  assert.match(byId.get('res-agent-douyin-claude-code').evidence.limitations,
+    /间接.*文字版|并非原视频正文/,
+    '抖音材料必须声明 equivalent 文字材料的间接边界');
 });
 
 test('lesson references resolve to all resources and interviews in both directions', () => {

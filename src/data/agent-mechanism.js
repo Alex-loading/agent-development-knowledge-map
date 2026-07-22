@@ -1,4 +1,158 @@
-const VERIFIED_AT = '2026-07-20';
+const VERIFIED_AT = '2026-07-22';
+
+const evidenceByResourceId = {
+  'res-agent-anthropic-effective': {
+    authority: 'official', role: 'core',
+    coverage: ['Agent 与 workflow 的控制权差异', '提示链、路由、并行、编排器与评估器模式', '自治成本、停止条件与工具设计'],
+    limitations: 'Anthropic 团队的在线工程经验，不是跨模型、跨任务的对照实验；页面内容仍可能随产品实践演进。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-openai-guide': {
+    authority: 'official', role: 'core',
+    coverage: ['Agent 的适用条件与组成', '模型、工具和指令的职责', '单 Agent 与多 Agent 编排', '运行循环退出、护栏与评测'],
+    limitations: '工程指南不是 API 规范；示例模型、成本和产品实现具有时效性，结论需要在目标业务和权限边界内验证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-berkeley-course': {
+    authority: 'academic', role: 'extension',
+    coverage: ['Agent 推理、规划和工具的课程知识路线', '基础设施、评测、安全与多 Agent 的主题导航'],
+    limitations: '只核验公开课程页和 syllabus，未把逐讲正文作为本模块证据；不能据课程目录推断机制细节或性能结论。',
+  },
+  'res-agent-hf-course': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['Agent 基础概念', 'Think–Act–Observe 循环', '工具与动作', 'smolagents 实践路线'],
+    limitations: '仓库 main 分支持续更新，框架示例用于教学而不证明一般可靠性；具体接口必须按所用版本复核。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-ms-course': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['Agent、环境和工具基础', 'Agent 的适用与不适用情形', '课程实现路线与框架入口'],
+    limitations: '核验时课程已扩展为 18 lessons，并转向 Microsoft Agent Framework 与 Foundry V2；旧视频代码和当前课程版本不可混用。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-hello-agents': {
+    authority: 'community', role: 'cross-check',
+    coverage: ['Agent 与环境的行动闭环', '目标分解、工具使用和动态修正', '框架分层与统一工具抽象'],
+    limitations: '社区教材适合作为中文实践对照，但其抽象不是厂商 API 规范，框架与接口的版本语义需要另行核验。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-dlai-agentic': {
+    authority: 'expert', role: 'extension',
+    coverage: ['反思、工具、规划与多 Agent 的课程路线', '评测、错误分析和部署主题导航'],
+    limitations: '只访问课程介绍与 outline，未取得完整讲义或字幕；只能提供学习路线，不能承担机制效果或生产可靠性主张。',
+  },
+  'res-agent-lilian-weng': {
+    authority: 'expert', role: 'cross-check',
+    coverage: ['规划与任务分解', 'ReAct', '短期与长期记忆', '工具使用和 Agent 挑战'],
+    limitations: '这是 2023 年的二手技术综述；论文结果、模型版本和实验数字需要回到原始工作核验，不代表当前实现标准。',
+  },
+  'res-agent-lihongyi': {
+    authority: 'expert', role: 'core',
+    coverage: ['目标、观察与动作的 Agent 直觉', '借助环境反馈调整行为', '工具使用', '规划、树搜索和 world model 的教学比较'],
+    limitations: '正文来自第三方繁体中文字幕，可能有转写误差；涉及 2023–2025 年论文、模型和 benchmark 的数字不能脱离年份与原始实验引用。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-datawhale-bili': {
+    authority: 'community', role: 'extension',
+    coverage: ['视频标题、作者、时长与所属课程等导航元数据'],
+    limitations: 'Bilibili 字幕数组为空，未取得可访问正文；不得从标题或简介推断 Agent 机制，也不能用本资源支撑任何实质章节。',
+  },
+  'res-agent-disney-planner-bili': {
+    authority: 'community', role: 'extension',
+    coverage: ['视频标题、作者、时长与简介等导航元数据'],
+    limitations: 'Bilibili 字幕数组为空，未取得讲解正文；简介不等于讲解，且百度云比赛合作语境可能过时，不能作为规划机制证据。',
+  },
+  'res-agent-ms-tool-video': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['外部工具扩展', '工具串联', '最小权限与错误处理', 'Semantic Kernel 的工具选择行为'],
+    limitations: '正文来自含三重重复的自动字幕，需去噪理解；Semantic Kernel 的 auto/required 行为依赖具体版本，不能当作通用协议。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-ms-plan-video': {
+    authority: 'official', role: 'cross-check',
+    coverage: ['复杂任务拆分为子任务', '多 Agent 分派', '结构化计划', 'Pydantic 校验与执行示例'],
+    limitations: '自动字幕有转写噪声；视频对应旧 Chapter 7 与 Pydantic 示例，必须和当前 18 课课程及最新框架版本分开看待。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-react-paper': {
+    authority: 'academic', role: 'core',
+    coverage: ['reason–act–observe 交替', '环境反馈进入后续决策', 'ReAct、CoT 与 Act 对照', '问答与交互环境实验'],
+    limitations: '实验使用 PaLM-540B、少量人工轨迹和受限动作空间；结果不构成通用控制器、生产安全或所有任务优势的证明。',
+  },
+  'res-agent-tot-paper': {
+    authority: 'academic', role: 'core',
+    coverage: ['thought 单元', '候选生成与状态评价', 'BFS 与 DFS', '前瞻、回溯和搜索式规划'],
+    limitations: '仅在三个特制任务中评估，搜索成本较高且依赖正确的问题分解与评价器；不能直接外推到开放环境。',
+  },
+  'res-agent-plan-solve': {
+    authority: 'academic', role: 'core',
+    coverage: ['先计划后求解', '子任务分解', 'Plan-and-Solve 与 PS+ 提示', '推理错误分类'],
+    limitations: '研究对象是静态推理提示，不包含环境动作、工具调用或动态重规划；不能证明初始计划在变化环境中始终有效。',
+  },
+  'res-agent-rewoo': {
+    authority: 'academic', role: 'core',
+    coverage: ['Planner–Worker–Solver 架构', '证据占位符', '推理与观察解耦', 'token 效率和工具失败讨论'],
+    limitations: '预先生成的固定蓝图减少在线适应性，不适合步骤强依赖新观察的任务；实验效率收益受其任务和模型设置限制。',
+  },
+  'res-agent-toolformer': {
+    authority: 'academic', role: 'cross-check',
+    coverage: ['自监督 API 调用标注', '调用时机与参数学习', '工具结果并入生成', '五类工具实验'],
+    limitations: '论文不覆盖工具链、交互修订、权限校验和副作用治理；研究目标不等同于生产应用的 function calling 协议。',
+  },
+  'res-agent-openai-function': {
+    authority: 'official', role: 'core',
+    coverage: ['五步 tool-call 生命周期', 'JSON Schema 工具定义', 'call_id 与 function_call_output 回填', '并行调用、strict 与工具建议'],
+    limitations: '当前文档含 GPT-5.6、Responses API、GPT-5.4+ tool_search 等时敏语义；结构化输出不保证参数满足业务规则，也不保证动作安全或成功。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-anthropic-tools': {
+    authority: 'official', role: 'core',
+    coverage: ['工具契约', '少而高信号的工具集合', '命名、描述和 schema', '返回上下文、token 效率与评测迭代'],
+    limitations: '这是 2025-09-11 的厂商工程经验且在线标题可能调整；效果依赖模型与任务，不能替代本项目权限、业务和回归测试。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-agent-coala': {
+    authority: 'academic', role: 'core',
+    coverage: ['工作记忆与长期记忆', '程序、语义和情景记忆', '内部与外部动作', '通用决策循环'],
+    limitations: '论文提出概念架构并综述文献，没有新增基准实验；分类用于组织设计空间，不是实现标准或性能保证。',
+  },
+  'res-agent-reflexion': {
+    authority: 'academic', role: 'core',
+    coverage: ['Actor–Evaluator–Reflection 闭环', '语言反馈', '情景记忆', '跨 trial 的改进'],
+    limitations: '方法依赖环境信号、启发式或 LLM 评价，并在部分任务使用单元测试且需要多次尝试；不证明无外部反馈自评可靠。',
+  },
+  'res-agent-self-refine': {
+    authority: 'academic', role: 'cross-check',
+    coverage: ['同一模型生成、反馈与修订', '迭代停止', '可操作反馈', '七类任务中的输出改进'],
+    limitations: '结果依赖任务化提示与评价标准，许多任务属于输出编辑；不能等同于任意推理错误都能被可靠自纠正。',
+  },
+  'res-agent-no-self-correct': {
+    authority: 'academic', role: 'core',
+    coverage: ['内在自修正定义', '无外部反馈时的性能退化', 'oracle 反馈对照', '等成本和提示公平比较'],
+    limitations: '论文集中研究推理正确性，不应外推为风格、偏好或安全任务都无法迭代；其反方证据针对无外部反馈条件。',
+  },
+  'res-agent-critic': {
+    authority: 'academic', role: 'core',
+    coverage: ['工具交互验证', '外部 critique', 'verify–correct 循环', '搜索、代码、计算器与毒性 API 实验'],
+    limitations: '外部工具本身可能错误、有偏、延迟，并带来隐私和安全风险；改进依赖工具与提示设置，不是通用正确性保证。',
+  },
+  'res-agent-agentbench': {
+    authority: 'academic', role: 'core',
+    coverage: ['八类交互环境', '29 个模型评测', '完成格式、动作、超时与终止', '重复和长程规划失败'],
+    limitations: '评测使用简化提示，未覆盖搜索、反思和多次尝试；环境与模型版本具有时效，结果不代表真实业务可靠性。',
+  },
+  'res-agent-tau-bench': {
+    authority: 'academic', role: 'core',
+    coverage: ['Agent、工具与用户的动态交互', '数据库终态判分', '领域政策', 'pass^k 可靠性'],
+    limitations: '使用模拟用户和两个简化领域，并假设唯一数据库结果；真实单次服务限制与跨 trial 反思不能由该评测直接推出。',
+  },
+  'res-agent-douyin-claude-code': {
+    authority: 'community', role: 'extension',
+    coverage: ['间接文字材料中的 LLM 工具编排', 'ReAct 循环', 'Plan-and-Execute 与重规划', '状态和 LangGraph 示例'],
+    limitations: '原抖音视频受防自动化限制且无可访问字幕；coverage 来自明确源于视频的间接修订文字版，并非原视频正文，GPT-4o、Cursor、Manus 与 LangGraph 均为 2025 语境。',
+    verifiedAt: VERIFIED_AT,
+  },
+};
 
 const resources = [
   { id: 'res-agent-anthropic-effective', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '机制总览', value: '厂商团队总结的工程经验，用于比较 workflow 与 Agent、从简单方案逐步增加自治；它不是跨模型、跨场景都成立的普适论文结论。', verifiedAt: VERIFIED_AT },
@@ -29,7 +183,7 @@ const resources = [
   { id: 'res-agent-agentbench', title: 'AgentBench: Evaluating LLMs as Agents', url: 'https://arxiv.org/abs/2308.03688', source: 'Liu 等', language: '英文', type: '论文', difficulty: '深挖', stage: '综合验证', value: '论文在其评测设定中构建多环境 Agent 基准并报告结果，用于观察长轨迹失败类型，不代表真实业务可靠性。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-tau-bench', title: 'τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains', url: 'https://arxiv.org/abs/2406.12045', source: 'Yao 等', language: '英文', type: '论文', difficulty: '深挖', stage: '综合验证', value: '论文在其评测设定中评估工具、规则与用户交互任务，适合说明完成判定需要状态证据而不是流畅回答。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-douyin-claude-code', title: 'Claude Code 实作演示补充', url: 'https://www.douyin.com/video/7529703060969508130', source: '抖音创作者', platform: '抖音', language: '中文', type: '社区补充短视频', difficulty: '入门', stage: '实作补充', value: '该短视频仅作真实编码 Agent 操作节奏的实作补充，不作为机制事实依据；课程结论应以可复现实验、官方语义和论文边界为准。', verifiedAt: VERIFIED_AT },
-];
+].map((resource) => ({ ...resource, evidence: evidenceByResourceId[resource.id] }));
 
 const quiz = (id, prompt, choices, answerIndex, explanation) => ({
   id,
