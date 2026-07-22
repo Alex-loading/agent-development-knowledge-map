@@ -3,14 +3,14 @@ const VERIFIED_AT = '2026-07-22';
 const evidenceByResourceId = {
   'res-agent-anthropic-effective': {
     authority: 'official', role: 'core',
-    coverage: ['Agent 与 workflow 的控制权差异', '提示链、路由、并行、编排器与评估器模式', '自治成本、停止条件与工具设计'],
-    limitations: 'Anthropic 团队的在线工程经验，不是跨模型、跨任务的对照实验；页面内容仍可能随产品实践演进。',
+    coverage: ['Agent 与 workflow 的控制权差异', '提示链、路由、并行、编排器与评估器模式', '自治成本与工具设计', '逐步取得环境 ground truth 并据此判断进展', '阻塞时请求人工反馈与最大迭代等停止条件'],
+    limitations: 'Anthropic 团队的在线工程经验，不是跨模型、跨任务的对照实验；正文未定义 task contract 字段、硬约束/软偏好、未知项四路由或三层业务完成语义，页面内容仍可能随产品实践演进。',
     verifiedAt: VERIFIED_AT,
   },
   'res-agent-openai-guide': {
     authority: 'official', role: 'core',
-    coverage: ['Agent 的适用条件与组成', '模型、工具和指令的职责', '单 Agent 与多 Agent 编排', '运行循环退出、护栏与评测'],
-    limitations: '工程指南不是 API 规范；示例模型、成本和产品实现具有时效性，结论需要在目标业务和权限边界内验证。',
+    coverage: ['Agent 的适用条件与模型、工具、指令组成', '单 Agent 与多 Agent 编排', '将操作文档改写为清晰步骤、动作、输出与缺失信息分支', 'run-loop 的结构化输出、错误和最大轮次等退出条件', '护栏、评测与按可撤销性、权限、财务影响评估工具风险', '失败阈值或高风险动作触发人工介入'],
+    limitations: '工程指南不是 API 规范；正文没有定义本课 task contract 的精确字段、硬约束/软偏好分类、未知项四路由或 submitted/action-succeeded/business-goal-achieved 三层语义，示例模型与产品实现具有时效性。',
     verifiedAt: VERIFIED_AT,
   },
   'res-agent-berkeley-course': {
@@ -32,8 +32,8 @@ const evidenceByResourceId = {
   },
   'res-agent-hello-agents': {
     authority: 'community', role: 'cross-check',
-    coverage: ['Agent 与环境的行动闭环', '目标分解、工具使用和动态修正', '框架分层与统一工具抽象'],
-    limitations: '社区教材适合作为中文实践对照，但其抽象不是厂商 API 规范，框架与接口的版本语义需要另行核验。',
+    coverage: ['传统与 LLM Agent 及感知环境、依据内部状态行动的闭环', '旅行目标分解、工具补齐信息缺口与用户反馈成为新约束后的动态修正', '带时间与 metadata 的消息历史示例', '框架分层、统一工具抽象与最大工具迭代示例'],
+    limitations: '社区教材适合作为中文实践对照，但旅行案例和教学框架不是 task contract 标准，也没有定义 state/transcript/event log 的三分法或三层业务完成谓词；框架与接口版本语义需要另行核验。',
     verifiedAt: VERIFIED_AT,
   },
   'res-agent-dlai-agentic': {
@@ -113,8 +113,8 @@ const evidenceByResourceId = {
   },
   'res-agent-coala': {
     authority: 'academic', role: 'core',
-    coverage: ['工作记忆与长期记忆', '程序、语义和情景记忆', '内部与外部动作', '通用决策循环'],
-    limitations: '论文提出概念架构并综述文献，没有新增基准实验；分类用于组织设计空间，不是实现标准或性能保证。',
+    coverage: ['跨 LLM 调用持久化的工作记忆及其当前感知、目标与中间信息', '程序、语义和情景长期记忆', '环境反馈经 grounding procedure 写回工作记忆', '提议、评价、选择、执行与观察组成的概念决策循环'],
+    limitations: '论文提出概念架构并综述文献，没有新增基准实验；它没有规定生产 state schema、transcript/event log 职责、task contract 或业务完成谓词，分类用于组织设计空间而不是实现标准或性能保证。',
   },
   'res-agent-reflexion': {
     authority: 'academic', role: 'core',
