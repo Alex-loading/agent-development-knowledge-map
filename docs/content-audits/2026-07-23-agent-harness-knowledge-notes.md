@@ -89,7 +89,7 @@
 | `harness-07` | 25 | 20 | 25 | 20 | 10 | 100 | 0 | author + spec + quality passed |
 | `harness-08` | 25 | 20 | 25 | 20 | 10 | 100 | 0 | author + spec + quality passed |
 
-八课均已完成作者自审、独立规格审查与独立质量审查，最低分 98/100，逐课 `brokenReferenceCount=0`。聚合接线后的四个目标测试文件共 59 项全部通过；`npm test` 全量回归共 264 项全部通过；`src/` 与 `tests/` 下全部 JavaScript 文件通过 `node --check`，`git diff --check` 通过。
+八课均已完成作者自审、独立规格审查与独立质量审查，最低分 98/100，逐课 `brokenReferenceCount=0`。聚合接线后的四个目标测试文件共 59 项全部通过；合并到精确 `main` 后，`npm test` 全量回归共 1,542 项全部通过；`src/` 与 `tests/` 下全部 JavaScript 文件通过 `node --check`，`git diff --check` 通过。
 
 ## 本地浏览器验收
 
