@@ -4,12 +4,12 @@ const sections = Object.freeze([
     title: '先保存失败观察，再讨论恢复动作',
     paragraphs: Object.freeze([
       '上一课把计划中的每一步都接到 checkpoint 和 failure exit；本章先把“失败”从一句自然语言变成可路由的 observation。工具返回或客户端超时后，宿主先追加不可变事件：tool、规范化参数摘要、call id、稳定 intent、开始与结束时间、HTTP 或业务 error code、原始响应的最小必要副本、外部资源版本、是否可能产生副作用，以及结果类别。随后才生成供模型读取的精简摘要。先保存原始证据是为了让对账、审计与人工接管仍能还原事实，而不是让下一轮模型用猜测覆盖现场。',
-      '课程把工单 Agent 的结果分成六类：transport 表示请求未到达、连接中断或响应未知；parameter 表示 schema、类型、枚举或跨字段约束不合格；empty-result 表示查询成功但当前范围没有命中，它是语义上“没有找到”而不是调用异常；business-conflict 表示版本冲突、状态迁移非法或规则拒绝；permission 表示身份、scope、审批或租户边界不满足；capability 表示当前工具根本不支持所需动作、字段或渠道。这个枚举和字段是课程工程综合，不是 AgentBench 或 τ-bench 发布的生产错误标准。',
+      '课程把工单结果分六类：transport 是连接或响应未知；parameter 是 schema 或跨字段不合格；semantic-mismatch 是结构合法、甚至非空，却与目标、事实或 completion predicate 不一致，items=[] 只是 empty-result 子类；business-conflict 是版本或规则冲突；permission 是身份、scope 或审批不足；capability 是工具不支持所需动作。这是课程工程综合，不是论文标准。',
       '分类器只读可信返回与 registry 元数据，不能让模型凭措辞决定 sideEffectRisk 或 retryable。AgentBench 在其八类环境的评测中记录 invalid action、超时、重复与终止失败，说明长轨迹故障可以从可观察行为分析；τ-bench 则用领域政策和数据库终态判分，说明一段流畅答复不等于业务状态正确。两篇工作都不提供本课六类路由或工单恢复规则，课程只借它们建立“行为与终态必须可观察”的证据边界。',
     ]),
     keyPoints: Object.freeze([
       '原始错误、调用关联、稳定 intent、外部版本和副作用可能性必须先进入事件日志，再生成模型摘要。',
-      'transport、parameter、empty-result、business-conflict、permission、capability 是面向恢复决策的课程分类，不是论文标准。',
+      'transport、parameter、semantic-mismatch、business-conflict、permission、capability 是面向恢复决策的课程分类；empty-result 是 semantic-mismatch 子类。',
     ]),
     callout: Object.freeze({
       kind: 'warning',
@@ -61,8 +61,8 @@ const sections = Object.freeze([
     title: '外部验证栈：从格式正确推进到业务终态正确',
     paragraphs: Object.freeze([
       '验证器是相对独立、可重复计算的证据来源，不等于另一个自由生成的“裁判模型”。第一层解析器检查 JSON、schema 和必填字段；第二层规则引擎检查工单状态迁移、权限、审批和字段组合；第三层测试或沙箱执行验证代码、查询与转换结果；第四层读取数据库版本、审计事件或远端 request status，确认真实副作用终态；第五层在策略冲突、高风险或证据无法自动判断时请求人工反馈。层级不是越多越好，而是按动作风险选择最便宜且有区分力的信号。',
-      '工单查询可以用 schema 和结果集合验证，更新则还要比较预期 rowVersion、更新后状态与审计事件。若工具说 success 但数据库仍是旧版本，控制器保存冲突 observation，不能让模型总结为完成；若规则拒绝 CLOSED → IN_PROGRESS，则修参也不能绕过状态机。τ-bench 的领域政策与数据库终态判分直接支持“策略遵循和环境状态共同决定任务是否完成”；它在模拟用户、两个简化领域及唯一数据库结果假设下评测，不代表真实客服系统的全部并发与人工流程。',
-      'CRITIC 支撑工具交互 critique 能在其任务中提供不同于纯自评的信号，却也提醒工具可能错误、有偏、延迟，并带来隐私和安全风险。因此验证器本身要有版本、超时、失败类别和可信范围：解析器不能验证业务真相，数据库读取可能陈旧，测试只能覆盖断言，人工也可能不一致。生产验收应组合证据并记录 provenance；论文没有承诺工具一接入就能保证正确。',
+      '验证只有 PASS、FAIL、VALIDATION_UNKNOWN。PASS 还须来源获准且 validatorVersion 与资源版本匹配，才可发布完成证据或继续副作用；FAIL 保存 expected-vs-actual、断言与 provenance，只做预算内修订。timeout、验证权限拒绝、stale source 或验证器冲突都归 UNKNOWN：不得发布或继续副作用，只可在相同权限和数据最小化边界内换独立 validator，否则 blocked/handoff。状态机 JSON：{"states":["PASS","FAIL","VALIDATION_UNKNOWN"],"passGate":["approved-provenance","validator-and-resource-version-match"],"failAction":"structured-feedback-and-bounded-revision","unknownAction":"no-publish-no-side-effect;alternate-independent-validator-with-same-permission-and-data-minimization-or-blocked-handoff"}',
+      '工单查询可以用 schema 和结果集合验证，更新则还要比较预期 rowVersion、更新后状态与审计事件。若工具说 success 但数据库仍是旧版本，控制器得到 FAIL 或 VALIDATION_UNKNOWN，不能让模型总结为完成；若规则拒绝 CLOSED → IN_PROGRESS，则修参也不能绕过状态机。τ-bench 的领域政策与数据库终态判分支持“策略遵循和环境状态共同决定任务是否完成”；CRITIC 支撑工具 critique 提供不同于纯自评的信号，但工具会错误、有偏、过期或超时。三态、版本门和替代 validator 权限规则是课程综合，不是论文保证。',
     ]),
     keyPoints: Object.freeze([
       '解析器、规则、测试、数据库终态和人工反馈解决不同层次的问题，必须按风险组合。',
@@ -74,13 +74,13 @@ const sections = Object.freeze([
     id: 'fingerprint-and-progress-detection',
     title: '动作指纹与进展检测：阻止死循环，也不误杀合理重试',
     paragraphs: Object.freeze([
-      '控制器为每次候选动作计算完整指纹：tool + canonical params + relevant state/version + result class。canonical params 会排序键、统一稳定格式但不泄露密钥；relevant state/version 至少包含目标版本、计划或步骤版本、目标资源版本与权限快照；result class 区分 timeout、validation-error、empty-result、conflict、permission-denied 等。只比较工具名和参数会误判：同一查询在新工单版本或退避窗口后可能合理，而参数相同、状态相同、结果类别相同才更接近无进展重复。',
-      '进展不是“模型换了一段解释”，而是可验证状态差异：新 observation 扩大了证据范围、参数通过验证、资源版本变化、权限已获批、checkpoint 被满足，或对账把 UNKNOWN_OUTCOME 解成确定终态。系统同时维护 consecutiveSameFingerprint、sameResultWithoutStateChange、recoveryAttempts 和 validatorScoreDelta；当完整指纹重复、相关 state/version 未变、结果类别相同且没有可验证进展达到阈值，控制器禁止再次 act，转向换查询、重规划、blocked 或 handoff。阈值与计数维度属于课程综合，需要用真实失败轨迹校准。',
-      '环境改变时不能机械去重：权限已批准、rowVersion 更新、服务器给出 retry-after 到期、先前对账确认未执行，都会改变 state/version 或恢复前提，从而形成新指纹或显式重置计数。相反，只改 temperature、提示措辞、计划步骤名称或 JSON 键顺序不算进展。AgentBench 的重复轨迹和 TLE 分析只能证明评测中存在这类可观察故障，不能提供通用阈值；AWS 的 caller intent 与晚到请求边界只支撑跨重放关联，具体指纹结构仍是课程工程综合。',
+      'pre-act 计算 actionKey = tool + canonical params + stableIntent + relevant state/version，通过权限、预算和 pending claim 才 act。post-act 再算 outcomeKey = actionKey + resultClass。canonical params 只统一键序；relevant state/version 含目标、计划/步骤、资源与权限版本。同一动作的 timeout 与 conflict 是两个 outcomeKey，却共享一个 actionKey。',
+      '控制器维护 globalRecoveryAttempts、globalRecoveryTime、globalRecoveryCost 三个硬预算和 noProgressOnActionKey；任何结果、提示或版本变化都不清零硬预算，同一 actionKey 的 timeout/conflict 交替也不重置无进展。任一到限即禁止 act 并 blocked/handoff。控制约束 JSON：{"actionKey":["tool","canonicalParams","stableIntent","relevantStateVersion"],"outcomeKey":["actionKey","resultClass"],"globalBudgets":["globalRecoveryAttempts","globalRecoveryTime","globalRecoveryCost"],"noProgressCounter":"noProgressOnActionKey","resultClassChangeResetsNoProgress":false,"hardBudgetNeverResets":true,"newAttemptRequires":"real-prerequisite-or-relevant-state-version-change"}',
+      '只有真实前置条件或 relevant state/version 改变，例如权限已批准、rowVersion 更新或对账确认未执行，才允许形成新 actionKey、开启新 attempt 并清零旧 actionKey 的局部无进展计数；总硬预算继续累计。retry-after 到期只能满足时间前置条件，仍要检查其他状态；只改 temperature、提示措辞、计划步骤名称、JSON 键序或 resultClass 不算新 action。AgentBench 的重复/TLE 与 AWS 的 caller intent 只支撑问题背景和跨重放关联；双键、计数与清零规则均为课程综合。',
     ]),
     keyPoints: Object.freeze([
-      '指纹必须结合 tool、规范化参数、相关 state/version 与 result class；只比较文本或参数不够。',
-      '只有完整指纹重复且状态无进展才累计死循环阈值；环境版本或对账证据变化允许重新判断。',
+      'pre-act actionKey 绑定 tool、规范化参数、stableIntent 与相关 state/version；post-act outcomeKey 再加入 resultClass。',
+      '结果类别交替不得清零 actionKey 无进展或全局次数/时间/成本；只有真实前置条件或版本变化允许新 attempt。',
     ]),
     sourceIds: Object.freeze(['res-agent-agentbench', 'res-agent-aws-idempotent-apis']),
   }),
@@ -88,9 +88,9 @@ const sections = Object.freeze([
     id: 'ticket-recovery-decision-table',
     title: '工单查询与更新：六类失败必须落到确定性决策表',
     paragraphs: Object.freeze([
-      '案例 Agent 有 search_tickets 只读查询与 update_ticket 写操作。下面的六行共享一份输入契约：分类器只使用可信 error code、schema validator、policy engine、工具 registry、request record 与数据库版本；sideEffectRisk 来自 registry，不采信模型；budget 是本地教学上限而非行业推荐；allowedRecovery 的顺序由控制器执行。整张表是课程工程综合，六篇论文和 AWS 正文都没有共同发布这套工单协议。',
-      '决策表 JSON：[ {"class":"transport","observableEvidence":["timeout-or-connection-reset","request-status"],"sideEffectRisk":"read=none;write=unknown","allowedRecovery":["read:bounded-backoff-retry","write:mark-UNKNOWN_OUTCOME","write:reconcile-by-stable-intent","write:retry-only-if-confirmed-not-executed"],"budget":{"attempts":2,"wallClockSeconds":30},"idempotency":"write requires host-persisted stable intent; reuse same key","terminalExit":"cannot-reconcile=>handoff;budget-exhausted=>blocked"}, {"class":"parameter","observableEvidence":["schema-or-cross-field-validation-error"],"sideEffectRisk":"none-before-act","allowedRecovery":["repair-only-rejected-fields","revalidate","single-resubmit"],"budget":{"repairs":1},"idempotency":"do not consume write intent before validation","terminalExit":"still-invalid=>blocked-with-required-fields"}, {"class":"empty-result","observableEvidence":["success=true","items=[]","searched-scope"],"sideEffectRisk":"none","allowedRecovery":["record-scope","change-query-or-approved-source","replan"],"budget":{"alternateQueries":2},"idempotency":"not-required-for-read","terminalExit":"approved-scopes-exhausted=>clarify-or-blocked"}, {"class":"business-conflict","observableEvidence":["version-conflict-or-illegal-transition","expected-and-actual-rowVersion"],"sideEffectRisk":"write-may-not-have-committed;verify","allowedRecovery":["read-current-state","recompute-against-policy","retry-only-with-new-expected-version-and-valid-transition"],"budget":{"replans":1},"idempotency":"preserve old request evidence; new intent only for materially revised authorized transition","terminalExit":"policy-still-conflicts=>blocked-or-handoff"}, {"class":"permission","observableEvidence":["authenticated-actor","denied-scope-or-missing-approval","policy-reference"],"sideEffectRisk":"action-must-not-run","allowedRecovery":["record-denial","request-approved-authorization-path","handoff"],"budget":{"automaticRetries":0},"idempotency":"no replay until authorization state/version changes","terminalExit":"blocked-awaiting-authorization-or-handoff"}, {"class":"capability","observableEvidence":["tool-registry-lacks-operation-or-required-field","supported-capabilities"],"sideEffectRisk":"unsupported-action-must-not-run","allowedRecovery":["clarify-goal","offer-approved-degraded-output","select-capable-approved-tool","handoff"],"budget":{"toolSubstitutions":1},"idempotency":"not-applicable-until-a-supported-action-exists","terminalExit":"no-safe-capability=>handoff-or-blocked"} ]',
-      '走查写操作 timeout：update_ticket 已持久化 intent=ticket-42-close-v1，客户端超时后只能写 UNKNOWN_OUTCOME；控制器查询 request-status 与工单 rowVersion，已关闭就吸收成功，明确未执行且仍获授权才用同一 key 重放，查不到则 handoff。权限拒绝 automaticRetries=0，不能靠反思伪造 scope。能力不足先澄清是否接受只读报告或选择获准工具；没有安全降级就交接。parameter 只修被拒字段，empty-result 换查询范围，business-conflict 读取新版本并重新验证规则，六类不会都落入 reflection。',
+      '案例有 search_tickets 只读查询与 update_ticket 写操作。分类器只使用可信 error code、schema/policy validator、工具 registry、request record 与数据库版本；sideEffectRisk 来自 registry，不采信模型。budget 是教学上限，allowedRecovery 由控制器按序执行；整表是课程综合，不是论文或 AWS 协议。',
+      '决策表 JSON：[ {"class":"transport","observableEvidence":["timeout-or-connection-reset","request-status"],"sideEffectRisk":"read=none;write=unknown","allowedRecovery":["read:bounded-backoff-retry","write:mark-UNKNOWN_OUTCOME","write:reconcile-by-stable-intent","write:retry-only-if-confirmed-not-executed"],"budget":{"attempts":2,"wallClockSeconds":30},"idempotency":"write requires host-persisted stable intent; reuse same key","terminalExit":"cannot-reconcile=>handoff;budget-exhausted=>blocked"}, {"class":"parameter","observableEvidence":["schema-or-cross-field-validation-error"],"sideEffectRisk":"none-before-act","allowedRecovery":["repair-only-rejected-fields","revalidate","single-resubmit"],"budget":{"repairs":1},"idempotency":"do not consume write intent before validation","terminalExit":"still-invalid=>blocked-with-required-fields"}, {"class":"semantic-mismatch","observableEvidence":["schema-valid","expected-vs-actual-mismatch","external-validator-mismatch","missing-or-conflicting-provenance","subtype:empty-result-or-nonempty-irrelevant"],"sideEffectRisk":"no-new-side-effect-before-validation","allowedRecovery":["record-scope-and-provenance","bounded-revise-query","change-approved-source","replan","external-validate"],"budget":{"revisions":2,"alternateValidators":1},"idempotency":"preserve prior evidence; no side-effect replay","terminalExit":"no-validated-relevant-evidence=>clarify-or-blocked;high-risk-conflict=>handoff"}, {"class":"business-conflict","observableEvidence":["version-conflict-or-illegal-transition","expected-and-actual-rowVersion"],"sideEffectRisk":"write-may-not-have-committed;verify","allowedRecovery":["read-current-state","recompute-against-policy","retry-only-with-new-expected-version-and-valid-transition"],"budget":{"replans":1},"idempotency":"preserve old request evidence; new intent only for materially revised authorized transition","terminalExit":"policy-still-conflicts=>blocked-or-handoff"}, {"class":"permission","observableEvidence":["authenticated-actor","denied-scope-or-missing-approval","policy-reference"],"sideEffectRisk":"action-must-not-run","allowedRecovery":["record-denial","request-approved-authorization-path","handoff"],"budget":{"automaticRetries":0},"idempotency":"no replay until authorization state/version changes","terminalExit":"blocked-awaiting-authorization-or-handoff"}, {"class":"capability","observableEvidence":["tool-registry-lacks-operation-or-required-field","supported-capabilities"],"sideEffectRisk":"unsupported-action-must-not-run","allowedRecovery":["clarify-goal","offer-approved-degraded-output","select-capable-approved-tool","handoff"],"budget":{"toolSubstitutions":1},"idempotency":"not-applicable-until-a-supported-action-exists","terminalExit":"no-safe-capability=>handoff-or-blocked"} ]',
+      '走查写操作 timeout：update_ticket 已持久化 intent=ticket-42-close-v1，客户端超时后只能写 UNKNOWN_OUTCOME；控制器查询 request-status 与工单 rowVersion，已关闭就吸收成功，明确未执行且仍获授权才用同一 key 重放，查不到则 handoff。权限拒绝 automaticRetries=0，不能靠反思伪造 scope。能力不足先澄清是否接受只读报告或选择获准工具；没有安全降级就交接。parameter 只修被拒字段；semantic-mismatch 中的 empty-result 换查询范围，非空但不相关或 provenance 冲突也要有限修订、换获准来源、重规划并外部验证；business-conflict 读取新版本并重新验证规则，六类不会都落入 reflection。',
     ]),
     keyPoints: Object.freeze([
       '每一类都必须写 observableEvidence、sideEffectRisk、allowedRecovery、budget、idempotency 和 terminalExit。',
@@ -107,9 +107,9 @@ const sections = Object.freeze([
     id: 'recovery-runbook-and-evaluation-boundary',
     title: '把恢复闭环做成可复现 runbook，而不是论文名称拼盘',
     paragraphs: Object.freeze([
-      '完整 runbook 的顺序是 observe → preserve evidence → classify → deterministic route → optional reflection candidate → external validate → update state → terminal check。Reflection 只在“存在可修改候选、反馈指出差距、预算仍有余量”时进入；transport unknown、permission 和 capability gap 不会因为生成更多文字而消失。每轮保存 validator version、feedback provenance、动作完整指纹、state diff 与预算变化，使接管者能判断失败来自模型候选、工具、策略、权限还是验证器。',
-      '练习交付时先把上一节 JSON 解析为六行，再注入四条轨迹：写更新 timeout 必须得到 UNKNOWN_OUTCOME→reconcile，权限拒绝必须直接零重试出口，能力缺口必须产生 clarify/degrade/handoff 候选，重复指纹只有在 relevant state/version 与 result class 同时未变时才触发 stop。再以同一数据执行反例：rowVersion 从 7 变 8 后指纹应变化；只改 JSON 键序或提示措辞则不算变化。这样能验证控制语义，而不是仅检查表格看起来完整。',
-      '这些 probe 规范是课程工程综合，只做本地确定性课程检查，不运行 Reflexion、Self-Refine、CRITIC、AgentBench 或 τ-bench，也不比较模型能力；论文结果始终保留各自模型、任务、反馈和 trial 边界。真实系统还要实现持久化事件、原子 intent 映射、鉴权、对账 API、validator 版本治理、隐私清理、告警与人工队列，并用自身故障注入校准预算和阈值。课程的目标不是承诺自动恢复一切，而是让每次继续、停止与交接都有可检查证据。',
+      'runbook 顺序是 observe → preserve evidence → classify → deterministic route → optional reflection → external validate → update state → terminal check。Reflection 只在有可修改候选、反馈和预算时进入；unknown、permission 与 capability gap 不会因更多文字消失。每轮保存 validator version/provenance、actionKey/outcomeKey、state diff 与预算。',
+      '练习先解析六行 JSON，再注入：写 timeout 对账；权限零重试；能力 clarify/degrade/handoff；semantic-mismatch 覆盖空与非空不相关；同一 actionKey 的 timeout/conflict/timeout 仍累计 noProgress 与全局次数并到限终止。validator VALIDATION_UNKNOWN 时 commitCount 和 downstreamSideEffectCount 都为 0；只有真实前置条件或版本变化允许新 attempt，且硬预算不清零。',
+      'probe 是课程综合的本地确定性检查，不运行论文方法或比较模型能力。真实系统还要实现持久事件、原子 intent、鉴权、对账、validator 治理、隐私、告警与人工队列，并用故障注入校准预算；目标不是自动恢复一切，而是让继续、停止与交接都有证据。',
     ]),
     keyPoints: Object.freeze([
       '确定性路由优先，reflection 只生成受反馈约束的恢复候选，外部验证后才能更新任务状态。',
@@ -148,18 +148,18 @@ const misconceptions = Object.freeze([
 
 export const agent06Note = Object.freeze({
   readingMinutes: 39,
-  introduction: '上一课把计划写成带 checkpoint 与 failure exit 的版本化步骤；本章回答失败出现后如何安全继续。你将先保存 error、外部版本和副作用证据，把传输、参数、空结果、业务冲突、权限与能力失败映射到不同恢复路径；再比较 Reflexion、Self-Refine、无外部反馈自纠错的反方研究与 CRITIC，理解“反思是否有用”取决于反馈来源和任务。最后为查询并更新工单的 Agent 交付一张可解析决策表，并用确定性 probe 验证写超时对账、权限零重试、能力出口和动作去重。',
+  introduction: '上一课把计划接上 checkpoint 与 failure exit；本章回答失败后如何安全继续。你将保存错误、版本和副作用证据，把传输、参数、语义不匹配、业务冲突、权限与能力失败分别路由，其中空结果只是语义不匹配子类；再比较四项反思研究的反馈条件。最后交付工单决策表，用 probe 验证写超时对账、验证器三态、双层动作键和受控出口。',
   sections,
   misconceptions,
   recap: Object.freeze([
     '恢复前先保存原始 error、call id、稳定 intent、外部版本、参数摘要、结果类别与副作用可能性，模型摘要不能覆盖证据。',
-    '六类课程路由分别是 transport、parameter、empty-result、business-conflict、permission 与 capability；同一句“失败”不能统一重试。',
+    '六类课程路由分别是 transport、parameter、semantic-mismatch、business-conflict、permission 与 capability；empty-result 只是语义不匹配子类。',
     '只读瞬态错误可在退避和硬预算内重试；写 timeout 是 UNKNOWN_OUTCOME，必须以同一稳定 intent 先对账。',
     'Reflexion 依赖 Actor、Evaluator、环境或测试反馈与多 trial；Self-Refine 多体现任务化输出反馈和修订。',
     '无外部反馈推理自修正的反方证据不否定带 oracle、测试或工具信号的恢复；先比较反馈条件，不能只比较论文标题。',
     'CRITIC 展示特定任务中的工具交互 critique，但工具质量、偏差、延迟、隐私与权限仍限制结果。',
-    '解析器、规则、测试、数据库终态和人工反馈是不同验证层；流畅答案与 success 字段都不能单独证明业务完成。',
-    '完整动作指纹包含 tool、canonical params、relevant state/version 与 result class；只有指纹重复且无状态进展才触发停止。',
+    '外部验证只有 PASS、FAIL、VALIDATION_UNKNOWN；UNKNOWN 不得发布或继续副作用，只有 PASS 且来源/版本匹配才能提交。',
+    'pre-act actionKey 不含结果类别，post-act outcomeKey 才加入 resultClass；结果交替不重置 action 无进展或全局硬预算。',
     '工单决策表每类都必须给出 observable evidence、side-effect risk、allowed recovery、budget/idempotency 与 terminal exit。',
     '权限不足默认零自动重试并 blocked/handoff；能力不足先澄清或提供获准降级，不能安全满足时交接。',
     '本章决策表、预算、指纹和 probe 是课程工程综合，不是论文或 AWS 的生产安全保证。',
