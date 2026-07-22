@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 
 import { modules } from '../src/data/modules.js';
 import { agentHarness } from '../src/data/agent-harness.js';
-import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { llmFoundationNotes } from '../src/data/llm-foundation-notes.js';
@@ -208,7 +207,7 @@ test('all 28 LLM resources provide complete evidence cards', () => {
 });
 
 test('other active module courses retain explanation fallback without knowledge notes', () => {
-  for (const course of [agentMechanism, agentHarness, contextRagMemory]) {
+  for (const course of [agentHarness, contextRagMemory]) {
     for (const lesson of course.lessons) {
       assert.equal(lesson.knowledgeNote, undefined, `${course.id}:${lesson.id}: 不应启用 knowledgeNote`);
       assert.ok(

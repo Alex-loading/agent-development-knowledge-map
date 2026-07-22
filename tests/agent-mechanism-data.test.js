@@ -22,6 +22,19 @@ const expectedLessonTitles = [
   '单 Agent 综合设计与面试压力测试',
 ];
 
+const agentNoteExpectations = new Map([
+  ['agent-01', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['agent-02', { minMinutes: 25, maxMinutes: 30, minLength: 3600 }],
+  ['agent-03', { minMinutes: 30, maxMinutes: 40, minLength: 4500 }],
+  ['agent-04', { minMinutes: 30, maxMinutes: 40, minLength: 4500 }],
+  ['agent-05', { minMinutes: 30, maxMinutes: 40, minLength: 4800 }],
+  ['agent-06', { minMinutes: 35, maxMinutes: 40, minLength: 4800 }],
+  ['agent-07', { minMinutes: 30, maxMinutes: 35, minLength: 4200 }],
+  ['agent-08', { minMinutes: 35, maxMinutes: 40, minLength: 5000 }],
+]);
+const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+const validEvidenceRoles = new Set(['core', 'cross-check', 'extension']);
+
 const expectedResourceUrls = new Map([
   ['res-agent-anthropic-effective', 'https://www.anthropic.com/engineering/building-effective-agents'],
   ['res-agent-openai-guide', 'https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents/'],
@@ -84,6 +97,15 @@ function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
 }
 
+function assertDeepFrozen(value, label, seen = new Set()) {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  assert.ok(Object.isFrozen(value), `${label}: 公开课程数据及其嵌套结构必须被冻结`);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    assertDeepFrozen(nestedValue, `${label}.${key}`, seen);
+  }
+}
+
 test('Agent mechanism contains eight ordered complete lessons', () => {
   assert.equal(agentMechanism.id, 'agent-mechanism');
   assert.equal(agentMechanism.title, 'Agent 机制');
@@ -111,6 +133,86 @@ test('Agent mechanism contains eight ordered complete lessons', () => {
     assert.ok(lesson.quiz.length >= 2, lesson.id);
     assert.ok(lesson.completionCriteria.length >= 2, lesson.id);
     assert.equal(lesson.interviewQuestionIds.length, 3, lesson.id);
+  }
+});
+
+test('every Agent mechanism lesson has a source-grounded long-form knowledge note', () => {
+  const resourcesById = new Map(
+    agentMechanism.resources.map((resource) => [resource.id, resource]),
+  );
+  assert.deepEqual(
+    agentMechanism.lessons.filter((lesson) => lesson.knowledgeNote).map((lesson) => lesson.id),
+    expectedLessonIds,
+    '八节 Agent 课程都必须提供 knowledgeNote',
+  );
+  assert.equal(
+    new Set(agentMechanism.lessons.map((lesson) => lesson.knowledgeNote)).size,
+    expectedLessonIds.length,
+    '每节 Agent 课程必须使用不同的 knowledgeNote 对象',
+  );
+
+  for (const lesson of agentMechanism.lessons) {
+    const expectation = agentNoteExpectations.get(lesson.id);
+    const note = lesson.knowledgeNote;
+    assert.ok(expectation, `${lesson.id}: 必须有知识笔记发布要求`);
+    assert.ok(note, `${lesson.id}: 必须提供 knowledgeNote`);
+    assert.ok(typeof note.introduction === 'string' && note.introduction.trim().length > 0,
+      `${lesson.id}: introduction 不能为空`);
+    assert.ok(typeof note.nextStep === 'string' && note.nextStep.trim().length > 0,
+      `${lesson.id}: nextStep 不能为空`);
+    assert.ok(Array.isArray(note.sections), `${lesson.id}: sections 必须为数组`);
+
+    const sectionIds = note.sections.map(({ id }) => id);
+    const bodyLength = note.introduction.length
+      + note.sections.flatMap(({ paragraphs }) => paragraphs).join('').length
+      + note.nextStep.length;
+    assert.ok(
+      Number.isInteger(note.readingMinutes)
+        && note.readingMinutes >= expectation.minMinutes
+        && note.readingMinutes <= expectation.maxMinutes,
+      `${lesson.id}: 阅读时长应为 ${expectation.minMinutes}–${expectation.maxMinutes} 分钟`,
+    );
+    assert.ok(note.sections.length >= 5 && note.sections.length <= 7,
+      `${lesson.id}: 应包含 5–7 个递进章节`);
+    assertUnique(sectionIds, `${lesson.id}: knowledgeNote section id`);
+    assert.ok(bodyLength >= expectation.minLength && bodyLength <= 9000,
+      `${lesson.id}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
+
+    const lessonResourceIds = new Set(lesson.resourceIds);
+    for (const section of note.sections) {
+      assert.match(section.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        `${lesson.id}: section id 必须为 kebab-case`);
+      assert.ok(typeof section.title === 'string' && section.title.trim().length >= 4,
+        `${lesson.id}:${section.id}: title 至少需要 4 个非空字符`);
+      assert.ok(Array.isArray(section.paragraphs)
+        && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
+      `${lesson.id}:${section.id}: 需要 2–4 个正文段落`);
+      assert.ok(section.paragraphs.every((paragraph) => (
+        typeof paragraph === 'string' && paragraph.length >= 60
+      )), `${lesson.id}:${section.id}: 每个正文段落至少需要 60 个字符`);
+      assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
+        `${lesson.id}:${section.id}: 至少需要 2 个要点`);
+      assert.ok(section.keyPoints.every((keyPoint) => (
+        typeof keyPoint === 'string' && keyPoint.trim().length > 0
+      )), `${lesson.id}:${section.id}: 每个要点必须是非空字符串`);
+      assert.ok(Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
+        `${lesson.id}:${section.id}: 至少需要 1 个来源`);
+      assert.ok(section.sourceIds.every((id) => resourcesById.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部存在于全局资源库`);
+      assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于 lesson.resourceIds`);
+    }
+    assert.ok(Array.isArray(note.misconceptions)
+      && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
+    `${lesson.id}: 需要 4–6 个常见误区`);
+    assert.ok(note.misconceptions.every((misconception) => (
+      typeof misconception?.claim === 'string' && misconception.claim.trim().length > 0
+      && typeof misconception.correction === 'string' && misconception.correction.trim().length > 0
+    )), `${lesson.id}: 每个误区必须具有非空 claim 和 correction`);
+    assert.ok(Array.isArray(note.recap) && note.recap.length >= 5,
+      `${lesson.id}: recap 至少需要 5 个回顾要点`);
+    assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${lesson.id}: 每个 recap 项必须是非空字符串`);
   }
 });
 
@@ -157,6 +259,16 @@ test('Agent course data is deeply frozen against representative mutations', () =
     interview.deepDive,
   ];
   for (const value of representativeValues) assert.equal(Object.isFrozen(value), true);
+
+  for (const candidate of agentMechanism.resources) {
+    assert.ok(candidate.evidence, `${candidate.id}: 冻结验证前必须提供 evidence`);
+    assertDeepFrozen(candidate.evidence, `${candidate.id}.evidence`);
+  }
+  for (const candidate of agentMechanism.lessons) {
+    assert.ok(candidate.knowledgeNote, `${candidate.id}: 冻结验证前必须提供 knowledgeNote`);
+    assertDeepFrozen(candidate.knowledgeNote, `${candidate.id}.knowledgeNote`);
+  }
+  assertDeepFrozen(agentMechanism, 'agentMechanism');
 
   const snapshot = structuredClone(agentMechanism);
   assert.throws(() => { agentMechanism.title = '被篡改'; }, TypeError);
@@ -258,6 +370,26 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
   assert.match(byId.get('res-agent-openai-function').value, /API.*语义/);
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('官方课程')));
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('社区补充')));
+});
+
+test('all 28 Agent resources provide complete evidence cards', () => {
+  assert.equal(agentMechanism.resources.length, 28, 'Agent 课程必须维护 28 份资源');
+  for (const resource of agentMechanism.resources) {
+    const { evidence } = resource;
+    assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(evidence.authority), `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validEvidenceRoles.has(evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(evidence.coverage) && evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(evidence.coverage.every((item) => typeof item === 'string' && item.trim().length > 0),
+      `${resource.id}: evidence.coverage 必须只包含非空字符串`);
+    assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.length >= 15,
+      `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+    assert.match(evidence.verifiedAt ?? '', /^2026-07-(20|21|22)$/,
+      `${resource.id}: evidence.verifiedAt 必须是允许的真实核验日期`);
+    assert.ok(evidence.verifiedAt <= '2026-07-22',
+      `${resource.id}: evidence.verifiedAt 不得晚于发布日`);
+  }
 });
 
 test('lesson references resolve to all resources and interviews in both directions', () => {

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 
 import { startApp } from '../src/app.js';
 import { createDefaultProgress } from '../src/core/progress.js';
+import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { renderLessonDetail } from '../src/ui/curriculum.js';
 import { renderKnowledgeNote } from '../src/ui/knowledge-note.js';
@@ -126,32 +128,74 @@ test('lesson detail renders released LLM knowledge notes with source-safe deepen
   }
 });
 
-test('agent mechanism lessons retain legacy explanations without a knowledge note', (t) => {
+test('Agent mechanism renders released knowledge notes with source-safe deepening resources', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const root = document.createElement('div');
   document.body.append(root);
 
-  renderLessonDetail(root, {
-    course: agentMechanism,
-    lessonId: 'agent-01',
-    progress: createDefaultProgress('agent-mechanism'),
-  });
+  for (const lessonId of ['agent-02', 'agent-08']) {
+    const lesson = agentMechanism.lessons.find(({ id }) => id === lessonId);
+    renderLessonDetail(root, {
+      course: agentMechanism,
+      lessonId,
+      progress: createDefaultProgress('agent-mechanism'),
+    });
 
-  assert.ok(root.textContent.includes(agentMechanism.lessons[0].explanations[0].heading));
-  assert.ok(root.querySelector('.lesson-explanations'));
-  assert.equal(root.querySelector('.knowledge-note'), null);
-  const resourceSelection = root.querySelector('.resource-selection');
-  const legacyResource = agentMechanism.resources.find(({ id }) => (
-    agentMechanism.lessons[0].resourceIds.includes(id)
-  ));
-  const legacyResourceItem = resourceSelection.querySelectorAll('li')
-    .find((item) => item.textContent.includes(legacyResource.title));
-  assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
-  assert.ok(legacyResourceItem.textContent.includes(
-    `${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`,
-  ));
-  assert.ok(!resourceSelection.textContent.includes('undefined'));
+    const knowledgeNote = root.querySelector('.knowledge-note');
+    const resourceSelection = root.querySelector('.resource-selection');
+    const sourceLink = knowledgeNote?.querySelector('a');
+    const evidenceResource = agentMechanism.resources.find((resource) => (
+      lesson.resourceIds.includes(resource.id) && resource.evidence
+    ));
+    assert.ok(lesson.knowledgeNote, `${lessonId}: 应发布 Agent 知识笔记数据`);
+    assert.ok(knowledgeNote, `${lessonId}: 应渲染知识型长文笔记`);
+    assert.equal(
+      knowledgeNote.querySelectorAll('nav[aria-label="本章目录"] button').length,
+      lesson.knowledgeNote.sections.length,
+      `${lessonId}: 目录按钮数必须等于章节数`,
+    );
+    assert.equal(sourceLink?.getAttribute('target'), '_blank', `${lessonId}: 来源链接应在新窗口打开`);
+    assert.ok(sourceLink?.getAttribute('rel').includes('noopener noreferrer'),
+      `${lessonId}: 来源链接必须防止 opener 泄漏`);
+    assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+    assert.ok(evidenceResource, `${lessonId}: 必须有可展示来源卡的课程资源`);
+    const evidenceResourceItem = resourceSelection.querySelectorAll('li')
+      .find((item) => item.textContent.includes(evidenceResource.title));
+    assert.ok(evidenceResourceItem, `${lessonId}: 应渲染关联资源的来源卡`);
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.role));
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.limitations));
+    assert.equal(root.querySelector('.data-diagnostic'), null, `${lessonId}: 不应出现资料诊断`);
+  }
+});
+
+test('Harness and Context lessons retain legacy explanations without a knowledge note', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const root = document.createElement('div');
+  document.body.append(root);
+
+  for (const course of [agentHarness, contextRagMemory]) {
+    const lesson = course.lessons[0];
+    renderLessonDetail(root, {
+      course,
+      lessonId: lesson.id,
+      progress: createDefaultProgress(course.id),
+    });
+
+    assert.ok(root.textContent.includes(lesson.explanations[0].heading));
+    assert.ok(root.querySelector('.lesson-explanations'));
+    assert.equal(root.querySelector('.knowledge-note'), null);
+    const resourceSelection = root.querySelector('.resource-selection');
+    const legacyResource = course.resources.find(({ id }) => lesson.resourceIds.includes(id));
+    const legacyResourceItem = resourceSelection.querySelectorAll('li')
+      .find((item) => item.textContent.includes(legacyResource.title));
+    assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
+    assert.ok(legacyResourceItem.textContent.includes(
+      `${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`,
+    ));
+    assert.ok(!resourceSelection.textContent.includes('undefined'));
+  }
 });
 
 test('knowledge note keeps body visible and reports missing source references', (t) => {
