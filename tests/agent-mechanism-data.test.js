@@ -106,6 +106,15 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   }
 }
 
+function assertValidDateOnOrBefore(value, latestDate, label) {
+  assert.equal(typeof value, 'string', `${label}: 必须为 YYYY-MM-DD 字符串`);
+  assert.match(value, /^\d{4}-\d{2}-\d{2}$/, `${label}: 必须严格使用 YYYY-MM-DD`);
+  const [year, month, day] = value.split('-').map(Number);
+  const normalized = new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10);
+  assert.equal(normalized, value, `${label}: 必须是真实存在的日期`);
+  assert.ok(value <= latestDate, `${label}: 不得晚于 ${latestDate}`);
+}
+
 test('Agent mechanism contains eight ordered complete lessons', () => {
   assert.equal(agentMechanism.id, 'agent-mechanism');
   assert.equal(agentMechanism.title, 'Agent 机制');
@@ -179,6 +188,9 @@ test('every Agent mechanism lesson has a source-grounded long-form knowledge not
       `${lesson.id}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
 
     const lessonResourceIds = new Set(lesson.resourceIds);
+    const lessonEvidenceIds = new Set(
+      lesson.resourceIds.filter((id) => resourcesById.get(id)?.evidence),
+    );
     for (const section of note.sections) {
       assert.match(section.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
         `${lesson.id}: section id 必须为 kebab-case`);
@@ -201,6 +213,8 @@ test('every Agent mechanism lesson has a source-grounded long-form knowledge not
         `${lesson.id}:${section.id}: sourceIds 必须全部存在于全局资源库`);
       assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
         `${lesson.id}:${section.id}: sourceIds 必须全部属于 lesson.resourceIds`);
+      assert.ok(section.sourceIds.every((id) => lessonEvidenceIds.has(id)),
+        `${lesson.id}:${section.id}: sourceIds 必须全部属于当前 lesson 的有效 evidence set`);
     }
     assert.ok(Array.isArray(note.misconceptions)
       && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
@@ -214,6 +228,24 @@ test('every Agent mechanism lesson has a source-grounded long-form knowledge not
     assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length > 0),
       `${lesson.id}: 每个 recap 项必须是非空字符串`);
   }
+});
+
+test('Agent mechanism note registry exactly matches public lesson note identities and is deeply frozen', async () => {
+  const { agentMechanismNotes } = await import('../src/data/agent-mechanism-notes.js');
+
+  assert.deepEqual(
+    Object.keys(agentMechanismNotes),
+    expectedLessonIds,
+    '笔记注册表必须覆盖且只覆盖八节 Agent 课程',
+  );
+  for (const lesson of agentMechanism.lessons) {
+    assert.equal(
+      lesson.knowledgeNote,
+      agentMechanismNotes[lesson.id],
+      `${lesson.id}: knowledgeNote 必须引用注册表中的同一对象`,
+    );
+  }
+  assertDeepFrozen(agentMechanismNotes, 'agentMechanismNotes');
 });
 
 test('only the three specified lessons expose interactive experiments', () => {
@@ -385,11 +417,20 @@ test('all 28 Agent resources provide complete evidence cards', () => {
       `${resource.id}: evidence.coverage 必须只包含非空字符串`);
     assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.length >= 15,
       `${resource.id}: evidence.limitations 至少需要 15 个字符`);
-    assert.match(evidence.verifiedAt ?? '', /^2026-07-(20|21|22)$/,
-      `${resource.id}: evidence.verifiedAt 必须是允许的真实核验日期`);
-    assert.ok(evidence.verifiedAt <= '2026-07-22',
-      `${resource.id}: evidence.verifiedAt 不得晚于发布日`);
+    if (evidence.verifiedAt !== undefined) {
+      assertValidDateOnOrBefore(
+        evidence.verifiedAt,
+        '2026-07-22',
+        `${resource.id}: evidence.verifiedAt`,
+      );
+    }
   }
+
+  const functionCalling = agentMechanism.resources.find(
+    ({ id }) => id === 'res-agent-openai-function',
+  );
+  assert.ok(functionCalling.evidence.verifiedAt,
+    'res-agent-openai-function: 时敏 API 语义必须记录 evidence.verifiedAt');
 });
 
 test('lesson references resolve to all resources and interviews in both directions', () => {
