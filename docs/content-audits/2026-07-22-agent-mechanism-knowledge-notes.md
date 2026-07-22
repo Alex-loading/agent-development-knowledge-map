@@ -2,10 +2,10 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份原始基线资源与 1 份 Task 5 规格审查补充资源、24 道面试题和 3 个交互实验。当前 registry 因证据完整性修订共 29 份；来源正文核验与 resource evidence registry 已完成。`agent-01` 至 `agent-06` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-07..08` 仍待写作，八课均尚未完成统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份原始基线资源与 1 份 Task 5 规格审查补充资源、24 道面试题和 3 个交互实验。当前 registry 因证据完整性修订共 29 份；来源正文核验与 resource evidence registry 已完成。`agent-01` 至 `agent-07` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
-- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..06` 待集成，`agent-07..08` 待写作）
+- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..07` 待集成，`agent-08` 待写作）
 - `brokenReferenceCount: 0`
 - 原始来源审计覆盖 28 份基线；Task 5 规格审查后另行访问并新增 AWS official/core 来源，当前 29 项 registry metadata 均已核验并记录 `2026-07-22`。回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
@@ -109,6 +109,14 @@ Task 7 的 timeout 注入是 assessed exercise outcome，而且要求学习者�
 
 六类中的语义类现为 `semantic-mismatch`，覆盖结构合法但与目标、事实或 completion predicate 不一致的空与非空结果；`empty-result` 保留为子类。外部验证器显式返回 PASS、FAIL 或 VALIDATION_UNKNOWN：只有来源获准且版本匹配的 PASS 可发布/继续副作用；FAIL 产生结构化反馈并有限修订；UNKNOWN 不得提交，只能在同权限和数据最小化边界换独立 validator，否则 blocked/handoff。pre-act `actionKey = tool + canonical params + stableIntent + relevant state/version`，post-act `outcomeKey = actionKey + resultClass`；结果类别交替不重置 action 无进展或全局次数/时间/成本，只有真实前置条件或版本变化允许新 attempt，且硬预算不清零。这些状态机、预算、键与工单 JSON 均为 `course synthesis`。
 
+## `agent-07` 工作记忆证据边界与课程综合
+
+本课四个关联来源均沿用 Task 2 的真实正文访问记录。CoALA PDF/HTML 的 4.1、4.2 与 4.6 节直接支持跨模型调用维持当前感知、目标和中间信息的 working memory、环境反馈写回，以及情景/语义/程序记忆的概念分类；它是概念架构与综述，不是新增 benchmark，也不规定生产 event、snapshot、summary 或 context schema。Lilian Weng 综述只交叉说明短期/长期记忆、上下文窗口与 Agent 组件地图，具体研究结论仍须回原论文。Hello-Agents chapter 1/7 只交叉核验内部状态、环境反馈、消息时间/metadata 与历史的中文实践语境，不定义 transcript/event log/state 五层职责。Berkeley 只取得课程页与 syllabus，故仅在模块边界章节用作后续学习导航，不承担任何状态机制主张。
+
+正文中的 transcript、append-only event log、derived working state、working memory、per-call context 与 artifact pointer 分层，fact/assumption/unknown/observation/belief/decision 分类，版本/来源/置信/有效期/validator provenance 字段，事件重放与 snapshot 哈希，summary version/provenance 拒绝门，P0–P3 token 裁剪规则，以及 20 轮供应商/工单 schema 和七组语义 probe 均明确为 `course synthesis`。它们把前课已有的 task contract、权限、预算、pending side effect、stable intent、planVersion、stepVersion 和 validator provenance 保留为 required invariants；没有把这些字段反向归因给 CoALA 或综述。
+
+本课没有 publication blocker：working memory、环境 observation 和记忆组件的一般机制有可访问正文，精确生产结构透明标为课程综合；四个实际使用的 source ID 均在 lesson `resourceIds`、全局 registry 与 evidence set 三重解析。边界保持为单 Agent 单任务内的短期状态和本轮 context；跨会话长期记忆写入治理、检索排序、RAG、遗忘与删除政策不在本课展开。剩余限制是生产系统需自行选择事件存储、事务/哈希、token 估算、隐私保留、validator 治理和 snapshot 周期。
+
 ## 论文冲突与互补
 
 Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` 的闭环实际使用环境、评价器或测试信号并允许跨 trial 记忆；`res-agent-no-self-correct` 检验的是没有外部反馈时的内在自修正，发现部分推理设置会退化，因此两者并不直接矛盾。`res-agent-self-refine` 支持有明确评价维度的生成/编辑迭代，不能被扩大成任意推理自纠错；`res-agent-critic` 则说明在其特定任务中引入可查询工具的外部 critique 能提供不同于自评的证据，但工具自身仍可能错误或有偏。
@@ -117,7 +125,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 逐课 coverage matrix 骨架
 
-以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 至 `agent-06` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-07..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
+以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 至 `agent-07` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-08` 的章节仍不存在，因此该课不提前声称覆盖或评分。
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -127,18 +135,18 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | `agent-04` | objectives[0..1] 与 concepts[0..4] → `state-read-and-termination-priority`、`decide-from-observable-state`、`validate-and-act-boundary`、`observe-and-update-state`、`progress-and-repetition-detection`、`react-boundary-and-observable-logging` | quiz[0] → `observe-and-update-state`；quiz[1] → `progress-and-repetition-detection` | `iq-agent-04-1` short/deepDive/misconception/followUp → 第 1/3/4/5/7 节；`iq-agent-04-2` 全字段 → 第 2/6 节；`iq-agent-04-3` 全字段 → 第 4/5/7 节 | exercise.steps[0..1]、deliverable → `minimal-loop-and-deterministic-lab`；completionCriteria[0] → 第 1–5/7 节，completionCriteria[1] → 第 2/6 节 | failed-first→一次性 reconciliation receipt→原子预算→全候选指纹→call-tool 校验→writer lease/CAS/唯一 claim→观察/action 指纹；重放 observation 只消费一次并进入正常控制流，winner 释放 lease 后 loser 仍被 claim 拦截，stale CAS 不可 act | ReAct 原论文支撑交错 reasoning/action/observation；OpenAI/Anthropic 支撑 run、环境反馈、最大迭代与人工介入；AgentBench 支撑其评测中的重复/终止失败；receipt、lease、CAS、claim、预算与阈值均为课程工程综合 | 97（25/20/25/18/9） | ready-for-integration |
 | `agent-05` | objectives[0..1] 与 concepts[0..4] → `choose-planning-by-task-structure`、`decompose-into-verifiable-work`、`plans-as-executable-dataflow`、`search-planning-and-evaluation-cost`、`observation-driven-replanning` | quiz[0] → 第 1/2/6 节；quiz[1] → 第 5/7 节 | `iq-agent-05-1` 全字段 → 第 1/6 节；`iq-agent-05-2` 全字段 → 第 2/3 节；`iq-agent-05-3` 全字段 → 第 5/7 节 | exercise.steps[0]、deliverable 三策略 → `supplier-research-strategy-board`；steps[1]、修订记录 → `failure-injections-and-lab-boundary`；completionCriteria[0] → 第 1/6 节，completionCriteria[1] → 第 2/5/7 节 | 七节按策略选择→可验证分解→版本化数据流与迟到完成隔离→ToT 搜索成本→观察驱动修订→供应商三策略棋盘→三类注入递进；每张策略卡的五类字段共享 step ID；pending→ready→running→终态使用原子 claim 和 CAS/fencing；timeout 副作用按对账状态分流 | ReAct 支撑行动/观察交错；Plan-and-Solve、ReWOO、ToT 只支撑各论文机制与实验边界；Microsoft 字幕仅交叉核验结构化计划/校验；复用 Task 5 已核验 AWS 来源只支撑 client idempotency、timeout unknown outcome 与 retry 前 reconciliation。版本协议、触发分类、棋盘与预算均标为 `course synthesis`；metadata-only Bilibili 不作章节 evidence | 97（25/20/24/19/9） | ready-for-integration |
 | `agent-06` | objectives[0..1] 与 concepts[0..4] → `observe-before-recover`、`retry-budget-and-unknown-outcome`、`reflection-needs-feedback`、`external-validation-stack`、`fingerprint-and-progress-detection` | quiz[0] → 第 1/2/6 节；quiz[1] → 第 3/4/7 节 | `iq-agent-06-1` 全字段 → 第 1/2/6 节；`iq-agent-06-2` 全字段 → 第 3/4/7 节；`iq-agent-06-3` 全字段 → 第 5/7 节 | exercise.steps[0] → 六类表，semantic-mismatch 同时含 empty 与 nonempty mismatch；steps[1]/deliverable → timeout 对账、双键预算、验证三态；completionCriteria[0] → 第 1/2/5/6 节，completionCriteria[1] → 第 3/4/7 节 | 七节按证据/六类→预算/幂等→反思证据→PASS/FAIL/UNKNOWN→actionKey/outcomeKey 与硬预算→JSON 表→可执行 probe 递进；UNKNOWN 不提交，结果类别交替仍到限停止 | 四项反思研究按反馈条件并列；AgentBench/τ-bench 只支撑可观察轨迹与终态；AWS 只支撑 caller intent、timeout unknown 与 retry 前 reconciliation。semantic-mismatch、验证三态、双键和预算均为 `course synthesis` | 98（25/20/25/19/9） | ready-for-integration |
-| `agent-07` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-07-1..3` | 待映射状态/日志/context 设计 | 待 Task 9 填写 | 待 Task 9 绑定 | — | pending |
+| `agent-07` | objectives[0..1] 与 concepts[0..4] → `information-carriers-and-lifecycles`、`epistemic-records-and-provenance`、`event-replay-and-derived-state`、`context-assembly-and-invariant-gates` | quiz[0] → 第 1/3 节；quiz[1] → 第 4/5/6 节 | `iq-agent-07-1` 全字段 → 第 1/3/6 节；`iq-agent-07-2` 全字段 → 第 4/5/6 节；`iq-agent-07-3` 全字段 → 第 2/5/6 节 | exercise.steps[0] → 第 2/3/5 节的事件索引、state、工作记忆；steps[1]/deliverable → 第 4/5/6 节的 context、删减依据和 probe；completionCriteria[0] → 第 1/3/5 节，completionCriteria[1] → 第 2/5/6 节 | 六节按载体职责→认识状态→事件重放→context gate→20 轮走查→语义 probe 递进；可解析 state、16 项 invariant、压缩前后 JSON 与七反例共同证明硬约束、pending、版本和 provenance 未丢失 | CoALA 核心支撑跨调用工作记忆、环境反馈与概念分类；Weng/Hello-Agents 只交叉核验组件地图、状态/消息实践；Berkeley 仅作后续导航。五层职责、生产 schema、重放/摘要/裁剪规则和 probe 均标 `course synthesis` | 97（25/20/24/19/9） | ready-for-integration |
 | `agent-08` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-08-1..3` | 待映射综合状态机与三类轨迹 | 待 Task 10 填写 | 待 Task 10 绑定 | — | pending |
 
 ## 当前测试审计
 
-`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 至 `agent-06` 已有通过单课 probe 的独立文件，但尚未接入，`agent-07..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
+`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 至 `agent-07` 已有通过单课 probe 的独立文件，但尚未接入，`agent-08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
 
 | command | exit code | result |
 | --- | ---: | --- |
 | `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、29 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
 | `node --test --test-name-pattern='contains eight\|29 fixed\|evidence cards\|references resolve\|interview bank\|identifiers' tests/agent-mechanism-data.test.js` | 0 | 6 项命中测试全部通过，6 项因名称不匹配跳过；29 项资源、evidence、双向引用、面试与 ID 完整性通过，新增的 agent-06 → AWS 关联可解析 |
-| `npm test -- --test-name-pattern='Agent mechanism\|Agent'` | 1 | 共 261 项，11 通过、245 跳过、5 个预期 RED：公开课程仍未接八课 `knowledgeNote`、缺聚合 registry/冻结、Agent UI 笔记和 README 发布声明；agent-06 独立文件、资源 evidence 与 Agent 实验回归通过 |
+| `npm test -- --test-name-pattern='Agent mechanism\|Agent'` | 1 | 共 261 项，11 通过、245 跳过、5 个预期 RED：公开课程仍未接八课 `knowledgeNote`、缺聚合 registry/冻结、Agent UI 笔记和 README 发布声明；agent-07 独立文件、资源 evidence 与 Agent 实验回归通过 |
 | `npm test` | 1 | 共 261 项，256 通过、5 个预期 RED，均与上一行的 Agent 笔记集成缺口相同；新增副作用超时对账反例均通过，Agent 29 份资源与其他模块回归均通过 |
 | `node --test tests/agent-mechanism.test.js` | 0 | 26/26 通过；包含 read-only 默认兼容、side-effect unknown→reconcile、cannot-reconcile→handoff、confirmed-not-executed 且有预算→retry、无重复 act、枚举校验和输入不突变 |
 | `node --test tests/ui-interactions.test.js` | 0 | 43/43 通过；plan-recovery caveat 明示固定只读供应商查询，retry 仅适用于无副作用读操作，原交互分支与 reset 均保持通过 |
@@ -153,7 +161,8 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | `node --check src/data/agent-mechanism-notes/agent-04.js` | 0 | `agent-04` 独立笔记语法通过 |
 | `node --check src/data/agent-mechanism-notes/agent-05.js` | 0 | `agent-05` 独立笔记语法通过 |
 | `node --check src/data/agent-mechanism-notes/agent-06.js` | 0 | `agent-06` 独立笔记语法通过 |
-| `git diff --check` | 0 | 本轮至 `agent-06` 独立笔记与审计差异无空白错误 |
+| `node --check src/data/agent-mechanism-notes/agent-07.js` | 0 | `agent-07` 独立笔记语法通过 |
+| `git diff --check` | 0 | 本轮至 `agent-07` 独立笔记与审计差异无空白错误 |
 | 下方“`agent-02` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 29 分钟；6 个唯一 section ID；测试口径（introduction + paragraphs + nextStep）正文 3935 字符；每节 3–4 段、每段最短 146 字符、至少 2 个要点、非空 source 数组；5 个误区、8 个 recap；所有嵌套值冻结；4 个来源均通过全局 registry、lesson resourceIds 和 evidence set 三重解析，`brokenReferenceCount: 0` |
 | 下方“`agent-03` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 36 分钟；7 个唯一 section ID；正文 7715 字符且不超过 9000；每节 3 段、每段最短 196 字符、至少 2 个要点、非空且无重复 source 数组；6 个误区、11 个 recap；所有嵌套值冻结；6 个来源均三重解析；两份 Responses schema 与五类 result JSON 均实际 parse，cancel_order 只含 order_id/reason/reason_detail，validation 为 false+repair_input、审批为 false+request_approval，AWS caller/UNKNOWN_OUTCOME reconcile 断言通过，`brokenReferenceCount: 0` |
 | 下方“`agent-04` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 37 分钟；7 个唯一 section ID；正文 8985 字符且不超过 9000；每节 3 段、每段最短 140 字符、至少 2 个要点；6 个误区、11 个 recap；深层冻结；5 个来源三重解析，`brokenReferenceCount: 0` |
@@ -163,6 +172,8 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | 下方“`agent-05` 版本化步骤与迟到完成 probe”完整 one-liner | 0 | 解析七状态与 stepId、planVersion、stepVersion、attempt、stableIntent、fencingToken 六元 claim key；old plan、same-plan old stepVersion、same-step old attempt、wrong stableIntent、stale fencing 五反例均 observation-only，不能发布 artifact、满足 checkpoint 或解锁依赖；只有当前六项完整 tuple 可发布；副作用反例保持 `actCount: 1` |
 | 下方“`agent-06` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 39 分钟；正文 8806；7 节；最短段 126；7 个来源三重解析；6 个误区、11 recap；深层冻结；`brokenReferenceCount: 0` |
 | 下方 `agent-06` 三条语义 probe | 0 | 确定性 classifier 的 empty/nonempty-irrelevant/matched 三案例；PASS/FAIL/UNKNOWN 与 stale PASS/FAIL；actionKey/outcomeKey、结果交替到限、真实版本只清局部且硬预算不清零均通过 |
+| 下方“`agent-07` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 34 分钟；正文 8538；6 节；最短段 199；4 个来源三重解析；6 个误区、11 recap；深层冻结；`brokenReferenceCount: 0` |
+| 下方“`agent-07` schema 与上下文语义 probe”完整 one-liner | 0 | 可解析 state、16 项 required invariants、20 轮压缩前后和七组预期；缺硬约束/pending、旧或无 provenance 摘要均拒绝；完整/快照重放同 state、重复事件零应用；pointer 只产生 observation；超预算仅裁 P2/P3 并保留 P0/P1 |
 
 ### `agent-02` 可复制 contract/source/freeze probe
 
@@ -310,3 +321,30 @@ node --input-type=module -e 'import assert from "node:assert/strict";const apply
 ```
 
 本轮真实输出：`{"pass":"publish","fail":"structured-feedback-and-bounded-revision","unknown":{"commitCount":0,"downstreamSideEffectCount":0,"exit":"blocked-or-handoff"},"stalePass":"VALIDATION_UNKNOWN","staleFail":"VALIDATION_UNKNOWN"}`。
+
+### `agent-07` 单课质量与可追溯性
+
+- `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-07-1..3` 的 `shortAnswer`、全部 `deepDive`、`misconceptions` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均映射到矩阵所列六节；这些字段只规定覆盖和交付，不进入 source ID 或 evidence map。
+- `sections → evidence → 产出`：第 1/2/3/4 节只用 CoALA 支撑跨调用工作记忆与环境反馈的一般机制，以 Weng/Hello-Agents 交叉核验组件地图和消息/状态实践；第 5 节将同一边界落到 20 轮供应商/工单案例；第 6 节只在“后续学习导航”范围使用 Berkeley syllabus。正文不声称四个来源定义 transcript/event/state 五层职责、认识分类、生产 schema、摘要或裁剪算法；这些结构、required invariants 和 probe 全部明标 `course synthesis`。
+- `状态与压缩语义`：可解析 state schema 明确保留 task contract、硬约束、权限、预算、pending side effect、stable intent、planVersion、stepVersion、fact/belief/unknown、validator provenance 和 artifact pointer；完整重放与 snapshot@16 增量重放得到同 state，重复 evt-18 不重复扣预算。20 轮压缩前后 JSON 保留新增约束、冲突 belief、对账决定和两个 retrieval pointers；pointer 解析只生成 observation，不自动提升 fact。缺 invariant、旧 summary 或无 provenance summary 都 fail closed；预算超限按 P3→P2 裁剪并保留 P0/P1。
+- `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试全字段、exercise 两步、deliverable 与两个完成标准均可追踪）；结构 20/20（六节由载体职责、认识状态与事件重放推进至 context gate、完整走查和反例验收，并连接 agent-08）；来源 24/25（四个 ID 均三重解析，CoALA/Weng/Hello/Berkeley 的正文与导航边界清晰；生产 schema 无单一行业规范，故只作课程综合）；教学 19/20（可解析状态、16 项 invariant、压缩前后和七组反例可直接完成练习，仍待页面验收）；数据契约 9/10（正文 8538 字符、34 分钟、纯数据、稳定 ID、无 HTML、深层冻结）。总分 `97/100`，`brokenReferenceCount: 0`；coverage gap：无阻塞缺口，生产系统仍需实现真实事件存储、事务/哈希、隐私保留、token 估算、snapshot 和 validator 治理；状态 `ready-for-integration`，模块仍为 `publicationReady: false`。
+
+### `agent-07` 可复制 contract/source/freeze probe
+
+以下命令实际导入独立笔记与课程 registry，检查 4200–9000 字正文、六节结构、source 三重解析、误区、recap 与全部嵌套值冻结：
+
+```bash
+node --input-type=module -e 'import assert from "node:assert/strict";const [{agent07Note:n},{agentMechanism:c}]=await Promise.all([import("./src/data/agent-mechanism-notes/agent-07.js"),import("./src/data/agent-mechanism.js")]);const lesson=c.lessons.find(x=>x.id==="agent-07");const reg=new Map(c.resources.map(x=>[x.id,x]));const body=[n.introduction,...n.sections.flatMap(s=>s.paragraphs),n.nextStep].reduce((a,s)=>a+s.trim().length,0);const ids=n.sections.map(s=>s.id);const deep=v=>{if(v&&typeof v==="object"){assert.equal(Object.isFrozen(v),true);Object.values(v).forEach(deep)}};assert.ok(n.readingMinutes>=30&&n.readingMinutes<=35);assert.equal(n.sections.length,6);assert.equal(new Set(ids).size,ids.length);assert.ok(body>=4200&&body<=9000);assert.ok(n.sections.every(s=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s.id)&&s.paragraphs.length>=2&&s.paragraphs.length<=4&&s.paragraphs.every(p=>p.trim().length>=60)&&s.keyPoints.length>=2&&s.sourceIds.length>=1&&new Set(s.sourceIds).size===s.sourceIds.length&&s.sourceIds.every(id=>lesson.resourceIds.includes(id)&&reg.has(id)&&reg.get(id).evidence)));assert.ok(n.misconceptions.length>=4&&n.misconceptions.length<=6);assert.ok(n.recap.length>=5);deep(n);console.log(JSON.stringify({readingMinutes:n.readingMinutes,body,sections:n.sections.length,minParagraph:Math.min(...n.sections.flatMap(s=>s.paragraphs.map(p=>p.trim().length))),sources:[...new Set(n.sections.flatMap(s=>s.sourceIds))],misconceptions:n.misconceptions.length,recap:n.recap.length,deepFrozen:true,brokenReferenceCount:0}))'
+```
+
+本轮真实输出：`{"readingMinutes":34,"body":8538,"sections":6,"minParagraph":199,"sources":["res-agent-coala","res-agent-lilian-weng","res-agent-hello-agents","res-agent-berkeley-course"],"misconceptions":6,"recap":11,"deepFrozen":true,"brokenReferenceCount":0}`。
+
+### `agent-07` 可复制 schema 与上下文语义 probe
+
+以下命令实际解析正文中的 state schema、16 项 required invariants、20 轮压缩前后和七组预期，并运行拒绝门、事件重放、重复投递、retrieval pointer 与 token 优先级逻辑：
+
+```bash
+node --input-type=module -e 'import assert from "node:assert/strict";const {agent07Note:n}=await import("./src/data/agent-mechanism-notes/agent-07.js");const sec=id=>n.sections.find(s=>s.id===id);const obj=s=>JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1));const arr=s=>JSON.parse(s.slice(s.indexOf("["),s.lastIndexOf("]")+1));const state=obj(sec("event-replay-and-derived-state").paragraphs[1]),required=arr(sec("context-assembly-and-invariant-gates").paragraphs[1]),before=obj(sec("twenty-turn-compression-walkthrough").paragraphs[0]),after=obj(sec("twenty-turn-compression-walkthrough").paragraphs[1]),expected=arr(sec("semantic-probes-and-module-boundary").paragraphs[1]);for(const k of ["taskContract.hardConstraints","taskContract.permissions","control.budgets","control.planVersion","control.stepVersion","pendingSideEffect.status","pendingSideEffect.stableIntent","validatorProvenance"])assert.ok(required.includes(k),k);assert.equal(state.pendingSideEffect.status,"UNKNOWN_OUTCOME");assert.equal(state.pendingSideEffect.reconcileBeforeAct,true);assert.equal(state.knowledge.beliefs[0].status,"contested");assert.equal(before.eventRange,"evt-1..evt-20");assert.ok(before.estimatedTokens>before.contextBudget);assert.equal(after.invariants.pending.next,"reconcile-before-act");assert.ok(after.manifest.estimatedTokens<=after.manifest.tokenBudget);assert.equal(after.pointers.length,2);const events=Array.from({length:20},(_,i)=>({eventId:`evt-${i+1}`,sequence:i+1,budgetDelta:i===17?-1:0,factVersion:i===17?2:null}));const reduce=(seed,list)=>{const out=structuredClone(seed),seen=new Set(out.seen);for(const e of list){if(seen.has(e.eventId))continue;seen.add(e.eventId);out.cursor=e.sequence;out.budget+=e.budgetDelta;if(e.factVersion)out.factVersion=e.factVersion}return {...out,seen:[...seen]}};const empty={cursor:0,budget:4,factVersion:0,seen:[]},full=reduce(empty,events),snap=reduce(empty,events.slice(0,16)),resumed=reduce(snap,events.slice(16));assert.deepEqual(full,resumed);assert.deepEqual(reduce(resumed,[events[17]]),resumed);const assemble=x=>{for(const key of ["hardConstraints","pending","stableIntent","validatorProvenance"])if(!x[key])return "REJECT_MISSING_INVARIANT";if(x.summaryVersion<x.currentSummaryVersion||!x.summaryProvenance)return "REJECT_STALE_OR_UNTRACEABLE_SUMMARY";return "ACCEPT"};const base={hardConstraints:["read-only"],pending:{status:"UNKNOWN_OUTCOME"},stableIntent:"intent-1",validatorProvenance:{id:"v",version:1},summaryVersion:4,currentSummaryVersion:4,summaryProvenance:{derivedFrom:["evt-1..20"]}};assert.equal(assemble({...base,hardConstraints:null}),"REJECT_MISSING_INVARIANT");assert.equal(assemble({...base,pending:null}),"REJECT_MISSING_INVARIANT");assert.equal(assemble({...base,summaryVersion:3}),"REJECT_STALE_OR_UNTRACEABLE_SUMMARY");assert.equal(assemble({...base,summaryProvenance:null}),"REJECT_STALE_OR_UNTRACEABLE_SUMMARY");const retrieval={pointer:"artifact://board?v=5",parsed:true,recordClass:"observation",factPromoted:false};assert.equal(retrieval.recordClass,"observation");assert.equal(retrieval.factPromoted,false);const blocks=[{priority:"P0",tokens:1700},{priority:"P1",tokens:2100},{priority:"P2",tokens:1900},{priority:"P3",tokens:700}],budget=4300,kept=[];let used=0;for(const p of ["P0","P1","P2","P3"])for(const b of blocks.filter(x=>x.priority===p))if(used+b.tokens<=budget||p==="P0"||p==="P1"){kept.push(b);used+=b.tokens}assert.deepEqual(kept.map(x=>x.priority),["P0","P1"]);assert.ok(used<=budget);assert.deepEqual(expected.map(x=>x.result),["REJECT_MISSING_INVARIANT","REJECT_MISSING_INVARIANT","REJECT_STALE_OR_UNTRACEABLE_SUMMARY","REJECT_STALE_OR_UNTRACEABLE_SUMMARY","SAME_STATE_HASH","OBSERVATION_ONLY","TRIM_P3_THEN_P2_KEEP_P0_P1"]);console.log(JSON.stringify({parsed:{state:true,requiredInvariants:required.length,before:true,after:true,expectedCases:expected.length},missingHardConstraint:assemble({...base,hardConstraints:null}),missingPending:assemble({...base,pending:null}),staleSummary:assemble({...base,summaryVersion:3}),missingProvenance:assemble({...base,summaryProvenance:null}),replay:{sameState:JSON.stringify(full)===JSON.stringify(resumed),duplicateApplied:false,cursor:full.cursor},retrieval,budget:{kept:kept.map(x=>x.priority),dropped:["P2","P3"],invariantsPreserved:true,used,budget}}))'
+```
+
+本轮真实输出：`{"parsed":{"state":true,"requiredInvariants":16,"before":true,"after":true,"expectedCases":7},"missingHardConstraint":"REJECT_MISSING_INVARIANT","missingPending":"REJECT_MISSING_INVARIANT","staleSummary":"REJECT_STALE_OR_UNTRACEABLE_SUMMARY","missingProvenance":"REJECT_STALE_OR_UNTRACEABLE_SUMMARY","replay":{"sameState":true,"duplicateApplied":false,"cursor":20},"retrieval":{"pointer":"artifact://board?v=5","parsed":true,"recordClass":"observation","factPromoted":false},"budget":{"kept":["P0","P1"],"dropped":["P2","P3"],"invariantsPreserved":true,"used":3800,"budget":4300}}`。
