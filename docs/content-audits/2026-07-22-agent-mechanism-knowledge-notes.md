@@ -2,7 +2,7 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。本阶段只完成来源正文核验、资源 evidence registry 与后续逐课 coverage matrix 骨架；尚未撰写或接线八篇 `knowledgeNote`。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 单课知识笔记已达到 ready-for-integration，其余课程仍按 coverage matrix 推进，八篇笔记尚未统一接线。
 
 - `publicationReady: false`
 - `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，笔记写作尚待 Task 3–10 完成）
@@ -69,7 +69,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `agent-01` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-01-1..3` | 待映射选型表和完成条件 | 待 Task 3 填写 | 待 Task 3 绑定 | — | pending |
+| `agent-01` | objectives[0..1] 与 concepts[0..4] → `control-authority-spectrum`、`minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | quiz[0] → `control-authority-spectrum`；quiz[1] → `minimal-action-loop`、`termination-evidence` | `iq-agent-01-1` short/deepDive/followUp → `control-authority-spectrum`；`iq-agent-01-2` 全字段 → `selection-thresholds`；`iq-agent-01-3` 全字段 → `minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | exercise.steps[0..1]、deliverable → `three-case-decision-table`；completionCriteria[0] → 第 1/5/6 节，completionCriteria[1] → 第 2/3/4/6 节 | 六节按控制权连续谱→最小闭环→动作与环境→终止证据→选型门槛→三案例表递进；产出固定摘要/审批流/开放调查分别为普通调用/Workflow/Agent，并含 done、blocked、budget、handoff | 核心 `res-agent-anthropic-effective`、`res-agent-openai-guide`；闭环交叉核验 `res-agent-hf-course`、`res-agent-ms-course`、`res-agent-hello-agents`、`res-agent-lihongyi`；未使用 metadata-only `res-agent-datawhale-bili`，也未把课程目录 `res-agent-berkeley-course` 或 outline-only `res-agent-dlai-agentic` 用作机制主张 | 94（25/20/24/16/9） | ready-for-integration |
 | `agent-02` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-02-1..3` | 待映射 task contract | 待 Task 4 填写 | 待 Task 4 绑定 | — | pending |
 | `agent-03` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-03-1..3` | 待映射工具 schema 与五类实验 | 待 Task 5 填写 | 待 Task 5 绑定 | — | pending |
 | `agent-04` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-04-1..3` | 待映射 loop 轨迹与退出 | 待 Task 6 填写 | 待 Task 6 绑定 | — | pending |
@@ -90,3 +90,9 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 | `node --check tests/agent-mechanism-data.test.js` | 0 | 语法通过 |
 
 当前没有把 metadata-only 材料当作机制 evidence，也没有把 extension 升级为 core。最终测试状态、coverage、评分和 `publicationReady` 必须在八篇笔记接线、完整自动化与浏览器验收完成后重写，不能沿用本阶段的中间结果。
+
+### `agent-01` 单课质量与可追溯性
+
+- `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-01-1..3` 的 `shortAnswer`、全部 `deepDive` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均已进入上表所列实质章节；这些路径只定义覆盖，不被伪装成来源 ID。
+- `sections → evidence → 产出`：第 1/5 节用 Anthropic 与 OpenAI 厂商正文支撑控制权和适用门槛，并明确其工程经验不构成跨任务定律；第 2/3/4 节以 OpenAI、Hugging Face、Microsoft、Hello-Agents 与李宏毅字幕正文交叉说明闭环、环境和退出，始终区分模型决策与宿主执行；第 6 节把相同标准应用到三案例选型表。两条 Bilibili metadata-only 资源没有出现在任何 `sourceIds` 中。
+- `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试全字段、exercise 两步与 deliverable、两个完成标准均可追踪）；结构 20/20（六节按依赖递进并连接 agent-02）；来源 24/25（ID 全部属于本课 registry 与 evidence set，厂商/字幕/课程边界已显式保留）；教学 16/20（固定三案例完整走查，但尚待集成后的真实页面可读性验收）；数据契约 9/10（纯数据、稳定 ID、无 HTML，最终递归冻结由聚合入口与集成测试共同验收）。总分 `94/100`，`brokenReferenceCount: 0`，coverage gap：无；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
