@@ -1,3 +1,5 @@
+import { agentMechanismNotes } from './agent-mechanism-notes.js';
+
 const VERIFIED_AT = '2026-07-22';
 
 const evidenceByResourceId = {
@@ -204,6 +206,7 @@ const lessons = [
   {
     id: 'agent-01', moduleId: 'agent-mechanism', order: 1, title: 'Agent、Workflow 与普通 LLM 应用', durationMinutes: 80,
     summary: '从控制权和行动闭环出发，判断何时使用普通调用、确定性 Workflow 或拥有有限自治权的 Agent。',
+    knowledgeNote: agentMechanismNotes['agent-01'],
     objectives: ['用控制权、路径确定性和环境反馈区分 LLM 应用、Workflow 与 Agent', '描述最小单 Agent 的目标、状态、动作、观察和终止组件'],
     concepts: ['Agency 连续谱', 'Workflow', '动作空间', '环境观察', '终止条件'],
     explanations: [
@@ -222,6 +225,7 @@ const lessons = [
   {
     id: 'agent-02', moduleId: 'agent-mechanism', order: 2, title: '目标、约束与任务状态', durationMinutes: 85,
     summary: '把模糊请求改写成可执行任务契约，并让完成判断依赖可观察证据而不是模型自信。',
+    knowledgeNote: agentMechanismNotes['agent-02'],
     objectives: ['把用户意图整理为目标、约束、成功证据和未知项', '区分工作状态、对话记录、事实、假设与环境观察'],
     concepts: ['Task contract', '硬约束与软偏好', '成功证据', '工作状态', '未知项'],
     explanations: [
@@ -240,6 +244,7 @@ const lessons = [
   {
     id: 'agent-03', moduleId: 'agent-mechanism', order: 3, title: '工具调用与 Agent–Computer Interface', durationMinutes: 100,
     summary: '掌握模型提出结构化动作、应用校验和执行、结果作为观察回填的完整工具调用协议。',
+    knowledgeNote: agentMechanismNotes['agent-03'],
     objectives: ['解释 function calling 从工具声明到 observation 回填的生命周期', '设计职责单一、约束清楚且错误结构化的工具 schema'],
     concepts: ['Function calling', 'Tool schema', '宿主执行器', '结构化错误', '最小权限'],
     explanations: [
@@ -258,6 +263,7 @@ const lessons = [
   {
     id: 'agent-04', moduleId: 'agent-mechanism', order: 4, title: 'Agent Loop 与 ReAct', durationMinutes: 100,
     summary: '把 decide、act、observe、update 和 terminate 写成受预算约束的控制循环，并理解 ReAct 的可观察机制。',
+    knowledgeNote: agentMechanismNotes['agent-04'],
     objectives: ['手写带工具结果回填和多类终止状态的最小 Agent loop', '解释 ReAct 与仅生成推理文本的 chain-of-thought 的机制差别'],
     concepts: ['Decide–Act–Observe', 'ReAct', '状态更新', '循环预算', '停止条件'],
     explanations: [
@@ -276,6 +282,7 @@ const lessons = [
   {
     id: 'agent-05', moduleId: 'agent-mechanism', order: 5, title: '规划、任务分解与重规划', durationMinutes: 105,
     summary: '把计划视为可验证的行动假设，比较即时反应、先规划后执行与搜索策略，并在新观察下重规划。',
+    knowledgeNote: agentMechanismNotes['agent-05'],
     objectives: ['依据任务长度、依赖和反馈频率选择 reactive 或 plan-and-execute', '把复杂目标分解为有产物、有依赖、有验证点的步骤并动态修订'],
     concepts: ['Reactive', 'Plan-and-execute', '任务分解', '重规划', '搜索式规划'],
     explanations: [
@@ -294,6 +301,7 @@ const lessons = [
   {
     id: 'agent-06', moduleId: 'agent-mechanism', order: 6, title: '失败恢复、反思与外部验证', durationMinutes: 110,
     summary: '按失败类型选择有限恢复动作，用外部证据校准反思，并防止同一失败动作反复执行。',
+    knowledgeNote: agentMechanismNotes['agent-06'],
     objectives: ['区分传输、参数、业务、语义、权限和能力失败并选择恢复动作', '说明 reflection 的适用条件与外部验证相对无依据自评的优势'],
     concepts: ['错误分类', '重试预算', 'Reflection', '外部验证', 'Blocked 与 handoff'],
     explanations: [
@@ -312,6 +320,7 @@ const lessons = [
   {
     id: 'agent-07', moduleId: 'agent-mechanism', order: 7, title: '上下文与工作记忆', durationMinutes: 95,
     summary: '把完整轨迹整理成事件日志、状态快照和下一轮最小上下文，保留来源、约束与未决失败。',
+    knowledgeNote: agentMechanismNotes['agent-07'],
     objectives: ['区分 transcript、event log、state、working memory 与 context', '在压缩长轨迹时保留硬约束、观察来源、产物引用和未解决问题'],
     concepts: ['Transcript', 'Event log', 'Working state', 'Context assembly', 'Belief 与 observation'],
     explanations: [
@@ -330,6 +339,7 @@ const lessons = [
   {
     id: 'agent-08', moduleId: 'agent-mechanism', order: 8, title: '单 Agent 综合设计与面试压力测试', durationMinutes: 120,
     summary: '综合设计一个只读仓库诊断 Agent，并在机制、框架价值和后续模块边界上接受压力测试。',
+    knowledgeNote: agentMechanismNotes['agent-08'],
     objectives: ['交付包含任务契约、状态、工具、循环、恢复与终止的单 Agent 设计', '解释不用框架的最小实现以及 Harness、RAG、MCP 和多 Agent 的接口边界'],
     concepts: ['端到端设计', '状态机', '框架抽象', 'Handoff', '模块边界'],
     explanations: [
