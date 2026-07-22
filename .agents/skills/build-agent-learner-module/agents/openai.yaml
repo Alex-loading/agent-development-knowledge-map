@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Agent Learner Module"
+  short_description: "从零研究、搭建并发布完整的 Agent Learner 学习模块"
+  default_prompt: "Use $build-agent-learner-module to build the next Agent Learner module from research through verified Vercel release."
