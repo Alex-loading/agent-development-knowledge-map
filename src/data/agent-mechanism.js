@@ -264,7 +264,7 @@ const lessons = [
       { heading: '最小循环是控制程序', body: '一个最小 Agent loop 每轮读取目标与当前状态，先检查是否已有完成证据、是否 blocked、预算是否耗尽，再让模型选择受允许的动作；宿主校验并执行动作，把 observation 追加到事件日志并更新工作状态，然后进入下一轮。done、blocked、failed、budget-exhausted 和 handoff 都应成为显式返回值，max turns、时间或成本预算用于阻止无限执行。', keyPoints: ['终止检查与动作执行同样属于循环核心', '状态只能依据动作结果更新，不能先假定成功'] },
       { heading: 'ReAct 让推理与环境反馈交错', body: '普通 chain-of-thought 描述模型内部生成的推理文本，并不要求系统执行动作或取得新证据；ReAct 则把任务相关的推理摘要、结构化 action 和环境 observation 交错组织，让下一步能根据真实反馈调整。产品日志应记录可观察决策摘要、工具参数和结果，而不是索取或暴露隐藏推理。若状态不变却重复同一调用，通常说明缺少进展检测、错误分类或停止预算。', keyPoints: ['ReAct 的关键是行动后吸收 observation，不是展示长篇思维过程', '重复动作、状态无进展和预算耗尽都应触发停止或恢复策略'] },
     ],
-    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
+    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
     exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。', experiment: 'agent-loop' },
     quiz: [
       quiz('quiz-agent-04-1', '最小 Agent loop 中，工具执行后必须先做什么再进入下一轮？', ['删除原始目标', '把结果记录为 observation 并更新状态', '自动扩大预算', '重新加载模型参数'], 1, '环境结果必须先进入事件日志和工作状态，下一轮决策才能建立在新证据上。'),
