@@ -348,7 +348,7 @@ const lessons = [
       { heading: '时间控制不是一个开关', body: 'Timeout 约束单个操作等待多久，deadline 表示整个 run 或调用链最晚完成时刻，cancellation 是向正在执行的组件传播停止意图，rollback 则是业务补偿或事务语义。timeout 不等于 cancel 或 rollback：等待超时后远端动作可能仍在运行或已成功，Harness 必须查询状态、传播取消并按工具契约决定补偿。', keyPoints: ['绝对 deadline 沿调用链传递，子步骤不得重置总时限', '超时结果未知时先确认副作用状态，不能立即盲重试'] },
       { heading: '预算与重试共同限制放大效应', body: '运行预算应覆盖模型调用数、token 或费用、工具调用数、墙钟时间、重试次数和并发槽位，并在父子任务间保守分配。只有明确瞬态且幂等或可安全去重的错误才进入有限重试，采用指数退避与 jitter；参数错误、权限拒绝、业务冲突和预算耗尽通常应修正、阻塞或终止。', keyPoints: ['每次重试都消耗剩余预算并记录原因', '重试策略需防止多层调用各自重试造成乘法放大'] },
     ],
-    resourceIds: ['res-harness-temporal-retry', 'res-harness-aws-timeouts', 'res-harness-sre-cascading'],
+    resourceIds: ['res-harness-langgraph-fault-tolerance', 'res-harness-temporal-retry', 'res-harness-aws-timeouts', 'res-harness-sre-cascading'],
     exercise: { title: '设计分层运行预算', brief: '为包含检索、生成和写入的 run 分配成本、时间与重试预算。', steps: ['定义全局 deadline、各步骤 timeout、模型和工具配额，并写出父子预算继承及拒绝规则', '把超时、限流、参数错误、权限拒绝和结果未知映射为重试、查询、修正、blocked 或 failed'], deliverable: '一张预算账本、错误决策表和取消传播时序图。' },
     quizzes: [
       quiz('工具调用 timeout 后最安全的第一步通常是什么？', ['立刻用相同参数无限重试', '依据调用标识查询远端状态和副作用', '假定已经 rollback'], 1, '超时只说明等待结束，远端结果可能未知；先查状态可避免重复副作用。'),
