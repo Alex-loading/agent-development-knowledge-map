@@ -2,12 +2,12 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、29 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 至 `agent-03` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-04..08` 仍待写作，八课均尚未完成统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份原始基线资源与 1 份 Task 5 规格审查补充资源、24 道面试题和 3 个交互实验。当前 registry 因证据完整性修订共 29 份；来源正文核验与 resource evidence registry 已完成。`agent-01` 至 `agent-03` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-04..08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
 - `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..03` 待集成，`agent-04..08` 待写作）
 - `brokenReferenceCount: 0`
-- 本次 registry 中 29 项资源 metadata 均已重访并更新为 `2026-07-22`；回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
+- 原始来源审计覆盖 28 份基线；Task 5 规格审查后另行访问并新增 AWS official/core 来源，当前 29 项 registry metadata 均已核验并记录 `2026-07-22`。回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
 
 ## Source policy
@@ -16,7 +16,13 @@
 
 `authority` 表示已核验的来源身份，不等于普遍正确；`role` 表示本模块实际用途。时敏 API、持续更新仓库、在线厂商材料和等价文字材料记录语义核验日。下表的 coverage 均来自本轮实际访问，limitations 明示访问、版本与迁移边界。
 
-## 29 项来源访问表
+## 来源访问表：28 份基线 + 1 份 Task 5 审查补充
+
+### 2026-07-22 证据完整性修订
+
+Task 2 按立项范围审计了 28 份基线资料。Task 5 规格审查发现，`agent-03` 的核心考核明确要求解释幂等请求标识、网络超时后的未知终态和安全重试，但基线资料没有一份可访问正文直接支持这组可靠执行语义。课程 objectives、quiz、面试题和 exercise 只能证明“课程要求覆盖”，不能证明机制本身；把课程字段或既有资源标题当 evidence 会违反本审计的 source policy。
+
+因此审查例外新增第 29 份来源 `res-agent-aws-idempotent-apis`：实际访问 AWS Builders' Library 官方正文 `Making retries safe with idempotent APIs`，canonical URL 为 `https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/`，作者 Malcolm Featonby。该卡角色为 `official/core`，增加原因仅是补足 assessed outcome 的直接证据；coverage 限定为 client request identifier、幂等重试、超时不确定性、语义等价响应、晚到请求与同标识改参边界，不把订单审批、查询、对账或补偿归因给 AWS。下表列出当前最终 29 项，并以这条记录保留 28 份基线与 AWS 补充的历史区别。
 
 | id | access type | 实际入口 | authority | role | coverage | limitations | 核验日 | broken |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -52,7 +58,7 @@
 
 ## URL、版本与字幕限制
 
-- 本轮 29 个 registry URL 均可解析，`brokenReferenceCount: 0`；实际正文入口可能是同一来源的 PDF、完整 HTML、课程子页、字幕或等价文字版，已逐项列在上表。
+- 28 个基线 registry URL 与 1 个 Task 5 AWS 补充 URL 均可解析，`brokenReferenceCount: 0`；实际正文入口可能是同一来源的 PDF、完整 HTML、课程子页、字幕或等价文字版，已逐项列在上表。
 - 两条 Bilibili 资源仅取得 metadata，字幕数组为空；它们只可用于资源导航，不能被章节 `sourceIds` 用来证明 Agent 机制。
 - 李宏毅和 Microsoft 两条 YouTube 使用第三方/自动字幕，分别保留转写与重复噪声限制。抖音原视频没有可访问字幕，只能把明确源自该视频的文字版作为间接 extension。
 - Berkeley 与 DeepLearning.AI 只访问课程页或 syllabus/outline；课程字段不等于逐讲正文。Microsoft 课程核验时已为 18 课，旧视频示例不得和当前仓库语义混用。

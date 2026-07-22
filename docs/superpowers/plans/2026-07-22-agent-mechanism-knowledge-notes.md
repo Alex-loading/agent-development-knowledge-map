@@ -4,9 +4,17 @@
 
 **Goal:** 把 Agent 机制八课升级为来源可追溯、站内可独立学习的知识笔记，并完成测试、浏览器验收、PR 合并与公开部署。
 
-**Architecture:** 每课使用一个纯数据文件，`agent-mechanism-notes.js` 只做八课聚合与递归冻结，`agent-mechanism.js` 负责真实课程和资源 registry 接线。通用 renderer 保持不变；29 份来源卡嵌入 `resource.evidence`，章节引用必须同时解析到全局 registry、当前 lesson 和有效 evidence。
+**Architecture:** 每课使用一个纯数据文件，`agent-mechanism-notes.js` 只做八课聚合与递归冻结，`agent-mechanism.js` 负责真实课程和资源 registry 接线。通用 renderer 保持不变；原计划为 28 份基线来源卡，按下方 2026-07-22 Change record 补入 1 份 AWS 来源后，最终 29 份来源卡嵌入 `resource.evidence`。章节引用必须同时解析到全局 registry、当前 lesson 和有效 evidence。
 
 **Tech Stack:** 原生 ES Modules、Node.js test runner、Fake DOM、GitHub Pages、项目 `.agents/skills/build-learning-module-notes/`。
+
+---
+
+## Change record — 2026-07-22
+
+原始计划以课程 registry 中的 28 份基线资源为固定范围，Task 1 的 RED contract 与 Task 2 的来源审计均按 28 份执行，并保留“不新增资源总数”的设计约束。Task 5 规格审查随后发现：幂等请求标识、网络超时后的未知终态与安全重试是 `agent-03` 的核心 assessed outcome，但 28 份基线来源没有可访问正文直接支撑。课程 objectives、quiz、exercise 和面试字段只定义覆盖，不能替代外部 evidence。
+
+因此 Task 5 获得一次证据完整性例外：新增 official/core 资源 `res-agent-aws-idempotent-apis`，标题 `Making retries safe with idempotent APIs`，canonical URL `https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/`。从该修订起，最终 Architecture、集成、内容审计、测试、PR 和发布门槛改为 29 份，即 28 份基线 + 1 份 AWS 审查补充；Task 2 的历史任务定义仍保持 28 份，不进行事后改写。
 
 ---
 
@@ -14,7 +22,7 @@
 
 - `src/data/agent-mechanism-notes/agent-01.js` … `agent-08.js`：单课纯数据知识笔记。
 - `src/data/agent-mechanism-notes.js`：八课 import、ID 映射和递归冻结。
-- `src/data/agent-mechanism.js`：29 份资源 evidence、lesson `knowledgeNote` 接线和课程导出。
+- `src/data/agent-mechanism.js`：28 份基线资源 + 1 份 Task 5 AWS 补充的最终 29 份 evidence、lesson `knowledgeNote` 接线和课程导出。
 - `tests/agent-mechanism-data.test.js`：Agent 课程、来源卡、知识笔记和冻结契约。
 - `tests/data.test.js`：跨模块 fallback 与全局数据回归。
 - `tests/guided-ui.test.js`：通用知识笔记渲染、目录焦点和安全外链。
@@ -54,7 +62,7 @@ const agentNoteExpectations = new Map([
 ]);
 ```
 
-断言应复用 LLM 正式 contract：8 个精确 key、对象身份、5–7 sections、kebab-case ID、2–4 段且每段至少 60 字、至少两个 keyPoints、sourceIds 双重解析、4–6 misconceptions、至少 5 个 recap、逐课阅读量/长度和深层冻结。另增加 29/29 evidence card 的 enum、coverage、limitations 与 `verifiedAt` 合法性断言。
+断言应复用 LLM 正式 contract：8 个精确 key、对象身份、5–7 sections、kebab-case ID、2–4 段且每段至少 60 字、至少两个 keyPoints、sourceIds 双重解析、4–6 misconceptions、至少 5 个 recap、逐课阅读量/长度和深层冻结。原始 RED contract 增加 28/28 baseline evidence card 的 enum、coverage、limitations 与 `verifiedAt` 合法性断言；Task 5 Change record 生效后，最终契约再提升为 29/29。
 
 - [ ] **Step 2: 把跨模块 fallback 收窄为 Harness 与 Context**
 
@@ -88,7 +96,7 @@ git add tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.te
 git commit -m "test: require Agent mechanism knowledge notes"
 ```
 
-### Task 2: 核验 29 份来源并建立 evidence registry
+### Task 2: 核验 28 份基线来源并建立 evidence registry
 
 **Files:**
 - Modify: `src/data/agent-mechanism.js`
@@ -102,13 +110,13 @@ Run:
 node --input-type=module -e "import('./src/data/agent-mechanism.js').then(({agentMechanism:c})=>console.log(JSON.stringify(c.resources.map(r=>({id:r.id,title:r.title,url:r.url,lessons:c.lessons.filter(l=>l.resourceIds.includes(r.id)).map(l=>l.id)})),null,2)))"
 ```
 
-Expected: 29 个唯一资源，所有 ID 至少被一课引用。
+Expected: 28 个唯一基线资源，所有 ID 至少被一课引用。
 
 - [ ] **Step 2: 逐正文建立来源访问表**
 
 审计表每项必须记录 `id`、访问类型 `body | metadata | equivalent`、实际访问入口、核验日期、authority、role、coverage、limitations。论文读原文/PDF；OpenAI function calling 读当前官方文档；无字幕视频记录 metadata 限制。不得从现有 `value` 反推正文。
 
-- [ ] **Step 3: 在 registry 中加入 29 张 evidence card**
+- [ ] **Step 3: 在 registry 中加入 28 张基线 evidence card**
 
 每个资源使用以下真实结构，具体字段必须来自 Step 2 的访问结果：
 
@@ -214,6 +222,18 @@ Expected: PASS；OpenAI 接口语义带 2026-07-22 核验边界；教学检查�
 - [ ] **Step 3: 提交并完成双重审查**
 
 Commit: `feat: add tool calling knowledge note`。质量分至少 85。
+
+#### Task 5 Amendment：补足可靠执行的直接证据
+
+规格审查判定原实现虽然讲授幂等与超时，但只依赖课程综合和不能直接证明该语义的五份基线材料，不符合“关键 assessed outcome 必须有可访问核心证据”的门槛。按本计划 Change record 执行以下追加步骤：
+
+- 实际访问 AWS Builders' Library 的 `Making retries safe with idempotent APIs` 正文与 canonical URL，记录作者、coverage、limitations 和核验日；
+- 新增 `res-agent-aws-idempotent-apis` official/core evidence card 与资源 metadata，并加入 `agent-03.resourceIds`；
+- 在宿主执行章节只把 client request identifier、幂等重试、网络超时不确定性、语义等价响应和晚到请求归因给 AWS；订单审批、状态查询、账本、补偿和错误码保持 course synthesis；
+- 把 get_order 与 cancel_order 改成两份完整可复制、可解析的 Responses function JSON 定义，并补测 strict、required、nullable 与 `additionalProperties: false`；
+- 将最终资源、evidence、审计和 README 数据派生计数从 28 更新为 29，但不回写 Task 2 的历史基线。
+
+Amendment commit 使用 `fix: ground reliable tool execution`；修复后重新进行规格审查，随后所有集成、Architecture、PR 和发布检查都引用“28 基线 + 1 AWS 补充”的 29 份门槛。
 
 ### Task 6: 撰写 `agent-04` 控制循环与 ReAct
 
@@ -380,7 +400,7 @@ knowledgeNote: agentMechanismNotes['agent-01'],
 
 - [ ] **Step 3: 完成审计矩阵与量表**
 
-审计必须包含 8 张 outcome→section 覆盖矩阵、29 份来源访问表、每课五类分数、总分、broken refs、证据角色修正、剩余限制和测试表。若某课低于 85 或有 gap，返回原作者修复并重新双审，不能在集成阶段降低断言。
+审计必须包含 8 张 outcome→section 覆盖矩阵，以及按 2026-07-22 Change record 形成的 28 份基线 + 1 份 AWS 补充来源访问表；最终 29 份资料均记录角色、限制和增加原因。另记录每课五类分数、总分、broken refs、证据角色修正、剩余限制和测试表。若某课低于 85 或有 gap，返回原作者修复并重新双审，不能在集成阶段降低断言。
 
 - [ ] **Step 4: 更新 README**
 
@@ -390,7 +410,7 @@ knowledgeNote: agentMechanismNotes['agent-01'],
 
 Run: `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js`
 
-Expected: 所有测试 PASS，Agent 八课 contract、29 evidence、旧模块 fallback 和 README 声明均为 GREEN。
+Expected: 所有测试 PASS，Agent 八课 contract、按 Change record 修订后的 29 evidence、旧模块 fallback 和 README 声明均为 GREEN。
 
 - [ ] **Step 6: 运行完整 GREEN**
 
@@ -413,7 +433,7 @@ git commit -m "feat: complete Agent mechanism knowledge notes"
 
 - [ ] **Step 1: 独立最终规格审查**
 
-逐项核对设计范围、八课考核覆盖、29 份来源、实验边界、相邻课程衔接、Harness/Context fallback、README 和所有发布门槛。任何遗漏返回对应作者修正并复审。
+逐项核对设计范围、八课考核覆盖、按 2026-07-22 Change record 修订后的 29 份来源、实验边界、相邻课程衔接、Harness/Context fallback、README 和所有发布门槛。任何遗漏返回对应作者修正并复审。
 
 - [ ] **Step 2: 独立最终质量审查**
 
@@ -442,7 +462,7 @@ git rebase origin/main
 git push -u origin feat/agent-mechanism-knowledge-notes
 ```
 
-创建非草稿 PR，标题 `feat: complete Agent mechanism knowledge notes`，正文列出 8 篇笔记、29 张 evidence、测试和浏览器结果。
+创建非草稿 PR，标题 `feat: complete Agent mechanism knowledge notes`，正文列出 8 篇笔记、按 2026-07-22 Change record 形成的 28 张基线 + 1 张 AWS 补充 evidence、测试和浏览器结果。
 
 - [ ] **Step 6: 合并并等待 Pages**
 
