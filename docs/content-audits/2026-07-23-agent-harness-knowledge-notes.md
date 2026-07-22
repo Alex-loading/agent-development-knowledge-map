@@ -4,7 +4,7 @@
 - 模块：`agent-harness`
 - 基线：8 课、28 个候选资源、24 道面试题、16 道测验、3 个交互实验
 - 发布集合：29 个资源；新增 2 个核心来源，移除 1 个无法核验的候选视频
-- 当前阶段：29 项来源门禁、8 篇知识笔记双审与目标发布契约均已通过；全量回归和浏览器/部署验证待发布阶段补录
+- 当前阶段：29 项来源门禁、8 篇知识笔记双审、目标发布契约、全量回归与本地浏览器验收均已通过；部署验证待发布阶段补录
 
 ## 来源变更与发布决定
 
@@ -89,4 +89,17 @@
 | `harness-07` | 25 | 20 | 25 | 20 | 10 | 100 | 0 | author + spec + quality passed |
 | `harness-08` | 25 | 20 | 25 | 20 | 10 | 100 | 0 | author + spec + quality passed |
 
-八课均已完成作者自审、独立规格审查与独立质量审查，最低分 98/100，逐课 `brokenReferenceCount=0`。聚合接线后的四个目标测试文件共 59 项全部通过。最终发布前还需补录全量自动化测试、桌面/390px/320px 浏览器验收、Vercel Preview/Production SHA 与 GitHub Pages 关闭状态。
+八课均已完成作者自审、独立规格审查与独立质量审查，最低分 98/100，逐课 `brokenReferenceCount=0`。聚合接线后的四个目标测试文件共 59 项全部通过；`npm test` 全量回归共 264 项全部通过；`src/` 与 `tests/` 下全部 JavaScript 文件通过 `node --check`，`git diff --check` 通过。
+
+## 本地浏览器验收
+
+- 桌面端抽查 `harness-01`、`harness-04`、`harness-08`：知识正文、本章目录、逐节依据、继续深挖、实验、测验、关联面试题与完成标准均正常渲染；中段课程明确显示 `Resource quota（资源配额，也称资源预算）`；末课包含 Handoff 与运行产物主题。
+- Run Lifecycle 实验按 `created → queued → running → awaiting_approval → running → retry_wait → running → blocked → running → succeeded` 推进，终态后的 `cancel` 被以 `terminal state succeeded is irreversible` 拒绝。
+- Retry / Resume 四个预设分别得到 `manual`、`retry`、`reconcile`、`skip`，与正文证据优先级一致。
+- Queue / Backpressure 默认过载配置在首个 tick 即保持 worker `100%` 利用并出现明确 rejected job，连续三个 tick 队列仍保持有界。
+- 第一课测验以正确答案提交后显示 `2 / 2（100%）`，结果同步出现在 Harness 学习进度页。
+- 资源库显示 29 个外部学习资源；面试高频显示 24 道题与 4 组筛选控件；学习进度页显示 8 节课、24 道面试题及测验记录。
+- 390×844 与 320×760 视口均无页面级横向溢出；320px 下正文、主区域与子元素均位于视口边界内。
+- 跳到主要内容链接激活后焦点落到 `#app-main`；页面控制台未发现 warning 或 error。
+
+最终发布还需补录 Vercel Preview/Production SHA 与 GitHub Pages 关闭状态。
