@@ -2,10 +2,10 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-02..08` 仍待写作，八课均尚未完成统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 与 `agent-02` 独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-03..08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
-- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01` 待集成，`agent-02..08` 待写作）
+- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..02` 待集成，`agent-03..08` 待写作）
 - `brokenReferenceCount: 0`
 - 本次 registry 中 28 项资源 metadata 均已重访并更新为 `2026-07-22`；回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
@@ -65,12 +65,12 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 逐课 coverage matrix 骨架
 
-以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-02..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
+以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 与 `agent-02` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-03..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `agent-01` | objectives[0..1] 与 concepts[0..4] → `control-authority-spectrum`、`minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | quiz[0] → `control-authority-spectrum`；quiz[1] → `minimal-action-loop`、`termination-evidence` | `iq-agent-01-1` short/deepDive/followUp → `control-authority-spectrum`；`iq-agent-01-2` 全字段 → `selection-thresholds`；`iq-agent-01-3` 全字段 → `minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | exercise.steps[0..1]、deliverable → `three-case-decision-table`；completionCriteria[0] → 第 1/5/6 节，completionCriteria[1] → 第 2/3/4/6 节 | 六节按控制权连续谱→最小闭环→动作与环境→终止证据→选型门槛→三案例表递进；产出固定摘要/审批流/开放调查分别为普通调用/Workflow/Agent，并含 done、blocked、budget、handoff | 核心 `res-agent-anthropic-effective`、`res-agent-openai-guide`；闭环交叉核验 `res-agent-hf-course`、`res-agent-ms-course`、`res-agent-hello-agents`、`res-agent-lihongyi`；未使用 metadata-only `res-agent-datawhale-bili`，也未把课程目录 `res-agent-berkeley-course` 或 outline-only `res-agent-dlai-agentic` 用作机制主张 | 94（25/20/24/16/9） | ready-for-integration |
-| `agent-02` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-02-1..3` | 待映射 task contract | 待 Task 4 填写 | 待 Task 4 绑定 | — | pending |
+| `agent-02` | objectives[0..1] 与 concepts[0..4] → `request-to-task-contract`、`constraints-and-preferences`、`facts-assumptions-unknowns`、`state-transcript-event-log`、`completion-predicates-evidence` | quiz[0] → `facts-assumptions-unknowns`、`shanghai-travel-contract`；quiz[1] → `completion-predicates-evidence` | `iq-agent-02-1` short/deepDive/followUp → 第 1/2/3/6 节；`iq-agent-02-2` 全字段 → 第 5/6 节；`iq-agent-02-3` 全字段 → 第 3/4 节 | exercise.steps[0..1] 与 deliverable → `shanghai-travel-contract`；completionCriteria[0] → 第 1/2/3/5/6 节，completionCriteria[1] → 第 3/4 节 | 六节按请求→契约、约束、认识状态、运行状态、完成证据、差旅交付递进；上海案例明确目标、硬约束、软偏好、事实、假设、七个未知项及查询/澄清/临时假设/blocked 策略，并区分 submitted/action-succeeded/business-goal-achieved | 核心工程边界用 `res-agent-openai-guide`、`res-agent-anthropic-effective`；状态/工作记忆用 `res-agent-coala` 并明示其为概念架构非标准；闭环和目标分解以 `res-agent-hello-agents` 交叉核验；厂商指南不外推成普适定律 | 95（25/20/23/18/9） | ready-for-integration |
 | `agent-03` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-03-1..3` | 待映射工具 schema 与五类实验 | 待 Task 5 填写 | 待 Task 5 绑定 | — | pending |
 | `agent-04` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-04-1..3` | 待映射 loop 轨迹与退出 | 待 Task 6 填写 | 待 Task 6 绑定 | — | pending |
 | `agent-05` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-05-1..3` | 待映射计划/重规划实验 | 待 Task 7 填写 | 待 Task 7 绑定 | — | pending |
@@ -80,14 +80,16 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 当前测试审计
 
-`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 虽已有通过单课 probe 的独立文件，但尚未接入，`agent-02..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
+`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 与 `agent-02` 已有通过单课 probe 的独立文件，但尚未接入，`agent-03..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
 
 | command | exit code | result |
 | --- | ---: | --- |
 | `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、28 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
-| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 独立文件已完成但不改变上述集成状态 |
+| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 与 `agent-02` 独立文件已完成但不改变上述集成状态 |
 | `node --check src/data/agent-mechanism.js` | 0 | 语法通过 |
 | `node --check tests/agent-mechanism-data.test.js` | 0 | 语法通过 |
+| `node --check src/data/agent-mechanism-notes/agent-02.js` | 0 | `agent-02` 独立笔记语法通过 |
+| `node --input-type=module -e "/* agent-02 contract/source/freeze probe */"` | 0 | 29 分钟；6 节；测试口径（introduction + paragraphs + nextStep）正文 3755 字符；每节 3–4 段、每段最短 146 字符、2 个要点；5 个误区、8 个 recap；所有嵌套值冻结；4 个来源均通过全局 registry、lesson resourceIds 和 evidence set 三重解析，`brokenReferenceCount: 0`；无 HTML |
 
 当前没有把 metadata-only 材料当作机制 evidence，也没有把 extension 升级为 core。最终测试状态、coverage、评分和 `publicationReady` 必须在八篇笔记接线、完整自动化与浏览器验收完成后重写，不能沿用本阶段的中间结果。
 
@@ -96,3 +98,10 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 - `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-01-1..3` 的 `shortAnswer`、全部 `deepDive` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均已进入上表所列实质章节；这些路径只定义覆盖，不被伪装成来源 ID。
 - `sections → evidence → 产出`：第 1/5 节用 Anthropic 与 OpenAI 厂商正文支撑控制权和适用门槛，并明确其工程经验不构成跨任务定律；第 2/3/4 节以 OpenAI、Hugging Face、Microsoft、Hello-Agents 与李宏毅字幕正文交叉说明闭环、环境和退出，始终区分模型决策与宿主执行；第 6 节把相同标准应用到三案例选型表。两条 Bilibili metadata-only 资源没有出现在任何 `sourceIds` 中。
 - `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试全字段、exercise 两步与 deliverable、两个完成标准均可追踪）；结构 20/20（六节按依赖递进并连接 agent-02）；来源 24/25（ID 全部属于本课 registry 与 evidence set，厂商/字幕/课程边界已显式保留）；教学 16/20（固定三案例完整走查，但尚待集成后的真实页面可读性验收）；数据契约 9/10（纯数据、稳定 ID、无 HTML，最终递归冻结由聚合入口与集成测试共同验收）。总分 `94/100`，`brokenReferenceCount: 0`，coverage gap：无；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
+
+### `agent-02` 单课质量与可追溯性
+
+- `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-02-1..3` 的 `shortAnswer`、全部 `deepDive`、`misconceptions` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均映射到上表所列六节；这些字段只规定覆盖与验收，不进入 `sourceIds` 或 evidence map。
+- `sections → evidence → 产出`：第 1/2/5/6 节把 OpenAI 与 Anthropic 正文的 instructions、tools、run-loop、退出与护栏经验限定为厂商工程检查清单；第 3/4/6 节用 Hello-Agents 交叉核验目标分解和闭环，用 CoALA 解释工作记忆、动作与决策位置，并明确它是无新增 benchmark 的概念架构、不是状态 schema 或实现标准。最终产出是一份上海差旅 task contract：含目标、硬约束、软偏好、已知事实、显式假设、七个未知项及其查询/澄清/可撤销假设/blocked 路由、预算、产物和分层完成谓词。
+- `完成语义`：正文明确区分 state、transcript 与 event log，区分事实、假设与 observation，关键状态带来源、时间或版本；完成检查依次区分“动作已提交、动作成功、业务目标达成”，异步 queued/pending/processing 均保持 waiting 或 in-progress，并依赖工具终态、产物校验或测试证据，而不采信模型自述。
+- `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试 short/deepDive/misconception/follow-up、exercise 全步骤与 deliverable、两个完成标准均可追踪）；结构 20/20（六节严格按任务定义到案例交付递进并承接 agent-01、连接 agent-03）；来源 23/25（四个 ID 均同时属于本课 registry 与 evidence set，厂商、社区与 CoALA 边界已保留）；教学 18/20（上海案例给出七个未知项的逐项策略与三层完成证据，仍待集成后的真实页面验收）；数据契约 9/10（纯数据、稳定 kebab-case ID、无 HTML、全部嵌套值已冻结，最终对象身份由聚合测试验收）。总分 `95/100`，`brokenReferenceCount: 0`，coverage gap：无；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
