@@ -2,10 +2,10 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 与 `agent-02` 独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-03..08` 仍待写作，八课均尚未完成统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 至 `agent-03` 的独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-04..08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
-- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..02` 待集成，`agent-03..08` 待写作）
+- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01..03` 待集成，`agent-04..08` 待写作）
 - `brokenReferenceCount: 0`
 - 本次 registry 中 28 项资源 metadata 均已重访并更新为 `2026-07-22`；回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
@@ -65,6 +65,14 @@
 
 本课没有 publication blocker：一般机制、风险边界、状态与环境反馈均有可访问正文，精确课程结构被清楚标为综合推导而非外部事实；coverage gap 为“尚无单一来源定义完整工程检查表”，已通过限制声明而不是伪造来源处理。若未来要把该检查表宣称为行业标准，必须补充对应规范；当前发布只把它作为可审查课程产出。
 
+## `agent-03` 五来源重访与接口边界
+
+2026-07-22 重新访问本课五个来源正文：按 OpenAI Docs Skill 搜索并完整读取当前 Function Calling 官方指南，核验五步 tool-call 生命周期、JSON Schema 定义、`strict` 与 `additionalProperties: false` 的约束、多个调用以及 `call_id` / `function_call_output` 回填；读取 Anthropic 工具工程正文与既有访问记录，保留少而高信号、命名、描述、返回上下文和评测迭代的厂商经验边界；用 PDF Skill 下载并提取 Toolformer 17 页原论文，实际阅读方法、五类工具、实验、分析与 Limitations；同时沿用已核验的 Hugging Face Unit 1 正文和 Microsoft 自动字幕正文，后者保留三重重复及 Semantic Kernel 版本限制。
+
+OpenAI 文档直接支撑本章的接口生命周期和当前 strict 语义，但不证明业务参数、权限、副作用或执行结果正确，全部时敏表述均限定为本轮核验日。Toolformer 支撑“调用时机、工具选择、参数和结果利用可成为自监督训练目标”，论文同时明确当前方法不能链式或交互式用工具、对措辞敏感且不考虑工具成本；因此正文没有把它描述成生产 function calling 协议。订单查询/取消 schema、统一 success/error 形状、错误码集合、五类验收表和 UNKNOWN_OUTCOME 恢复规则是课程把官方接口与工程安全原则综合成的可审查交付物，不反向伪装成五份来源共同定义的标准。
+
+本课没有 publication blocker：五步生命周期、schema、调用关联、工具设计和训练研究边界均有可访问正文；精确订单字段与业务策略被清楚标为工程示例。剩余限制是供应商接口和框架会演进，真实订单权限、审批阈值、错误码与幂等存储必须由具体系统重新设计和测试，教学检查器也不构成真实模型或生产安全评测。
+
 ## 论文冲突与互补
 
 Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` 的闭环实际使用环境、评价器或测试信号并允许跨 trial 记忆；`res-agent-no-self-correct` 检验的是没有外部反馈时的内在自修正，发现部分推理设置会退化，因此两者并不直接矛盾。`res-agent-self-refine` 支持有明确评价维度的生成/编辑迭代，不能被扩大成任意推理自纠错；`res-agent-critic` 则说明在其特定任务中引入可查询工具的外部 critique 能提供不同于自评的证据，但工具自身仍可能错误或有偏。
@@ -73,13 +81,13 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 逐课 coverage matrix 骨架
 
-以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 与 `agent-02` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-03..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
+以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 至 `agent-03` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-04..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `agent-01` | objectives[0..1] 与 concepts[0..4] → `control-authority-spectrum`、`minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | quiz[0] → `control-authority-spectrum`；quiz[1] → `minimal-action-loop`、`termination-evidence` | `iq-agent-01-1` short/deepDive/followUp → `control-authority-spectrum`；`iq-agent-01-2` 全字段 → `selection-thresholds`；`iq-agent-01-3` 全字段 → `minimal-action-loop`、`action-space-and-environment`、`termination-evidence` | exercise.steps[0..1]、deliverable → `three-case-decision-table`；completionCriteria[0] → 第 1/5/6 节，completionCriteria[1] → 第 2/3/4/6 节 | 六节按控制权连续谱→最小闭环→动作与环境→终止证据→选型门槛→三案例表递进；产出固定摘要/审批流/开放调查分别为普通调用/Workflow/Agent，并含 done、blocked、budget、handoff | 核心 `res-agent-anthropic-effective`、`res-agent-openai-guide`；闭环交叉核验 `res-agent-hf-course`、`res-agent-ms-course`、`res-agent-hello-agents`、`res-agent-lihongyi`；未使用 metadata-only `res-agent-datawhale-bili`，也未把课程目录 `res-agent-berkeley-course` 或 outline-only `res-agent-dlai-agentic` 用作机制主张 | 94（25/20/24/16/9） | ready-for-integration |
 | `agent-02` | objectives[0..1] 与 concepts[0..4] → `request-to-task-contract`、`constraints-and-preferences`、`facts-assumptions-unknowns`、`state-transcript-event-log`、`completion-predicates-evidence` | quiz[0] → `facts-assumptions-unknowns`、`shanghai-travel-contract`；quiz[1] → `completion-predicates-evidence` | `iq-agent-02-1` short/deepDive/followUp → 第 1/2/3/6 节；`iq-agent-02-2` 全字段 → 第 5/6 节；`iq-agent-02-3` 全字段 → 第 3/4 节 | exercise.steps[0..1] 与 deliverable → `shanghai-travel-contract`；completionCriteria[0] → 第 1/2/3/5/6 节，completionCriteria[1] → 第 3/4 节 | 六节按请求→契约、约束、认识状态、运行状态、完成证据、差旅交付递进；上海案例逐项处理七个未知项，敏感资料明确查询授权系统→向用户/管理员澄清→仍缺失则 blocked，并禁止临时假设；同时区分 submitted/action-succeeded/business-goal-achieved | OpenAI 支撑清晰指令、缺失信息分支、退出与高风险人工介入；Anthropic 支撑环境 ground truth、阻塞检查点和停止；CoALA 支撑跨调用工作记忆、反馈与决策循环；Hello-Agents 交叉核验旅行目标分解、工具补缺和反馈修正。精确字段、四路由、三类记录与三层验收全部标为 `course synthesis` | 94（25/20/22/18/9） | ready-for-integration |
-| `agent-03` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-03-1..3` | 待映射工具 schema 与五类实验 | 待 Task 5 填写 | 待 Task 5 绑定 | — | pending |
+| `agent-03` | objectives[0..1] 与 concepts[0..4] → `tool-declaration-contract`、`model-proposes-function-call`、`syntax-and-schema-validation`、`business-permission-risk-validation`、`host-execution-boundary`、`structured-result-observation` | quiz[0] → 第 2/3/4 节；quiz[1] → `structured-result-observation` | `iq-agent-03-1` short/deepDive/misconception/followUp → 第 2/4/5/6 节；`iq-agent-03-2` 全字段 → 第 1/3/4/7 节；`iq-agent-03-3` 全字段 → 第 5/6 节 | exercise.steps[0..1]、deliverable → `order-tool-contract-lab`；completionCriteria[0] → 第 1/2/4/5/6 节，completionCriteria[1] → 第 1/4/6/7 节 | 七节按声明→模型提案→结构校验→业务/权限/风险→宿主执行→结果关联→订单实验递进；给出 get_order 与 cancel_order 两份可照写 schema、success/error 结构及合法/缺参/非法枚举/额外字段/需审批五类结果 | OpenAI 核心支撑五步、schema、strict、call_id；Anthropic 核心支撑工具命名、边界、返回和评测；Toolformer 只交叉核验训练研究并显式保留无工具链/交互/权限边界；HF 与 Microsoft 仅做循环、最小权限和错误处理交叉核验，Microsoft 字幕版本限制可见 | 96（25/20/24/18/9） | ready-for-integration |
 | `agent-04` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-04-1..3` | 待映射 loop 轨迹与退出 | 待 Task 6 填写 | 待 Task 6 绑定 | — | pending |
 | `agent-05` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-05-1..3` | 待映射计划/重规划实验 | 待 Task 7 填写 | 待 Task 7 绑定 | — | pending |
 | `agent-06` | 待逐项映射 | 待映射 2 题推理 | 待映射 `iq-agent-06-1..3` | 待映射失败恢复表 | 待 Task 8 填写 | 待 Task 8 绑定 | — | pending |
@@ -88,17 +96,19 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 当前测试审计
 
-`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 与 `agent-02` 已有通过单课 probe 的独立文件，但尚未接入，`agent-03..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
+`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 至 `agent-03` 已有通过单课 probe 的独立文件，但尚未接入，`agent-04..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
 
 | command | exit code | result |
 | --- | ---: | --- |
 | `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、28 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
-| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 与 `agent-02` 独立文件已完成但不改变上述集成状态 |
+| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 至 `agent-03` 独立文件已完成但不改变上述集成状态 |
 | `node --check src/data/agent-mechanism.js` | 0 | 语法通过 |
 | `node --check tests/agent-mechanism-data.test.js` | 0 | 语法通过 |
 | `node --check src/data/agent-mechanism-notes/agent-02.js` | 0 | `agent-02` 独立笔记语法通过 |
-| `git diff --check` | 0 | 本轮 `agent-02`、四张 evidence card 与审计差异无空白错误 |
+| `node --check src/data/agent-mechanism-notes/agent-03.js` | 0 | `agent-03` 独立笔记语法通过 |
+| `git diff --check` | 0 | 本轮至 `agent-03` 独立笔记与审计差异无空白错误 |
 | 下方“`agent-02` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 29 分钟；6 个唯一 section ID；测试口径（introduction + paragraphs + nextStep）正文 3935 字符；每节 3–4 段、每段最短 146 字符、至少 2 个要点、非空 source 数组；5 个误区、8 个 recap；所有嵌套值冻结；4 个来源均通过全局 registry、lesson resourceIds 和 evidence set 三重解析，`brokenReferenceCount: 0` |
+| 下方“`agent-03` 可复制 contract/source/freeze probe”完整 one-liner | 0 | 36 分钟；7 个唯一 section ID；测试口径（introduction + paragraphs + nextStep）正文 5622 字符；每节 3 段、每段最短 196 字符、至少 2 个要点、非空且无重复 source 数组；6 个误区、10 个 recap；所有嵌套值冻结；5 个来源均通过全局 registry、lesson resourceIds 和 evidence set 三重解析，`brokenReferenceCount: 0` |
 
 ### `agent-02` 可复制 contract/source/freeze probe
 
@@ -109,6 +119,16 @@ node --input-type=module -e 'import assert from "node:assert/strict"; const [{ag
 ```
 
 本轮输出：`{"body":3935,"sections":6,"uniqueSectionIds":true,"nonEmptySourceArrays":true,"minParagraph":146,"sources":["res-agent-openai-guide","res-agent-anthropic-effective","res-agent-hello-agents","res-agent-coala"],"brokenReferenceCount":0,"deepFrozen":true}`。
+
+### `agent-03` 可复制 contract/source/freeze probe
+
+以下命令实际导入 `agent03Note` 与公开课程 registry，断言 30–40 分钟、测试口径至少 4500 字符、恰七节与唯一 kebab-case ID、每节 2–4 段且每段至少 60 字符、至少两个要点、source 数组非空无重复并三重解析、4–6 个误区、至少五个 recap 和所有嵌套值冻结：
+
+```bash
+node --input-type=module -e 'import assert from "node:assert/strict"; const [{agent03Note:n},{agentMechanism:c}]=await Promise.all([import("./src/data/agent-mechanism-notes/agent-03.js"),import("./src/data/agent-mechanism.js")]); const lesson=c.lessons.find(({id})=>id==="agent-03"); const globalIds=new Set(c.resources.map(({id})=>id)); const evidenceIds=new Set(c.resources.filter(({evidence})=>evidence).map(({id})=>id)); const body=[n.introduction,...n.sections.flatMap(({paragraphs})=>paragraphs),n.nextStep].reduce((sum,value)=>sum+value.trim().length,0); const ids=n.sections.map(({id})=>id); const deepFrozen=(v)=>{if(v&&typeof v==="object"){assert.equal(Object.isFrozen(v),true); Object.values(v).forEach(deepFrozen)}}; assert.ok(n.readingMinutes>=30&&n.readingMinutes<=40); assert.equal(n.sections.length,7); assert.equal(new Set(ids).size,ids.length); assert.ok(body>=4500); assert.ok(n.sections.every(({id,paragraphs,keyPoints,sourceIds})=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)&&paragraphs.length>=2&&paragraphs.length<=4&&paragraphs.every(p=>p.trim().length>=60)&&keyPoints.length>=2&&Array.isArray(sourceIds)&&sourceIds.length>=1&&new Set(sourceIds).size===sourceIds.length&&sourceIds.every(sourceId=>globalIds.has(sourceId)&&lesson.resourceIds.includes(sourceId)&&evidenceIds.has(sourceId)))); assert.ok(n.misconceptions.length>=4&&n.misconceptions.length<=6); assert.ok(n.recap.length>=5); deepFrozen(n); console.log(JSON.stringify({body,readingMinutes:n.readingMinutes,sections:n.sections.length,minParagraph:Math.min(...n.sections.flatMap(({paragraphs})=>paragraphs.map(p=>p.trim().length))),sources:[...new Set(n.sections.flatMap(({sourceIds})=>sourceIds))],misconceptions:n.misconceptions.length,recap:n.recap.length,brokenReferenceCount:0,deepFrozen:true}))'
+```
+
+本轮输出：`{"body":5622,"readingMinutes":36,"sections":7,"minParagraph":196,"sources":["res-agent-openai-function","res-agent-anthropic-tools","res-agent-ms-tool-video","res-agent-toolformer","res-agent-hf-course"],"misconceptions":6,"recap":10,"brokenReferenceCount":0,"deepFrozen":true}`。
 
 当前没有把 metadata-only 材料当作机制 evidence，也没有把 extension 升级为 core。最终测试状态、coverage、评分和 `publicationReady` 必须在八篇笔记接线、完整自动化与浏览器验收完成后重写，不能沿用本阶段的中间结果。
 
@@ -124,3 +144,10 @@ node --input-type=module -e 'import assert from "node:assert/strict"; const [{ag
 - `sections → evidence → 产出`：第 1/2/5/6 节只用 OpenAI 支撑清晰步骤、缺失信息分支、run 退出、工具风险与人工介入，用 Anthropic 支撑环境 ground truth、阻塞检查点和停止；第 3/4/6 节只用 Hello-Agents 交叉核验旅行目标分解、工具补缺和反馈修正，用 CoALA 解释跨调用工作记忆、环境反馈与决策循环。正文明确说明四份来源都没有定义完整 task contract；最终上海差旅逐项处理七个未知项，其中敏感资料只可查授权系统或澄清、执行前仍缺失即 blocked、禁止临时假设；全部字段、四路由、三类记录和三层验收是课程综合出的可审查交付物。
 - `完成语义`：正文明确区分 state、transcript 与 event log，区分事实、假设与 observation，关键状态带来源、时间或版本；完成检查依次区分“动作已提交、动作成功、业务目标达成”，异步 queued/pending/processing 均保持 waiting 或 in-progress，并依赖工具终态、产物校验或测试证据，而不采信模型自述。
 - `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试 short/deepDive/misconception/follow-up、exercise 全步骤与 deliverable、两个完成标准均可追踪）；结构 20/20（六节严格按任务定义到案例交付递进并承接 agent-01、连接 agent-03）；来源 22/25（四份正文重新实际访问且 ID 三重解析，精确课程结构均标注为综合推导；扣分项是没有单一外部规范定义完整检查表）；教学 18/20（上海案例给出七个未知项的逐项策略与三层完成证据，仍待集成后的真实页面验收）；数据契约 9/10（纯数据、稳定 kebab-case ID、无 HTML、全部嵌套值已冻结，最终对象身份由聚合测试验收）。总分 `94/100`，`brokenReferenceCount: 0`；coverage gap：没有阻塞性缺口，限制为“完整 schema 仅作为 course synthesis 而非外部标准”；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
+
+### `agent-03` 单课质量与可追溯性
+
+- `courseFieldBasis`：`lesson.objectives[0..1]`、`lesson.concepts[0..4]`、`lesson.explanations[0..1]`、`lesson.quiz[0..1]`、`iq-agent-03-1..3` 的 `shortAnswer`、全部 `deepDive`、`misconceptions` 与 `followUps`、`lesson.exercise.steps[0..1]`、`lesson.exercise.deliverable`、`lesson.completionCriteria[0..1]` 均映射到矩阵所列七节；这些字段只规定教学覆盖与验收，不进入 `sourceIds` 或 evidence map。
+- `sections → evidence → 产出`：第 1/2/3/6 节用 OpenAI 当前官方正文支撑工具定义、五步生命周期、strict 边界和 call_id 回填；第 1/3/4/5/6/7 节用 Anthropic 与 Microsoft 支撑工具命名、最小权限、错误和返回设计，并保留厂商与字幕版本限制；Toolformer 只用于解释训练目标及其无工具链、无交互修订、无权限治理的边界；HF 只交叉核验 Think–Act–Observe 路线。最终订单案例给出 get_order 与 cancel_order 两份具体 schema、统一 success/error、五类调用结果、幂等与超时未知终态。
+- `接口与实验边界`：正文把 OpenAI strict、Responses 与 call_id 等语义限定为 `2026-07-22` 核验；明确合法 JSON 之后仍需 schema、存在性、跨字段、权限、风险、幂等与审批；明确 success/error 具有 code、retryable、message、evidenceRef，空列表和超时分开；明确页面 `tool-contract` 是确定性教学检查器，不是真实模型调用、生产安全验证或能力评测。
+- `质量自评`：覆盖 25/25（两个 objectives、五 concepts、两题 quiz 推理、三题面试 short/deepDive/misconception/follow-up、exercise 两步与 deliverable、两个完成标准均可追踪）；结构 20/20（恰七节从 agent-02 任务契约推进至动作契约并连接 agent-04 loop）；来源 24/25（五份正文真实核验且全部 ID 三重解析，Toolformer 和时敏接口边界清晰；扣分项是厂商接口及视频实现仍会演进）；教学 18/20（两份 schema 与五类结果可直接完成练习，仍待集成页面验收）；数据契约 9/10（纯数据、稳定 kebab-case ID、无 HTML、所有嵌套值冻结，最终对象身份由聚合测试验收）。总分 `96/100`，`brokenReferenceCount: 0`；coverage gap：没有阻塞性缺口，真实业务字段、审批阈值和错误码需按具体系统再设计；状态 `ready-for-integration`，全模块仍为 `publicationReady: false`。
