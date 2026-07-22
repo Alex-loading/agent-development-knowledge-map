@@ -34,6 +34,7 @@ const agentNoteExpectations = new Map([
 ]);
 const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
 const validEvidenceRoles = new Set(['core', 'cross-check', 'extension']);
+const allowedResourceVerificationDates = new Set(['2026-07-20', '2026-07-22']);
 
 const expectedResourceUrls = new Map([
   ['res-agent-anthropic-effective', 'https://www.anthropic.com/engineering/building-effective-agents'],
@@ -353,7 +354,8 @@ test('course has exactly 28 fixed, fully described and platform-resolvable resou
   for (const resource of agentMechanism.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
     assertValidDateOnOrBefore(resource.verifiedAt, '2026-07-22', `${resource.id}: verifiedAt`);
-    assert.equal(resource.verifiedAt, '2026-07-22', `${resource.id}: 本轮 metadata 核验日期`);
+    assert.ok(allowedResourceVerificationDates.has(resource.verifiedAt),
+      `${resource.id}: verifiedAt 必须属于已知真实核验日期集合`);
     for (const field of ['id', 'title', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }

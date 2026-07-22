@@ -7,7 +7,7 @@
 - `publicationReady: false`
 - `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，笔记写作尚待 Task 3–10 完成）
 - `brokenReferenceCount: 0`
-- 资源 metadata 核验日：`2026-07-22`
+- 本次 registry 中 28 项资源 metadata 均已重访并更新为 `2026-07-22`；回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
 
 ## Source policy
@@ -84,7 +84,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 | command | exit code | result |
 | --- | ---: | --- |
-| `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、28 张 evidence 卡、双向引用和日期均通过 |
+| `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、28 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
 | `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：八课 notes、聚合 registry/冻结、Agent UI 笔记和 README 发布声明尚未实现 |
 | `node --check src/data/agent-mechanism.js` | 0 | 语法通过 |
 | `node --check tests/agent-mechanism-data.test.js` | 0 | 语法通过 |
