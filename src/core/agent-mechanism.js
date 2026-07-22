@@ -1,6 +1,13 @@
 const TOOL_PROPERTY_TYPES = new Set(['string', 'number', 'boolean']);
 const PLAN_STRATEGIES = new Set(['fixed', 'reactive', 'hybrid']);
 const PLAN_OBSERVATIONS = new Set(['success', 'timeout', 'empty-result', 'new-constraint']);
+const PLAN_OPERATION_KINDS = new Set(['read-only', 'side-effect']);
+const PLAN_RECONCILIATION_STATUSES = new Set([
+  'not-required',
+  'unknown',
+  'confirmed-not-executed',
+  'cannot-reconcile',
+]);
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -195,12 +202,25 @@ export function validateToolInvocation(toolCatalog, invocation) {
   };
 }
 
-export function decidePlanRecovery({ strategy, observation, retriesUsed, maxRetries }) {
+export function decidePlanRecovery({
+  strategy,
+  observation,
+  retriesUsed,
+  maxRetries,
+  operationKind = 'read-only',
+  reconciliationStatus = 'not-required',
+}) {
   if (!PLAN_STRATEGIES.has(strategy)) {
     throw new RangeError('strategy 必须是 fixed、reactive 或 hybrid');
   }
   if (!PLAN_OBSERVATIONS.has(observation)) {
     throw new RangeError('observation 不受支持');
+  }
+  if (!PLAN_OPERATION_KINDS.has(operationKind)) {
+    throw new RangeError('operationKind 必须是 read-only 或 side-effect');
+  }
+  if (!PLAN_RECONCILIATION_STATUSES.has(reconciliationStatus)) {
+    throw new RangeError('reconciliationStatus 不受支持');
   }
   assertNonNegativeInteger(retriesUsed, 'retriesUsed');
   assertNonNegativeInteger(maxRetries, 'maxRetries');
@@ -209,6 +229,17 @@ export function decidePlanRecovery({ strategy, observation, retriesUsed, maxRetr
     return { action: 'continue', reason: '当前步骤已获得成功证据' };
   }
   if (observation === 'timeout') {
+    if (operationKind === 'side-effect') {
+      if (reconciliationStatus === 'cannot-reconcile') {
+        return { action: 'handoff', reason: '副作用终态无法对账，禁止重复执行并转人工处理' };
+      }
+      if (reconciliationStatus !== 'confirmed-not-executed') {
+        return { action: 'reconcile', reason: '副作用终态未知，必须按宿主持久化的稳定 intent 先对账' };
+      }
+      if (retriesUsed < maxRetries) {
+        return { action: 'retry', reason: '已确认副作用未执行且仍有重试预算' };
+      }
+    }
     if (retriesUsed < maxRetries) {
       return { action: 'retry', reason: '临时超时且仍有重试预算' };
     }

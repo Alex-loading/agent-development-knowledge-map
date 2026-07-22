@@ -396,6 +396,67 @@ test('plan recovery retries timeout only while retry budget remains', () => {
   }), { action: 'blocked', reason: '固定计划的重试预算已耗尽' });
 });
 
+test('plan recovery reconciles side-effect timeouts before any retry', () => {
+  const base = {
+    strategy: 'hybrid',
+    observation: 'timeout',
+    retriesUsed: 0,
+    maxRetries: 2,
+    operationKind: 'side-effect',
+  };
+
+  assert.deepEqual(decidePlanRecovery({
+    ...base,
+    reconciliationStatus: 'unknown',
+  }), {
+    action: 'reconcile',
+    reason: '副作用终态未知，必须按宿主持久化的稳定 intent 先对账',
+  });
+  assert.deepEqual(decidePlanRecovery({
+    ...base,
+    reconciliationStatus: 'cannot-reconcile',
+  }), {
+    action: 'handoff',
+    reason: '副作用终态无法对账，禁止重复执行并转人工处理',
+  });
+  assert.deepEqual(decidePlanRecovery({
+    ...base,
+    reconciliationStatus: 'confirmed-not-executed',
+  }), {
+    action: 'retry',
+    reason: '已确认副作用未执行且仍有重试预算',
+  });
+});
+
+test('plan recovery never retries an unreconciled side effect', () => {
+  let actCount = 1;
+  const first = decidePlanRecovery({
+    strategy: 'hybrid',
+    observation: 'timeout',
+    retriesUsed: 0,
+    maxRetries: 2,
+    operationKind: 'side-effect',
+    reconciliationStatus: 'unknown',
+  });
+  if (first.action === 'retry') actCount += 1;
+
+  const second = decidePlanRecovery({
+    strategy: 'hybrid',
+    observation: 'timeout',
+    retriesUsed: 0,
+    maxRetries: 2,
+    operationKind: 'side-effect',
+    reconciliationStatus: 'cannot-reconcile',
+  });
+  if (second.action === 'retry') actCount += 1;
+
+  assert.deepEqual({ first: first.action, second: second.action, actCount }, {
+    first: 'reconcile',
+    second: 'handoff',
+    actCount: 1,
+  });
+});
+
 test('plan recovery rejects unsupported strategies and observations', () => {
   const valid = {
     strategy: 'hybrid',
@@ -406,6 +467,8 @@ test('plan recovery rejects unsupported strategies and observations', () => {
 
   assert.throws(() => decidePlanRecovery({ ...valid, strategy: 'adaptive' }), RangeError);
   assert.throws(() => decidePlanRecovery({ ...valid, observation: 'failure' }), RangeError);
+  assert.throws(() => decidePlanRecovery({ ...valid, operationKind: 'write' }), RangeError);
+  assert.throws(() => decidePlanRecovery({ ...valid, reconciliationStatus: 'assumed-failed' }), RangeError);
 });
 
 test('plan recovery rejects invalid retry counts without changing its input', () => {
@@ -431,4 +494,13 @@ test('plan recovery rejects invalid retry counts without changing its input', ()
   }
   decidePlanRecovery(input);
   assert.deepEqual(input, valid);
+
+  const trustedInput = {
+    ...valid,
+    operationKind: 'side-effect',
+    reconciliationStatus: 'confirmed-not-executed',
+  };
+  const trustedSnapshot = { ...trustedInput };
+  decidePlanRecovery(trustedInput);
+  assert.deepEqual(trustedInput, trustedSnapshot);
 });
