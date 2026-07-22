@@ -86,7 +86,7 @@
 | `harness-04` | 25 | 20 | 25 | 19 | 10 | 99 | 0 | author + spec + quality passed |
 | `harness-05` | 25 | 20 | 24 | 20 | 10 | 99 | 0 | author + spec + quality passed |
 | `harness-06` | 25 | 20 | 25 | 19 | 10 | 99 | 0 | author + spec + quality passed |
-| `harness-07` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
+| `harness-07` | 25 | 20 | 25 | 20 | 10 | 100 | 0 | author + spec + quality passed |
 | `harness-08` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
 
 最终发布前还需补录每课覆盖矩阵审查、独立规格审查、独立质量审查、自动化测试、桌面/390px/320px 浏览器验收、Vercel Preview/Production SHA 与 GitHub Pages 关闭状态。
