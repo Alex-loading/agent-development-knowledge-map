@@ -180,7 +180,7 @@ const evidenceByResourceId = {
     authority: 'official',
     role: 'cross-check',
     coverage: ['项目 README 中的 AaaS、SSE、生命周期、sandbox、状态 load/save 与 interrupt 服务能力'],
-    limitations: '仓库已归档并把能力并入 AgentScope 2.0；内容是项目维护者的实现说明，不是跨框架可靠性或安全性保证。',
+    limitations: '仓库已进入只读迁移阶段并计划归档，相关能力并入 AgentScope 2.0；内容是项目维护者的实现说明，不是跨框架可靠性或安全性保证。',
     verifiedAt: VERIFIED_AT,
   },
   'res-harness-smolagents-code': {

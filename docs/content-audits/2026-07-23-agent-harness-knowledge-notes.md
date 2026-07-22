@@ -46,7 +46,7 @@
 | `res-harness-nist-tool-use` | 03, 08 | full | official / cross-check | 工具功能、访问、风险、可逆性、监控与自治 taxonomy | Workshop lessons，不是控制标准或实现规范 |
 | `res-harness-owasp-agency` | 03 | full | expert / core | 最小功能、最小权限、用户上下文、高影响审批、下游 complete mediation | 安全指南，不定义具体状态机和恢复协议 |
 | `res-harness-agent-learning-hub` | 08 | full | community / extension | 中文 Harness 学习路线、trace/retry/timeout/cost/permission/HITL 导航 | 社区 README；不支撑状态、handoff 或可靠性核心结论 |
-| `res-harness-agentscope-runtime` | 01, 07 | full | official / cross-check | AaaS、SSE、生命周期、sandbox、状态 load/save、interrupt 的项目实现 | 仓库归档并并入 AgentScope 2.0；第一方实现主张，不是通用保证 |
+| `res-harness-agentscope-runtime` | 01, 07 | full | official / cross-check | AaaS、SSE、生命周期、sandbox、状态 load/save、interrupt 的项目实现 | 仓库进入只读迁移阶段并计划归档，能力并入 AgentScope 2.0；第一方实现主张，不是通用保证 |
 | `res-harness-smolagents-code` | 04 | full | official / extension | CodeAgent、显式工具列表、authorized imports 与执行日志教学示例 | Import allowlist 不等于内核、网络、挂载、凭证或资源隔离 |
 | `res-harness-hello-agents-framework` | 01 | full | community / extension | 框架对 loop、tool、state、logging、callbacks 的抽象与中文示例 | 版本时敏；不支撑幂等、副作用恢复或生产可靠性保证 |
 | `res-harness-douyin` | 08 | metadata-only | community / extension | 可核验标题《十分钟拆解Agent Skill如何让AI稳定执行任务》、作者老傅1024、2026-06-02、08:06 与简介 | 无字幕/正文，不支撑任何 assessed outcome 或知识笔记关键机制 |
@@ -80,7 +80,7 @@
 
 | Lesson | Structure | Coverage | Evidence | Teaching | Contract | Total | Broken refs | Status |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| `harness-01` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
+| `harness-01` | 25 | 20 | 24 | 19 | 10 | 98 | 0 | author + spec + quality passed |
 | `harness-02` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
 | `harness-03` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
 | `harness-04` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
