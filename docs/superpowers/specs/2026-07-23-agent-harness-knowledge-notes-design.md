@@ -2,7 +2,7 @@
 
 ## 背景与目标
 
-Agent Harness 已经是可学习的完整模块：八节递进课程、28 份外部资料、24 道面试题、16 道测验和三个确定性交互实验均已上线，但每节课仍依赖两段 `explanations` 和外链资料。学习者需要自行把运行状态、恢复、权限、隔离、预算、幂等、背压与人工交接拼成体系，无法在站内完成一站式学习。
+Agent Harness 已经是可学习的完整模块：八节递进课程、28 份基线外部资料、24 道面试题、16 道测验和三个确定性交互实验均已上线，但每节课仍依赖两段 `explanations` 和外链资料。学习者需要自行把运行状态、恢复、权限、隔离、预算、幂等、背压与人工交接拼成体系，无法在站内完成一站式学习。
 
 本次工作把 `harness-01` 至 `harness-08` 全部迁移为来源可追溯、站内可独立学习的中文知识笔记。完成后，学习者即使不打开外链，也应能回答现有 quiz 和面试追问、完成每课 exercise，并能设计一个可暂停、可恢复、可约束且能安全处理副作用的 Agent 宿主。外部资料承担核心依据、交叉核验和延伸阅读，不再替代正文。
 
@@ -17,7 +17,7 @@ Agent Harness 已经是可学习的完整模块：八节递进课程、28 份外
 本次范围包括：
 
 - Agent Harness 八课知识笔记及聚合入口；
-- 28 份基线资料的正文核验、证据账本和 `resource.evidence`；
+- 基线资料及证据补强资料的正文核验、证据账本和 `resource.evidence`；
 - 课程数据接线、递归冻结、发布契约测试、README 与内容审计；
 - 桌面、390px 和 320px 浏览器验收；
 - Pull Request、Vercel Preview、合并和 Vercel Production 精确 SHA 验证。
@@ -56,7 +56,7 @@ Agent Harness 已经是可学习的完整模块：八节递进课程、28 份外
 
 ## 来源与证据策略
 
-模块制作使用 `.agents/skills/build-agent-learner-module/`，每课必须继续使用 `.agents/skills/build-learning-module-notes/`。28 个基线资源逐一读取正文并建立 evidence card：
+模块制作使用 `.agents/skills/build-agent-learner-module/`，每课必须继续使用 `.agents/skills/build-learning-module-notes/`。基线资源与经 amendment 补入的资源逐一读取正文并建立 evidence card：
 
 ```text
 authority: official | academic | expert | community
@@ -66,7 +66,13 @@ limitations: 访问、版本、平台、实验设定或迁移边界
 verifiedAt: 对时敏实现语义记录核验日期
 ```
 
-OpenAI Agents SDK、LangGraph、Temporal、Azure、Docker、gVisor 和 Firecracker 只证明各自当前文档或实现语义；AWS 与 Google SRE 是有平台背景的工程经验；NIST 与 OWASP 支撑安全原则和风险边界；课程、仓库和视频承担导航、示例或交叉理解。没有可访问字幕或等价正文的 Bilibili、抖音资源只能是 `extension`，不得单独支撑关键机制。
+OpenAI Agents SDK、LangGraph、Temporal、Azure、AWS SQS、Docker、gVisor 和 Firecracker 只证明各自当前文档或实现语义；AWS Builders' Library 与 Google SRE 是有平台背景的工程经验；NIST 与 OWASP 支撑安全原则和风险边界；课程、仓库和视频承担导航、示例或交叉理解。没有可访问字幕或等价正文的视频最多只能是 `extension`，不得单独支撑关键机制；连标题、作者和简介都无法核验的资源必须移出正式 registry。
+
+### 2026-07-23 来源 amendment
+
+正文核验确认两个核心考核结果缺乏直接证据，因此在写作前修订来源集合：新增 OpenAI 官方 `Sandbox Agents`，支撑 Harness 控制面与 sandbox 执行面的职责分离；新增 AWS 官方 `Amazon SQS visibility timeout`，支撑 receive、临时不可见、delete-as-ack、超时后 redelivery 与重复投递边界。原 Bilibili 条目无法核验标题、作者、简介或字幕，移出正式 registry。最终发布集合为 29 项资源，其中抖音条目仅有可核验元数据，保持 `community/extension` 且不进入关键章节 `sourceIds`。
+
+`handoff bundle` 与 `artifact manifest` 的字段集合明确标为本课程基于状态、审批、副作用和产物证据要求形成的工程综合模板，而不是 OpenAI、NIST、LangGraph 或任何外部组织发布的统一标准。
 
 每个章节 `sourceIds` 必须同时存在于全局资源 registry、当前 lesson 的 `resourceIds` 和有效 evidence set。访问失败必须如实记录，不能依据标题、URL、`value` 或模型记忆推断正文。关键 assessed outcome 缺少可访问核心证据时，该课保持 blocked，直至补充权威来源或明确缩小主张。
 
@@ -103,7 +109,7 @@ src/data/agent-harness.js
 - 每章 2–4 个非空段落、至少两个 key points、至少一个可解析 `sourceId`；
 - 每课误区为 4–6 个、回顾至少 5 项，introduction 和 nextStep 为实质文本；
 - 所有章节来源同时属于当前 lesson 和有效 evidence set，断裂引用为 0；
-- 28 份资源全部有合法 evidence card，时敏来源记录 `verifiedAt`，metadata-only 视频保持 `community/extension`；
+- 29 份最终资源全部有合法 evidence card，时敏来源记录 `verifiedAt`，metadata-only 视频保持 `community/extension`；
 - 八课笔记、证据卡、课程数据和聚合入口递归冻结；
 - 通用 UI 为 Harness 八课渲染目录、来源链接和来源卡，不引入 lesson ID 分支；
 - 既有 1275 项测试持续通过，README 准确描述三个已完成知识笔记模块及后续 fallback 状态。

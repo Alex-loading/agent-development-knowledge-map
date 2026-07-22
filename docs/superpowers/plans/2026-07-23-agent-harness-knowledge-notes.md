@@ -4,7 +4,7 @@
 
 **Goal:** 把 Agent Harness 八课升级为来源可追溯、站内可独立学习的知识笔记，并完成测试、浏览器验收、PR 合并与 Vercel Production 精确 SHA 验证。
 
-**Architecture:** 八课各自使用纯数据文件，`agent-harness-notes.js` 负责聚合与递归冻结，`agent-harness.js` 负责真实课程与 28 份资源的 evidence/knowledgeNote 接线。通用 renderer 保持不变；写作期间线上继续使用 `explanations` fallback，最终一次性接入八课。
+**Architecture:** 八课各自使用纯数据文件，`agent-harness-notes.js` 负责聚合与递归冻结，`agent-harness.js` 负责真实课程与 29 份最终资源的 evidence/knowledgeNote 接线。通用 renderer 保持不变；写作期间线上继续使用 `explanations` fallback，最终一次性接入八课。
 
 **Tech Stack:** 原生 ES Modules、Node.js test runner、Fake DOM、Vercel、项目 Skills `build-agent-learner-module` 与 `build-learning-module-notes`。
 
@@ -29,18 +29,18 @@
 - 单课质量至少 85/100，最终 `brokenReferenceCount === 0`。
 - 单课作者只编辑自己的 note 文件；共享 registry、聚合入口、测试、README 和审计由主代理集成。
 
-### Task 1：核验 28 份来源并冻结 evidence ledger
+### Task 1：核验来源并冻结 evidence ledger
 
 **Files:**
 - Create: `docs/content-audits/2026-07-23-agent-harness-knowledge-notes.md`
 - Modify later: `src/data/agent-harness.js`
 
-- [ ] 导出 28 项资源及逐课引用关系，确认所有 ID 唯一且至少被一课使用。
+- [x] 导出 28 项基线资源及逐课引用关系，确认所有 ID 唯一且至少被一课使用。
 - [ ] 三个只读研究流核验实际正文：运行状态与恢复；权限与隔离；可靠性、队列与交接。
 - [ ] 主代理逐项复核正文入口、canonical URL、访问类型、版本/日期、coverage 与 limitations。
-- [ ] 对 OpenAI 条目使用官方文档 Skill；对 Bilibili/抖音确认字幕或 metadata-only 状态。
-- [ ] 建立 28 行访问表和逐课 assessed-outcome coverage matrix。
-- [ ] 若核心 outcome 缺证据，先建立书面 amendment；不得开始相应课程写作。
+- [x] 对 OpenAI 条目使用官方文档 Skill；对 Bilibili/抖音确认正文、元数据与访问状态。
+- [ ] 建立 29 行最终访问表和逐课 assessed-outcome coverage matrix。
+- [x] 对控制面/执行面与队列 lease/ack 缺口建立书面 amendment：新增 OpenAI Sandbox Agents 和 AWS SQS visibility timeout，移除完全不可核验的 Bilibili 条目。
 - [ ] 将合法 evidence card 写入 `agent-harness.js`，但暂不接入 knowledgeNote。
 - [ ] 提交：`docs: audit Agent Harness learning sources`。
 
@@ -55,7 +55,7 @@
 - [ ] 在 Harness 数据测试中声明逐课阅读时间与最低正文长度。
 - [ ] 先引用尚不存在的 `agentHarnessNotes`，断言八个精确 key、对象 identity、5–7 sections、2–4 paragraphs、kebab-case ID、keyPoints、sourceIds、4–6 misconceptions、至少 5 recap、长度与递归冻结。
 - [ ] 断言所有章节来源同时属于资源 registry、当前 lesson 和有效 evidence set，断裂引用为 0。
-- [ ] 断言 28 张 evidence card 的 enum、coverage、limitations、日期和 metadata-only 视频边界。
+- [ ] 断言 29 张 evidence card 的 enum、coverage、limitations、日期和 metadata-only 视频边界。
 - [ ] 将跨模块 fallback 收窄为 Context/RAG/Memory；在 UI 测试中要求 Harness 第一、中间和末课渲染知识笔记与来源卡。
 - [ ] README 测试要求前三模块使用站内长文主教材，并列出 Harness 笔记目录与聚合入口。
 - [ ] 运行目标测试，确认只因缺少 notes/接线/README 声明而失败。
