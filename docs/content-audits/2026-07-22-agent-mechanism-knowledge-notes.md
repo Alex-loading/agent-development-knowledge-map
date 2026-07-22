@@ -2,10 +2,10 @@
 
 ## Scope 与当前发布状态
 
-本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 单课知识笔记已达到 ready-for-integration，其余课程仍按 coverage matrix 推进，八篇笔记尚未统一接线。
+本审计覆盖 `agent-mechanism` 的 8 节课、28 份既有资源、24 道面试题和 3 个交互实验。来源正文核验与资源 evidence registry 已完成；`agent-01` 独立知识笔记文件已达到 ready-for-integration，但尚未接入公开课程数据，`agent-02..08` 仍待写作，八课均尚未完成统一接线。
 
 - `publicationReady: false`
-- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，笔记写作尚待 Task 3–10 完成）
+- `status: in-progress`（不是 blocked；可访问核心证据和项目 registry 已具备，`agent-01` 待集成，`agent-02..08` 待写作）
 - `brokenReferenceCount: 0`
 - 本次 registry 中 28 项资源 metadata 均已重访并更新为 `2026-07-22`；回归测试同时允许已知真实核验日期 `2026-07-20` 与 `2026-07-22`，避免把所有历史记录强制伪装成同一天
 - 发布门槛：每课质量分至少 85/100、所有章节 `sourceIds` 同时解析到全局 registry、lesson `resourceIds` 和有效 evidence set。
@@ -65,7 +65,7 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 逐课 coverage matrix 骨架
 
-以下矩阵必须由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪，但章节尚不存在，故不提前声称覆盖或评分。
+以下矩阵由 Task 3–10 的单课作者按“courseFieldBasis → 教学章节 → resource evidence → 验收产出”逐项填充。目前 evidence set 已就绪；`agent-01` 的独立章节、覆盖与评分已经完成但尚未接线，`agent-02..08` 的章节仍不存在，因此这些课程不提前声称覆盖或评分。
 
 | lesson | objectives / concepts | quiz | interview | exercise / completion | section mapping | evidence mapping | 质量分 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -80,12 +80,12 @@ Reflection 的正反证据必须按反馈条件分开：`res-agent-reflexion` �
 
 ## 当前测试审计
 
-`tests.status: failed`，原因是本提交刻意停在“来源已就绪、笔记未撰写”的中间阶段；evidence 与引用测试已通过，失败没有被改写为 `not applicable`。
+`tests.status: failed`，原因是当前公开课程数据与聚合入口仍未接入八课 `knowledgeNote`：`agent-01` 虽已有通过单课 probe 的独立文件，但尚未接入，`agent-02..08` 尚未完成。evidence 与引用测试已通过，集成 RED 没有被改写为 `not applicable`。
 
 | command | exit code | result |
 | --- | ---: | --- |
 | `node --test --test-name-pattern="resources\|evidence\|references" tests/agent-mechanism-data.test.js` | 0 | 3 项命中测试通过，9 项因名称不匹配跳过；资源数量、28 张 evidence 卡、双向引用和日期均通过；日期需真实、不晚于审计日且属于 `2026-07-20`/`2026-07-22` 允许集合，当前 registry 实值均为本轮重访的 `2026-07-22` |
-| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：八课 notes、聚合 registry/冻结、Agent UI 笔记和 README 发布声明尚未实现 |
+| `node --test tests/agent-mechanism-data.test.js tests/data.test.js tests/guided-ui.test.js tests/static-app.test.js` | 1 | 共 58 项，53 通过、5 个预期 RED：公开课程数据仍缺八课 `knowledgeNote` 接线、聚合 registry/冻结、Agent UI 笔记和 README 发布声明；`agent-01` 独立文件已完成但不改变上述集成状态 |
 | `node --check src/data/agent-mechanism.js` | 0 | 语法通过 |
 | `node --check tests/agent-mechanism-data.test.js` | 0 | 语法通过 |
 
