@@ -82,7 +82,7 @@
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | `harness-01` | 25 | 20 | 24 | 19 | 10 | 98 | 0 | author + spec + quality passed |
 | `harness-02` | 25 | 20 | 24 | 19 | 10 | 98 | 0 | author + spec + quality passed |
-| `harness-03` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
+| `harness-03` | 25 | 19 | 25 | 19 | 10 | 98 | 0 | author + spec + quality passed |
 | `harness-04` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
 | `harness-05` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
 | `harness-06` | 待评 | 待评 | 待评 | 待评 | 待评 | 待评 | 待测 | pending |
