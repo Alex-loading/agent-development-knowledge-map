@@ -1,4 +1,4 @@
-const VERIFIED_AT = '2026-07-21';
+const VERIFIED_AT = '2026-07-23';
 
 const officialBoundary = '证据边界：该资料描述当前产品或框架实现，接口和版本会变化，不代表跨产品或框架标准。';
 const researchBoundary = '证据边界：研究结论绑定论文的实验或评测设定，不可外推为所有语料、模型或业务的结论。';
@@ -7,7 +7,7 @@ const benchmarkBoundary = '证据边界：评测任务与数据集限定了结�
 const courseBoundary = '证据边界：项目依赖与接口版本会更新，示例只作学习导航，不承担生产质量或安全保证。';
 const videoBoundary = '证据边界：视频用于建立直觉与学习导航，不作为实现细节、效果数字或系统保证的权威证据。';
 
-const resources = [
+const resourceCatalog = [
   { id: 'res-context-anthropic-engineering', title: 'Effective context engineering for AI agents', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '上下文工程', value: '学习用途：理解上下文选择、压缩、隔离和工具结果管理的工程框架；' + engineeringBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-lost-middle', title: 'Lost in the Middle', url: 'https://aclanthology.org/2024.tacl-1.9/', source: 'TACL', language: '英文', type: '研究论文', difficulty: '进阶', stage: '长上下文边界', value: '学习用途：分析信息位置与长上下文利用效果之间的关系；' + researchBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-openai-compaction', title: 'Compaction', url: 'https://developers.openai.com/api/docs/guides/compaction', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '进阶', stage: '会话压缩', value: '学习用途：对照长会话压缩与状态续接的产品接口；' + officialBoundary, verifiedAt: VERIFIED_AT },
@@ -15,6 +15,7 @@ const resources = [
   { id: 'res-context-dpr', title: 'Dense Passage Retrieval', url: 'https://aclanthology.org/2020.emnlp-main.550/', source: 'EMNLP', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Dense Retrieval', value: '学习用途：理解双编码器稠密召回的训练目标与实验方式；' + researchBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-rrf', title: 'Reciprocal Rank Fusion', url: 'https://research.google/pubs/reciprocal-rank-fusion-outperforms-condorcet-and-individual-rank-learning-methods/', source: 'Google Research', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Hybrid Retrieval', value: '学习用途：学习不依赖原始分数尺度的排序融合方法；' + researchBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-contextual-retrieval', title: 'Introducing Contextual Retrieval', url: 'https://www.anthropic.com/engineering/contextual-retrieval', source: 'Anthropic', language: '英文', type: '工程文章', difficulty: '进阶', stage: '检索增强', value: '学习用途：观察为 chunk 补充文档上下文的检索设计；' + engineeringBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-bert-reranker', title: 'Passage Re-ranking with BERT', url: 'https://arxiv.org/abs/1901.04085', source: 'arXiv', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'Reranking', value: '学习用途：理解用查询与候选段落联合编码进行第二阶段重排的研究方法；' + researchBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-openai-retrieval', title: 'Retrieval', url: 'https://developers.openai.com/api/docs/guides/retrieval', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: '检索管线', value: '学习用途：对照向量存储、搜索与属性过滤的产品接口；' + officialBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-rag-paper', title: 'Retrieval-Augmented Generation', url: 'https://proceedings.neurips.cc/paper/2020/hash/6b493230-Abstract.html', source: 'NeurIPS', language: '英文', type: '研究论文', difficulty: '进阶', stage: 'RAG 基础', value: '学习用途：理解参数化生成与外部非参数知识结合的原始研究设定；' + researchBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-openai-citations', title: 'Citation formatting', url: 'https://developers.openai.com/api/docs/guides/citation-formatting', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '入门', stage: '引用呈现', value: '学习用途：学习把文件标注转换为用户可读引用的实现方式；' + officialBoundary, verifiedAt: VERIFIED_AT },
@@ -33,10 +34,221 @@ const resources = [
   { id: 'res-context-hello-agents', title: 'Hello Agents', url: 'https://github.com/datawhalechina/hello-agents', source: 'Datawhale', language: '中文', type: '开源课程', difficulty: '入门到进阶', stage: 'Agent 记忆', value: '学习用途：结合 Agent 应用观察 RAG 与记忆的接入位置；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-practical-guide', title: '上下文工程实践指南', url: 'https://wakeup-jin.github.io/Practical-Guide-to-Context-Engineering/', source: 'Practical Guide to Context Engineering', language: '中文', type: '公开指南', difficulty: '入门到进阶', stage: '上下文工程', value: '学习用途：用中文案例复习上下文组织与压缩策略；' + courseBoundary, verifiedAt: VERIFIED_AT },
   { id: 'res-context-hf-agentic-rag', title: 'Agentic RAG', url: 'https://huggingface.co/learn/agents-course/unit3/agentic-rag/agentic-rag', source: 'Hugging Face', language: '英文', type: '公开课程', difficulty: '进阶', stage: 'Agentic RAG', value: '学习用途：观察 Agent 如何决定检索与检查证据；' + courseBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-ragflow', title: 'RAGFlow 中文文档', url: 'https://ragflow.com.cn/docs', source: 'RAGFlow', language: '中文', type: '官方文档', difficulty: '入门到进阶', stage: 'RAG 工程', value: '学习用途：对照文档解析、知识库和检索配置的产品实践；' + officialBoundary, verifiedAt: VERIFIED_AT },
-  { id: 'res-context-bilibili', title: 'Datawhale RAG 入门视频', url: 'https://www.bilibili.com/video/BV1Sb421E74u/', source: 'Datawhale / Bilibili', language: '中文', type: '公开视频', difficulty: '入门', stage: 'RAG 入门', value: '学习用途：通过演示建立 RAG 数据流的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'Bilibili' },
-  { id: 'res-context-youtube', title: '李宏毅 2025 上下文工程课程', url: 'https://www.youtube.com/watch?v=lVdajtNpaGI', source: 'Hung-yi Lee / YouTube', language: '中文', type: '公开视频', difficulty: '入门到进阶', stage: '上下文工程', value: '学习用途：从课程讲解建立长上下文与上下文工程的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'YouTube' },
+  { id: 'res-context-ragflow', title: 'RAGFlow 文档', url: 'https://ragflow.io/docs/v0.26.4/', source: 'RAGFlow', language: '英文', type: '官方文档', difficulty: '入门到进阶', stage: 'RAG 工程', value: '学习用途：对照文档解析、知识库和检索配置的产品实践；' + officialBoundary, verifiedAt: VERIFIED_AT },
+  { id: 'res-context-bilibili', title: '【精剪版】Datawhale开源大模型入门课-第四节-大模型应用开发实践-RAG与Agent-02-检索增强生成：原理、实践和应用场景', url: 'https://www.bilibili.com/video/BV1Sb421E74u/', source: '二次元的Datawhale', language: '中文', type: '公开视频', difficulty: '入门', stage: 'RAG 入门', value: '学习用途：通过演示建立 RAG 数据流的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'Bilibili' },
+  { id: 'res-context-youtube', title: '【生成式人工智慧與機器學習導論2025】第2講：上下文工程—AI Agent背後的關鍵技術', url: 'https://www.youtube.com/watch?v=lVdajtNpaGI', source: 'Hung-yi Lee', language: '中文', type: '公开视频', difficulty: '入门到进阶', stage: '上下文工程', value: '学习用途：从课程讲解建立长上下文与上下文工程的直觉；' + videoBoundary, verifiedAt: VERIFIED_AT, platform: 'YouTube' },
 ];
+
+const evidenceByResourceId = {
+  'res-context-anthropic-engineering': {
+    authority: 'official',
+    role: 'core',
+    coverage: ['上下文选择、压缩、隔离、工具结果管理与按需加载的工程原则'],
+    limitations: '厂商工程文章不定义本课程的五层对象、context manifest 字段或确定性预算与溢出契约，也不能保证跨模型复现收益。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-lost-middle': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['长上下文中相关信息位置对模型利用效果的影响'],
+    limitations: '结论受论文所测模型、任务、上下文长度与输入构造限制，不能推出所有模型或业务都具有相同的位置效应。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-openai-compaction': {
+    authority: 'official',
+    role: 'core',
+    coverage: ['OpenAI 会话压缩接口、压缩后状态续接与长会话管理方式'],
+    limitations: '仅说明 OpenAI 当前产品接口，不证明压缩无损，也不定义跨供应商通用的 transcript、canonical state 或摘要契约。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-openai-embeddings': {
+    authority: 'official',
+    role: 'core',
+    coverage: ['OpenAI embedding 的向量表示用途及语义检索接入方式'],
+    limitations: '产品文档不证明特定 embedding 在本课程语料上优于词法检索，也不覆盖 chunk 版本、权限与引用跨度治理。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-dpr': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['双编码器稠密段落检索的训练目标、召回流程与论文实验'],
+    limitations: '论文结果绑定开放域问答数据集、负样本和评测设置，不能外推为 dense retrieval 在所有领域都优于 sparse retrieval。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-rrf': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['Reciprocal Rank Fusion 依据名次融合多路排序结果的方法'],
+    limitations: 'RRF 是 rank fusion 排名融合方法，不是使用 query-document 交互信号重新打分的 reranker，也不保证在所有语料上提升效果。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-contextual-retrieval': {
+    authority: 'official',
+    role: 'core',
+    coverage: ['BM25、embedding、混合检索、上下文化 chunk 与 reranking 管线'],
+    limitations: '文中召回失败率改善来自 Anthropic 指定语料、模型和评测配置，不可外推为通用收益；也不建立引用正确性保证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-bert-reranker': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['passage re-ranking with BERT', 'query 与 passage 联合编码后对首阶段候选重新评分'],
+    limitations: '论文结论绑定其 2019 年模型、候选集和 TREC/MS MARCO 实验；reranker 不能找回首阶段未召回的段落。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-openai-retrieval': {
+    authority: 'official',
+    role: 'core',
+    coverage: ['OpenAI vector store、检索查询、排序选项与属性过滤接口'],
+    limitations: '接口语义随产品版本变化，不能当作跨向量库标准；文档也不提供适用于任意语料的 threshold 与 top-k 最优值。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-rag-paper': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['参数化生成模型与外部非参数知识索引结合的原始 RAG 研究设定'],
+    limitations: '论文架构与结论受其 Wikipedia、任务和模型设置限制，不直接证明课程中的过滤、证据包、引用或记忆治理契约。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-openai-citations': {
+    authority: 'official',
+    role: 'cross-check',
+    coverage: ['将 OpenAI 文件标注转换为用户可读引用的产品格式'],
+    limitations: '引用格式与回源链接不证明对应 claim 被证据蕴含，也不覆盖 citation correctness、completeness 或跨产品格式。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-alce': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['长文本生成中的引用正确性、引用完整性与答案质量评测'],
+    limitations: '评测定义、数据与自动评价方法限定了指标含义，不能把高分直接解释为生产答案全部真实或无遗漏。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-beir': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['异构检索数据集上的零样本 sparse、dense 与相关方法比较'],
+    limitations: 'BEIR 的任务集合和公开语料不能替代目标业务的真实查询、权限过滤、时效和成本评测，排名也不是普适结论。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-ragas': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['将检索上下文质量与生成回答质量分开评估的 RAGAS 指标思路'],
+    limitations: '论文指标与评估模型有特定假设，不能单独证明事实正确性，也不能替代人工 claim-to-source 核验。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-langchain-memory': {
+    authority: 'official',
+    role: 'cross-check',
+    coverage: ['LangGraph 线程级短期状态、跨会话长期 store、namespace 与记忆更新时机'],
+    limitations: '这是 LangChain/LangGraph 的框架模型，不是通用记忆标准；不直接规定 confidence、TTL、supersession 或物理删除保证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-coala': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['语言 agent 的工作记忆、长期记忆及 semantic、episodic、procedural 组织框架'],
+    limitations: '这是认知架构分析框架，不证明具体模型具有等同人类的记忆机制，也不提供生产存储、隔离或删除接口保证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-memgpt': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['通过分层存储与显式换入换出扩展有效上下文的 MemGPT 架构'],
+    limitations: '论文系统和实验不能当作所有 agent 的标准实现，分层内存方法也不自动满足隐私、权限与生命周期治理要求。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-memorybank': {
+    authority: 'academic',
+    role: 'cross-check',
+    coverage: ['长期对话记忆的形成、更新、检索与遗忘建模实验'],
+    limitations: '研究设定和遗忘机制绑定论文系统及评测，不足以定义业务记忆的 TTL、用户删除权或跨主体隔离契约。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-longmemeval': {
+    authority: 'academic',
+    role: 'core',
+    coverage: ['跨会话信息检索、时间推理、知识更新与长期记忆任务评测'],
+    limitations: '仓库任务和数据集只衡量指定能力，不代表生产环境中的记忆质量、隐私合规、删除传播或主体隔离。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-openai-data': {
+    authority: 'official',
+    role: 'cross-check',
+    coverage: ['OpenAI API 数据保留、存储与可用控制选项的当前产品说明'],
+    limitations: '产品数据政策具有账户、端点、地区和时间边界，不能外推为应用自身的长期记忆删除、备份擦除或合规证明。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-rag-scratch': {
+    authority: 'official',
+    role: 'extension',
+    coverage: ['LangChain maintainer notebooks 对 indexing、retrieval 与 generation 的教学拆解'],
+    limitations: '仓库主分支无稳定发布与依赖锁定，示例不是生产规范，也不覆盖文档版本、权限、失效和完整检索控制策略。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-llm-universe': {
+    authority: 'community',
+    role: 'cross-check',
+    coverage: ['中文知识库问答课程中的文档处理、向量检索与生成示例'],
+    limitations: '社区课程依赖和接口会变化，示例用于学习导航，不能作为当前产品语义、生产安全或效果数字的核心证据。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-all-in-rag': {
+    authority: 'community',
+    role: 'cross-check',
+    coverage: ['中文开源课程中的文档解析、检索组件与 RAG 评测实践'],
+    limitations: '社区仓库覆盖面不等于各组件均获独立验证，代码版本和示例结果不能外推为特定业务的生产保证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-hello-agents': {
+    authority: 'community',
+    role: 'cross-check',
+    coverage: ['中文 Agent 教程中 RAG 与记忆在应用流程里的接入示例'],
+    limitations: '课程示例不定义通用 memory semantics，也不证明其中的写入、召回、过期和删除策略满足生产治理要求。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-practical-guide': {
+    authority: 'community',
+    role: 'extension',
+    coverage: ['中文上下文工程案例对信息组织、压缩与检索策略的学习导航'],
+    limitations: '公开指南用于解释和复习，不是框架规范或原始实验来源；案例结论不能取代官方接口与学术证据。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-hf-agentic-rag': {
+    authority: 'official',
+    role: 'extension',
+    coverage: ['Hugging Face 官方课程中由 agent 决定是否调用检索工具的 Agentic RAG 示例'],
+    limitations: '页面正文和示例只支持基本工具接入，不覆盖 sparse/dense/hybrid 选择、过滤阈值、完整故障树或生产质量保证。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-ragflow': {
+    authority: 'official',
+    role: 'cross-check',
+    coverage: ['RAGFlow v0.26.4 的文档解析、chunk 配置、检索测试、引用与知识库产品流程'],
+    limitations: 'RAGFlow 的产品实现不等于通用 RAG 规范；版本化文档也不证明返回引用必然正确、完整或支持答案主张。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-bilibili': {
+    authority: 'community',
+    role: 'extension',
+    coverage: ['视频标题、作者、发布日期 2024-07-02、时长 15:58 与页面元数据'],
+    limitations: '页面字幕为空或未取得字幕正文，因此不能用该视频支撑 RAG 机制、实现细节、效果数字或 assessed outcomes。',
+    verifiedAt: VERIFIED_AT,
+  },
+  'res-context-youtube': {
+    authority: 'expert',
+    role: 'extension',
+    coverage: ['讲者、课程标题、发布日期等公开视频元数据'],
+    limitations: '未稳定取得字幕正文，故只作专家课程导航，不能据此声明课程具体论点、实现细节或跨模型效果结论。',
+    verifiedAt: VERIFIED_AT,
+  },
+};
+
+const resources = resourceCatalog.map((resource) => ({
+  ...resource,
+  evidence: evidenceByResourceId[resource.id],
+}));
 
 function quiz(id, prompt, choices, answerIndex, explanation) {
   return {
@@ -169,7 +381,7 @@ const lessons = [
       { heading: '首阶段候选不是最终上下文', body: '第一阶段检索追求较高召回，reranker 再用更强的查询—文档相关性信号调整顺序。随后要按 documentId、version 和 span 合并近重复内容，并在不同来源之间保留多样性；否则同一文档的重叠 chunk 会占满预算，掩盖相互独立或相互冲突的证据。', keyPoints: ['Reranker 优化候选次序但不能创造 corpus 中不存在的事实', '去重和多样性共同提高有限证据预算的覆盖率'] },
       { heading: '证据存在不代表回答忠实', body: 'Evidence packet 应包含 chunk 文本、sourceRef、documentId、version、span 和选择分数，并按 token budget 打包。检索到相关证据不保证生成忠实，模型仍可能曲解或越界；引用也不自动证明对应 claim，必须检查每个主张是否被所指 span 支持，并分别评估检索与生成。', keyPoints: ['Citation manifest 解决回源，不自动解决蕴含与完整性', '故障定位要分别观察候选、打包结果、引用映射和最终主张'] },
     ],
-    resourceIds: ['res-context-rrf', 'res-context-contextual-retrieval', 'res-context-rag-paper', 'res-context-openai-citations', 'res-context-alce', 'res-context-ragas', 'res-context-ragflow'],
+    resourceIds: ['res-context-rrf', 'res-context-bert-reranker', 'res-context-contextual-retrieval', 'res-context-rag-paper', 'res-context-openai-citations', 'res-context-alce', 'res-context-ragas', 'res-context-ragflow'],
     exercise: { title: '打包可引用证据', brief: '把混合召回候选经过重排、版本去重和多样性选择装入固定预算。', steps: ['执行固定 rerank，移除旧版本与近重复 chunk，并记录每次排除原因', '按预算选择互补证据，生成唯一 source/version/span 的 citation manifest 并逐条核对 claim'], deliverable: '一个 evidence packet、排除清单和 claim-to-citation 核对表。' },
     quizzes: [
       quiz('context-06-1', '为什么第一阶段 top-k 不宜直接全部塞入 prompt？', ['候选可能重复、旧版或相关性不足', '模型不能读取文本', '引用只支持单个 chunk'], 0, '候选生成强调召回，仍需重排、版本处理、去重、多样性和预算打包。'),

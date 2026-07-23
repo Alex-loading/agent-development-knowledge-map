@@ -29,6 +29,7 @@ const resourceUrls = [
   'https://aclanthology.org/2020.emnlp-main.550/',
   'https://research.google/pubs/reciprocal-rank-fusion-outperforms-condorcet-and-individual-rank-learning-methods/',
   'https://www.anthropic.com/engineering/contextual-retrieval',
+  'https://arxiv.org/abs/1901.04085',
   'https://developers.openai.com/api/docs/guides/retrieval',
   'https://proceedings.neurips.cc/paper/2020/hash/6b493230-Abstract.html',
   'https://developers.openai.com/api/docs/guides/citation-formatting',
@@ -47,7 +48,7 @@ const resourceUrls = [
   'https://github.com/datawhalechina/hello-agents',
   'https://wakeup-jin.github.io/Practical-Guide-to-Context-Engineering/',
   'https://huggingface.co/learn/agents-course/unit3/agentic-rag/agentic-rag',
-  'https://ragflow.com.cn/docs',
+  'https://ragflow.io/docs/v0.26.4/',
   'https://www.bilibili.com/video/BV1Sb421E74u/',
   'https://www.youtube.com/watch?v=lVdajtNpaGI',
 ];
@@ -148,19 +149,92 @@ test('only lessons two, five and seven map the specified experiments', () => {
   );
 });
 
-test('resources are the exact 28 verified HTTPS entries with complete metadata', () => {
-  assert.equal(contextRagMemory.resources.length, 28);
+test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
+  assert.equal(contextRagMemory.resources.length, 29);
   assert.deepEqual(contextRagMemory.resources.map(({ url }) => url), resourceUrls);
   for (const resource of contextRagMemory.resources) {
     assert.match(resource.id, /^res-context-/);
     assert.equal(new URL(resource.url).protocol, 'https:', resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-21', resource.id);
+    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
     assert.match(resource.value, /学习用途[：:]/, `${resource.id}: learning use`);
     assert.match(resource.value, /证据边界[：:]/, `${resource.id}: evidence boundary`);
     if (resource.type.includes('视频')) assert.ok(resource.platform, `${resource.id}: platform`);
+  }
+});
+
+test('all 29 Context RAG and Memory resources provide complete evidence cards', () => {
+  const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+  const validRoles = new Set(['core', 'cross-check', 'extension']);
+  const byId = new Map(contextRagMemory.resources.map((resource) => [resource.id, resource]));
+
+  for (const resource of contextRagMemory.resources) {
+    const { evidence } = resource;
+    assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(evidence.authority),
+      `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validRoles.has(evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(evidence.coverage) && evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(evidence.coverage.every((item) => (
+      typeof item === 'string' && item.trim().length > 0
+    )), `${resource.id}: evidence.coverage 必须只包含非空字符串`);
+    assert.ok(typeof evidence.limitations === 'string'
+      && evidence.limitations.trim().length >= 15,
+    `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+    if (evidence.verifiedAt !== undefined) {
+      assert.equal(evidence.verifiedAt, '2026-07-23',
+        `${resource.id}: evidence.verifiedAt 必须记录本轮正文核验日期`);
+    }
+  }
+
+  const rrf = byId.get('res-context-rrf');
+  assert.equal(rrf.evidence.authority, 'academic');
+  assert.equal(rrf.evidence.role, 'core');
+  assert.match(rrf.evidence.limitations, /rank fusion.*不是.*rerank/i);
+
+  const reranker = byId.get('res-context-bert-reranker');
+  assert.equal(reranker.evidence.authority, 'academic');
+  assert.equal(reranker.evidence.role, 'core');
+  assert.match(reranker.evidence.coverage.join(' '), /passage re-?ranking|query.*passage/i);
+
+  const ragflow = byId.get('res-context-ragflow');
+  assert.equal(ragflow.url, 'https://ragflow.io/docs/v0.26.4/');
+  assert.equal(ragflow.evidence.authority, 'official');
+  assert.equal(ragflow.evidence.role, 'cross-check');
+  assert.match(ragflow.evidence.limitations, /产品实现.*不(?:等于|代表).*通用/i);
+
+  const bilibili = byId.get('res-context-bilibili');
+  assert.equal(
+    bilibili.title,
+    '【精剪版】Datawhale开源大模型入门课-第四节-大模型应用开发实践-RAG与Agent-02-检索增强生成：原理、实践和应用场景',
+  );
+  assert.equal(bilibili.source, '二次元的Datawhale');
+  assert.equal(bilibili.evidence.authority, 'community');
+  assert.equal(bilibili.evidence.role, 'extension');
+  assert.match(bilibili.evidence.coverage.join(' '), /标题|作者|时长|元数据/);
+  assert.match(bilibili.evidence.coverage.join(' '), /2024-07-02.*15:58/);
+  assert.match(bilibili.evidence.limitations, /字幕.*空|未取得.*字幕/);
+
+  const youtube = byId.get('res-context-youtube');
+  assert.equal(
+    youtube.title,
+    '【生成式人工智慧與機器學習導論2025】第2講：上下文工程—AI Agent背後的關鍵技術',
+  );
+  assert.equal(youtube.source, 'Hung-yi Lee');
+  assert.equal(youtube.evidence.authority, 'expert');
+  assert.equal(youtube.evidence.role, 'extension');
+  assert.match(youtube.evidence.limitations, /字幕正文.*未.*取得|未稳定取得.*字幕/);
+
+  for (const id of [
+    'res-context-llm-universe',
+    'res-context-all-in-rag',
+    'res-context-hello-agents',
+  ]) {
+    assert.equal(byId.get(id).evidence.authority, 'community', `${id}: authority`);
+    assert.equal(byId.get(id).evidence.role, 'cross-check', `${id}: role`);
   }
 });
 
@@ -325,6 +399,10 @@ test('context RAG and memory recursively freezes every nested value', () => {
   }
   for (const resource of contextRagMemory.resources) {
     assert.throws(() => { resource.value = 'changed'; }, TypeError, resource.id);
+    assert.throws(() => { resource.evidence.coverage.push('changed'); }, TypeError,
+      `${resource.id}.evidence.coverage`);
+    assert.throws(() => { resource.evidence.limitations = 'changed'; }, TypeError,
+      `${resource.id}.evidence.limitations`);
   }
   for (const item of contextRagMemory.interviewQuestions) {
     assert.throws(() => { item.shortAnswer = 'changed'; }, TypeError, item.id);
