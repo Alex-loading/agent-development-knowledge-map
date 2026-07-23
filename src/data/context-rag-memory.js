@@ -1,3 +1,5 @@
+import { contextRagMemoryNotes } from './context-rag-memory-notes.js';
+
 const VERIFIED_AT = '2026-07-23';
 
 const officialBoundary = '证据边界：该资料描述当前产品或框架实现，接口和版本会变化，不代表跨产品或框架标准。';
@@ -262,8 +264,9 @@ function quiz(id, prompt, choices, answerIndex, explanation) {
 
 function lesson({ order, title, summary, objectives, concepts, explanations, resourceIds, exercise, quizzes, completionCriteria }) {
   const suffix = String(order).padStart(2, '0');
+  const id = 'context-' + suffix;
   return {
-    id: 'context-' + suffix,
+    id,
     moduleId: 'context-rag-memory',
     order,
     title,
@@ -277,6 +280,7 @@ function lesson({ order, title, summary, objectives, concepts, explanations, res
     quiz: quizzes,
     interviewQuestionIds: [1, 2, 3].map((number) => 'iq-context-' + suffix + '-' + number),
     completionCriteria,
+    knowledgeNote: contextRagMemoryNotes[id],
   };
 }
 

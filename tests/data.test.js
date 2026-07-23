@@ -206,12 +206,18 @@ test('all 28 LLM resources provide complete evidence cards', () => {
   }
 });
 
-test('only Context, RAG and Memory retains explanation fallback without knowledge notes', () => {
+test('all four active modules publish long-form notes while Context retains explanations as fallback', async () => {
+  const { contextRagMemoryNotes } = await import('../src/data/context-rag-memory-notes.js');
+
   assert.ok(agentHarness.lessons.every((lesson) => lesson.knowledgeNote),
     'Agent Harness 八课必须全部启用 knowledgeNote');
+  assert.deepEqual(Object.keys(contextRagMemoryNotes), contextRagMemory.lessons.map(({ id }) => id),
+    'Context 笔记注册表必须精确覆盖八课');
   for (const lesson of contextRagMemory.lessons) {
-    assert.equal(lesson.knowledgeNote, undefined,
-      `${contextRagMemory.id}:${lesson.id}: 不应启用 knowledgeNote`);
+    assert.ok(lesson.knowledgeNote,
+      `${contextRagMemory.id}:${lesson.id}: 必须启用 knowledgeNote`);
+    assert.equal(lesson.knowledgeNote, contextRagMemoryNotes[lesson.id],
+      `${contextRagMemory.id}:${lesson.id}: 必须引用注册表中的同一对象`);
     assert.ok(
       Array.isArray(lesson.explanations) && lesson.explanations.length >= 2,
       `${contextRagMemory.id}:${lesson.id}: 必须保留 explanations 作为 fallback`,
