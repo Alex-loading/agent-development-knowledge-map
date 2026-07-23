@@ -455,14 +455,13 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide records three knowledge-note modules with only Context fallback', async () => {
+test('release guide records all four active modules as knowledge-note textbooks', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
   const architecture = markdownSection(readme, '架构与数据流');
   const primaryTextbookStatement = markdownParagraphContaining(status, '主教材');
-  const fallbackStatement = markdownParagraphContaining(status, '`explanations`');
 
-  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness']) {
+  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness', '上下文、RAG 与记忆']) {
     assert.match(
       primaryTextbookStatement,
       new RegExp(`${escapeRegExp(title)}[^\\n]{0,50}(?:八|8)课[^\\n]{0,50}(?:站内)?知识笔记[^\\n]{0,40}主教材`),
@@ -474,14 +473,8 @@ test('release guide records three knowledge-note modules with only Context fallb
     /外部(?:学习)?资料[^\n]{0,50}依据[^\n]{0,30}交叉核验[^\n]{0,30}扩展/,
     'README should position external resources as evidence, cross-checks and extensions',
   );
-  for (const title of ['上下文、RAG 与记忆']) {
-    assert.ok(fallbackStatement.includes(title), `README should preserve the explanations fallback for ${title}`);
-  }
-  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness']) {
-    assert.ok(!fallbackStatement.includes(title),
-      `README should not describe ${title} as an explanations fallback`);
-  }
-  assert.match(fallbackStatement, /尚未迁移[^\n]{0,20}同等长文/);
+  assert.doesNotMatch(status, /上下文、RAG 与记忆[^\n]{0,80}尚未迁移/);
+  assert.match(status, /`explanations`[^\n]{0,50}(?:兼容|通用)[^\n]{0,30}fallback/);
   assert.doesNotMatch(readme, /这个试点目前只覆盖 `llm-01`/);
   assert.doesNotMatch(readme, /LLM 第一课知识笔记试点/);
   assert.ok(architecture.includes('`src/data/llm-foundation-notes/`'));
@@ -490,6 +483,8 @@ test('release guide records three knowledge-note modules with only Context fallb
   assert.match(architecture, /`src\/data\/agent-mechanism-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
   assert.ok(architecture.includes('`src/data/agent-harness-notes/`'));
   assert.match(architecture, /`src\/data\/agent-harness-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
+  assert.ok(architecture.includes('`src/data/context-rag-memory-notes/`'));
+  assert.match(architecture, /`src\/data\/context-rag-memory-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
 });
 
 test('release guide publishes every active registered course with data-derived counts and canonical routes', async () => {
