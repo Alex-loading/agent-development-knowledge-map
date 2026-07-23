@@ -21,6 +21,17 @@ const lessonTitles = [
   'RAG 与记忆综合设计及故障定位',
 ];
 
+const noteExpectations = new Map([
+  ['context-01', { exportName: 'context01Note', minMinutes: 30, maxMinutes: 38, minLength: 4200 }],
+  ['context-02', { exportName: 'context02Note', minMinutes: 32, maxMinutes: 40, minLength: 4400 }],
+  ['context-03', { exportName: 'context03Note', minMinutes: 34, maxMinutes: 42, minLength: 4600 }],
+  ['context-04', { exportName: 'context04Note', minMinutes: 35, maxMinutes: 45, minLength: 4800 }],
+  ['context-05', { exportName: 'context05Note', minMinutes: 36, maxMinutes: 45, minLength: 5000 }],
+  ['context-06', { exportName: 'context06Note', minMinutes: 38, maxMinutes: 45, minLength: 5200 }],
+  ['context-07', { exportName: 'context07Note', minMinutes: 38, maxMinutes: 45, minLength: 5200 }],
+  ['context-08', { exportName: 'context08Note', minMinutes: 40, maxMinutes: 45, minLength: 5400 }],
+]);
+
 const resourceUrls = [
   'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents',
   'https://aclanthology.org/2024.tacl-1.9/',
@@ -29,6 +40,7 @@ const resourceUrls = [
   'https://aclanthology.org/2020.emnlp-main.550/',
   'https://research.google/pubs/reciprocal-rank-fusion-outperforms-condorcet-and-individual-rank-learning-methods/',
   'https://www.anthropic.com/engineering/contextual-retrieval',
+  'https://arxiv.org/abs/1901.04085',
   'https://developers.openai.com/api/docs/guides/retrieval',
   'https://proceedings.neurips.cc/paper/2020/hash/6b493230-Abstract.html',
   'https://developers.openai.com/api/docs/guides/citation-formatting',
@@ -47,7 +59,7 @@ const resourceUrls = [
   'https://github.com/datawhalechina/hello-agents',
   'https://wakeup-jin.github.io/Practical-Guide-to-Context-Engineering/',
   'https://huggingface.co/learn/agents-course/unit3/agentic-rag/agentic-rag',
-  'https://ragflow.com.cn/docs',
+  'https://ragflow.io/docs/v0.26.4/',
   'https://www.bilibili.com/video/BV1Sb421E74u/',
   'https://www.youtube.com/watch?v=lVdajtNpaGI',
 ];
@@ -81,6 +93,15 @@ const interviewTitles = [
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
+}
+
+function assertDeepFrozenValue(value, label, seen = new Set()) {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  assert.ok(Object.isFrozen(value), `${label}: 公开数据及其嵌套结构必须被冻结`);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    assertDeepFrozenValue(nestedValue, `${label}.${key}`, seen);
+  }
 }
 
 test('context RAG and memory exposes eight ordered substantive lessons and sixteen quizzes', () => {
@@ -148,19 +169,212 @@ test('only lessons two, five and seven map the specified experiments', () => {
   );
 });
 
-test('resources are the exact 28 verified HTTPS entries with complete metadata', () => {
-  assert.equal(contextRagMemory.resources.length, 28);
+for (const lessonId of lessonIds) {
+  test(`${lessonId} publishes a complete source-grounded knowledge note file`, async () => {
+    const lesson = contextRagMemory.lessons.find(({ id }) => id === lessonId);
+    const expectation = noteExpectations.get(lessonId);
+    const noteModule = await import(`../src/data/context-rag-memory-notes/${lessonId}.js`);
+    const note = noteModule[expectation.exportName];
+    const resourcesById = new Map(
+      contextRagMemory.resources.map((resource) => [resource.id, resource]),
+    );
+    const lessonResourceIds = new Set(lesson.resourceIds);
+
+    assert.ok(note, `${lessonId}: 必须导出 ${expectation.exportName}`);
+    assertDeepFrozenValue(note, `${lessonId}.knowledgeNote`);
+    assert.ok(Number.isInteger(note.readingMinutes)
+      && note.readingMinutes >= expectation.minMinutes
+      && note.readingMinutes <= expectation.maxMinutes,
+    `${lessonId}: 阅读时长应为 ${expectation.minMinutes}–${expectation.maxMinutes} 分钟`);
+    assert.ok(typeof note.introduction === 'string' && note.introduction.trim().length >= 80,
+      `${lessonId}: introduction 至少需要 80 个字符`);
+    assert.ok(Array.isArray(note.sections)
+      && note.sections.length >= 5 && note.sections.length <= 7,
+    `${lessonId}: 应包含 5–7 个递进章节`);
+    assertUnique(note.sections.map(({ id }) => id), `${lessonId}: section ids`);
+
+    const bodyLength = [
+      note.introduction,
+      ...note.sections.flatMap(({ paragraphs }) => paragraphs),
+      note.nextStep,
+    ].reduce((total, value) => total + value.trim().length, 0);
+    assert.ok(bodyLength >= expectation.minLength && bodyLength <= 9000,
+      `${lessonId}: 正文长度应为 ${expectation.minLength}–9000 字符，当前为 ${bodyLength}`);
+
+    for (const section of note.sections) {
+      assert.match(section.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        `${lessonId}: section id 必须为 kebab-case`);
+      assert.ok(typeof section.title === 'string' && section.title.trim().length >= 4,
+        `${lessonId}:${section.id}: title 至少需要 4 个字符`);
+      assert.ok(Array.isArray(section.paragraphs)
+        && section.paragraphs.length >= 2 && section.paragraphs.length <= 4,
+      `${lessonId}:${section.id}: 需要 2–4 个正文段落`);
+      assert.ok(section.paragraphs.every((paragraph) => (
+        typeof paragraph === 'string' && paragraph.trim().length >= 60
+      )), `${lessonId}:${section.id}: 每个正文段落至少需要 60 个字符`);
+      assert.ok(Array.isArray(section.keyPoints) && section.keyPoints.length >= 2,
+        `${lessonId}:${section.id}: 至少需要两个要点`);
+      assert.ok(section.keyPoints.every((point) => (
+        typeof point === 'string' && point.trim().length >= 8
+      )), `${lessonId}:${section.id}: keyPoints 必须是实质性文本`);
+      assert.ok(Array.isArray(section.sourceIds) && section.sourceIds.length >= 1,
+        `${lessonId}:${section.id}: 至少需要一个来源`);
+      assert.ok(section.sourceIds.every((id) => lessonResourceIds.has(id)),
+        `${lessonId}:${section.id}: sourceIds 必须属于当前课资源`);
+      assert.ok(section.sourceIds.every((id) => resourcesById.get(id)?.evidence),
+        `${lessonId}:${section.id}: sourceIds 必须具有 evidence`);
+      assert.ok(section.sourceIds.some((id) => resourcesById.get(id).evidence.role !== 'extension'),
+        `${lessonId}:${section.id}: 章节不能只由 extension 来源承担`);
+    }
+
+    assert.ok(Array.isArray(note.misconceptions)
+      && note.misconceptions.length >= 4 && note.misconceptions.length <= 6,
+    `${lessonId}: 需要 4–6 个常见误区`);
+    assert.ok(note.misconceptions.every(({ claim, correction }) => (
+      typeof claim === 'string' && claim.trim().length >= 10
+      && typeof correction === 'string' && correction.trim().length >= 20
+    )), `${lessonId}: misconception 必须包含实质 claim/correction`);
+    assert.ok(Array.isArray(note.recap) && note.recap.length >= 5,
+      `${lessonId}: recap 至少需要 5 项`);
+    assert.ok(note.recap.every((item) => typeof item === 'string' && item.trim().length >= 8),
+      `${lessonId}: recap 必须是实质性文本`);
+    assert.ok(typeof note.nextStep === 'string' && note.nextStep.trim().length >= 60,
+      `${lessonId}: nextStep 至少需要 60 个字符`);
+  });
+}
+
+test('Context RAG and Memory note registry exactly matches all eight lesson files', async () => {
+  const { contextRagMemoryNotes } = await import('../src/data/context-rag-memory-notes.js');
+
+  assert.deepEqual(Object.keys(contextRagMemoryNotes), lessonIds);
+  assert.equal(new Set(Object.values(contextRagMemoryNotes)).size, lessonIds.length,
+    '每课必须使用不同的 knowledgeNote 对象');
+  assertDeepFrozenValue(contextRagMemoryNotes, 'contextRagMemoryNotes');
+});
+
+test('context-07 lifecycle walkthrough explicitly executes reject and no-op events', async () => {
+  const { context07Note } = await import(
+    '../src/data/context-rag-memory-notes/context-07.js'
+  );
+  const copy = JSON.stringify(context07Note);
+
+  assert.match(copy, /action=reject/,
+    'context-07 必须用实验事件实际产生 reject，而不只在概念列表中提及');
+  assert.match(copy, /action=no-op/,
+    'context-07 必须用实验事件实际产生 no-op，而不只在概念列表中提及');
+});
+
+test('context-08 assigns an explicit owner to every source-to-citation layer', async () => {
+  const { context08Note } = await import(
+    '../src/data/context-rag-memory-notes/context-08.js'
+  );
+  const copy = JSON.stringify(context08Note);
+
+  for (const ownerField of [
+    'sourceOwner',
+    'ingestOwner',
+    'chunkOwner',
+    'indexOwner',
+    'retrieveOwner',
+    'filterOwner',
+    'rerankOwner',
+    'packOwner',
+    'stateProjectionOwner',
+    'memoryProjectionOwner',
+    'generateOwner',
+    'citationOwner',
+  ]) {
+    assert.match(copy, new RegExp(ownerField),
+      `context-08 必须逐层给出 ${ownerField}`);
+  }
+});
+
+test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
+  assert.equal(contextRagMemory.resources.length, 29);
   assert.deepEqual(contextRagMemory.resources.map(({ url }) => url), resourceUrls);
   for (const resource of contextRagMemory.resources) {
     assert.match(resource.id, /^res-context-/);
     assert.equal(new URL(resource.url).protocol, 'https:', resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-21', resource.id);
+    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
     assert.match(resource.value, /学习用途[：:]/, `${resource.id}: learning use`);
     assert.match(resource.value, /证据边界[：:]/, `${resource.id}: evidence boundary`);
     if (resource.type.includes('视频')) assert.ok(resource.platform, `${resource.id}: platform`);
+  }
+});
+
+test('all 29 Context RAG and Memory resources provide complete evidence cards', () => {
+  const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
+  const validRoles = new Set(['core', 'cross-check', 'extension']);
+  const byId = new Map(contextRagMemory.resources.map((resource) => [resource.id, resource]));
+
+  for (const resource of contextRagMemory.resources) {
+    const { evidence } = resource;
+    assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
+    assert.ok(validAuthorities.has(evidence.authority),
+      `${resource.id}: evidence.authority 值无效`);
+    assert.ok(validRoles.has(evidence.role), `${resource.id}: evidence.role 值无效`);
+    assert.ok(Array.isArray(evidence.coverage) && evidence.coverage.length >= 1,
+      `${resource.id}: evidence.coverage 不能为空`);
+    assert.ok(evidence.coverage.every((item) => (
+      typeof item === 'string' && item.trim().length > 0
+    )), `${resource.id}: evidence.coverage 必须只包含非空字符串`);
+    assert.ok(typeof evidence.limitations === 'string'
+      && evidence.limitations.trim().length >= 15,
+    `${resource.id}: evidence.limitations 至少需要 15 个字符`);
+    if (evidence.verifiedAt !== undefined) {
+      assert.equal(evidence.verifiedAt, '2026-07-23',
+        `${resource.id}: evidence.verifiedAt 必须记录本轮正文核验日期`);
+    }
+  }
+
+  const rrf = byId.get('res-context-rrf');
+  assert.equal(rrf.evidence.authority, 'academic');
+  assert.equal(rrf.evidence.role, 'core');
+  assert.match(rrf.evidence.limitations, /rank fusion.*不是.*rerank/i);
+
+  const reranker = byId.get('res-context-bert-reranker');
+  assert.equal(reranker.evidence.authority, 'academic');
+  assert.equal(reranker.evidence.role, 'core');
+  assert.match(reranker.evidence.coverage.join(' '), /passage re-?ranking|query.*passage/i);
+
+  const ragflow = byId.get('res-context-ragflow');
+  assert.equal(ragflow.url, 'https://ragflow.io/docs/v0.26.4/');
+  assert.equal(ragflow.evidence.authority, 'official');
+  assert.equal(ragflow.evidence.role, 'cross-check');
+  assert.match(ragflow.evidence.limitations, /产品实现.*不(?:等于|代表).*通用/i);
+
+  const bilibili = byId.get('res-context-bilibili');
+  assert.equal(
+    bilibili.title,
+    '【精剪版】Datawhale开源大模型入门课-第四节-大模型应用开发实践-RAG与Agent-02-检索增强生成：原理、实践和应用场景',
+  );
+  assert.equal(bilibili.source, '二次元的Datawhale');
+  assert.equal(bilibili.evidence.authority, 'community');
+  assert.equal(bilibili.evidence.role, 'extension');
+  assert.match(bilibili.evidence.coverage.join(' '), /标题|作者|时长|元数据/);
+  assert.match(bilibili.evidence.coverage.join(' '), /2024-07-02.*15:58/);
+  assert.match(bilibili.evidence.limitations, /字幕.*空|未取得.*字幕/);
+
+  const youtube = byId.get('res-context-youtube');
+  assert.equal(
+    youtube.title,
+    '【生成式人工智慧與機器學習導論2025】第2講：上下文工程—AI Agent背後的關鍵技術',
+  );
+  assert.equal(youtube.source, 'Hung-yi Lee');
+  assert.equal(youtube.evidence.authority, 'expert');
+  assert.equal(youtube.evidence.role, 'extension');
+  assert.match(youtube.evidence.limitations, /字幕正文.*未.*取得|未稳定取得.*字幕/);
+
+  for (const id of [
+    'res-context-llm-universe',
+    'res-context-all-in-rag',
+    'res-context-hello-agents',
+  ]) {
+    assert.equal(byId.get(id).evidence.authority, 'community', `${id}: authority`);
+    assert.equal(byId.get(id).evidence.role, 'cross-check', `${id}: role`);
   }
 });
 
@@ -325,6 +539,10 @@ test('context RAG and memory recursively freezes every nested value', () => {
   }
   for (const resource of contextRagMemory.resources) {
     assert.throws(() => { resource.value = 'changed'; }, TypeError, resource.id);
+    assert.throws(() => { resource.evidence.coverage.push('changed'); }, TypeError,
+      `${resource.id}.evidence.coverage`);
+    assert.throws(() => { resource.evidence.limitations = 'changed'; }, TypeError,
+      `${resource.id}.evidence.limitations`);
   }
   for (const item of contextRagMemory.interviewQuestions) {
     assert.throws(() => { item.shortAnswer = 'changed'; }, TypeError, item.id);

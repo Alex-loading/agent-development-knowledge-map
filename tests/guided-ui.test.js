@@ -210,32 +210,43 @@ test('Agent Harness renders first, middle and last knowledge notes with source-s
   }
 });
 
-test('Context lessons retain legacy explanations without a knowledge note', (t) => {
+test('Context renders first, middle and last knowledge notes with source-safe evidence cards', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const root = document.createElement('div');
   document.body.append(root);
 
-  for (const course of [contextRagMemory]) {
-    const lesson = course.lessons[0];
+  for (const lessonId of ['context-01', 'context-04', 'context-08']) {
+    const lesson = contextRagMemory.lessons.find(({ id }) => id === lessonId);
     renderLessonDetail(root, {
-      course,
-      lessonId: lesson.id,
-      progress: createDefaultProgress(course.id),
+      course: contextRagMemory,
+      lessonId,
+      progress: createDefaultProgress(contextRagMemory.id),
     });
 
-    assert.ok(root.textContent.includes(lesson.explanations[0].heading));
-    assert.ok(root.querySelector('.lesson-explanations'));
-    assert.equal(root.querySelector('.knowledge-note'), null);
+    const knowledgeNote = root.querySelector('.knowledge-note');
     const resourceSelection = root.querySelector('.resource-selection');
-    const legacyResource = course.resources.find(({ id }) => lesson.resourceIds.includes(id));
-    const legacyResourceItem = resourceSelection.querySelectorAll('li')
-      .find((item) => item.textContent.includes(legacyResource.title));
-    assert.equal(resourceSelection.querySelector('h2').textContent, '精选资料');
-    assert.ok(legacyResourceItem.textContent.includes(
-      `${legacyResource.source} · ${legacyResource.language} · ${legacyResource.value}`,
+    const sourceLink = knowledgeNote?.querySelector('a');
+    const evidenceResource = contextRagMemory.resources.find((resource) => (
+      lesson.resourceIds.includes(resource.id) && resource.evidence
     ));
-    assert.ok(!resourceSelection.textContent.includes('undefined'));
+    assert.ok(knowledgeNote, `${lessonId}: 应渲染知识型长文笔记`);
+    assert.equal(
+      knowledgeNote.querySelectorAll('nav[aria-label="本章目录"] button').length,
+      lesson.knowledgeNote.sections.length,
+      `${lessonId}: 目录按钮数必须等于章节数`,
+    );
+    assert.equal(sourceLink?.getAttribute('target'), '_blank', `${lessonId}: 来源链接应在新窗口打开`);
+    assert.ok(sourceLink?.getAttribute('rel').includes('noopener noreferrer'),
+      `${lessonId}: 来源链接必须防止 opener 泄漏`);
+    assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
+    assert.ok(evidenceResource, `${lessonId}: 必须有可展示来源卡的课程资源`);
+    const evidenceResourceItem = resourceSelection.querySelectorAll('li')
+      .find((item) => item.textContent.includes(evidenceResource.title));
+    assert.ok(evidenceResourceItem, `${lessonId}: 应渲染关联资源的来源卡`);
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.role));
+    assert.ok(evidenceResourceItem.textContent.includes(evidenceResource.evidence.limitations));
+    assert.equal(root.querySelector('.data-diagnostic'), null, `${lessonId}: 不应出现资料诊断`);
   }
 });
 
