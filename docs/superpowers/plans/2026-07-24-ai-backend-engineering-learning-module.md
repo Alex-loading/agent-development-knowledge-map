@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` to implement this plan task-by-task. Every production change starts with a failing test and receives specification review followed by quality review.
 
-**Goal:** 从零开放第五个完整的「AI 后端工程」模块，交付八节系统课程、29 项核验资源、24 道面试题、16 道测验、八篇可独立学习的知识笔记和三项确定性交互实验。
+**Goal:** 从零开放第五个完整的「AI 后端工程」模块，交付八节系统课程、37 项核验资源、24 道面试题、16 道测验、八篇可独立学习的知识笔记和三项确定性交互实验。
 
 **Architecture:** 保持当前无框架静态 ES Modules。课程与笔记通过深度冻结数据注册并复用六个通用视图；流式生命周期、服务准入和任务投递作为独立纯函数；DOM renderer 位于模块 UI 文件，通用实验入口只合并 renderer registry。模块在全部质量门禁通过后才从 planned 激活。
 
@@ -19,9 +19,9 @@
 - `src/data/backend-engineering-notes.js`
 - `src/data/backend-engineering-notes/backend-01.js` 至 `backend-08.js`
 
-1. 先写失败测试，断言 8 lessons、29 resources、24 interviews、16 quiz、8 notes、稳定 ID、双向引用、evidence card、资源使用率、深度冻结和知识笔记数据契约。
+1. 先写失败测试，断言 8 lessons、37 resources、24 interviews、16 quiz、8 notes、稳定 ID、双向引用、evidence card、资源使用率、深度冻结、显式 assessed-outcome coverage matrix 和知识笔记测试审计/数据契约。
 2. 运行 `node --test tests/backend-engineering-data.test.js`，确认因模块不存在而 RED。
-3. 实现 29 项资源与 evidence card；实现八节课程的 objectives、concepts、explanations、exercise、quiz、interview IDs、completion criteria。
+3. 实现 37 项资源与 evidence card；实现八节课程的 objectives、concepts、explanations、exercise、quiz、interview IDs、completion criteria。
 4. 逐课撰写 20–30 分钟知识笔记。每篇 4–7 个实质 section，每段 2–4 个短段落，包含可操作例子、误区、recap 和 nextStep；所有 `sourceIds` 解析到课程资源。
 5. 运行目标测试和 `npm test`，修复后提交 `feat: add AI backend engineering curriculum`。
 6. 规格审查课程覆盖与证据，质量审查教学结构、边界、版权和数据契约；Important 问题回到作者修复。
@@ -97,4 +97,3 @@
 5. 核验 `https://agent-development-knowledge-map.vercel.app`、`#backend-engineering/dashboard` 和至少一节 lesson；核验部署 metadata Git SHA 等于 merge SHA。
 6. 核验 GitHub Pages 保持关闭。
 7. 最终交付只报告实际通过的测试数量、PR、merge SHA、Production URL/SHA、Pages 状态和已知剩余限制。
-

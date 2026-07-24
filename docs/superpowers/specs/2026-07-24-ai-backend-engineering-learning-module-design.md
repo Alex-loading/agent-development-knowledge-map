@@ -62,13 +62,14 @@
 
 ## 5. Coverage and evidence
 
-模块使用 29 项核验资源，ID 统一为 `res-backend-*`：
+模块使用 37 项核验资源，ID 统一为 `res-backend-*`。初版 29 项在规格审查中暴露出 Little 定律、应用幂等、transactional outbox、lease sequencer、容器实践、负载测试指标和 singleflight 请求合并的证据空洞，因此补充 8 项直接覆盖 assessed outcomes 的来源：
 
 - 规范与官方机制：OpenAPI 3.1.2、RFC 9110、RFC 6585、WHATWG SSE、ASGI HTTP、ASGI Lifespan、Python asyncio、Kubernetes Probes、Prometheus Instrumentation。
 - AI/API 官方语义：OpenAI Streaming Responses、Background Mode、Rate Limits；FastAPI SSE 与容器部署。
 - 任务与数据：Celery Tasks、Celery Optimizing、Redis Eviction、Redis Semantic Cache、PostgreSQL Transactions。
 - 原始研究与工程书籍：Tail at Scale、SEDA、DAGOR、MillWheel、Sarathi-Serve、Google SRE Cascading Failures。
-- 实现扩展：vLLM Architecture、vLLM OpenAI-compatible Server、Ray Serve Dynamic Request Batching、Dockerfile Reference、Datawhale LLM Universe。
+- 实现扩展：vLLM Architecture、vLLM OpenAI-compatible Server、Ray Serve Dynamic Request Batching、Datawhale LLM Universe。容器构建由 FastAPI 官方容器部署资料承担，Dockerfile Reference 不单列为课程资源。
+- 补强来源：Columbia Little's Law proof、AWS Idempotent APIs、AWS Transactional Outbox、Chubby lock service、Docker Build Best Practices、Coordinated Omission in NoSQL Benchmarking、vLLM Performance Tuning 的 TPOT/ITL 指标定义、Go `x/sync/singleflight` 的同 key 重复调用抑制语义。
 
 资源条目含可归因来源、学习价值、证据边界和核验日期；课程 section 只能引用课程资源数组中存在的 ID。每项资源都有 evidence card：`authority`、`role`、`coverage`、`limitations`，时间敏感项带 `verifiedAt`。
 
@@ -112,7 +113,7 @@
 
 RED 测试先于生产代码：
 
-- 数据测试：8 节、29 资源、24 面试题、16 quiz、8 篇知识笔记、evidence 可解析、资源使用率、全局 ID 唯一和深度冻结。
+- 数据测试：8 节、37 资源、24 面试题、16 quiz、8 篇知识笔记、evidence 可解析、资源使用率、全局 ID 唯一和深度冻结。
 - 纯逻辑测试：流式终态与断线/取消竞态；容量数学、deadline、拒绝和边界校验；任务 redelivery、未知结果、去重和账本不变式。
 - UI 测试：三项实验真实 DOM 操作、reset、label、live region、键盘与焦点。
 - 集成测试：第五课程 registry、canonical route、六视图、独立进度、资源与面试筛选。
@@ -151,4 +152,3 @@ RED 测试先于生产代码：
 - 质量分低于 85/100、存在 course-field 伪证据、版权复制或未标注时效边界：停止发布。
 - 测试失败、浏览器控制台错误、移动端横向溢出、Critical/Important review 未解决：停止合并。
 - Vercel 非 READY、Production SHA 不匹配、canonical route 不可达或 Pages 被启用：停止宣布完成。
-
