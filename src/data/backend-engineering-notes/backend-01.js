@@ -94,9 +94,11 @@ export const backend01Note = deepFreeze({
   ],
   nextStep: '下一步先为研究报告服务画出上下文图和 job 状态机，再写一份包含成功、校验错误、冲突、限流和服务器故障响应的 OpenAPI 草案。随后用三个实验验证边界：重复提交相同幂等键、用不同 payload 复用同一键、在创建成功后模拟连接断开。记录每次客户端看到的响应、数据库事实和可恢复路径，作为进入流式协议课程的基线。邀请一名前端开发只阅读规范完成调用伪代码，收集其无法确定的分支并修订契约，同时保存评审决定及其证据。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });

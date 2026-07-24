@@ -55,6 +55,7 @@ const resourceUrls = [
   'https://docs.docker.com/build/building/best-practices/',
   'https://vsis-www.informatik.uni-hamburg.de/getDoc.php/publications/569/Coordinated_Omission_in_NoSQL_Database_Benchmarking-Friedrich.pdf',
   'https://docs.vllm.ai/projects/spyre/en/latest/user_guide/performance.html',
+  'https://pkg.go.dev/golang.org/x/sync/singleflight',
 ];
 const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
 const validRoles = new Set(['core', 'cross-check', 'extension']);
@@ -138,8 +139,8 @@ test('AI backend engineering exposes eight ordered lessons, sixteen quizzes and 
   }
 });
 
-test('the course publishes exactly 36 verified resources with complete evidence cards', () => {
-  assert.equal(backendEngineering.resources.length, 36);
+test('the course publishes exactly 37 verified resources with complete evidence cards', () => {
+  assert.equal(backendEngineering.resources.length, 37);
   assert.deepEqual(backendEngineering.resources.map(({ url }) => url), resourceUrls);
 
   for (const resource of backendEngineering.resources) {
@@ -223,6 +224,12 @@ test('the course publishes exactly 36 verified resources with complete evidence 
       coverage: /TTFT|ITL|TPOT|E2EL/,
       limitations: /Spyre|通用/,
     },
+    'res-backend-go-singleflight': {
+      authority: 'official',
+      role: 'core',
+      coverage: /duplicate function call suppression|同一 key.*只执行一次|等待.*共享结果/i,
+      limitations: /Go x\/sync.*进程内.*分布式锁.*跨实例去重/i,
+    },
   };
   for (const [id, expected] of Object.entries(requiredEvidence)) {
     const resource = byId.get(id);
@@ -254,8 +261,8 @@ test('lesson references resolve resources and interviews in both directions with
       referencedInterviewIds.push(id);
     }
   }
-  assert.deepEqual(usedResourceIds, resourceIds, '36 项资源都应被至少一课使用');
-  assert.deepEqual(noteUsedResourceIds, resourceIds, '36 项资源都应被至少一篇笔记直接使用');
+  assert.deepEqual(usedResourceIds, resourceIds, '37 项资源都应被至少一课使用');
+  assert.deepEqual(noteUsedResourceIds, resourceIds, '37 项资源都应被至少一篇笔记直接使用');
   assert.equal(new Set(referencedInterviewIds).size, 24);
 
   for (const question of backendEngineering.interviewQuestions) {
@@ -336,13 +343,27 @@ test('all eight lessons publish distinct source-grounded knowledge notes', async
     assert.ok(note.tests, `${lesson.id}: missing tests audit`);
     assert.deepEqual(
       Object.keys(note.tests).sort(),
-      ['command', 'exitCode', 'summary', 'verifiedAt'].sort(),
+      ['status', 'commands', 'results'].sort(),
       `${lesson.id}: tests audit fields`,
     );
-    assert.equal(note.tests.command, 'node --test tests/backend-engineering-data.test.js', lesson.id);
-    assert.equal(note.tests.exitCode, 0, lesson.id);
-    assert.match(note.tests.summary, /通过|pass/i, lesson.id);
-    assert.equal(note.tests.verifiedAt, VERIFIED_AT, lesson.id);
+    assert.equal(note.tests.status, 'passed', lesson.id);
+    assert.deepEqual(
+      note.tests.commands,
+      ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+      lesson.id,
+    );
+    assert.equal(note.tests.results.length, note.tests.commands.length, lesson.id);
+    for (const result of note.tests.results) {
+      assert.deepEqual(
+        Object.keys(result).sort(),
+        ['command', 'exitCode', 'summary'].sort(),
+        `${lesson.id}: test result fields`,
+      );
+      assert.ok(note.tests.commands.includes(result.command), `${lesson.id}: ${result.command}`);
+      assert.equal(result.exitCode, 0, `${lesson.id}: ${result.command}`);
+      assert.match(result.summary, /通过|pass/i, `${lesson.id}: ${result.command}`);
+    }
+    assertUnique(note.tests.results.map(({ command }) => command), `${lesson.id}: test results`);
   }
   assertDeepFrozen(backendEngineeringNotes, 'backendEngineeringNotes');
 });
@@ -396,10 +417,28 @@ test('coverage matrix binds central claims to matching primary evidence', () => 
       sourceIds: ['res-backend-little-law'],
     },
     {
+      lessonId: 'backend-03',
+      fieldPath: 'exercise.steps[0]',
+      claim: /到达率|并发|负载/,
+      sourceIds: ['res-backend-coordinated-omission'],
+    },
+    {
       lessonId: 'backend-04',
       fieldPath: 'completionCriteria[1]',
       claim: /崩溃|恢复|对账/,
       sourceIds: ['res-backend-chubby'],
+    },
+    {
+      lessonId: 'backend-05',
+      fieldPath: 'exercise.steps[0]',
+      claim: /singleflight|并发.*回源/i,
+      sourceIds: ['res-backend-go-singleflight'],
+    },
+    {
+      lessonId: 'backend-06',
+      fieldPath: 'objectives[0]',
+      claim: /幂等/,
+      sourceIds: ['res-backend-aws-idempotent-apis'],
     },
     {
       lessonId: 'backend-06',

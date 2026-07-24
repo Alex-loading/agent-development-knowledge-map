@@ -74,7 +74,7 @@ export const backend03Note = deepFreeze({
         '峰值结束后继续观察恢复时间。一个受控系统会停止积累过期工作，队列年龄下降并恢复正常延迟；一个不受控系统可能持续重试、内存交换或反复重启。记录拒绝比例、清空队列时间和恢复期间错误预算，才能比较两种准入策略，而不是只比较峰值每秒请求数。',
       ],
       keyPoints: ['开放环负载更容易暴露真实过载反馈', '容量评估同时覆盖饱和、拒绝、公平性和恢复时间'],
-      sourceIds: ['res-backend-tail-at-scale', 'res-backend-sre-cascading', 'res-backend-dagor'],
+      sourceIds: ['res-backend-tail-at-scale', 'res-backend-sre-cascading', 'res-backend-dagor', 'res-backend-coordinated-omission'],
     },
   ],
   misconceptions: [
@@ -94,9 +94,11 @@ export const backend03Note = deepFreeze({
   ],
   nextStep: '为一个模拟模型端点构造短请求、长请求和突发租户三种流量，逐步提高到达率并记录完成率、平均与 p95/p99、队列深度、最老任务年龄和资源利用率。用这些数据选择初始并发门与队列上限，再加入端到端 deadline、429、Retry-After 和带抖动的有限重试。最后让依赖延迟翻倍，验证系统会受控拒绝并恢复，而不是形成重试风暴。压测结束后继续观察到队列清空，比较启用与关闭准入控制时的恢复时长、失败尝试总数和内存峰值。按租户及长短任务拆分数据，确认高优流量获得保护的同时，普通任务不会永久饥饿。把阈值、硬件和流量分布写入报告，禁止脱离这些条件复用结论。最后用第二组不同长度分布重复实验，检查阈值是否对工作负载漂移过度敏感，并写出重新校准条件、值班观察步骤、安全回退值和变更审核责任人，留存完整实验档案。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });

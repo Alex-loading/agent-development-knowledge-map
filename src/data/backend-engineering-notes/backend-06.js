@@ -30,7 +30,7 @@ export const backend06Note = deepFreeze({
         'key 的作用域和保留期属于产品协议。租户 A 与租户 B 可以使用相同字符串但不能碰撞；创建报告与取消报告也不应共享命名空间。保留期至少覆盖客户端可能重试和消息可能重投的窗口，过期清理前评估副作用是否仍可能迟到，否则旧请求重现会被误当成新操作。',
       ],
       keyPoints: ['幂等账本绑定请求指纹与既有资源', '作用域和保留期必须覆盖真实重试窗口'],
-      sourceIds: ['res-backend-rfc9110', 'res-backend-postgres-transactions'],
+      sourceIds: ['res-backend-rfc9110', 'res-backend-postgres-transactions', 'res-backend-aws-idempotent-apis'],
     },
     {
       id: 'unknown-outcome',
@@ -41,7 +41,7 @@ export const backend06Note = deepFreeze({
         'HTTP 方法幂等语义有助于判断重复预期，但不代替远端实现保证。即使 PUT 被定义为幂等，远端计费、通知或审计可能仍记录多次；POST 也可能通过供应商幂等键安全重试。工程决策必须读取目标 API 的当前契约，并用沙箱故障实验验证，而不是只凭方法名称。',
       ],
       keyPoints: ['timeout 产生知识不确定性而非确定失败', '对账依赖可查询身份和持久证据'],
-      sourceIds: ['res-backend-rfc9110', 'res-backend-sre-cascading'],
+      sourceIds: ['res-backend-rfc9110', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis'],
     },
     {
       id: 'outbox-inbox',
@@ -94,9 +94,11 @@ export const backend06Note = deepFreeze({
   ],
   nextStep: '画出一次任务从 HTTP 提交、数据库事务、outbox、broker、worker 到远端模型和结果提交的事件账本。为每个事件记录业务幂等键、messageId、attempt 和可查询证据，并在任意两个事件之间注入崩溃或响应丢失。验证重复交付不会生成第二份业务结果，unknown outcome 会进入对账而非盲重试，超过预算的任务会形成明确终态和人工处理清单。再配置客户端、API 和 worker 各自重试，测量未共享预算时的乘法调用次数；随后只保留一个责任层并传递剩余 deadline，对比下游压力和用户成功率。选择一个没有状态查询接口的模拟副作用，写出停止自动化、收集日志、人工核验和补偿的升级流程，证明系统不会用虚假的 failed 或 cancelled 掩盖未知事实，并由另一位值班人员按流程独立复核全部证据与最终业务结论，留存完整对账档案。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });

@@ -43,6 +43,7 @@ const resourceCatalog = [
   { id: 'res-backend-docker-build-best-practices', title: 'Docker build best practices', url: 'https://docs.docker.com/build/building/best-practices/', source: 'Docker', language: '英文', type: '官方文档', difficulty: '进阶', stage: '容器构建', value: `学习用途：核对 USER、non-root、build cache 与可重建镜像建议；${officialBoundary}`, verifiedAt: VERIFIED_AT },
   { id: 'res-backend-coordinated-omission', title: 'Coordinated Omission in NoSQL Database Benchmarking', url: 'https://vsis-www.informatik.uni-hamburg.de/getDoc.php/publications/569/Coordinated_Omission_in_NoSQL_Database_Benchmarking-Friedrich.pdf', source: 'University of Hamburg', language: '英文', type: '研究论文', difficulty: '深挖', stage: '负载生成', value: `学习用途：识别 closed synchronous generator 跳过 intended arrivals 导致的 coordinated omission；${researchBoundary}`, verifiedAt: VERIFIED_AT },
   { id: 'res-backend-vllm-performance-tpot', title: 'vLLM Spyre performance tuning', url: 'https://docs.vllm.ai/projects/spyre/en/latest/user_guide/performance.html', source: 'vLLM Spyre', language: '英文', type: '官方文档', difficulty: '进阶', stage: 'LLM 延迟指标', value: `学习用途：区分 TTFT、ITL、TPOT 与 E2EL 的当前定义；${officialBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-go-singleflight', title: 'singleflight package', url: 'https://pkg.go.dev/golang.org/x/sync/singleflight', source: 'Go Packages / golang.org/x/sync', language: '英文', type: '官方文档', difficulty: '进阶', stage: '缓存击穿保护', value: `学习用途：核对 duplicate function call suppression，即同一 key 的并发调用只执行一次，重复调用等待并共享结果；${officialBoundary}`, verifiedAt: VERIFIED_AT },
 ];
 
 const evidenceByResourceId = {
@@ -82,6 +83,7 @@ const evidenceByResourceId = {
   'res-backend-docker-build-best-practices': { authority: 'official', role: 'core', coverage: ['Dockerfile USER、non-root 运行、build cache 与可重建构建实践'], limitations: '这是 Docker 当前版本化实现的构建建议，不替代组织镜像供应链政策，也不保证所有基础镜像、运行时或编排环境行为一致。', verifiedAt: VERIFIED_AT },
   'res-backend-coordinated-omission': { authority: 'academic', role: 'cross-check', coverage: ['closed synchronous generator 跳过 intended arrivals 与 coordinated omission 偏差'], limitations: '论文围绕 NoSQL 数据库 benchmark 实验展开；其结果不能直接外推为任意 LLM serving 的性能数字，只用于校准负载生成方法。', verifiedAt: VERIFIED_AT },
   'res-backend-vllm-performance-tpot': { authority: 'official', role: 'cross-check', coverage: ['TTFT、ITL、TPOT 与 E2EL 延迟指标定义'], limitations: '该页面属于 vLLM Spyre plugin 文档，是版本化项目扩展，不代表所有模型、硬件、vLLM backend 或观测系统的通用指标实现。', verifiedAt: VERIFIED_AT },
+  'res-backend-go-singleflight': { authority: 'official', role: 'core', coverage: ['duplicate function call suppression：同一 key 的并发调用只执行一次，重复调用等待并共享结果'], limitations: '这是 Go x/sync/singleflight 的进程内语义，不等同于分布式锁、跨实例去重、结果持久化或跨故障恢复。', verifiedAt: VERIFIED_AT },
 };
 
 const resources = resourceCatalog.map((resource) => ({
@@ -179,7 +181,7 @@ const lessons = [
       { heading: '容量先于重试', body: '稳态均值下 L = λW 描述系统内平均在途量、到达率和平均停留时间的关系，但不是 p95 或 p99 公式。并发槽有限且服务时间上升时，无界排队只会把失败推迟；准入控制应在昂贵工作开始前检查预算和 deadline。', keyPoints: ['均值模型用于容量直觉而不是尾延迟承诺', '队列长度必须有上限和拒绝策略'] },
       { heading: '过载保护要跨层协调', body: '429 与 Retry-After 向客户端表达暂时超限，指数退避和 jitter 可减少同步重试，却不会创造容量。入口限流、租户公平、任务优先级、并发 semaphore 与下游保护要共享过载信号，避免重试风暴和级联故障。', keyPoints: ['越早拒绝越能保护昂贵资源', 'deadline 应向下游递减传播而非每层重置'] },
     ],
-    resourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-tail-at-scale', 'res-backend-dagor', 'res-backend-sre-cascading', 'res-backend-little-law'],
+    resourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-tail-at-scale', 'res-backend-dagor', 'res-backend-sre-cascading', 'res-backend-little-law', 'res-backend-coordinated-omission'],
     exercise: { title: '计算服务准入预算', brief: '给定到达率、平均服务时间、并发槽、队列上限和 deadline，判断请求去向。', steps: ['计算平均并发需求与利用率，分别模拟空闲、短队列、满队列和 deadline 不足', '为 accepted、queued、rejected、timedOut 写出确定理由和客户端响应'], deliverable: '一份容量表、拒绝策略与边界说明。', experiment: 'service-admission' },
     quizzes: [
       quiz('backend-03', 1, 'L = λW 能直接预测哪项指标？', ['任意 p99 延迟', '稳态平均在途量', '每个请求的完成时间'], 1, 'Little 定律描述稳态均值关系，不是尾延迟或单请求预测公式。'),
@@ -215,8 +217,8 @@ const lessons = [
       { heading: '权威状态进入事务性持久层', body: 'Job 当前状态、状态版本、结果引用和幂等记录应由 PostgreSQL 等事务性持久层承担，状态转换与 outbox 记录可在同一事务中提交。单库事务仍不能覆盖 broker、模型 API 或邮件等外部系统，因此需要 relay、幂等和对账。', keyPoints: ['事务提交点定义可恢复事实', '结果大对象可外置但索引和校验信息仍需持久化'] },
       { heading: 'Redis 只能作为可失去的加速层', body: 'Redis key 可能因 TTL、淘汰、故障或主动失效消失，所以缓存必须非权威、可重建。语义缓存还存在近似误命中；除了相似度阈值，还要以 tenant、model、prompt/template version、temperature、tool schema、安全策略和知识版本做硬隔离。', keyPoints: ['缓存 miss 不能让业务真相丢失', '缓存正确性比命中率更优先'] },
     ],
-    resourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-redis-semantic-cache'],
-    exercise: { title: '设计权威状态与缓存表', brief: '为报告 job、result、idempotency record、exact cache 和 semantic cache 划分存储。', steps: ['为每类数据写出 owner、事务边界、唯一约束、TTL、淘汰后行为和重建来源', '构造跨租户、模型升级、知识更新和安全策略变化场景，验证旧缓存不会误用'], deliverable: '一份表结构草图、缓存键规范和失效矩阵。' },
+    resourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-redis-semantic-cache', 'res-backend-go-singleflight'],
+    exercise: { title: '设计权威状态与缓存表', brief: '为报告 job、result、idempotency record、exact cache 和 semantic cache 划分存储。', steps: ['为每类数据写出 owner、事务边界、唯一约束、TTL、淘汰后行为和重建来源，并为热门 key 的并发 miss 定义 singleflight 回源保护', '构造跨租户、模型升级、知识更新和安全策略变化场景，验证旧缓存不会误用'], deliverable: '一份表结构草图、缓存键规范和失效矩阵。' },
     quizzes: [
       quiz('backend-05', 1, '为什么 Redis 不应单独保存任务权威终态？', ['读取太快', 'key 可能过期或被淘汰，无法承担不可丢失事实', '不支持字符串'], 1, '缓存可能消失，权威状态和幂等账本应保存在事务性持久层。'),
       quiz('backend-05', 2, '语义缓存只用相似度阈值有什么风险？', ['无法存储文本', '跨租户、模型或安全版本误复用答案', '一定没有命中'], 1, '近似匹配必须叠加硬 metadata 隔离和失效策略，避免语义相近但上下文不同的误命中。'),
@@ -233,7 +235,7 @@ const lessons = [
       { heading: '投递保证必须标明边界', body: 'Broker 常见至少一次投递意味着消息可能重复，Celery ack 时点和 worker 丢失配置还会改变重投行为。HTTP 方法幂等、应用幂等键、数据库唯一约束和流处理框架 exactly-once 是不同边界；不能把任何一层的保证外推到支付、邮件或工具调用。', keyPoints: ['重复是正常输入而不是罕见异常', '幂等记录要绑定规范请求指纹和稳定结果'] },
       { heading: '未知结果优先对账而不是盲重试', body: '若外部写成功后 worker 在记录结果前崩溃，系统看到的是 unknown outcome。安全流程是用幂等键查询远端或本地 effect ledger；能证明成功则回放结果，能证明未执行才重试，证据矛盾则进入 reconcile。指数退避只能控制时间，不会让非幂等副作用自动安全。', keyPoints: ['先识别副作用边界再配置重试', 'outbox 解决数据库事实与发布意图协调而非所有外部原子性'] },
     ],
-    resourceIds: ['res-backend-rfc9110', 'res-backend-celery-tasks', 'res-backend-millwheel', 'res-backend-postgres-transactions', 'res-backend-sre-cascading', 'res-backend-aws-transactional-outbox'],
+    resourceIds: ['res-backend-rfc9110', 'res-backend-celery-tasks', 'res-backend-millwheel', 'res-backend-postgres-transactions', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis', 'res-backend-aws-transactional-outbox'],
     exercise: { title: '推演任务投递账本', brief: '在提交、入队、领取、执行、提交结果和确认阶段注入重复与崩溃。', steps: ['为每个事件更新 job state、message state、effect ledger 和 idempotency record', '遇到 unknown outcome 时列出可证明成功、可安全重试与必须人工 reconcile 的证据'], deliverable: '一份投递事件日志、幂等账本和人工对账清单。', experiment: 'job-delivery-ledger' },
     quizzes: [
       quiz('backend-06', 1, '至少一次投递意味着消费者必须准备什么？', ['消息绝不重复', '重复消息与幂等或去重处理', '每次都生成新幂等键'], 1, '至少一次允许 redelivery，消费者应把重复当作协议内情况。'),
@@ -368,9 +370,9 @@ const coverageMatrix = {
     coverage('interviewQuestionIds[0]', 'queueing-intuition', 'res-backend-little-law'),
     coverage('interviewQuestionIds[1]', 'admission-control', 'res-backend-rfc6585', 'res-backend-dagor'),
     coverage('interviewQuestionIds[2]', 'overload-loop', 'res-backend-sre-cascading'),
-    coverage('exercise.steps[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading'),
+    coverage('exercise.steps[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading', 'res-backend-coordinated-omission'),
     coverage('exercise.steps[1]', 'admission-control', 'res-backend-rfc6585', 'res-backend-dagor'),
-    coverage('completionCriteria[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading'),
+    coverage('completionCriteria[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading', 'res-backend-coordinated-omission'),
     coverage('completionCriteria[1]', 'queueing-intuition', 'res-backend-little-law', 'res-backend-tail-at-scale'),
   ],
   'backend-04': [
@@ -394,21 +396,21 @@ const coverageMatrix = {
     coverage('interviewQuestionIds[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
     coverage('interviewQuestionIds[1]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
     coverage('interviewQuestionIds[2]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
-    coverage('exercise.steps[0]', 'data-review', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('exercise.steps[0]', 'cache-aside', 'res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-go-singleflight'),
     coverage('exercise.steps[1]', 'consistency-tests', 'res-backend-postgres-transactions', 'res-backend-redis-semantic-cache'),
     coverage('completionCriteria[0]', 'consistency-tests', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
     coverage('completionCriteria[1]', 'semantic-cache', 'res-backend-redis-semantic-cache', 'res-backend-redis-eviction'),
   ],
   'backend-06': [
-    coverage('objectives[0]', 'idempotency-ledger', 'res-backend-rfc9110', 'res-backend-postgres-transactions'),
-    coverage('objectives[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('objectives[0]', 'idempotency-ledger', 'res-backend-rfc9110', 'res-backend-postgres-transactions', 'res-backend-aws-idempotent-apis'),
+    coverage('objectives[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis'),
     coverage('quiz[0]', 'delivery-semantics', 'res-backend-celery-tasks', 'res-backend-millwheel'),
-    coverage('quiz[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('quiz[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis'),
     coverage('interviewQuestionIds[0]', 'delivery-semantics', 'res-backend-celery-tasks', 'res-backend-millwheel'),
-    coverage('interviewQuestionIds[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('interviewQuestionIds[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis'),
     coverage('interviewQuestionIds[2]', 'outbox-inbox', 'res-backend-aws-transactional-outbox', 'res-backend-postgres-transactions'),
     coverage('exercise.steps[0]', 'assurance-table', 'res-backend-celery-tasks', 'res-backend-millwheel'),
-    coverage('exercise.steps[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('exercise.steps[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading', 'res-backend-aws-idempotent-apis'),
     coverage('completionCriteria[0]', 'assurance-table', 'res-backend-celery-tasks', 'res-backend-millwheel'),
     coverage('completionCriteria[1]', 'outbox-inbox', 'res-backend-aws-transactional-outbox', 'res-backend-postgres-transactions'),
   ],

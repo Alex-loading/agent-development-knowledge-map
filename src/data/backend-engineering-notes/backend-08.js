@@ -94,9 +94,11 @@ export const backend08Note = deepFreeze({
   ],
   nextStep: '完成一份研究报告服务设计包：画出 API、queue、worker、PostgreSQL、Redis 和 model server 的独立扩容边界，附上 OpenAPI 与状态机；在固定模型和硬件上运行稳态、突发、长短混合与依赖变慢测试，记录吞吐、TTFT、p95/p99、队列年龄、错误和成本。最后执行一次金丝雀发布与回滚演练，用故障树证明每项异常都有检测、降级和恢复证据。请另一位工程师仅凭证据包复现一次容量结论和故障定位。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });

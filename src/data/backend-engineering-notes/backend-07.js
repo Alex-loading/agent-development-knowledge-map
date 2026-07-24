@@ -94,9 +94,11 @@ export const backend07Note = deepFreeze({
   ],
   nextStep: '为服务写出 starting、ready、draining、stopped 状态表，并分别实现 startup、readiness、liveness 与 shutdown 判定。部署两个副本后模拟慢启动、模型供应商抖动和 SIGTERM，观察端点摘流顺序、现有 SSE 与 job 的最终状态。同步建立请求率、错误、TTFT、队列年龄和 worker 利用率仪表盘，用统一身份链从一条告警追到具体模型调用和恢复动作。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });

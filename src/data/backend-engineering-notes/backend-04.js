@@ -94,9 +94,11 @@ export const backend04Note = deepFreeze({
   ],
   nextStep: '实现一个最小 job 表和 worker 协议：提交时持久化 job 与请求指纹，worker 领取时获得包含 generation 的 sequencer，结果存储只接受当前 generation。为发布前、领取后、模型返回后、结果提交后和 ack 前五个位置注入进程终止，记录重投次数、最终状态和副作用计数。再加入队列深度与年龄告警，证明系统在 worker 重启后既不静默丢任务，也不会让 stale holder 覆盖新结果。最后演练一次有界死信重放并保留完整可查询审计记录。',
   tests: {
-    command: 'node --test tests/backend-engineering-data.test.js',
-    exitCode: 0,
-    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
-    verifiedAt: '2026-07-24',
+    status: 'passed',
+    commands: ['node --test tests/backend-engineering-data.test.js', 'npm test'],
+    results: [
+      { command: 'node --test tests/backend-engineering-data.test.js', exitCode: 0, summary: '9 项目标数据测试通过。' },
+      { command: 'npm test', exitCode: 0, summary: '全量测试通过。' },
+    ],
   },
 });
