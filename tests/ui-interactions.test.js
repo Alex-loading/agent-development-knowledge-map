@@ -14,6 +14,7 @@ import {
   setInterviewStatus,
   toggleReviewQueue,
 } from '../src/core/progress.js';
+import { backendEngineering } from '../src/data/backend-engineering.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
@@ -215,7 +216,7 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
-test('application preserves independent resource filters across all four active modules', (t) => {
+test('application preserves independent resource filters across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#context-rag-memory/resources');
@@ -391,7 +392,7 @@ test('application persists interview mastery exactly once and updates shell summ
   assert.equal(store.saves.length, 2);
 });
 
-test('application preserves independent interview filters and revealed answers across all four active modules', (t) => {
+test('application preserves independent interview filters and revealed answers across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#context-rag-memory/interviews');
@@ -518,7 +519,7 @@ test('interview summaries ignore duplicate and stale mastered/review IDs', (t) =
   assert.ok(root.textContent.includes('复习队列 1 题'));
 });
 
-test('application progress scopes lesson, interview and quiz state across all four active modules', (t) => {
+test('application progress scopes lesson, interview and quiz state across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const registeredCourses = Object.values(courseRegistry);
@@ -1754,26 +1755,27 @@ test('every configured experiment has a resolvable accessible heading and is int
   }
 });
 
-test('real application activates context RAG memory, switches all modules and renders six views plus labs', (t) => {
+test('real application activates AI backend engineering, switches all modules and renders six views, quiz and labs', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#agent-mechanism/dashboard');
+  const store = createStore(createDefaultProgress('llm-foundation'));
   const app = startApp({
     documentRef: document,
     windowRef,
-    progressStore: createStore(createDefaultProgress('llm-foundation')),
+    progressStore: store,
   });
   t.after(app.teardown);
 
-  dispatchChange(document.querySelector('#module-select'), 'context-rag-memory');
+  dispatchChange(document.querySelector('#module-select'), backendEngineering.id);
   windowRef.dispatchEvent(new FakeEvent('hashchange'));
-  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
-  assert.equal(document.querySelector('#current-module-title').textContent, contextRagMemory.title);
+  assert.equal(windowRef.location.hash, '#backend-engineering/dashboard');
+  assert.equal(document.querySelector('#current-module-title').textContent, backendEngineering.title);
   assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 0 / 8'));
   assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 0 / 24'));
 
   const priorCourses = Object.values(courseRegistry)
-    .filter(({ id }) => id !== contextRagMemory.id);
+    .filter(({ id }) => id !== backendEngineering.id);
   for (const course of priorCourses) {
     document.querySelector('#module-select').focus();
     dispatchChange(document.querySelector('#module-select'), course.id);
@@ -1783,32 +1785,47 @@ test('real application activates context RAG memory, switches all modules and re
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, course.id);
     assert.equal(document.activeElement.id, 'app-main', course.id);
   }
-  dispatchChange(document.querySelector('#module-select'), contextRagMemory.id);
+  dispatchChange(document.querySelector('#module-select'), backendEngineering.id);
   windowRef.dispatchEvent(new FakeEvent('hashchange'));
-  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
+  assert.equal(windowRef.location.hash, '#backend-engineering/dashboard');
 
   for (const view of ['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']) {
     document.querySelector('#module-select').focus();
-    navigateTo(app, windowRef, `#context-rag-memory/${view}`);
+    navigateTo(app, windowRef, `#backend-engineering/${view}`);
     const viewRoot = document.querySelector('#view-root');
-    assert.ok(viewRoot.textContent.includes(contextRagMemory.title), `${view} should render context course content`);
+    assert.ok(viewRoot.textContent.includes(backendEngineering.title), `${view} should render backend course content`);
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, `${view} should render one h1`);
     assert.equal(document.activeElement.id, 'app-main', `${view} navigation should focus main`);
-    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, contextRagMemory.resources.length);
-    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, contextRagMemory.interviewQuestions.length);
+    if (view === 'curriculum') assert.equal(viewRoot.querySelectorAll('.lesson-ledger__item').length, 8);
+    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, backendEngineering.resources.length);
+    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, 24);
     if (view === 'progress') {
-      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.lessons.length}`));
-      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.interviewQuestions.length}`));
+      assert.ok(viewRoot.textContent.includes(`0 / ${backendEngineering.lessons.length}`));
+      assert.ok(viewRoot.textContent.includes(`0 / ${backendEngineering.interviewQuestions.length}`));
     }
   }
 
-  for (const lessonId of ['context-02', 'context-05', 'context-07']) {
-    navigateTo(app, windowRef, `#context-rag-memory/lesson/${lessonId}`);
+  navigateTo(app, windowRef, '#backend-engineering/lesson/backend-01');
+  const quizForm = document.querySelector('.quiz-form');
+  assert.equal(quizForm.querySelectorAll('.quiz-question').length, 2);
+  for (const question of backendEngineering.lessons[0].quiz) {
+    quizForm.querySelector(
+      `input[name="${question.id}"][value="${question.answerIndex}"]`,
+    ).checked = true;
+  }
+  const savesBeforeQuiz = store.saves.length;
+  quizForm.dispatchEvent(new FakeEvent('submit'));
+  assert.equal(app.getState().quizResults['backend-01'].percent, 100);
+  assert.ok(document.querySelector('.quiz-results').textContent.includes('得分 2 / 2（100%）'));
+  assert.equal(store.saves.length, savesBeforeQuiz + 1);
+
+  for (const lessonId of ['backend-02', 'backend-03', 'backend-06']) {
+    navigateTo(app, windowRef, `#backend-engineering/lesson/${lessonId}`);
     const viewRoot = document.querySelector('#view-root');
     assert.equal(viewRoot.querySelectorAll('h1').length, 1, lessonId);
     assert.equal(viewRoot.querySelectorAll('.experiment-lab').length, 1, lessonId);
     assert.ok(viewRoot.textContent.includes(
-      contextRagMemory.lessons.find(({ id }) => id === lessonId).title,
+      backendEngineering.lessons.find(({ id }) => id === lessonId).title,
     ));
     assert.equal(document.activeElement.id, 'app-main', lessonId);
   }
