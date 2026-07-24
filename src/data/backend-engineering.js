@@ -214,10 +214,10 @@ const lessons = [
     objectives: ['划分任务状态、结果索引、幂等账本与缓存的权威归属', '设计 exact/semantic cache key、TTL、隔离与失效策略'],
     concepts: ['Source of truth', 'Transaction', 'Cache-aside', 'Eviction', 'Semantic cache'],
     explanations: [
-      { heading: '权威状态进入事务性持久层', body: 'Job 当前状态、状态版本、结果引用和幂等记录应由 PostgreSQL 等事务性持久层承担，状态转换与 outbox 记录可在同一事务中提交。单库事务仍不能覆盖 broker、模型 API 或邮件等外部系统，因此需要 relay、幂等和对账。', keyPoints: ['事务提交点定义可恢复事实', '结果大对象可外置但索引和校验信息仍需持久化'] },
+      { heading: '权威状态进入事务性持久层', body: 'Job 当前状态、状态版本、结果引用和幂等记录应由 PostgreSQL 等事务性持久层承担。为避免业务事实与消息发布的 dual write 缺口，可把状态转换与 outbox 发布意图放进同一事务，再由 relay 至少一次发送；单库事务仍不能覆盖 broker、模型 API 或邮件等外部系统，relay 重复也要求消费者幂等和对账。', keyPoints: ['事务提交点定义可恢复事实', '结果大对象可外置但索引和校验信息仍需持久化'] },
       { heading: 'Redis 只能作为可失去的加速层', body: 'Redis key 可能因 TTL、淘汰、故障或主动失效消失，所以缓存必须非权威、可重建。语义缓存还存在近似误命中；除了相似度阈值，还要以 tenant、model、prompt/template version、temperature、tool schema、安全策略和知识版本做硬隔离。', keyPoints: ['缓存 miss 不能让业务真相丢失', '缓存正确性比命中率更优先'] },
     ],
-    resourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-redis-semantic-cache', 'res-backend-go-singleflight'],
+    resourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-redis-semantic-cache', 'res-backend-go-singleflight', 'res-backend-aws-transactional-outbox'],
     exercise: { title: '设计权威状态与缓存表', brief: '为报告 job、result、idempotency record、exact cache 和 semantic cache 划分存储。', steps: ['为每类数据写出 owner、事务边界、唯一约束、TTL、淘汰后行为和重建来源，并为热门 key 的并发 miss 定义 singleflight 回源保护', '构造跨租户、模型升级、知识更新和安全策略变化场景，验证旧缓存不会误用'], deliverable: '一份表结构草图、缓存键规范和失效矩阵。' },
     quizzes: [
       quiz('backend-05', 1, '为什么 Redis 不应单独保存任务权威终态？', ['读取太快', 'key 可能过期或被淘汰，无法承担不可丢失事实', '不支持字符串'], 1, '缓存可能消失，权威状态和幂等账本应保存在事务性持久层。'),
@@ -393,7 +393,7 @@ const coverageMatrix = {
     coverage('objectives[1]', 'semantic-cache', 'res-backend-redis-semantic-cache', 'res-backend-redis-eviction'),
     coverage('quiz[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
     coverage('quiz[1]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
-    coverage('interviewQuestionIds[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('interviewQuestionIds[0]', 'transaction-boundary', 'res-backend-postgres-transactions', 'res-backend-aws-transactional-outbox'),
     coverage('interviewQuestionIds[1]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
     coverage('interviewQuestionIds[2]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
     coverage('exercise.steps[0]', 'cache-aside', 'res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-go-singleflight'),

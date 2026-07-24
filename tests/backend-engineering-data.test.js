@@ -403,6 +403,33 @@ test('coverage matrix resolves every assessed field to a real section and eviden
 
 test('coverage matrix binds central claims to matching primary evidence', () => {
   assert.ok(backendEngineering.coverageMatrix, 'missing coverageMatrix');
+  const lessonFive = backendEngineering.lessons.find(({ id }) => id === 'backend-05');
+  const transactionBoundary = lessonFive.knowledgeNote.sections
+    .find(({ id }) => id === 'transaction-boundary');
+  const lessonFiveOutboxCoverage = backendEngineering.coverageMatrix['backend-05']
+    .find(({ fieldPath }) => fieldPath === 'interviewQuestionIds[0]');
+  assert.ok(
+    lessonFive.resourceIds.includes('res-backend-aws-transactional-outbox'),
+    'backend-05 must assign the AWS transactional outbox source',
+  );
+  assert.match(
+    lessonFive.explanations.map(({ body }) => body).join(' '),
+    /outbox.*relay.*外部|outbox.*broker/i,
+  );
+  assert.ok(
+    transactionBoundary.sourceIds.includes('res-backend-aws-transactional-outbox'),
+    'backend-05 transaction-boundary must cite the AWS transactional outbox source',
+  );
+  assert.match(
+    JSON.stringify(resolveAssessmentField(lessonFive, 'interviewQuestionIds[0]')),
+    /事务.*发布|outbox/i,
+  );
+  assert.equal(lessonFiveOutboxCoverage.sectionId, 'transaction-boundary');
+  assert.ok(
+    lessonFiveOutboxCoverage.sourceIds.includes('res-backend-aws-transactional-outbox'),
+    'backend-05 interviewQuestionIds[0] must bind transactional outbox evidence',
+  );
+
   const rules = [
     {
       lessonId: 'backend-01',

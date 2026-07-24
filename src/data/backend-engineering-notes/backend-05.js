@@ -27,10 +27,10 @@ export const backend05Note = deepFreeze({
       paragraphs: [
         'PostgreSQL 事务把一组数据库操作变成 all-or-nothing，并让并发会话按隔离规则观察变化。创建 job 时，可以在一个事务内检查幂等键、插入 job、写初始事件和 outbox 意图；任何一步失败都回滚。唯一约束和条件更新比“先查再写”的应用逻辑更能抵抗并发竞争。',
         '隔离级别并不自动替业务选择正确不变量。两个请求读取相同配额后分别写入，可能在某些隔离策略下都认为有余额；需要行锁、原子更新、唯一约束或更强隔离，并处理 serialization failure。事务应短小，不能在持有锁时等待模型数十秒，否则连接和锁会把慢依赖传播给所有请求。',
-        '单库事务不能原子覆盖 broker publish、模型 API、邮件或对象存储。经典做法是在数据库事务内写 outbox 记录，独立发布器重试发送，再由消费者以消息标识去重。outbox 协调“业务事实已提交”和“需要发布”的意图，却没有让外部副作用自动 exactly-once；每个边界仍需幂等、查询或补偿。',
+        '单库事务不能原子覆盖 broker publish、模型 API、邮件或对象存储。AWS transactional outbox 指南把这个 dual write 缺口建模为：在数据库事务内写 outbox 记录，独立 relay 重试发送，再由消费者以消息标识去重。outbox 协调“业务事实已提交”和“需要发布”的意图，却没有让外部副作用自动 exactly-once；relay 仍可能重复发布，每个边界仍需幂等、查询或补偿。',
       ],
       keyPoints: ['用数据库约束与条件写守护并发不变量', '事务外动作通过 outbox 和幂等协调'],
-      sourceIds: ['res-backend-postgres-transactions'],
+      sourceIds: ['res-backend-postgres-transactions', 'res-backend-aws-transactional-outbox'],
     },
     {
       id: 'cache-aside',
