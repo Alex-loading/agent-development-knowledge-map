@@ -1,5 +1,10 @@
 const RESPONSE_MODES = new Set(['sync', 'stream']);
 const MAX_SIMULATION_DELTAS = 10_000;
+const ADMISSION_WINDOW_PROTOCOL = [
+  'use a 1000ms window at one-or-more requests/second;',
+  'otherwise use one mean-service-time window;',
+  'ceil offered arrivals and issue whole capacity credits',
+].join(' ');
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -59,7 +64,20 @@ function streamTerminal(type, upstreamCancellable) {
       clientStatus: 'cancelled',
       upstreamStatus: upstreamCancellable ? 'cancelled' : 'continuing',
       cleanupActions: [
+        'stop-client-writes',
         upstreamCancellable ? 'request-upstream-cancel' : 'observe-upstream-until-terminal',
+        'close-response',
+        'release-request-resources',
+      ],
+    };
+  }
+
+  if (type === 'error') {
+    return {
+      clientStatus: 'failed',
+      upstreamStatus: 'failed',
+      cleanupActions: [
+        'stop-client-writes',
         'close-response',
         'release-request-resources',
       ],
@@ -90,6 +108,7 @@ export function simulateStreamLifecycle(input) {
     input.deltaCount,
   );
   assertNullableDelta(input.cancelAfterDelta, 'input.cancelAfterDelta', input.deltaCount);
+  assertNullableDelta(input.failAfterDelta, 'input.failAfterDelta', input.deltaCount);
   assertBoolean(input.upstreamCancellable, 'input.upstreamCancellable');
 
   const events = [{ type: 'created', sequence: 0 }];
@@ -108,10 +127,18 @@ export function simulateStreamLifecycle(input) {
       terminalType = 'disconnected';
       break;
     }
+    if (input.failAfterDelta === delta) {
+      terminalType = 'error';
+      break;
+    }
   }
 
   terminalType ??= 'completed';
-  events.push({ type: terminalType, sequence: events.length });
+  events.push({
+    type: terminalType,
+    sequence: events.length,
+    ...(terminalType === 'error' ? { errorCode: 'upstream-failed' } : {}),
+  });
 
   return {
     events,
@@ -148,8 +175,15 @@ export function evaluateServiceAdmission(input) {
   const capacityPerSecond = capacityNumerator / input.meanServiceTimeMs;
   const offeredConcurrency = offeredConcurrencyNumerator / 1_000;
   const offeredLoad = offeredConcurrency / input.concurrencySlots;
-  const immediate = Math.min(input.arrivalRatePerSecond, Math.floor(capacityPerSecond));
-  const excess = input.arrivalRatePerSecond - immediate;
+  const windowMs = capacityPerSecond >= 1 ? 1_000 : input.meanServiceTimeMs;
+  const offeredRequestsInWindow = windowMs === 1_000
+    ? input.arrivalRatePerSecond
+    : Math.ceil(offeredConcurrencyNumerator / 1_000);
+  const capacityCredits = windowMs === 1_000
+    ? Math.floor(capacityPerSecond)
+    : input.concurrencySlots;
+  const immediate = Math.min(offeredRequestsInWindow, capacityCredits);
+  const excess = offeredRequestsInWindow - immediate;
   const queued = Math.min(excess, input.queueLimit);
   const rejected = excess - queued;
   const accepted = immediate + queued;
@@ -168,7 +202,11 @@ export function evaluateServiceAdmission(input) {
 
   const estimatedMaxQueueWaitMs = queued === 0
     ? 0
-    : Math.ceil(queued / input.concurrencySlots) * input.meanServiceTimeMs;
+    : assertSafeProduct(
+      Math.ceil(queued / input.concurrencySlots),
+      input.meanServiceTimeMs,
+      'estimated queue wait',
+    );
   const reasons = [];
   if (queued > 0) reasons.push('queue-buffering');
   if (rejected > 0) reasons.push('queue-limit-rejections');
@@ -177,6 +215,10 @@ export function evaluateServiceAdmission(input) {
 
   return {
     capacityPerSecond,
+    windowMs,
+    offeredRequestsInWindow,
+    capacityCredits,
+    windowProtocol: ADMISSION_WINDOW_PROTOCOL,
     offeredConcurrency,
     offeredLoad,
     utilization: Math.min(offeredLoad, 1),
@@ -187,7 +229,7 @@ export function evaluateServiceAdmission(input) {
     timedOut,
     estimatedMaxQueueWaitMs,
     reasons,
-    modelBoundary: 'deterministic one-second mean-capacity model; not a p95 or p99 prediction',
+    modelBoundary: 'deterministic admission-window credit model using mean service time; not a p95 or p99 prediction',
   };
 }
 
@@ -222,6 +264,27 @@ const DELIVERY_EVENT_TYPES = new Set([
   'reconcile',
 ]);
 const RECONCILIATION_OUTCOMES = new Set(['committed', 'not-committed']);
+const UNKNOWN_REASONS = new Set(['result-commit', 'cancellation-outcome']);
+const LEGAL_LEDGER_TRANSITIONS = new Set([
+  'applied:submit:empty:submitted',
+  'applied:enqueue:submitted:queued',
+  'applied:lease:queued:leased',
+  'applied:start:leased:running',
+  'applied:commit:running:committed',
+  'applied:ack:committed:acknowledged',
+  'applied:crash:leased:queued',
+  'applied:crash:running:queued',
+  'reconcile-required:crash:committed:unknown',
+  'applied:redeliver:queued:leased',
+  'reconcile-required:redeliver:unknown:unknown',
+  'applied:cancel:submitted:cancelled',
+  'applied:cancel:queued:cancelled',
+  'applied:cancel:leased:cancelled',
+  'reconcile-required:cancel:running:unknown',
+  'applied:reconcile:unknown:committed',
+  'applied:reconcile:unknown:queued',
+  'applied:reconcile:unknown:cancelled',
+]);
 
 function assertNonEmptyString(value, name, { nullable = false } = {}) {
   if (nullable && value === null) return;
@@ -312,6 +375,41 @@ function assertDeliveryLedger(state) {
       throw new RangeError('state.ledger event IDs must match state.processedEventIds');
     }
   }
+
+  if (state.ledger.length === 0) {
+    if (state.status !== 'empty') {
+      throw new RangeError('state.ledger tail must match the current status');
+    }
+    return;
+  }
+
+  if (state.ledger[0].from !== 'empty') {
+    throw new RangeError('state.ledger first transition must start from empty');
+  }
+  for (let index = 1; index < state.ledger.length; index += 1) {
+    if (state.ledger[index - 1].to !== state.ledger[index].from) {
+      throw new RangeError('state.ledger transitions must form a continuous history');
+    }
+  }
+  if (state.ledger.at(-1).to !== state.status) {
+    throw new RangeError('state.ledger tail must match the current status');
+  }
+
+  for (const entry of state.ledger) {
+    const deduplicatedSubmit = entry.type === 'submit'
+      && entry.decision === 'deduplicated'
+      && entry.from !== 'empty'
+      && entry.from === entry.to;
+    const transitionKey = [
+      entry.decision,
+      entry.type,
+      entry.from,
+      entry.to,
+    ].join(':');
+    if (!deduplicatedSubmit && !LEGAL_LEDGER_TRANSITIONS.has(transitionKey)) {
+      throw new RangeError('state.ledger entry must describe a legal transition');
+    }
+  }
 }
 
 function assertDeliveryState(state) {
@@ -322,6 +420,7 @@ function assertDeliveryState(state) {
   assertSafeInteger(state.deliveryAttempt, 'state.deliveryAttempt');
   assertNonEmptyString(state.leaseOwner, 'state.leaseOwner', { nullable: true });
   assertNonEmptyString(state.resultRef, 'state.resultRef', { nullable: true });
+  assertNonEmptyString(state.unknownReason, 'state.unknownReason', { nullable: true });
   assertUniqueStringArray(
     state.processedEventIds,
     'state.processedEventIds',
@@ -367,11 +466,23 @@ function assertDeliveryState(state) {
   }
 
   if (state.status === 'unknown') {
+    assertEnum(state.unknownReason, UNKNOWN_REASONS, 'state.unknownReason');
     if (state.reconciliationItems.length === 0) {
       throw new RangeError('unknown delivery state must have reconciliation items');
     }
+    const expectedItem = state.unknownReason === 'result-commit'
+      ? 'confirm-result-commit'
+      : 'confirm-cancellation-outcome';
+    if (
+      state.reconciliationItems.length !== 1
+      || state.reconciliationItems[0] !== expectedItem
+    ) {
+      throw new RangeError('unknown delivery state reconciliation must match unknownReason');
+    }
   } else if (state.reconciliationItems.length !== 0) {
     throw new RangeError(`${state.status} delivery state must not have reconciliation items`);
+  } else if (state.unknownReason !== null) {
+    throw new RangeError(`${state.status} delivery state must not have an unknownReason`);
   }
 
   assertIdempotencyRecord(state);
@@ -506,6 +617,7 @@ export function advanceJobDelivery(state, event) {
 
   if (event.type === 'crash' && state.status === 'committed') {
     next.status = 'unknown';
+    next.unknownReason = 'result-commit';
     setRecordStatus(next, 'unknown');
     next.reconciliationItems = ['confirm-result-commit'];
     return recordDeliveryEvent(state, next, event, 'reconcile-required');
@@ -535,6 +647,7 @@ export function advanceJobDelivery(state, event) {
   if (event.type === 'cancel' && state.status === 'running') {
     next.status = 'unknown';
     next.leaseOwner = null;
+    next.unknownReason = 'cancellation-outcome';
     setRecordStatus(next, 'unknown');
     next.reconciliationItems = ['confirm-cancellation-outcome'];
     return recordDeliveryEvent(state, next, event, 'reconcile-required');
@@ -542,7 +655,9 @@ export function advanceJobDelivery(state, event) {
 
   if (event.type === 'reconcile' && state.status === 'unknown') {
     assertEnum(event.outcome, RECONCILIATION_OUTCOMES, 'event.outcome');
+    const unknownReason = next.unknownReason;
     next.reconciliationItems = [];
+    next.unknownReason = null;
     if (event.outcome === 'committed') {
       if (next.resultRef === null) {
         assertNonEmptyString(event.resultRef, 'event.resultRef');
@@ -550,6 +665,10 @@ export function advanceJobDelivery(state, event) {
       }
       next.status = 'committed';
       setRecordStatus(next, 'committed');
+    } else if (unknownReason === 'cancellation-outcome') {
+      next.status = 'cancelled';
+      next.resultRef = null;
+      setRecordStatus(next, 'cancelled');
     } else {
       next.status = 'queued';
       next.resultRef = null;

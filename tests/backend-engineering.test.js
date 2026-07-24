@@ -13,6 +13,7 @@ function streamInput(overrides = {}) {
     deltaCount: 3,
     disconnectAfterDelta: null,
     cancelAfterDelta: null,
+    failAfterDelta: null,
     upstreamCancellable: true,
     ...overrides,
   };
@@ -109,6 +110,52 @@ test('simulateStreamLifecycle gives application cancellation tie priority and ke
   );
 });
 
+test('simulateStreamLifecycle emits a typed error terminal and cleans up failed upstream work', () => {
+  const result = simulateStreamLifecycle(streamInput({
+    failAfterDelta: 2,
+  }));
+
+  assert.deepEqual(result.events, [
+    { type: 'created', sequence: 0 },
+    { type: 'delta', sequence: 1, delta: 1 },
+    { type: 'delta', sequence: 2, delta: 2 },
+    {
+      type: 'error',
+      sequence: 3,
+      errorCode: 'upstream-failed',
+    },
+  ]);
+  assert.equal(result.clientStatus, 'failed');
+  assert.equal(result.upstreamStatus, 'failed');
+  assert.deepEqual(result.cleanupActions, [
+    'stop-client-writes',
+    'close-response',
+    'release-request-resources',
+  ]);
+  assert.equal(
+    result.events.filter(
+      (event) => ['completed', 'disconnected', 'cancelled', 'error'].includes(event.type),
+    ).length,
+    1,
+  );
+});
+
+test('simulateStreamLifecycle keeps uncancellable upstream work visible after application cancel', () => {
+  const result = simulateStreamLifecycle(streamInput({
+    cancelAfterDelta: 1,
+    upstreamCancellable: false,
+  }));
+
+  assert.equal(result.clientStatus, 'cancelled');
+  assert.equal(result.upstreamStatus, 'continuing');
+  assert.deepEqual(result.cleanupActions, [
+    'stop-client-writes',
+    'observe-upstream-until-terminal',
+    'close-response',
+    'release-request-resources',
+  ]);
+});
+
 test('simulateStreamLifecycle validates every boundary and leaves input untouched', () => {
   const input = streamInput();
   const snapshot = structuredClone(input);
@@ -143,6 +190,10 @@ test('simulateStreamLifecycle validates every boundary and leaves input untouche
     /cancelAfterDelta.*deltaCount/i,
   );
   assert.throws(
+    () => simulateStreamLifecycle(streamInput({ failAfterDelta: 4 })),
+    /failAfterDelta.*deltaCount/i,
+  );
+  assert.throws(
     () => simulateStreamLifecycle(streamInput({ upstreamCancellable: 'yes' })),
     /upstreamCancellable.*boolean/i,
   );
@@ -164,6 +215,10 @@ test('evaluateServiceAdmission reports a fully utilized service without inventin
 
   assert.deepEqual(result, {
     capacityPerSecond: 8,
+    windowMs: 1_000,
+    offeredRequestsInWindow: 8,
+    capacityCredits: 8,
+    windowProtocol: 'use a 1000ms window at one-or-more requests/second; otherwise use one mean-service-time window; ceil offered arrivals and issue whole capacity credits',
     offeredConcurrency: 2,
     offeredLoad: 1,
     utilization: 1,
@@ -174,7 +229,7 @@ test('evaluateServiceAdmission reports a fully utilized service without inventin
     timedOut: 0,
     estimatedMaxQueueWaitMs: 0,
     reasons: ['capacity-sufficient'],
-    modelBoundary: 'deterministic one-second mean-capacity model; not a p95 or p99 prediction',
+    modelBoundary: 'deterministic admission-window credit model using mean service time; not a p95 or p99 prediction',
   });
 });
 
@@ -238,6 +293,26 @@ test('evaluateServiceAdmission treats zero arrivals and a zero queue as valid bo
   assert.equal(reject.accepted, 8);
   assert.equal(reject.rejected, 1);
   assert.deepEqual(reject.reasons, ['queue-limit-rejections']);
+});
+
+test('evaluateServiceAdmission accumulates a whole credit for services slower than one second', () => {
+  const result = evaluateServiceAdmission(admissionInput({
+    arrivalRatePerSecond: 1,
+    meanServiceTimeMs: 2_000,
+    concurrencySlots: 1,
+    queueLimit: 0,
+    deadlineMs: 5_000,
+  }));
+
+  assert.equal(result.capacityPerSecond, 0.5);
+  assert.equal(result.windowMs, 2_000);
+  assert.equal(result.offeredRequestsInWindow, 2);
+  assert.equal(result.capacityCredits, 1);
+  assert.match(result.windowProtocol, /mean-service-time.*ceil.*whole capacity credits/i);
+  assert.equal(result.immediate, 1);
+  assert.equal(result.accepted, 1);
+  assert.equal(result.rejected, 1);
+  assert.equal(result.timedOut, 0);
 });
 
 test('evaluateServiceAdmission validates safe integer ranges and leaves input untouched', () => {
@@ -304,6 +379,7 @@ function deliveryState(overrides = {}) {
     leaseOwner: null,
     resultRef: null,
     idempotencyRecord: null,
+    unknownReason: null,
     processedEventIds: [],
     ledger: [],
     reconciliationItems: [],
@@ -472,13 +548,15 @@ test('advanceJobDelivery models queued cancellation and running cancellation unc
   const uncertain = advance(running, 'cancel', 5);
   assert.equal(uncertain.decision, 'reconcile-required');
   assert.equal(uncertain.state.status, 'unknown');
+  assert.equal(uncertain.state.unknownReason, 'cancellation-outcome');
   assert.deepEqual(uncertain.state.reconciliationItems, ['confirm-cancellation-outcome']);
 
   const notCommitted = advance(uncertain.state, 'reconcile', 6, {
     outcome: 'not-committed',
   });
-  assert.equal(notCommitted.state.status, 'queued');
-  assert.equal(notCommitted.state.idempotencyRecord.status, 'pending');
+  assert.equal(notCommitted.state.status, 'cancelled');
+  assert.equal(notCommitted.state.idempotencyRecord.status, 'cancelled');
+  assert.equal(notCommitted.state.unknownReason, null);
 });
 
 test('advanceJobDelivery rejects unknown and illegal transitions without consuming events', () => {
@@ -492,6 +570,42 @@ test('advanceJobDelivery rejects unknown and illegal transitions without consumi
     assert.match(result.reason, /unknown|illegal|transition|未知|非法/i);
     assert.deepEqual(result.state, state);
   }
+});
+
+test('advanceJobDelivery rejects forged or discontinuous ledger histories', () => {
+  let valid = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-1',
+    idempotencyKey: 'stable-key',
+  }).state;
+  valid = advance(valid, 'enqueue', 2).state;
+
+  const firstDoesNotStartEmpty = structuredClone(valid);
+  firstDoesNotStartEmpty.ledger[0].from = 'queued';
+  assert.throws(
+    () => advance(firstDoesNotStartEmpty, 'cancel', 3),
+    /ledger.*(first|start|empty)/i,
+  );
+
+  const discontinuous = structuredClone(valid);
+  discontinuous.ledger[1].from = 'running';
+  assert.throws(
+    () => advance(discontinuous, 'cancel', 3),
+    /ledger.*continuous/i,
+  );
+
+  const staleTail = structuredClone(valid);
+  staleTail.ledger[1].to = 'running';
+  assert.throws(
+    () => advance(staleTail, 'cancel', 3),
+    /ledger.*current status/i,
+  );
+
+  const impossibleTransition = structuredClone(valid);
+  impossibleTransition.ledger[0].type = 'ack';
+  assert.throws(
+    () => advance(impossibleTransition, 'cancel', 3),
+    /ledger.*legal transition/i,
+  );
 });
 
 test('advanceJobDelivery validates nested state and event fields without mutation', () => {
@@ -522,18 +636,16 @@ test('advanceJobDelivery validates nested state and event fields without mutatio
     }), event),
     /duplicate processed event/i,
   );
+  const mismatchedRecord = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-1',
+    idempotencyKey: 'key-1',
+  }).state;
+  mismatchedRecord.idempotencyRecord.key = 'different-key';
   assert.throws(
-    () => advanceJobDelivery(deliveryState({
-      status: 'submitted',
-      jobId: 'job-1',
-      idempotencyKey: 'key-1',
-      idempotencyRecord: {
-        key: 'different-key',
-        jobId: 'job-1',
-        status: 'pending',
-        resultRef: null,
-      },
-    }), { eventId: 'enqueue-1', type: 'enqueue' }),
+    () => advanceJobDelivery(mismatchedRecord, {
+      eventId: 'enqueue-1',
+      type: 'enqueue',
+    }),
     /idempotency record.*match/i,
   );
   assert.throws(() => advanceJobDelivery(state, null), /event.*plain object/i);
@@ -551,17 +663,11 @@ test('advanceJobDelivery validates nested state and event fields without mutatio
     /event.jobId.*empty/i,
   );
 
-  const queued = deliveryState({
-    status: 'queued',
+  const submitted = advance(deliveryState(), 'submit', 10, {
     jobId: 'job-1',
     idempotencyKey: 'key-1',
-    idempotencyRecord: {
-      key: 'key-1',
-      jobId: 'job-1',
-      status: 'pending',
-      resultRef: null,
-    },
-  });
+  }).state;
+  const queued = advance(submitted, 'enqueue', 11).state;
   assert.throws(
     () => advanceJobDelivery(queued, {
       eventId: 'lease-1',
@@ -570,19 +676,38 @@ test('advanceJobDelivery validates nested state and event fields without mutatio
     }),
     /event.workerId.*empty/i,
   );
+  const queuedWithUnknownReason = structuredClone(queued);
+  queuedWithUnknownReason.unknownReason = 'result-commit';
   assert.throws(
-    () => advanceJobDelivery(deliveryState({
-      status: 'unknown',
-      jobId: 'job-1',
-      idempotencyKey: 'key-1',
-      idempotencyRecord: {
-        key: 'key-1',
-        jobId: 'job-1',
-        status: 'unknown',
-        resultRef: null,
-      },
-      reconciliationItems: ['confirm-cancellation-outcome'],
-    }), {
+    () => advance(queuedWithUnknownReason, 'cancel', 12),
+    /queued.*must not have.*unknownReason/i,
+  );
+  let running = advance(deliveryState(), 'submit', 20, {
+    jobId: 'job-2',
+    idempotencyKey: 'key-2',
+  }).state;
+  running = advance(running, 'enqueue', 21).state;
+  running = advance(running, 'lease', 22, { workerId: 'worker-a' }).state;
+  running = advance(running, 'start', 23).state;
+  const unknown = advance(running, 'cancel', 24).state;
+  const unsupportedUnknownReason = structuredClone(unknown);
+  unsupportedUnknownReason.unknownReason = 'network-maybe';
+  assert.throws(
+    () => advance(unsupportedUnknownReason, 'redeliver', 25, {
+      workerId: 'worker-b',
+    }),
+    /unknownReason.*supported/i,
+  );
+  const mismatchedReconciliation = structuredClone(unknown);
+  mismatchedReconciliation.reconciliationItems = ['confirm-result-commit'];
+  assert.throws(
+    () => advance(mismatchedReconciliation, 'redeliver', 26, {
+      workerId: 'worker-b',
+    }),
+    /reconciliation.*match.*unknownReason/i,
+  );
+  assert.throws(
+    () => advanceJobDelivery(unknown, {
       eventId: 'reconcile-1',
       type: 'reconcile',
       outcome: 'maybe',
