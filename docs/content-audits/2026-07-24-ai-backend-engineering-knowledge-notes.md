@@ -2,7 +2,7 @@
 
 - 审计日期：2026-07-24
 - 模块：`backend-engineering`
-- 审计基线：`fd0ecee`
+- 审计基线：`0dbd658`
 - 审计对象：8 课课程字段、8 篇 `knowledgeNote`、37 条资源、88 条 assessed coverage row，以及与本模块有关的核心模拟、三项实验和静态 UI 测试
 - 发布结论：**内容发布门通过**。8 篇笔记均达到 85/100 的最低门槛；assessed coverage gap、broken resource reference、section source reference error 与 course-field-as-evidence violation 均为 0。
 
@@ -266,7 +266,7 @@
 | service admission / `evaluateServiceAdmission` | 7 个核心测试覆盖容量信用、接受/拒绝及输入边界；对应渲染器为 `service-admission` | 使用平均服务时间的确定性 admission-window 信用模型；不是到达分布或队列模拟器，不预测 p95/p99 |
 | job delivery / `advanceJobDelivery` | 13 个核心测试覆盖接受、投递、超时、重试、完成与拒绝；对应渲染器为 `job-delivery-ledger` | 纯内存确定性 delivery state machine；没有真实 broker、数据库事务、lease clock 或外部副作用，不能证明 exactly-once |
 
-核心 ledger 最多保留 256 条；第三项实验 UI 的 attempt history 最多显示 24 条。非法或被拒绝的 UI 尝试不会修改核心状态。静态 Fake DOM 测试验证的是渲染、交互和可访问性契约，不等于真实浏览器视觉或端到端网络验收。
+核心 ledger 最多保留 256 条；第三项实验 UI 的 attempt history 最多显示 24 条。非法或被拒绝的 UI 尝试不会修改核心状态。静态 Fake DOM 测试验证的是渲染、交互和可访问性契约；后续真实浏览器验收另行记录，仍不等于端到端生产网络证明。
 
 ## 8. 测试审计
 
@@ -279,10 +279,20 @@
 | `node --test tests/static-app.test.js tests/ui-interactions.test.js` | 74/74 passed |
 | `npm test` | 319/319 passed |
 
-因此可以确认数据契约、88 条映射、资源引用、三个确定性核心及静态 UI 回归在本地自动化范围内通过。这个结论不扩大到未执行的真实浏览器和部署环境。
+因此可以确认数据契约、88 条映射、资源引用、三个确定性核心及静态 UI 回归在本地自动化范围内通过。这个结论不扩大到尚未执行的生产部署环境。
 
 ## 9. 浏览器与部署状态
 
-本内容审计任务**没有**完成真实浏览器 viewport 手工验收、Playwright 浏览器验收或像素级截图比对；也**没有**创建或核验 Vercel Preview/Production 部署、公开可达 URL、部署 SHA 或 GitHub Pages 状态。这些仍是 Task 5 / 发布流程的后续工作，不能从 Fake DOM、静态源码测试或本地数据测试推断为已完成。
+在 `http://localhost:4173` 上使用真实浏览器完成以下验收：
 
-最终内容发布记录：8 篇笔记 8/8 通过，最低 97/100；37/37 资源实际使用；88/88 assessed row 有 note section 与外部证据；broken refs = 0。内容门通过，但浏览器验收与部署门保持未完成状态。
+- 桌面 1280×720：`backend-engineering` dashboard、8 课学习主线、知识地图、37 项资源库、24 道面试题、学习进度均只有一个 `h1`，无横向溢出。
+- `stream-lifecycle`：在第 1 个 delta 后断线，得到 `created → delta → disconnected`、客户端 `disconnected`、上游 `cancelled` 与完整清理动作；reset 恢复默认并把焦点放回响应模式。
+- `service-admission`：把到达率改为 20 req/s 后，账本显示 8 immediate、3 queued、9 rejected，并保留“均值模型不预测 p95/p99”的边界。
+- `job-delivery-ledger`：先执行非法 `ack`，UI 保留 `ui-01-ack · rejected` 且核心仍为 `empty`；随后执行 submit、enqueue、lease、start、commit、crash、reconcile，最终恢复 `committed`，客户端、消息、effect 与幂等四个事实边界分别展示。
+- 课程测验：backend-02 两题提交后显示 2/2（100%）及逐题解释。
+- 390×844 与 320×800：dashboard 和 backend-06 课程无横向溢出；实验 grid 为单列；按钮与输入最小高度均至少 44px；长 ID 可换行。390px 与 320px 截图中的课程卡片和知识笔记正文可读。
+- 浏览器控制台：warning/error 为 0。
+
+浏览器发布门通过。当前仍**没有**创建或核验 Vercel Preview/Production 部署、公开可达 URL、部署 SHA 或 GitHub Pages 状态；这些属于后续发布流程，不能从本地浏览器结果推断为已完成。
+
+最终本地发布记录：8 篇笔记 8/8 通过，最低 97/100；37/37 资源实际使用；88/88 assessed row 有 note section 与外部证据；broken refs = 0；自动化 319/319；桌面、390px 与 320px 浏览器门通过。部署门保持未完成状态。
