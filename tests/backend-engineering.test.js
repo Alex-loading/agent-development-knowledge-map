@@ -395,6 +395,20 @@ function advance(state, type, sequence, extra = {}) {
   });
 }
 
+function submittedHistory(eventCount) {
+  let state = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-history',
+    idempotencyKey: 'stable-history-key',
+  }).state;
+  for (let sequence = 2; sequence <= eventCount; sequence += 1) {
+    state = advance(state, 'submit', sequence, {
+      jobId: 'job-history',
+      idempotencyKey: 'stable-history-key',
+    }).state;
+  }
+  return state;
+}
+
 test('advanceJobDelivery applies the complete successful delivery lifecycle', () => {
   let result = advance(deliveryState(), 'submit', 1, {
     jobId: 'job-1',
@@ -459,6 +473,24 @@ test('advanceJobDelivery redelivers a pre-commit crash with a new delivery attem
   assert.equal(redelivered.state.leaseOwner, 'worker-b');
 });
 
+test('advanceJobDelivery derives deliveryAttempt exactly from successful lease history', () => {
+  let leased = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-1',
+    idempotencyKey: 'stable-key',
+  }).state;
+  leased = advance(leased, 'enqueue', 2).state;
+  leased = advance(leased, 'lease', 3, { workerId: 'worker-a' }).state;
+
+  for (const deliveryAttempt of [0, 2, Number.MAX_SAFE_INTEGER]) {
+    const tampered = structuredClone(leased);
+    tampered.deliveryAttempt = deliveryAttempt;
+    assert.throws(
+      () => advance(tampered, 'start', 4),
+      /deliveryAttempt.*(ledger|lease|redeliver)/i,
+    );
+  }
+});
+
 test('advanceJobDelivery reconciles commit-before-ack uncertainty before redelivery', () => {
   let state = advance(deliveryState(), 'submit', 1, {
     jobId: 'job-1',
@@ -487,6 +519,70 @@ test('advanceJobDelivery reconciles commit-before-ack uncertainty before redeliv
 
   const acknowledged = advance(reconciled.state, 'ack', 9);
   assert.equal(acknowledged.state.status, 'acknowledged');
+});
+
+test('advanceJobDelivery validates result references while reconciling committed outcomes', () => {
+  let state = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-1',
+    idempotencyKey: 'stable-key',
+  }).state;
+  state = advance(state, 'enqueue', 2).state;
+  state = advance(state, 'lease', 3, { workerId: 'worker-a' }).state;
+  state = advance(state, 'start', 4).state;
+  state = advance(state, 'commit', 5, { resultRef: 'result-1' }).state;
+  const unknown = advance(state, 'crash', 6).state;
+
+  const matching = advance(unknown, 'reconcile', 7, {
+    outcome: 'committed',
+    resultRef: 'result-1',
+  });
+  assert.equal(matching.state.status, 'committed');
+  assert.equal(matching.state.resultRef, 'result-1');
+
+  assert.throws(
+    () => advance(unknown, 'reconcile', 8, {
+      outcome: 'committed',
+      resultRef: 'result-conflict',
+    }),
+    /event.resultRef.*match.*existing/i,
+  );
+  assert.throws(
+    () => advance(unknown, 'reconcile', 9, {
+      outcome: 'committed',
+      resultRef: '',
+    }),
+    /event.resultRef.*empty/i,
+  );
+
+  const missingResult = structuredClone(unknown);
+  missingResult.resultRef = null;
+  missingResult.idempotencyRecord.resultRef = null;
+  assert.throws(
+    () => advance(missingResult, 'reconcile', 10, {
+      outcome: 'not-committed',
+    }),
+    /result-commit.*resultRef/i,
+  );
+});
+
+test('advanceJobDelivery returns a result-commit uncertainty to queue when not committed', () => {
+  let state = advance(deliveryState(), 'submit', 1, {
+    jobId: 'job-1',
+    idempotencyKey: 'stable-key',
+  }).state;
+  state = advance(state, 'enqueue', 2).state;
+  state = advance(state, 'lease', 3, { workerId: 'worker-a' }).state;
+  state = advance(state, 'start', 4).state;
+  state = advance(state, 'commit', 5, { resultRef: 'result-1' }).state;
+  state = advance(state, 'crash', 6).state;
+
+  const notCommitted = advance(state, 'reconcile', 7, {
+    outcome: 'not-committed',
+  });
+  assert.equal(notCommitted.state.status, 'queued');
+  assert.equal(notCommitted.state.resultRef, null);
+  assert.equal(notCommitted.state.idempotencyRecord.status, 'pending');
+  assert.equal(notCommitted.state.unknownReason, null);
 });
 
 test('advanceJobDelivery deduplicates a repeated submit while preserving the first key', () => {
@@ -605,6 +701,43 @@ test('advanceJobDelivery rejects forged or discontinuous ledger histories', () =
   assert.throws(
     () => advance(impossibleTransition, 'cancel', 3),
     /ledger.*legal transition/i,
+  );
+});
+
+test('advanceJobDelivery caps delivery history and blocks the 257th state or append', () => {
+  let state = submittedHistory(255);
+  state = advance(state, 'enqueue', 256).state;
+  assert.equal(state.ledger.length, 256);
+  assert.equal(state.processedEventIds.length, 256);
+
+  const duplicateAtBoundary = advanceJobDelivery(state, {
+    eventId: 'enqueue-256',
+    type: 'lease',
+    workerId: 'worker-a',
+  });
+  assert.equal(duplicateAtBoundary.decision, 'duplicate');
+
+  assert.throws(
+    () => advance(state, 'lease', 257, { workerId: 'worker-a' }),
+    /delivery event history.*maximum.*256/i,
+  );
+  assert.equal(state.deliveryAttempt, 0);
+
+  const oversized = structuredClone(state);
+  oversized.processedEventIds.push('submit-257');
+  oversized.ledger.push({
+    eventId: 'submit-257',
+    type: 'submit',
+    from: 'queued',
+    to: 'queued',
+    decision: 'deduplicated',
+  });
+  assert.throws(
+    () => advanceJobDelivery(oversized, {
+      eventId: 'cancel-258',
+      type: 'cancel',
+    }),
+    /delivery event history.*maximum.*256/i,
   );
 });
 

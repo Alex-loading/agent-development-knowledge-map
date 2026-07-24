@@ -265,6 +265,8 @@ const DELIVERY_EVENT_TYPES = new Set([
 ]);
 const RECONCILIATION_OUTCOMES = new Set(['committed', 'not-committed']);
 const UNKNOWN_REASONS = new Set(['result-commit', 'cancellation-outcome']);
+const DELIVERY_ATTEMPT_EVENT_TYPES = new Set(['lease', 'redeliver']);
+const MAX_DELIVERY_EVENTS = 256;
 const LEGAL_LEDGER_TRANSITIONS = new Set([
   'applied:submit:empty:submitted',
   'applied:enqueue:submitted:queued',
@@ -296,9 +298,19 @@ function assertNonEmptyString(value, name, { nullable = false } = {}) {
   }
 }
 
-function assertUniqueStringArray(value, name, duplicateMessage) {
+function assertUniqueStringArray(
+  value,
+  name,
+  duplicateMessage,
+  { maximum = null } = {},
+) {
   if (!Array.isArray(value)) {
     throw new TypeError(`${name} must be an array`);
+  }
+  if (maximum !== null && value.length > maximum) {
+    throw new RangeError(
+      `delivery event history exceeds the maximum of ${maximum} events`,
+    );
   }
 
   const seen = new Set();
@@ -360,6 +372,11 @@ function assertDeliveryLedger(state) {
   if (!Array.isArray(state.ledger)) {
     throw new TypeError('state.ledger must be an array');
   }
+  if (state.ledger.length > MAX_DELIVERY_EVENTS) {
+    throw new RangeError(
+      `delivery event history exceeds the maximum of ${MAX_DELIVERY_EVENTS} events`,
+    );
+  }
   if (state.ledger.length !== state.processedEventIds.length) {
     throw new RangeError('state.ledger must match state.processedEventIds');
   }
@@ -410,6 +427,18 @@ function assertDeliveryLedger(state) {
       throw new RangeError('state.ledger entry must describe a legal transition');
     }
   }
+
+  const successfulDeliveryAttempts = state.ledger.filter(
+    (entry) => entry.decision === 'applied'
+      && DELIVERY_ATTEMPT_EVENT_TYPES.has(entry.type)
+      && entry.from === 'queued'
+      && entry.to === 'leased',
+  ).length;
+  if (state.deliveryAttempt !== successfulDeliveryAttempts) {
+    throw new RangeError(
+      'state.deliveryAttempt must match successful lease and redeliver ledger entries',
+    );
+  }
 }
 
 function assertDeliveryState(state) {
@@ -425,6 +454,7 @@ function assertDeliveryState(state) {
     state.processedEventIds,
     'state.processedEventIds',
     'state has duplicate processed event IDs',
+    { maximum: MAX_DELIVERY_EVENTS },
   );
   assertUniqueStringArray(
     state.reconciliationItems,
@@ -467,6 +497,9 @@ function assertDeliveryState(state) {
 
   if (state.status === 'unknown') {
     assertEnum(state.unknownReason, UNKNOWN_REASONS, 'state.unknownReason');
+    if (state.unknownReason === 'result-commit' && state.resultRef === null) {
+      throw new RangeError('unknown result-commit state must have a resultRef');
+    }
     if (state.reconciliationItems.length === 0) {
       throw new RangeError('unknown delivery state must have reconciliation items');
     }
@@ -497,6 +530,14 @@ function deliveryResult(state, decision, reason = null) {
 }
 
 function recordDeliveryEvent(previous, next, event, decision = 'applied', reason = null) {
+  if (
+    next.processedEventIds.length >= MAX_DELIVERY_EVENTS
+    || next.ledger.length >= MAX_DELIVERY_EVENTS
+  ) {
+    throw new RangeError(
+      `delivery event history exceeds the maximum of ${MAX_DELIVERY_EVENTS} events`,
+    );
+  }
   next.processedEventIds.push(event.eventId);
   next.ledger.push({
     eventId: event.eventId,
@@ -659,9 +700,15 @@ export function advanceJobDelivery(state, event) {
     next.reconciliationItems = [];
     next.unknownReason = null;
     if (event.outcome === 'committed') {
+      const hasEventResultRef = Object.hasOwn(event, 'resultRef');
+      if (hasEventResultRef) {
+        assertNonEmptyString(event.resultRef, 'event.resultRef');
+      }
       if (next.resultRef === null) {
         assertNonEmptyString(event.resultRef, 'event.resultRef');
         next.resultRef = event.resultRef;
+      } else if (hasEventResultRef && event.resultRef !== next.resultRef) {
+        throw new RangeError('event.resultRef must match the existing resultRef');
       }
       next.status = 'committed';
       setRecordStatus(next, 'committed');
