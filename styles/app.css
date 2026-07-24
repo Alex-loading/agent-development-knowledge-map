@@ -1374,6 +1374,162 @@ button:disabled {
   color: var(--color-vermilion);
 }
 
+.backend-lab-grid,
+.backend-controls,
+.backend-results,
+.backend-event-trace,
+.backend-delivery-ledger,
+.backend-definition-ledger,
+.backend-reconciliation,
+.backend-delivery-history {
+  min-width: 0;
+}
+
+.backend-control-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink);
+  background: var(--color-paper-raised);
+  font: inherit;
+}
+
+.backend-checkbox {
+  width: 1.35rem;
+  height: 1.35rem;
+  accent-color: var(--color-vermilion);
+}
+
+.backend-control-input:focus-visible,
+.backend-checkbox:focus-visible,
+.backend-action:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.backend-check-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.backend-check-control label {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 700;
+}
+
+.backend-action {
+  min-height: 2.75rem;
+}
+
+.backend-event-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.backend-event-trace,
+.backend-delivery-ledger {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.backend-event,
+.backend-delivery-entry {
+  border-left: 0.25rem solid var(--color-ochre);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-ochre-soft);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.backend-event[data-event-type="completed"] {
+  border-color: var(--color-forest);
+  background: var(--color-forest-soft);
+}
+
+.backend-event[data-event-type="error"],
+.backend-event[data-event-type="cancelled"],
+.backend-event[data-event-type="disconnected"] {
+  border-color: var(--color-vermilion);
+  background: var(--color-vermilion-soft);
+}
+
+.backend-definition-ledger {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(0, 1fr);
+  margin: 0;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-paper-raised);
+}
+
+.backend-definition-ledger__entry {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.backend-definition-ledger__entry:last-child {
+  border-bottom: 0;
+}
+
+.backend-definition-ledger dt,
+.backend-definition-ledger dd {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+.backend-definition-ledger dt {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.backend-definition-ledger dd {
+  border-left: 1px solid var(--color-border-soft);
+  font-weight: 700;
+}
+
+.backend-capacity-grid dd {
+  color: var(--color-forest);
+  font-family: var(--font-mono);
+}
+
+.backend-model-boundary {
+  margin-bottom: 0;
+  border-left: 0.25rem solid var(--color-vermilion);
+  padding: var(--space-3);
+  background: var(--color-vermilion-soft);
+}
+
+.backend-cleanup ul {
+  margin-bottom: 0;
+}
+
+.backend-reconciliation,
+.backend-delivery-history {
+  display: grid;
+  gap: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.backend-long-id {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .agent-controls,
 .agent-decision-ledger,
 .tool-invocation-display,
@@ -2688,7 +2844,8 @@ button:disabled {
   .resource-row,
   .answer-drawer,
   .progress-ledger__summary,
-  .experiment-grid {
+  .experiment-grid,
+  .backend-lab-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2751,6 +2908,15 @@ button:disabled {
 
   .memory-event-button {
     width: 100%;
+  }
+
+  .backend-event-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .backend-action {
+    width: 100%;
+    min-height: 2.75rem;
   }
 
   .filter-ledger__summary button {
@@ -2833,6 +2999,19 @@ button:disabled {
 
   .agent-decision-ledger {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .backend-definition-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .backend-definition-ledger__entry {
+    display: block;
+  }
+
+  .backend-definition-ledger dd {
+    border-top: 1px dashed var(--color-border-soft);
+    border-left: 0;
   }
 
   .agent-decision-ledger__entry {

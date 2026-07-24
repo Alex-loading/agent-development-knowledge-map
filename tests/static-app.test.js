@@ -415,6 +415,55 @@ test('Agent experiment renderers are isolated, safely registered and responsivel
   assert.match(styles, /@media\s*\(max-width\s*:\s*22rem\)[\s\S]*\.agent-decision-ledger/s);
 });
 
+test('backend experiment renderers safely register core simulations with mobile lab styles', async () => {
+  const [experiments, backendExperiments, styles] = await Promise.all([
+    read('src/ui/experiments.js'),
+    read('src/ui/backend-experiments.js'),
+    read('styles/app.css'),
+  ]);
+
+  for (const coreFunction of [
+    'simulateStreamLifecycle',
+    'evaluateServiceAdmission',
+    'advanceJobDelivery',
+  ]) {
+    assert.match(backendExperiments, new RegExp(`\\b${coreFunction}\\s*\\(`));
+  }
+  for (const renderer of [
+    'renderStreamLifecycleExperiment',
+    'renderServiceAdmissionExperiment',
+    'renderJobDeliveryLedgerExperiment',
+  ]) {
+    assert.match(backendExperiments, new RegExp(`export function ${renderer}\\b`));
+  }
+  assert.match(backendExperiments, /export const backendExperimentRenderers\s*=\s*Object\.freeze\s*\(\s*\{/);
+  for (const id of ['stream-lifecycle', 'service-admission', 'job-delivery-ledger']) {
+    assert.match(backendExperiments, new RegExp(`['"]${id}['"]\\s*:`));
+  }
+  assert.match(
+    experiments,
+    /import\s*\{\s*backendExperimentRenderers\s*\}\s*from ['"]\.\/backend-experiments\.js['"]/,
+  );
+  assert.match(
+    experiments,
+    /Object\.freeze\s*\(\s*\{[\s\S]*\.\.\.backendExperimentRenderers[\s\S]*\}\s*\)/,
+  );
+  assert.deepEqual(findUnsafeDomPatterns(backendExperiments), []);
+
+  for (const selector of [
+    '.backend-event-trace',
+    '.backend-capacity-grid',
+    '.backend-delivery-ledger',
+    '.backend-long-id',
+  ]) {
+    assert.ok(styles.includes(selector), `missing backend lab style ${selector}`);
+  }
+  assert.match(styles, /\.backend-long-id\s*\{[^}]*overflow-wrap:\s*anywhere[^}]*word-break:\s*break-word/s);
+  assert.match(styles, /\.backend-action\s*\{[^}]*min-height:\s*(?:2\.75rem|44px)/s);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.backend-lab-grid\s*\{[^}]*grid-template-columns:\s*(?:minmax\(\s*0\s*,\s*1fr\s*\)|1fr)/s);
+  assert.match(styles, /prefers-reduced-motion\s*:\s*reduce/i);
+});
+
 test('release guide documents operation, architecture, privacy and the extension contract', async () => {
   const readme = await read('README.md');
 

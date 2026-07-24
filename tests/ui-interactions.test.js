@@ -1472,6 +1472,160 @@ test('memory lifecycle experiment applies preset events and keeps recall subject
   assert.equal(document.activeElement, observe);
 });
 
+test('stream lifecycle lab renders typed events, propagation state and a focused reset', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('stream-lifecycle');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-stream-result');
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  assert.ok(lab.querySelector(`#${lab.getAttribute('aria-labelledby')}`));
+  for (const controlId of [
+    'backend-stream-mode',
+    'backend-stream-delta-count',
+    'backend-stream-disconnect-after',
+    'backend-stream-cancel-after',
+    'backend-stream-fail-after',
+    'backend-stream-upstream-cancellable',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  assert.deepEqual(
+    lab.querySelectorAll('.backend-event').map((event) => event.dataset.eventType),
+    ['created', 'delta', 'delta', 'delta', 'completed'],
+  );
+  assert.match(result.textContent, /客户端状态.*completed/);
+  assert.match(result.textContent, /上游状态.*completed/);
+  assert.ok(result.textContent.includes('release-request-resources'));
+  assert.ok(lab.querySelector('.experiment-caveat').textContent.includes('确定性教学模拟'));
+
+  const disconnect = lab.querySelector('#backend-stream-disconnect-after');
+  const upstreamCancellable = lab.querySelector('#backend-stream-upstream-cancellable');
+  upstreamCancellable.checked = false;
+  upstreamCancellable.dispatchEvent(new FakeEvent('change'));
+  disconnect.value = '1';
+  disconnect.dispatchEvent(new FakeEvent('input'));
+  assert.deepEqual(
+    lab.querySelectorAll('.backend-event').map((event) => event.dataset.eventType),
+    ['created', 'delta', 'disconnected'],
+  );
+  assert.match(result.textContent, /客户端状态.*disconnected/);
+  assert.match(result.textContent, /上游状态.*continuing/);
+  assert.ok(result.textContent.includes('observe-upstream-until-terminal'));
+
+  lab.querySelector('#backend-stream-reset').click();
+  assert.equal(disconnect.value, '');
+  assert.equal(upstreamCancellable.checked, true);
+  assert.match(result.textContent, /客户端状态.*completed/);
+  assert.equal(document.activeElement, lab.querySelector('#backend-stream-mode'));
+});
+
+test('service admission lab exposes its window math, all outcomes and mean-model boundary', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('service-admission');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-admission-result');
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  for (const controlId of [
+    'backend-admission-arrival-rate',
+    'backend-admission-service-time',
+    'backend-admission-slots',
+    'backend-admission-queue-limit',
+    'backend-admission-deadline',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  for (const field of ['window', 'capacity', 'immediate', 'queued', 'rejected', 'timedOut']) {
+    assert.ok(result.textContent.includes(field), field);
+  }
+  assert.match(result.textContent, /not a p95 or p99 prediction/);
+  assert.ok(lab.textContent.includes('均值模型'));
+
+  const deadline = lab.querySelector('#backend-admission-deadline');
+  deadline.value = '400';
+  deadline.dispatchEvent(new FakeEvent('input'));
+  assert.match(result.textContent, /timedOut.*11/);
+  assert.match(result.textContent, /rejected.*1/);
+
+  lab.querySelector('#backend-admission-reset').click();
+  assert.equal(deadline.value, '1000');
+  assert.match(result.textContent, /timedOut.*0/);
+  assert.equal(document.activeElement, lab.querySelector('#backend-admission-arrival-rate'));
+});
+
+test('job delivery lab drives every event and exposes delivery, idempotency and reconciliation history', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('job-delivery-ledger');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-delivery-result');
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  for (const type of [
+    'submit',
+    'enqueue',
+    'lease',
+    'start',
+    'commit',
+    'ack',
+    'crash',
+    'redeliver',
+    'cancel',
+    'reconcile',
+  ]) {
+    assert.notEqual(lab.querySelector(`#backend-delivery-event-${type}`), null, type);
+  }
+  for (const controlId of [
+    'backend-delivery-job-id',
+    'backend-delivery-idempotency-key',
+    'backend-delivery-worker-id',
+    'backend-delivery-result-ref',
+    'backend-delivery-reconcile-outcome',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.match(result.textContent, /idempotency status.*none/);
+
+  for (const type of ['submit', 'enqueue', 'lease', 'start', 'commit', 'crash']) {
+    lab.querySelector(`#backend-delivery-event-${type}`).click();
+  }
+  assert.match(result.textContent, /delivery status.*unknown/);
+  assert.match(result.textContent, /idempotency status.*unknown/);
+  assert.match(result.textContent, /unknownReason.*result-commit/);
+  assert.ok(result.textContent.includes('confirm-result-commit'));
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 6);
+
+  lab.querySelector('#backend-delivery-event-redeliver').click();
+  assert.ok(result.textContent.includes('reconcile-required'));
+  lab.querySelector('#backend-delivery-event-reconcile').click();
+  assert.match(result.textContent, /delivery status.*committed/);
+  lab.querySelector('#backend-delivery-event-ack').click();
+  assert.match(result.textContent, /delivery status.*acknowledged/);
+  assert.ok(result.textContent.includes('result://report-001'));
+
+  lab.querySelector('#backend-delivery-reset').click();
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(document.activeElement, lab.querySelector('#backend-delivery-event-submit'));
+
+  for (const type of ['submit', 'enqueue', 'lease', 'start', 'cancel']) {
+    lab.querySelector(`#backend-delivery-event-${type}`).click();
+  }
+  assert.match(result.textContent, /delivery status.*unknown/);
+  assert.match(result.textContent, /unknownReason.*cancellation-outcome/);
+  assert.ok(result.textContent.includes('confirm-cancellation-outcome'));
+  dispatchChange(lab.querySelector('#backend-delivery-reconcile-outcome'), 'not-committed');
+  lab.querySelector('#backend-delivery-event-reconcile').click();
+  assert.match(result.textContent, /delivery status.*cancelled/);
+});
+
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
