@@ -1564,9 +1564,13 @@ test('job delivery lab drives every event and exposes delivery, idempotency and 
   const lab = renderExperiment('job-delivery-ledger');
   document.body.append(lab);
 
+  const summary = lab.querySelector('#backend-delivery-summary');
   const result = lab.querySelector('#backend-delivery-result');
-  assert.equal(result.getAttribute('aria-live'), 'polite');
-  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  assert.equal(summary.getAttribute('aria-live'), 'polite');
+  assert.equal(summary.getAttribute('aria-atomic'), 'true');
+  assert.equal(result.getAttribute('aria-live'), null);
+  assert.equal(result.getAttribute('aria-atomic'), null);
+  assert.equal(lab.querySelector('.backend-delivery-history').getAttribute('aria-live'), null);
   for (const type of [
     'submit',
     'enqueue',
@@ -1592,6 +1596,14 @@ test('job delivery lab drives every event and exposes delivery, idempotency and 
   }
   assert.match(result.textContent, /delivery status.*empty/);
   assert.match(result.textContent, /idempotency status.*none/);
+  for (const boundary of [
+    'client state',
+    'message state',
+    'effect ledger',
+    'idempotency ledger',
+  ]) {
+    assert.match(result.textContent, new RegExp(boundary), boundary);
+  }
 
   for (const type of ['submit', 'enqueue', 'lease', 'start', 'commit', 'crash']) {
     lab.querySelector(`#backend-delivery-event-${type}`).click();
@@ -1624,6 +1636,57 @@ test('job delivery lab drives every event and exposes delivery, idempotency and 
   dispatchChange(lab.querySelector('#backend-delivery-reconcile-outcome'), 'not-committed');
   lab.querySelector('#backend-delivery-event-reconcile').click();
   assert.match(result.textContent, /delivery status.*cancelled/);
+});
+
+test('job delivery lab keeps rejected and invalid UI attempts visible without mutating core state', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('job-delivery-ledger');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-delivery-result');
+  const summary = lab.querySelector('#backend-delivery-summary');
+  const jobId = lab.querySelector('#backend-delivery-job-id');
+  const submit = lab.querySelector('#backend-delivery-event-submit');
+  const ack = lab.querySelector('#backend-delivery-event-ack');
+
+  ack.click();
+  assert.match(summary.textContent, /ui-01-ack.*rejected/);
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 1);
+  assert.match(
+    lab.querySelector('.backend-delivery-attempt').textContent,
+    /ui-01-ack.*illegal ack transition from empty/,
+  );
+
+  jobId.value = '   ';
+  submit.click();
+  assert.match(summary.textContent, /ui-02-submit.*invalid-input/);
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 2);
+  assert.match(
+    lab.querySelectorAll('.backend-delivery-attempt').at(-1).textContent,
+    /ui-02-submit.*event\.jobId must not be empty/,
+  );
+
+  jobId.value = 'job-report-001';
+  submit.click();
+  assert.match(summary.textContent, /ui-03-submit.*applied/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 1);
+  assert.match(lab.querySelector('.backend-delivery-entry').textContent, /ui-03-submit/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 3);
+
+  for (let attempt = 0; attempt < 30; attempt += 1) ack.click();
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 24);
+  assert.doesNotMatch(result.textContent, /ui-01-ack/);
+  assert.match(
+    lab.querySelectorAll('.backend-delivery-attempt').at(-1).textContent,
+    /ui-33-ack.*rejected/,
+  );
+  assert.match(result.textContent, /delivery status.*submitted/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 1);
 });
 
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {

@@ -34,6 +34,7 @@ const DELIVERY_EVENT_TYPES = Object.freeze([
   'cancel',
   'reconcile',
 ]);
+const MAX_UI_DELIVERY_ATTEMPTS = 24;
 
 function labHeader(index, id, title, description) {
   return element('header', { className: 'experiment-lab__header' }, [
@@ -426,25 +427,116 @@ function createInitialDeliveryState() {
 export function renderJobDeliveryLedgerExperiment() {
   let state = createInitialDeliveryState();
   let eventSequence = 0;
+  let attemptHistory = [];
+  let lastEventId = null;
   let lastDecision = 'idle';
   let lastReason = null;
-  const result = element('div', {
-    className: 'experiment-status backend-delivery-result',
+  const summary = element('div', {
+    className: 'experiment-status backend-delivery-summary',
     attrs: {
-      id: 'backend-delivery-result',
+      id: 'backend-delivery-summary',
       'aria-live': 'polite',
       'aria-atomic': 'true',
     },
   });
+  const result = element('div', {
+    className: 'experiment-status backend-delivery-result',
+    attrs: { id: 'backend-delivery-result' },
+  });
 
   let submitButton;
 
+  function clientState() {
+    return {
+      empty: 'not-created · 客户端尚无 job',
+      submitted: 'accepted · job 已创建',
+      queued: 'accepted · 等待 worker',
+      leased: 'running · worker 已领取',
+      running: 'running · 正在执行',
+      committed: 'succeeded · 结果已持久化',
+      acknowledged: 'succeeded · 消息已确认',
+      cancelled: 'cancelled · 已确认取消',
+      unknown: 'reconciliation-required · 暂不能断言终态',
+    }[state.status];
+  }
+
+  function messageState() {
+    return {
+      empty: 'none · 尚未创建消息',
+      submitted: 'publish-pending · job 已存在但尚未入队',
+      queued: 'queued · broker 可交付',
+      leased: 'in-flight · worker 暂时持有',
+      running: 'in-flight · worker 正在执行',
+      committed: 'commit-before-ack · 结果已提交但消息未确认',
+      acknowledged: 'acknowledged · broker 已确认',
+      cancelled: 'inactive · 不再交付',
+      unknown: 'delivery-unknown · 必须先对账',
+    }[state.status];
+  }
+
+  function effectLedgerState() {
+    if (state.status === 'unknown') {
+      return `unknown · ${state.unknownReason} · ${state.reconciliationItems.join(', ')}`;
+    }
+    if (state.resultRef !== null) return `committed · ${state.resultRef}`;
+    if (state.status === 'cancelled') return 'not-committed · 已确认无结果提交';
+    return 'not-recorded · 尚无已证明副作用';
+  }
+
+  function idempotencyLedgerState() {
+    if (state.idempotencyRecord === null) return 'none · 尚无业务意图记录';
+    return `${state.idempotencyRecord.status} · ${state.idempotencyRecord.key}`;
+  }
+
+  function recordAttempt(event, from, to, decision, reason) {
+    attemptHistory = [
+      ...attemptHistory,
+      {
+        eventId: event.eventId,
+        type: event.type,
+        from,
+        to,
+        decision,
+        reason,
+      },
+    ].slice(-MAX_UI_DELIVERY_ATTEMPTS);
+    lastEventId = event.eventId;
+    lastDecision = decision;
+    lastReason = reason;
+  }
+
   function renderState() {
     const idempotencyStatus = state.idempotencyRecord?.status ?? 'none';
+    summary.className = `experiment-status backend-delivery-summary backend-delivery-summary--${lastDecision}`;
+    summary.dataset.decision = lastDecision;
+    summary.replaceChildren(
+      element('strong', {
+        text: lastEventId === null
+          ? '等待投递事件'
+          : `${lastEventId} · ${lastDecision}`,
+      }),
+      element('span', {
+        className: 'backend-long-id',
+        text: `核心任务状态：${state.status}${lastReason ? `；${lastReason}` : ''}`,
+      }),
+    );
+
     result.className = `experiment-status backend-delivery-result backend-delivery-result--${state.status}`;
     result.dataset.status = state.status;
     result.replaceChildren(
       element('h4', { text: '投递状态与幂等证据' }),
+      element('section', { className: 'backend-delivery-boundaries' }, [
+        element('h4', { text: '四个独立事实边界' }),
+        element('p', {
+          text: '客户端状态、broker 消息、外部副作用与业务幂等记录各自回答不同问题；一个边界变化不能替其他边界作证。',
+        }),
+        definitionLedger([
+          ['client state', clientState()],
+          ['message state', messageState()],
+          ['effect ledger', effectLedgerState(), 'backend-long-id'],
+          ['idempotency ledger', idempotencyLedgerState(), 'backend-long-id'],
+        ], 'backend-boundary-ledger'),
+      ]),
       definitionLedger([
         ['delivery status', state.status],
         ['idempotency status', idempotencyStatus],
@@ -475,6 +567,21 @@ export function renderJobDeliveryLedgerExperiment() {
               className: 'backend-delivery-entry backend-long-id',
               dataset: { decision: entry.decision },
               text: `${entry.eventId} · ${entry.type} · ${entry.from} → ${entry.to} · ${entry.decision}`,
+            })
+          ))),
+      ]),
+      element('section', { className: 'backend-delivery-attempt-history' }, [
+        element('h4', { text: `UI attempt / rejected history（最近 ${MAX_UI_DELIVERY_ATTEMPTS} 次）` }),
+        element('p', {
+          text: '这里保留所有按钮尝试；rejected 与 invalid-input 不会写入或篡改 core ledger。',
+        }),
+        attemptHistory.length === 0
+          ? element('p', { text: '尚无 UI 尝试。' })
+          : element('ol', { className: 'backend-delivery-attempts' }, attemptHistory.map((entry) => (
+            element('li', {
+              className: 'backend-delivery-attempt backend-long-id',
+              dataset: { decision: entry.decision },
+              text: `${entry.eventId} · ${entry.type} · ${entry.from} → ${entry.to} · ${entry.decision}${entry.reason ? ` · ${entry.reason}` : ''}`,
             })
           ))),
       ]),
@@ -535,15 +642,21 @@ export function renderJobDeliveryLedgerExperiment() {
   }
 
   function applyEvent(type) {
+    const event = eventFor(type);
+    const fromStatus = state.status;
     try {
-      const transition = advanceJobDelivery(state, eventFor(type));
+      const transition = advanceJobDelivery(state, event);
       state = transition.state;
-      lastDecision = transition.decision;
-      lastReason = transition.reason;
+      recordAttempt(
+        event,
+        fromStatus,
+        state.status,
+        transition.decision,
+        transition.reason,
+      );
       renderState();
     } catch (error) {
-      lastDecision = 'invalid-input';
-      lastReason = error.message;
+      recordAttempt(event, fromStatus, state.status, 'invalid-input', error.message);
       renderState();
     }
   }
@@ -561,6 +674,8 @@ export function renderJobDeliveryLedgerExperiment() {
   function reset() {
     state = createInitialDeliveryState();
     eventSequence = 0;
+    attemptHistory = [];
+    lastEventId = null;
     lastDecision = 'idle';
     lastReason = null;
     jobIdControl.input.value = 'job-report-001';
@@ -593,7 +708,7 @@ export function renderJobDeliveryLedgerExperiment() {
           attrs: { role: 'group', 'aria-label': '投递事件' },
         }, eventButtons),
       ]),
-      element('div', { className: 'experiment-results backend-results' }, [result]),
+      element('div', { className: 'experiment-results backend-results' }, [summary, result]),
     ]),
     button('重置投递实验', {
       className: 'secondary-action experiment-reset backend-action',

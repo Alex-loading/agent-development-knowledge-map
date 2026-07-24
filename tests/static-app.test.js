@@ -453,7 +453,10 @@ test('backend experiment renderers safely register core simulations with mobile 
   for (const selector of [
     '.backend-event-trace',
     '.backend-capacity-grid',
+    '.backend-delivery-summary',
     '.backend-delivery-ledger',
+    '.backend-delivery-attempts',
+    '.backend-delivery-boundaries',
     '.backend-long-id',
   ]) {
     assert.ok(styles.includes(selector), `missing backend lab style ${selector}`);

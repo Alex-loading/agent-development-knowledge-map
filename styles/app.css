@@ -1381,8 +1381,21 @@ button:disabled {
 .backend-delivery-ledger,
 .backend-definition-ledger,
 .backend-reconciliation,
-.backend-delivery-history {
+.backend-delivery-history,
+.backend-delivery-attempts,
+.backend-delivery-attempt-history,
+.backend-delivery-boundaries {
   min-width: 0;
+}
+
+.backend-delivery-summary {
+  border-left-width: 0.3rem;
+}
+
+.backend-delivery-summary--rejected,
+.backend-delivery-summary--invalid-input {
+  border-color: var(--color-vermilion);
+  background: var(--color-vermilion-soft);
 }
 
 .backend-control-input {
@@ -1436,7 +1449,8 @@ button:disabled {
 }
 
 .backend-event-trace,
-.backend-delivery-ledger {
+.backend-delivery-ledger,
+.backend-delivery-attempts {
   display: grid;
   gap: var(--space-2);
   margin: 0;
@@ -1444,7 +1458,8 @@ button:disabled {
 }
 
 .backend-event,
-.backend-delivery-entry {
+.backend-delivery-entry,
+.backend-delivery-attempt {
   border-left: 0.25rem solid var(--color-ochre);
   padding: var(--space-2) var(--space-3);
   background: var(--color-ochre-soft);
@@ -1460,6 +1475,12 @@ button:disabled {
 .backend-event[data-event-type="error"],
 .backend-event[data-event-type="cancelled"],
 .backend-event[data-event-type="disconnected"] {
+  border-color: var(--color-vermilion);
+  background: var(--color-vermilion-soft);
+}
+
+.backend-delivery-attempt[data-decision="rejected"],
+.backend-delivery-attempt[data-decision="invalid-input"] {
   border-color: var(--color-vermilion);
   background: var(--color-vermilion-soft);
 }
@@ -1518,7 +1539,9 @@ button:disabled {
 }
 
 .backend-reconciliation,
-.backend-delivery-history {
+.backend-delivery-history,
+.backend-delivery-attempt-history,
+.backend-delivery-boundaries {
   display: grid;
   gap: var(--space-2);
   border-top: 1px dashed var(--color-border);
