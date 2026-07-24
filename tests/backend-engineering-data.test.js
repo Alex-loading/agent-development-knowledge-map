@@ -48,9 +48,23 @@ const resourceUrls = [
   'https://docs.vllm.ai/en/stable/serving/openai_compatible_server/',
   'https://docs.ray.io/en/latest/serve/advanced-guides/dyn-req-batch.html',
   'https://github.com/datawhalechina/llm-universe',
+  'https://www.columbia.edu/~ks20/stochastic-I/stochastic-I-LL.pdf',
+  'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/',
+  'https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html',
+  'https://people.eecs.berkeley.edu/~prabal/teaching/eecs582-w12/readings/chubby.pdf',
+  'https://docs.docker.com/build/building/best-practices/',
+  'https://vsis-www.informatik.uni-hamburg.de/getDoc.php/publications/569/Coordinated_Omission_in_NoSQL_Database_Benchmarking-Friedrich.pdf',
+  'https://docs.vllm.ai/projects/spyre/en/latest/user_guide/performance.html',
 ];
 const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
 const validRoles = new Set(['core', 'cross-check', 'extension']);
+const assessmentFields = [
+  ['objectives', 2],
+  ['quiz', 2],
+  ['interviewQuestionIds', 3],
+  ['exercise.steps', 2],
+  ['completionCriteria', 2],
+];
 
 function assertUnique(values, label) {
   assert.equal(new Set(values).size, values.length, `${label} 不应重复`);
@@ -63,6 +77,24 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   for (const [key, nested] of Object.entries(value)) {
     assertDeepFrozen(nested, `${label}.${key}`, seen);
   }
+}
+
+function resolveAssessmentField(lesson, fieldPath) {
+  const match = /^(objectives|quiz|interviewQuestionIds|exercise\.steps|completionCriteria)\[(\d+)\]$/
+    .exec(fieldPath);
+  assert.ok(match, `${lesson.id}: unsupported coverage field path ${fieldPath}`);
+  const [, collection, rawIndex] = match;
+  const index = Number(rawIndex);
+  const value = collection === 'exercise.steps'
+    ? lesson.exercise.steps[index]
+    : lesson[collection][index];
+  assert.notEqual(value, undefined, `${lesson.id}: unresolved coverage field ${fieldPath}`);
+  if (collection === 'interviewQuestionIds') {
+    const question = backendEngineering.interviewQuestions.find(({ id }) => id === value);
+    assert.ok(question, `${lesson.id}: unresolved interview ${value}`);
+    return question;
+  }
+  return value;
 }
 
 test('AI backend engineering exposes eight ordered lessons, sixteen quizzes and stable IDs', () => {
@@ -106,8 +138,8 @@ test('AI backend engineering exposes eight ordered lessons, sixteen quizzes and 
   }
 });
 
-test('the course publishes exactly 29 verified resources with complete evidence cards', () => {
-  assert.equal(backendEngineering.resources.length, 29);
+test('the course publishes exactly 36 verified resources with complete evidence cards', () => {
+  assert.equal(backendEngineering.resources.length, 36);
   assert.deepEqual(backendEngineering.resources.map(({ url }) => url), resourceUrls);
 
   for (const resource of backendEngineering.resources) {
@@ -147,12 +179,66 @@ test('the course publishes exactly 29 verified resources with complete evidence 
   assert.match(byId.get('res-backend-tail-at-scale').evidence.limitations, /实验|工作负载/);
   assert.match(byId.get('res-backend-dagor').evidence.limitations, /微信|WeChat/);
   assert.match(byId.get('res-backend-sarathi').evidence.limitations, /硬件|GPU|模型/);
+
+  const requiredEvidence = {
+    'res-backend-little-law': {
+      authority: 'academic',
+      role: 'core',
+      coverage: /L\s*=\s*λW|长期均值/,
+      limitations: /存在.*有限|p95|p99/,
+    },
+    'res-backend-aws-idempotent-apis': {
+      authority: 'official',
+      role: 'core',
+      coverage: /client request ID|same ID|different intent|late arrival|unknown outcome/i,
+      limitations: /厂商|标准/,
+    },
+    'res-backend-aws-transactional-outbox': {
+      authority: 'official',
+      role: 'core',
+      coverage: /dual write|outbox|relay|重复/i,
+      limitations: /AWS.*exactly-once|普适.*exactly-once/i,
+    },
+    'res-backend-chubby': {
+      authority: 'academic',
+      role: 'cross-check',
+      coverage: /sequencer|generation|stale/i,
+      limitations: /broker|统一规范/,
+    },
+    'res-backend-docker-build-best-practices': {
+      authority: 'official',
+      role: 'core',
+      coverage: /USER|non-root|build cache/i,
+      limitations: /版本|实现/,
+    },
+    'res-backend-coordinated-omission': {
+      authority: 'academic',
+      role: 'cross-check',
+      coverage: /closed|synchronous|intended arrivals|coordinated omission/i,
+      limitations: /数据库|实验/,
+    },
+    'res-backend-vllm-performance-tpot': {
+      authority: 'official',
+      role: 'cross-check',
+      coverage: /TTFT|ITL|TPOT|E2EL/,
+      limitations: /Spyre|通用/,
+    },
+  };
+  for (const [id, expected] of Object.entries(requiredEvidence)) {
+    const resource = byId.get(id);
+    assert.ok(resource, id);
+    assert.equal(resource.evidence.authority, expected.authority, id);
+    assert.equal(resource.evidence.role, expected.role, id);
+    assert.match(resource.evidence.coverage.join(' '), expected.coverage, id);
+    assert.match(resource.evidence.limitations, expected.limitations, id);
+  }
 });
 
 test('lesson references resolve resources and interviews in both directions with full resource usage', () => {
   const resourceIds = new Set(backendEngineering.resources.map(({ id }) => id));
   const interviewIds = new Set(backendEngineering.interviewQuestions.map(({ id }) => id));
   const usedResourceIds = new Set();
+  const noteUsedResourceIds = new Set();
   const referencedInterviewIds = [];
 
   for (const lesson of backendEngineering.lessons) {
@@ -160,12 +246,16 @@ test('lesson references resolve resources and interviews in both directions with
       assert.ok(resourceIds.has(id), `${lesson.id}: unknown resource ${id}`);
       usedResourceIds.add(id);
     }
+    for (const id of lesson.knowledgeNote.sections.flatMap(({ sourceIds }) => sourceIds)) {
+      noteUsedResourceIds.add(id);
+    }
     for (const id of lesson.interviewQuestionIds) {
       assert.ok(interviewIds.has(id), `${lesson.id}: unknown interview ${id}`);
       referencedInterviewIds.push(id);
     }
   }
-  assert.deepEqual(usedResourceIds, resourceIds, '29 项资源都应被至少一课使用');
+  assert.deepEqual(usedResourceIds, resourceIds, '36 项资源都应被至少一课使用');
+  assert.deepEqual(noteUsedResourceIds, resourceIds, '36 项资源都应被至少一篇笔记直接使用');
   assert.equal(new Set(referencedInterviewIds).size, 24);
 
   for (const question of backendEngineering.interviewQuestions) {
@@ -243,8 +333,105 @@ test('all eight lessons publish distinct source-grounded knowledge notes', async
       claim.length >= 10 && correction.length >= 25), lesson.id);
     assert.ok(note.recap.length >= 5, lesson.id);
     assert.ok(note.nextStep.length >= 80, lesson.id);
+    assert.ok(note.tests, `${lesson.id}: missing tests audit`);
+    assert.deepEqual(
+      Object.keys(note.tests).sort(),
+      ['command', 'exitCode', 'summary', 'verifiedAt'].sort(),
+      `${lesson.id}: tests audit fields`,
+    );
+    assert.equal(note.tests.command, 'node --test tests/backend-engineering-data.test.js', lesson.id);
+    assert.equal(note.tests.exitCode, 0, lesson.id);
+    assert.match(note.tests.summary, /通过|pass/i, lesson.id);
+    assert.equal(note.tests.verifiedAt, VERIFIED_AT, lesson.id);
   }
   assertDeepFrozen(backendEngineeringNotes, 'backendEngineeringNotes');
+});
+
+test('coverage matrix resolves every assessed field to a real section and evidence source', () => {
+  const resourcesById = new Map(backendEngineering.resources.map((resource) => [resource.id, resource]));
+  assert.ok(backendEngineering.coverageMatrix, 'missing coverageMatrix');
+  assert.deepEqual(Object.keys(backendEngineering.coverageMatrix), lessonIds);
+
+  for (const lesson of backendEngineering.lessons) {
+    const entries = backendEngineering.coverageMatrix[lesson.id];
+    const expectedPaths = assessmentFields.flatMap(([field, count]) =>
+      Array.from({ length: count }, (_, index) => `${field}[${index}]`));
+    assert.deepEqual(entries.map(({ fieldPath }) => fieldPath).sort(), expectedPaths.sort(), lesson.id);
+    assertUnique(entries.map(({ fieldPath }) => fieldPath), `${lesson.id}: coverage paths`);
+
+    const noteSections = new Map(lesson.knowledgeNote.sections.map((section) => [section.id, section]));
+    for (const entry of entries) {
+      const assessedValue = resolveAssessmentField(lesson, entry.fieldPath);
+      assert.ok(assessedValue, `${lesson.id}:${entry.fieldPath}`);
+      const section = noteSections.get(entry.sectionId);
+      assert.ok(section, `${lesson.id}:${entry.fieldPath}: unknown section ${entry.sectionId}`);
+      assert.ok(entry.sourceIds.length >= 1, `${lesson.id}:${entry.fieldPath}: sourceIds`);
+      for (const sourceId of entry.sourceIds) {
+        assert.ok(section.sourceIds.includes(sourceId),
+          `${lesson.id}:${entry.fieldPath}: ${sourceId} must ground ${entry.sectionId}`);
+        assert.ok(lesson.resourceIds.includes(sourceId),
+          `${lesson.id}:${entry.fieldPath}: ${sourceId} must belong to lesson`);
+        assert.ok(resourcesById.has(sourceId),
+          `${lesson.id}:${entry.fieldPath}: unknown source ${sourceId}`);
+      }
+      assert.ok(entry.sourceIds.some((id) => resourcesById.get(id).evidence.role !== 'extension'),
+        `${lesson.id}:${entry.fieldPath}: assessed fields cannot use extension-only evidence`);
+    }
+  }
+});
+
+test('coverage matrix binds central claims to matching primary evidence', () => {
+  assert.ok(backendEngineering.coverageMatrix, 'missing coverageMatrix');
+  const rules = [
+    {
+      lessonId: 'backend-01',
+      fieldPath: 'interviewQuestionIds[2]',
+      claim: /幂等|idempot/i,
+      sourceIds: ['res-backend-aws-idempotent-apis'],
+    },
+    {
+      lessonId: 'backend-03',
+      fieldPath: 'objectives[0]',
+      claim: /Little|L\s*=\s*λW/i,
+      sourceIds: ['res-backend-little-law'],
+    },
+    {
+      lessonId: 'backend-04',
+      fieldPath: 'completionCriteria[1]',
+      claim: /崩溃|恢复|对账/,
+      sourceIds: ['res-backend-chubby'],
+    },
+    {
+      lessonId: 'backend-06',
+      fieldPath: 'interviewQuestionIds[2]',
+      claim: /outbox/i,
+      sourceIds: ['res-backend-aws-transactional-outbox'],
+    },
+    {
+      lessonId: 'backend-08',
+      fieldPath: 'objectives[0]',
+      claim: /负载测试|TTFT|尾延迟/,
+      sourceIds: ['res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'],
+    },
+    {
+      lessonId: 'backend-08',
+      fieldPath: 'objectives[1]',
+      claim: /部署|发布|扩展/,
+      sourceIds: ['res-backend-docker-build-best-practices'],
+    },
+  ];
+
+  for (const rule of rules) {
+    const lesson = backendEngineering.lessons.find(({ id }) => id === rule.lessonId);
+    const entry = backendEngineering.coverageMatrix[rule.lessonId]
+      .find(({ fieldPath }) => fieldPath === rule.fieldPath);
+    assert.ok(entry, `${rule.lessonId}:${rule.fieldPath}`);
+    assert.match(JSON.stringify(resolveAssessmentField(lesson, rule.fieldPath)), rule.claim);
+    for (const sourceId of rule.sourceIds) {
+      assert.ok(entry.sourceIds.includes(sourceId),
+        `${rule.lessonId}:${rule.fieldPath} must use matching evidence ${sourceId}`);
+    }
+  }
 });
 
 test('curriculum preserves the central protocol and evidence boundaries', () => {

@@ -47,12 +47,12 @@ export const backend06Note = deepFreeze({
       id: 'outbox-inbox',
       title: 'Outbox 协调事实和发布意图',
       paragraphs: [
-        '数据库提交业务事实后再发布消息会在两者之间崩溃，先发布后提交则可能让消费者看到不存在的事实。outbox 将业务行与待发布事件写入同一数据库事务，发布器随后读取并至少一次发送。即使发布器崩溃后重发，发布意图不会静默丢失。',
-        'outbox 解决数据库事实与发布意图协调，而非所有外部原子性。消费者仍可能收到重复消息，因此 inbox 或业务幂等表保存已处理 messageId 与结果；如果处理同时修改本地数据库，可以在同一事务内写入去重记录。调用远端 API 仍位于事务外，需要远端幂等键或 unknown outcome 对账。',
+        'AWS transactional outbox 指南从 dual write 风险出发：数据库提交业务事实后再发布消息会在两者之间崩溃，先发布后提交则可能让消费者看到不存在的事实。outbox 将业务行与待发布事件写入同一数据库事务，relay 随后读取并至少一次发送；relay 在发送后标记前崩溃时会重复发布，而不会静默丢失发布意图。',
+        'outbox 解决数据库事实与发布意图协调，而非所有外部原子性。消费者仍可能收到重复消息，因此 inbox 或业务幂等表保存已处理 messageId 与结果；若处理同时修改本地数据库，可以在同一事务内写入去重记录。AWS 示例不是普适 exactly-once，调用远端 API 仍位于事务外，需要远端幂等键或 unknown outcome 对账。',
         '发布器需要并发领取、租约、退避和可观察状态，不能只跑一个无状态循环。消息 schema 带版本，消费者应兼容部署窗口内的旧消息。清理 outbox 和 inbox 记录前，确认 broker 最大重投期、灾备恢复和审计要求；为了节省表空间过早删除会重新打开重复副作用窗口。',
       ],
       keyPoints: ['outbox 防止数据库提交与消息发布之间静默丢失', '消费者去重和外部副作用仍需独立协议'],
-      sourceIds: ['res-backend-postgres-transactions', 'res-backend-millwheel'],
+      sourceIds: ['res-backend-postgres-transactions', 'res-backend-millwheel', 'res-backend-aws-transactional-outbox'],
     },
     {
       id: 'retry-budget',
@@ -93,4 +93,10 @@ export const backend06Note = deepFreeze({
     '重试应按错误分类并受跨层总预算限制。',
   ],
   nextStep: '画出一次任务从 HTTP 提交、数据库事务、outbox、broker、worker 到远端模型和结果提交的事件账本。为每个事件记录业务幂等键、messageId、attempt 和可查询证据，并在任意两个事件之间注入崩溃或响应丢失。验证重复交付不会生成第二份业务结果，unknown outcome 会进入对账而非盲重试，超过预算的任务会形成明确终态和人工处理清单。再配置客户端、API 和 worker 各自重试，测量未共享预算时的乘法调用次数；随后只保留一个责任层并传递剩余 deadline，对比下游压力和用户成功率。选择一个没有状态查询接口的模拟副作用，写出停止自动化、收集日志、人工核验和补偿的升级流程，证明系统不会用虚假的 failed 或 cancelled 掩盖未知事实，并由另一位值班人员按流程独立复核全部证据与最终业务结论，留存完整对账档案。',
+  tests: {
+    command: 'node --test tests/backend-engineering-data.test.js',
+    exitCode: 0,
+    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
+    verifiedAt: '2026-07-24',
+  },
 });

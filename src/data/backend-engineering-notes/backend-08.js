@@ -14,12 +14,12 @@ export const backend08Note = deepFreeze({
       id: 'container-boundary',
       title: '容器封装进程而非消除运行约束',
       paragraphs: [
-        '镜像应固定应用与运行依赖、使用可复现构建、以非特权用户运行，并把配置和秘密留到运行时注入。构建层要减少无关文件和缓存泄露，启动命令明确一个主进程及信号处理。FastAPI 容器文档能说明当前框架部署取舍，但 Dockerfile Reference 未单列为本课资源，具体通用指令仍应回查 Docker 官方文档。',
+        'Docker build best practices 直接说明可重建构建、build cache 和在镜像中用 USER 切换 non-root 用户等建议；应用仍要按所选基础镜像验证 UID、文件权限与运行时能力。FastAPI 容器文档补充当前框架的进程和复制取舍。两者都是版本化实现资料，Dockerfile Reference 仍未单列，不能把某个示例写成所有运行时的永久规则。',
         '一个容器内启动多个 API worker 可能提高单机 CPU 利用，却会为每个进程复制 Python 堆、连接池甚至模型内存。在 Kubernetes 等编排环境中，常见选择是每容器单进程、靠副本扩展和故障隔离；但这不是铁律。决定应基于内存、启动成本、连接数量、信号传播和实际吞吐测量。',
         '模型权重和 KV cache 让 AI 容器的启动与内存边界更突出。startup 必须覆盖下载、加载和预热，readiness 只能在能够服务后成功；滚动发布要控制 surge，避免新旧副本同时加载耗尽节点显存。镜像版本、模型版本、配置和 schema 迁移都要进入发布证据。',
       ],
       keyPoints: ['镜像构建与运行配置边界要清晰', '进程数和副本数由内存、连接和故障隔离证据决定'],
-      sourceIds: ['res-backend-fastapi-containers'],
+      sourceIds: ['res-backend-fastapi-containers', 'res-backend-docker-build-best-practices'],
     },
     {
       id: 'scaling-units',
@@ -47,12 +47,12 @@ export const backend08Note = deepFreeze({
       id: 'load-test',
       title: '负载测试绑定模型、硬件和流量',
       paragraphs: [
-        '测试报告先声明模型与精度、GPU/CPU、并行方式、输入输出长度分布、并发模式、缓存冷热、工具调用和成功判定。固定短 prompt 的单点 benchmark 无法代表研究 Agent 的长尾工作。至少包含稳态、阶跃、突发和长短混合流量，并记录开始拒绝与恢复的时刻。',
-        '指标同时覆盖接纳率、完成率、TTFT、完整延迟、p50/p95/p99、tokens/s、队列深度和年龄、错误分类、重试、成本与结果质量。吞吐提高但错误或答案截断上升不是胜利；缓存命中也要区分正确复用和错误复用。所有图表保留原始配置、时间窗口和版本，便于复现。',
+        '测试报告先声明模型与精度、GPU/CPU、并行方式、输入输出长度分布、并发模式、缓存冷热、工具调用和成功判定。coordinated omission 论文指出，closed synchronous generator 会因等待上一响应而跳过原本 intended arrivals，从而低估高延迟；因此至少加入按计划到达的开放环或补偿记录，并明确该结论来自数据库 benchmark 方法研究而非 LLM 性能数字。',
+        '指标同时覆盖接纳率、完成率、队列和错误；延迟中 TTFT 是首 token 时间，ITL 是相邻输出 token 间隔，TPOT 是首 token 后平均每输出 token 时间，E2EL 是端到端总延迟。vLLM Spyre 页面为这些定义提供当前实现参照，但不是所有 backend 的通用指标实现。报告还要给 p50/p95/p99、tokens/s、成本与质量，并保留原始配置和版本。',
         '寻找的是安全工作区而非极限峰值。逐步增加负载，观察哪项资源先饱和、尾延迟在哪里陡升，然后将生产准入设在有恢复余量的位置。再让模型延迟翻倍、Redis 清空、worker 崩溃和数据库连接受限，验证降级、队列和恢复路径；没有故障阶段的压测只能说明理想条件。',
       ],
       keyPoints: ['负载报告必须公开模型、硬件和请求分布', '用饱和曲线与故障阶段确定安全工作区'],
-      sourceIds: ['res-backend-vllm-server', 'res-backend-ray-batching', 'res-backend-sarathi'],
+      sourceIds: ['res-backend-vllm-server', 'res-backend-ray-batching', 'res-backend-sarathi', 'res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'],
     },
     {
       id: 'deployment-diagnosis',
@@ -93,4 +93,10 @@ export const backend08Note = deepFreeze({
     '发布与诊断依靠兼容窗口、身份链和故障证据。',
   ],
   nextStep: '完成一份研究报告服务设计包：画出 API、queue、worker、PostgreSQL、Redis 和 model server 的独立扩容边界，附上 OpenAPI 与状态机；在固定模型和硬件上运行稳态、突发、长短混合与依赖变慢测试，记录吞吐、TTFT、p95/p99、队列年龄、错误和成本。最后执行一次金丝雀发布与回滚演练，用故障树证明每项异常都有检测、降级和恢复证据。请另一位工程师仅凭证据包复现一次容量结论和故障定位。',
+  tests: {
+    command: 'node --test tests/backend-engineering-data.test.js',
+    exitCode: 0,
+    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
+    verifiedAt: '2026-07-24',
+  },
 });

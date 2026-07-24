@@ -36,6 +36,13 @@ const resourceCatalog = [
   { id: 'res-backend-vllm-server', title: 'Online Serving', url: 'https://docs.vllm.ai/en/stable/serving/openai_compatible_server/', source: 'vLLM', language: '英文', type: '官方文档', difficulty: '进阶', stage: '模型服务接口', value: `学习用途：观察 OpenAI-compatible endpoint、health、load 与 metrics；${officialBoundary}`, verifiedAt: VERIFIED_AT },
   { id: 'res-backend-ray-batching', title: 'Dynamic Request Batching', url: 'https://docs.ray.io/en/latest/serve/advanced-guides/dyn-req-batch.html', source: 'Ray Serve', language: '英文', type: '官方文档', difficulty: '进阶', stage: '动态批处理', value: `学习用途：观察请求入队、batch wait、batch size 与拆分响应的当前实现；${officialBoundary}`, verifiedAt: VERIFIED_AT },
   { id: 'res-backend-datawhale', title: 'LLM Universe', url: 'https://github.com/datawhalechina/llm-universe', source: 'Datawhale', language: '中文', type: '开源课程', difficulty: '入门到进阶', stage: '中文实践导航', value: `学习用途：用中文项目串联 API、数据库、模型调用与部署实践；${courseBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-little-law', title: "Little's Law", url: 'https://www.columbia.edu/~ks20/stochastic-I/stochastic-I-LL.pdf', source: 'Columbia University', language: '英文', type: '学术讲义', difficulty: '深挖', stage: '排队均值', value: `学习用途：核对 L = λW 的长期均值含义、存在与有限条件及证明思路；${researchBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-aws-idempotent-apis', title: 'Making retries safe with idempotent APIs', url: 'https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/', source: 'AWS Builders Library', language: '英文', type: '官方工程文章', difficulty: '进阶', stage: '幂等 API', value: `学习用途：分析 client request ID、相同 ID 不同意图、迟到请求与 unknown outcome；${officialBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-aws-transactional-outbox', title: 'Transactional outbox pattern', url: 'https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html', source: 'AWS Prescriptive Guidance', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '事务消息', value: `学习用途：理解 dual write 风险、outbox、relay 和重复消费边界；${officialBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-chubby', title: 'The Chubby lock service for loosely-coupled distributed systems', url: 'https://people.eecs.berkeley.edu/~prabal/teaching/eecs582-w12/readings/chubby.pdf', source: 'Google / OSDI', language: '英文', type: '研究论文', difficulty: '深挖', stage: '租约有效性', value: `学习用途：理解 sequencer、generation 与拒绝 stale holder 的设计思路；${researchBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-docker-build-best-practices', title: 'Docker build best practices', url: 'https://docs.docker.com/build/building/best-practices/', source: 'Docker', language: '英文', type: '官方文档', difficulty: '进阶', stage: '容器构建', value: `学习用途：核对 USER、non-root、build cache 与可重建镜像建议；${officialBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-coordinated-omission', title: 'Coordinated Omission in NoSQL Database Benchmarking', url: 'https://vsis-www.informatik.uni-hamburg.de/getDoc.php/publications/569/Coordinated_Omission_in_NoSQL_Database_Benchmarking-Friedrich.pdf', source: 'University of Hamburg', language: '英文', type: '研究论文', difficulty: '深挖', stage: '负载生成', value: `学习用途：识别 closed synchronous generator 跳过 intended arrivals 导致的 coordinated omission；${researchBoundary}`, verifiedAt: VERIFIED_AT },
+  { id: 'res-backend-vllm-performance-tpot', title: 'vLLM Spyre performance tuning', url: 'https://docs.vllm.ai/projects/spyre/en/latest/user_guide/performance.html', source: 'vLLM Spyre', language: '英文', type: '官方文档', difficulty: '进阶', stage: 'LLM 延迟指标', value: `学习用途：区分 TTFT、ITL、TPOT 与 E2EL 的当前定义；${officialBoundary}`, verifiedAt: VERIFIED_AT },
 ];
 
 const evidenceByResourceId = {
@@ -68,6 +75,13 @@ const evidenceByResourceId = {
   'res-backend-vllm-server': { authority: 'official', role: 'cross-check', coverage: ['vLLM OpenAI-compatible API、health、load、metrics 与开发端点'], limitations: 'OpenAI-compatible 不等于字段和行为完全等价；开发端点具有生产风险，支持矩阵与默认参数需按固定版本核对。', verifiedAt: VERIFIED_AT },
   'res-backend-ray-batching': { authority: 'official', role: 'cross-check', coverage: ['Ray Serve 动态 batch queue、max batch size、wait timeout 与响应拆分'], limitations: '这是 Ray Serve 当前实现，不证明批次越大越好；TTFT、尾延迟、吞吐和显存需按目标模型与流量压测。', verifiedAt: VERIFIED_AT },
   'res-backend-datawhale': { authority: 'community', role: 'extension', coverage: ['Datawhale 中文开源课程的 LLM 应用、数据库与部署实践导航'], limitations: '该仓库仅作中文学习导航，依赖和示例会变化，不承担课程 assessed outcome 的核心主张、可靠性结论或生产保证。', verifiedAt: VERIFIED_AT },
+  'res-backend-little-law': { authority: 'academic', role: 'core', coverage: ['L = λW、长期均值关系、相关量存在且有限时的适用条件'], limitations: '讲义证明的是长期平均关系且要求相关极限存在并有限；它不支持 p95、p99、单请求延迟或非稳态突发预测。', verifiedAt: VERIFIED_AT },
+  'res-backend-aws-idempotent-apis': { authority: 'official', role: 'core', coverage: ['client request ID、same ID/different intent、late arrivals 与 unknown outcome'], limitations: '这是 AWS 厂商工程经验而非互联网标准；键作用域、冲突响应、保留期和迟到请求策略仍由具体系统定义并验证。', verifiedAt: VERIFIED_AT },
+  'res-backend-aws-transactional-outbox': { authority: 'official', role: 'core', coverage: ['dual write 风险、transactional outbox、relay 与消费者重复处理'], limitations: 'AWS 示例用于解释模式边界，不构成跨任意 broker、数据库和外部副作用的普适 exactly-once 保证；消费者仍需幂等。', verifiedAt: VERIFIED_AT },
+  'res-backend-chubby': { authority: 'academic', role: 'cross-check', coverage: ['sequencer、generation 与资源服务拒绝 stale holder 的机制'], limitations: 'Chubby 的锁服务与 sequencer 机制不是所有 broker lease、worker 协议或 fencing token 的统一规范；应用必须定义自己的验证方。', verifiedAt: VERIFIED_AT },
+  'res-backend-docker-build-best-practices': { authority: 'official', role: 'core', coverage: ['Dockerfile USER、non-root 运行、build cache 与可重建构建实践'], limitations: '这是 Docker 当前版本化实现的构建建议，不替代组织镜像供应链政策，也不保证所有基础镜像、运行时或编排环境行为一致。', verifiedAt: VERIFIED_AT },
+  'res-backend-coordinated-omission': { authority: 'academic', role: 'cross-check', coverage: ['closed synchronous generator 跳过 intended arrivals 与 coordinated omission 偏差'], limitations: '论文围绕 NoSQL 数据库 benchmark 实验展开；其结果不能直接外推为任意 LLM serving 的性能数字，只用于校准负载生成方法。', verifiedAt: VERIFIED_AT },
+  'res-backend-vllm-performance-tpot': { authority: 'official', role: 'cross-check', coverage: ['TTFT、ITL、TPOT 与 E2EL 延迟指标定义'], limitations: '该页面属于 vLLM Spyre plugin 文档，是版本化项目扩展，不代表所有模型、硬件、vLLM backend 或观测系统的通用指标实现。', verifiedAt: VERIFIED_AT },
 };
 
 const resources = resourceCatalog.map((resource) => ({
@@ -129,7 +143,7 @@ const lessons = [
       { heading: '先定义公共服务边界', body: 'Harness 管理一个 run 内部的步骤和工具；AI 后端还要管理多个客户端、run、任务和服务实例。API 因此应围绕 report、job、result 与 cancellation 等资源建模，并明确同步、异步与流式响应的接受条件。', keyPoints: ['资源状态是跨请求公共契约', '请求 ID、run ID 与幂等键承担不同身份职责'] },
       { heading: 'OpenAPI 描述接口但不制造保证', body: 'OpenAPI 可以描述路径、schema、状态码与认证，却不会自动让实现兼容、事务安全或可靠。HTTP 方法幂等也只是一层协议语义；broker 重投、数据库去重和外部工具副作用仍需要独立设计。项目实现不等于通用规范。', keyPoints: ['错误响应必须稳定且可诊断', '版本策略要说明兼容窗口与废弃路径'] },
     ],
-    resourceIds: ['res-backend-openapi', 'res-backend-rfc9110', 'res-backend-rfc6585', 'res-backend-datawhale'],
+    resourceIds: ['res-backend-openapi', 'res-backend-rfc9110', 'res-backend-rfc6585', 'res-backend-datawhale', 'res-backend-aws-idempotent-apis'],
     exercise: { title: '设计研究报告服务 API', brief: '为创建报告、读取状态、获取结果和取消任务定义资源与接口。', steps: ['写出资源 schema、端点、状态码、错误 envelope 与请求身份字段', '为兼容变更、重复提交、未知资源和超限分别写出验收示例'], deliverable: '一份 OpenAPI 草案与契约决策记录。' },
     quizzes: [
       quiz('backend-01', 1, 'OpenAPI 文档能够自动保证什么？', ['实现一定幂等', '接口结构可被机器读取和校验', 'broker 与数据库原子提交'], 1, 'OpenAPI 描述接口结构，但不会自动创造实现兼容、可靠性或事务保证。'),
@@ -165,7 +179,7 @@ const lessons = [
       { heading: '容量先于重试', body: '稳态均值下 L = λW 描述系统内平均在途量、到达率和平均停留时间的关系，但不是 p95 或 p99 公式。并发槽有限且服务时间上升时，无界排队只会把失败推迟；准入控制应在昂贵工作开始前检查预算和 deadline。', keyPoints: ['均值模型用于容量直觉而不是尾延迟承诺', '队列长度必须有上限和拒绝策略'] },
       { heading: '过载保护要跨层协调', body: '429 与 Retry-After 向客户端表达暂时超限，指数退避和 jitter 可减少同步重试，却不会创造容量。入口限流、租户公平、任务优先级、并发 semaphore 与下游保护要共享过载信号，避免重试风暴和级联故障。', keyPoints: ['越早拒绝越能保护昂贵资源', 'deadline 应向下游递减传播而非每层重置'] },
     ],
-    resourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-tail-at-scale', 'res-backend-dagor', 'res-backend-sre-cascading'],
+    resourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-tail-at-scale', 'res-backend-dagor', 'res-backend-sre-cascading', 'res-backend-little-law'],
     exercise: { title: '计算服务准入预算', brief: '给定到达率、平均服务时间、并发槽、队列上限和 deadline，判断请求去向。', steps: ['计算平均并发需求与利用率，分别模拟空闲、短队列、满队列和 deadline 不足', '为 accepted、queued、rejected、timedOut 写出确定理由和客户端响应'], deliverable: '一份容量表、拒绝策略与边界说明。', experiment: 'service-admission' },
     quizzes: [
       quiz('backend-03', 1, 'L = λW 能直接预测哪项指标？', ['任意 p99 延迟', '稳态平均在途量', '每个请求的完成时间'], 1, 'Little 定律描述稳态均值关系，不是尾延迟或单请求预测公式。'),
@@ -183,7 +197,7 @@ const lessons = [
       { heading: '异步接口先创建可查询资源', body: '长任务提交后返回 202、jobId 和 status URL，只表示请求已被接纳，不表示任务一定成功。客户端可见状态可采用 queued、running、succeeded、failed、cancelled，并记录版本、进度和终态原因；内部 broker delivery 状态不应直接冒充业务状态。', keyPoints: ['job 是权威资源而不是临时消息', '状态更新要支持重复读取和明确终态'] },
       { heading: '队列和 worker 需要有界控制', body: 'Broker 解耦提交和执行，worker 通过领取或 lease 获取任务。Celery 的 ack、prefetch 和重投具有具体实现语义；到达率长期高于完成率时队列不会自行恢复。应按任务成本、租户和 deadline 路由，并为排队、执行和结果保存分别设限。', keyPoints: ['消息存在不等于任务状态已经事务提交', 'worker 崩溃点决定重投与对账动作'] },
     ],
-    resourceIds: ['res-backend-openai-background', 'res-backend-celery-tasks', 'res-backend-celery-optimizing', 'res-backend-seda', 'res-backend-millwheel'],
+    resourceIds: ['res-backend-openai-background', 'res-backend-celery-tasks', 'res-backend-celery-optimizing', 'res-backend-seda', 'res-backend-millwheel', 'res-backend-chubby'],
     exercise: { title: '设计报告任务状态机', brief: '把报告生成拆成提交、入队、领取、执行、保存结果与确认阶段。', steps: ['定义客户端 job state、消息状态、worker lease、取消入口和每一步持久字段', '在入队前后、结果提交前后和 ack 前后注入崩溃，写出恢复或人工对账动作'], deliverable: '一张 job 状态机、崩溃点表和 worker 契约。' },
     quizzes: [
       quiz('backend-04', 1, '202 Accepted 最准确的含义是什么？', ['任务已经成功', '请求已接纳但处理尚未完成', '结果不会失败'], 1, '202 表示已接纳处理，客户端仍需通过任务资源观察后续状态。'),
@@ -219,7 +233,7 @@ const lessons = [
       { heading: '投递保证必须标明边界', body: 'Broker 常见至少一次投递意味着消息可能重复，Celery ack 时点和 worker 丢失配置还会改变重投行为。HTTP 方法幂等、应用幂等键、数据库唯一约束和流处理框架 exactly-once 是不同边界；不能把任何一层的保证外推到支付、邮件或工具调用。', keyPoints: ['重复是正常输入而不是罕见异常', '幂等记录要绑定规范请求指纹和稳定结果'] },
       { heading: '未知结果优先对账而不是盲重试', body: '若外部写成功后 worker 在记录结果前崩溃，系统看到的是 unknown outcome。安全流程是用幂等键查询远端或本地 effect ledger；能证明成功则回放结果，能证明未执行才重试，证据矛盾则进入 reconcile。指数退避只能控制时间，不会让非幂等副作用自动安全。', keyPoints: ['先识别副作用边界再配置重试', 'outbox 解决数据库事实与发布意图协调而非所有外部原子性'] },
     ],
-    resourceIds: ['res-backend-rfc9110', 'res-backend-celery-tasks', 'res-backend-millwheel', 'res-backend-postgres-transactions', 'res-backend-sre-cascading'],
+    resourceIds: ['res-backend-rfc9110', 'res-backend-celery-tasks', 'res-backend-millwheel', 'res-backend-postgres-transactions', 'res-backend-sre-cascading', 'res-backend-aws-transactional-outbox'],
     exercise: { title: '推演任务投递账本', brief: '在提交、入队、领取、执行、提交结果和确认阶段注入重复与崩溃。', steps: ['为每个事件更新 job state、message state、effect ledger 和 idempotency record', '遇到 unknown outcome 时列出可证明成功、可安全重试与必须人工 reconcile 的证据'], deliverable: '一份投递事件日志、幂等账本和人工对账清单。', experiment: 'job-delivery-ledger' },
     quizzes: [
       quiz('backend-06', 1, '至少一次投递意味着消费者必须准备什么？', ['消息绝不重复', '重复消息与幂等或去重处理', '每次都生成新幂等键'], 1, '至少一次允许 redelivery，消费者应把重复当作协议内情况。'),
@@ -255,7 +269,7 @@ const lessons = [
       { heading: '按瓶颈拆分扩容单元', body: 'API ingress、异步 worker、PostgreSQL、Redis 和模型 server 的瓶颈不同，应分别观察 CPU、连接、队列、显存与 token 调度。vLLM 的 scheduler/KV cache 拓扑和 Ray Serve dynamic batching 是项目实现，不代表通用规范；批处理需要同时测吞吐、TTFT 与尾延迟。', keyPoints: ['扩容前先定位饱和资源与排队位置', '模型副本扩容要考虑加载时间、显存和缓存预热'] },
       { heading: '发布与诊断依赖可恢复协议', body: '滚动发布先启动并通过 startup/readiness，再接流量；旧实例摘流、停止领取新任务并 drain。故障诊断沿 client、gateway、API、queue、worker、database、cache、model server 逐层反证，区分容量不足、发布不兼容、缓存陈旧和模型延迟。', keyPoints: ['版本兼容窗口覆盖正在运行的旧任务', '压测结果绑定硬件、模型、请求长度和流量分布'] },
     ],
-    resourceIds: ['res-backend-fastapi-containers', 'res-backend-vllm-architecture', 'res-backend-vllm-server', 'res-backend-ray-batching', 'res-backend-sarathi', 'res-backend-datawhale', 'res-backend-openapi'],
+    resourceIds: ['res-backend-fastapi-containers', 'res-backend-vllm-architecture', 'res-backend-vllm-server', 'res-backend-ray-batching', 'res-backend-sarathi', 'res-backend-datawhale', 'res-backend-openapi', 'res-backend-docker-build-best-practices', 'res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'],
     exercise: { title: '完成 AI 研究报告服务设计包', brief: '整合 OpenAPI、SSE、异步任务、存储、可靠性、健康检查、容量和部署策略。', steps: ['定义测试流量、模型与硬件基线，记录吞吐、TTFT、P95/P99、队列、错误、成本和质量指标', '为滚动发布、模型变慢、worker 崩溃、Redis 清空和数据库故障逐层写检测、降级与恢复'], deliverable: '一份可评审的架构图、接口、容量报告、发布计划和故障树。' },
     quizzes: [
       quiz('backend-08', 1, '动态批处理的正确评估方式是什么？', ['只看最大吞吐', '同时测吞吐、TTFT、尾延迟、显存和目标流量分布', '假设 batch 越大越好'], 1, '批处理改变吞吐与等待时间，应在固定硬件、模型和请求分布下综合评估。'),
@@ -315,6 +329,117 @@ const interviewQuestions = interviewSpecs.map((question) => ({
   roles: [...question.roles],
 }));
 
+function coverage(fieldPath, sectionId, ...sourceIds) {
+  return { fieldPath, sectionId, sourceIds };
+}
+
+const coverageMatrix = {
+  'backend-01': [
+    coverage('objectives[0]', 'service-boundary', 'res-backend-openapi', 'res-backend-rfc9110'),
+    coverage('objectives[1]', 'openapi-contract', 'res-backend-openapi'),
+    coverage('quiz[0]', 'openapi-contract', 'res-backend-openapi'),
+    coverage('quiz[1]', 'resource-state', 'res-backend-aws-idempotent-apis', 'res-backend-openapi'),
+    coverage('interviewQuestionIds[0]', 'service-boundary', 'res-backend-openapi', 'res-backend-rfc9110'),
+    coverage('interviewQuestionIds[1]', 'openapi-contract', 'res-backend-openapi'),
+    coverage('interviewQuestionIds[2]', 'resource-state', 'res-backend-aws-idempotent-apis', 'res-backend-rfc9110'),
+    coverage('exercise.steps[0]', 'contract-review', 'res-backend-openapi', 'res-backend-rfc9110'),
+    coverage('exercise.steps[1]', 'resource-state', 'res-backend-aws-idempotent-apis'),
+    coverage('completionCriteria[0]', 'openapi-contract', 'res-backend-openapi'),
+    coverage('completionCriteria[1]', 'resource-state', 'res-backend-aws-idempotent-apis', 'res-backend-rfc9110'),
+  ],
+  'backend-02': [
+    coverage('objectives[0]', 'streaming-model', 'res-backend-whatwg-sse', 'res-backend-openai-streaming'),
+    coverage('objectives[1]', 'asgi-disconnect', 'res-backend-asgi-http', 'res-backend-python-asyncio'),
+    coverage('quiz[0]', 'sse-wire-format', 'res-backend-whatwg-sse'),
+    coverage('quiz[1]', 'asgi-disconnect', 'res-backend-asgi-http'),
+    coverage('interviewQuestionIds[0]', 'streaming-model', 'res-backend-whatwg-sse', 'res-backend-openai-streaming'),
+    coverage('interviewQuestionIds[1]', 'cooperative-cancellation', 'res-backend-python-asyncio', 'res-backend-asgi-http'),
+    coverage('interviewQuestionIds[2]', 'streaming-model', 'res-backend-whatwg-sse'),
+    coverage('exercise.steps[0]', 'client-contract', 'res-backend-whatwg-sse', 'res-backend-fastapi-sse'),
+    coverage('exercise.steps[1]', 'cooperative-cancellation', 'res-backend-python-asyncio', 'res-backend-asgi-http'),
+    coverage('completionCriteria[0]', 'client-contract', 'res-backend-whatwg-sse'),
+    coverage('completionCriteria[1]', 'asgi-disconnect', 'res-backend-asgi-http', 'res-backend-python-asyncio'),
+  ],
+  'backend-03': [
+    coverage('objectives[0]', 'queueing-intuition', 'res-backend-little-law'),
+    coverage('objectives[1]', 'admission-control', 'res-backend-rfc6585', 'res-backend-dagor'),
+    coverage('quiz[0]', 'queueing-intuition', 'res-backend-little-law'),
+    coverage('quiz[1]', 'overload-loop', 'res-backend-sre-cascading'),
+    coverage('interviewQuestionIds[0]', 'queueing-intuition', 'res-backend-little-law'),
+    coverage('interviewQuestionIds[1]', 'admission-control', 'res-backend-rfc6585', 'res-backend-dagor'),
+    coverage('interviewQuestionIds[2]', 'overload-loop', 'res-backend-sre-cascading'),
+    coverage('exercise.steps[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading'),
+    coverage('exercise.steps[1]', 'admission-control', 'res-backend-rfc6585', 'res-backend-dagor'),
+    coverage('completionCriteria[0]', 'capacity-experiment', 'res-backend-tail-at-scale', 'res-backend-sre-cascading'),
+    coverage('completionCriteria[1]', 'queueing-intuition', 'res-backend-little-law', 'res-backend-tail-at-scale'),
+  ],
+  'backend-04': [
+    coverage('objectives[0]', 'job-contract', 'res-backend-openai-background', 'res-backend-celery-tasks'),
+    coverage('objectives[1]', 'worker-lease', 'res-backend-celery-tasks', 'res-backend-chubby'),
+    coverage('quiz[0]', 'job-contract', 'res-backend-openai-background'),
+    coverage('quiz[1]', 'queue-capacity', 'res-backend-celery-optimizing', 'res-backend-seda'),
+    coverage('interviewQuestionIds[0]', 'job-contract', 'res-backend-openai-background', 'res-backend-celery-tasks'),
+    coverage('interviewQuestionIds[1]', 'retry-routing', 'res-backend-celery-tasks', 'res-backend-celery-optimizing'),
+    coverage('interviewQuestionIds[2]', 'queue-capacity', 'res-backend-celery-optimizing', 'res-backend-seda'),
+    coverage('exercise.steps[0]', 'worker-lease', 'res-backend-celery-tasks', 'res-backend-chubby'),
+    coverage('exercise.steps[1]', 'operational-proof', 'res-backend-millwheel', 'res-backend-celery-tasks'),
+    coverage('completionCriteria[0]', 'job-contract', 'res-backend-openai-background', 'res-backend-celery-tasks'),
+    coverage('completionCriteria[1]', 'worker-lease', 'res-backend-chubby', 'res-backend-celery-tasks'),
+  ],
+  'backend-05': [
+    coverage('objectives[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('objectives[1]', 'semantic-cache', 'res-backend-redis-semantic-cache', 'res-backend-redis-eviction'),
+    coverage('quiz[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('quiz[1]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
+    coverage('interviewQuestionIds[0]', 'source-of-truth', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('interviewQuestionIds[1]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
+    coverage('interviewQuestionIds[2]', 'semantic-cache', 'res-backend-redis-semantic-cache'),
+    coverage('exercise.steps[0]', 'data-review', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('exercise.steps[1]', 'consistency-tests', 'res-backend-postgres-transactions', 'res-backend-redis-semantic-cache'),
+    coverage('completionCriteria[0]', 'consistency-tests', 'res-backend-postgres-transactions', 'res-backend-redis-eviction'),
+    coverage('completionCriteria[1]', 'semantic-cache', 'res-backend-redis-semantic-cache', 'res-backend-redis-eviction'),
+  ],
+  'backend-06': [
+    coverage('objectives[0]', 'idempotency-ledger', 'res-backend-rfc9110', 'res-backend-postgres-transactions'),
+    coverage('objectives[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('quiz[0]', 'delivery-semantics', 'res-backend-celery-tasks', 'res-backend-millwheel'),
+    coverage('quiz[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('interviewQuestionIds[0]', 'delivery-semantics', 'res-backend-celery-tasks', 'res-backend-millwheel'),
+    coverage('interviewQuestionIds[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('interviewQuestionIds[2]', 'outbox-inbox', 'res-backend-aws-transactional-outbox', 'res-backend-postgres-transactions'),
+    coverage('exercise.steps[0]', 'assurance-table', 'res-backend-celery-tasks', 'res-backend-millwheel'),
+    coverage('exercise.steps[1]', 'unknown-outcome', 'res-backend-rfc9110', 'res-backend-sre-cascading'),
+    coverage('completionCriteria[0]', 'assurance-table', 'res-backend-celery-tasks', 'res-backend-millwheel'),
+    coverage('completionCriteria[1]', 'outbox-inbox', 'res-backend-aws-transactional-outbox', 'res-backend-postgres-transactions'),
+  ],
+  'backend-07': [
+    coverage('objectives[0]', 'lifecycle-states', 'res-backend-asgi-lifespan', 'res-backend-kubernetes-probes'),
+    coverage('objectives[1]', 'observability-model', 'res-backend-prometheus', 'res-backend-vllm-server'),
+    coverage('quiz[0]', 'probe-semantics', 'res-backend-kubernetes-probes', 'res-backend-sre-cascading'),
+    coverage('quiz[1]', 'observability-model', 'res-backend-prometheus'),
+    coverage('interviewQuestionIds[0]', 'probe-semantics', 'res-backend-kubernetes-probes'),
+    coverage('interviewQuestionIds[1]', 'graceful-shutdown', 'res-backend-asgi-lifespan', 'res-backend-kubernetes-probes'),
+    coverage('interviewQuestionIds[2]', 'observability-model', 'res-backend-prometheus', 'res-backend-vllm-server'),
+    coverage('exercise.steps[0]', 'lifecycle-states', 'res-backend-asgi-lifespan', 'res-backend-kubernetes-probes'),
+    coverage('exercise.steps[1]', 'alerts-runbooks', 'res-backend-prometheus', 'res-backend-sre-cascading'),
+    coverage('completionCriteria[0]', 'graceful-shutdown', 'res-backend-asgi-lifespan', 'res-backend-kubernetes-probes'),
+    coverage('completionCriteria[1]', 'alerts-runbooks', 'res-backend-prometheus', 'res-backend-sre-cascading'),
+  ],
+  'backend-08': [
+    coverage('objectives[0]', 'load-test', 'res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'),
+    coverage('objectives[1]', 'container-boundary', 'res-backend-docker-build-best-practices', 'res-backend-fastapi-containers'),
+    coverage('quiz[0]', 'batching-tradeoff', 'res-backend-ray-batching', 'res-backend-sarathi'),
+    coverage('quiz[1]', 'deployment-diagnosis', 'res-backend-fastapi-containers', 'res-backend-openapi'),
+    coverage('interviewQuestionIds[0]', 'load-test', 'res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'),
+    coverage('interviewQuestionIds[1]', 'scaling-units', 'res-backend-vllm-architecture', 'res-backend-vllm-server'),
+    coverage('interviewQuestionIds[2]', 'load-test', 'res-backend-vllm-performance-tpot', 'res-backend-vllm-server'),
+    coverage('exercise.steps[0]', 'load-test', 'res-backend-coordinated-omission', 'res-backend-vllm-performance-tpot'),
+    coverage('exercise.steps[1]', 'deployment-diagnosis', 'res-backend-fastapi-containers', 'res-backend-openapi'),
+    coverage('completionCriteria[0]', 'design-defense', 'res-backend-openapi', 'res-backend-vllm-architecture'),
+    coverage('completionCriteria[1]', 'load-test', 'res-backend-vllm-performance-tpot', 'res-backend-coordinated-omission'),
+  ],
+};
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nested of Object.values(value)) deepFreeze(nested);
@@ -328,4 +453,5 @@ export const backendEngineering = deepFreeze({
   lessons,
   resources,
   interviewQuestions,
+  coverageMatrix,
 });

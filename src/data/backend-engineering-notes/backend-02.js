@@ -93,4 +93,10 @@ export const backend02Note = deepFreeze({
     '故障注入应验证事件顺序、终态唯一性和资源释放。',
   ],
   nextStep: '实现一个最小流式端点：复用同一 run 状态机，按 sequence 发出 created、delta 和唯一终态，并记录 requestId、runId、最后发送序号与取消来源。然后分别模拟正常完成、第三个 delta 后上游报错、慢消费者和客户端断线，核对客户端事件、数据库终态、远端调用是否仍在运行以及连接资源是否释放。把差异整理成断线与取消策略表。',
+  tests: {
+    command: 'node --test tests/backend-engineering-data.test.js',
+    exitCode: 0,
+    summary: '目标数据测试全部通过，资源、笔记、覆盖矩阵与深冻结断言无失败。',
+    verifiedAt: '2026-07-24',
+  },
 });
