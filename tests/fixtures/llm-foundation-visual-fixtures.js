@@ -374,18 +374,35 @@ export const llmFoundationVisualFixtures = deepFreeze([
   fixture(
     'visual-llm-04-multi-head-merge',
     {
-      Input: 'H1=[2]、H2=[3]、W_O=[[1,1],[1,-1]]。',
-      Method: '沿特征维 concat，再做行向量乘输出投影。',
-      Rounding: '整数算例不舍入。',
+      Input:
+        'Head1 scores=[0,ln3]、V=[[-1],[3]]；Head2 scores=[0,0]、V=[[2],[4]]；W_O=[[1,1],[1,-1]]。',
+      Method: '每头 stable softmax → Σ(w_i V_i) 得 Hn → 沿特征维 concat → 行向量乘输出投影。',
+      Rounding: '权重三位小数；整数输出不舍入。',
     },
     {
-      heads: [[2], [3]],
+      heads: [
+        {
+          scores: [0, Math.log(3)],
+          values: [[-1], [3]],
+        },
+        {
+          scores: [0, 0],
+          values: [[2], [4]],
+        },
+      ],
       outputProjection: [
         [1, 1],
         [1, -1],
       ],
     },
-    { concatenated: [2, 3], output: [5, -1] },
+    {
+      heads: [
+        { weights: [0.25, 0.75], output: [2] },
+        { weights: [0.5, 0.5], output: [3] },
+      ],
+      concatenated: [2, 3],
+      output: [5, -1],
+    },
   ),
   fixture(
     'visual-llm-04-causal-visibility',

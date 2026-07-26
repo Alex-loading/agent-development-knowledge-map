@@ -714,9 +714,20 @@ function structuredElementSignature(node) {
   ];
   return JSON.stringify([
     node.name,
+    node.text.replace(/\s+/g, ' ').trim(),
     ...structuralAttributes.map((attribute) => node.attributes.get(attribute) ?? null),
   ]);
 }
+
+test('states the score scaling direction as raw divided by root d_k equals scaled', async () => {
+  for (const stepNumber of [3, 4]) {
+    const assetPath =
+      `assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-${stepNumber}.svg`;
+    const visibleText = visibleSvgText(await readFile(assetPath, 'utf8'), assetPath);
+    assertSvgIncludes(visibleText, 'raw ÷ √d_k = scaled');
+    assert.doesNotMatch(visibleText, /scaled\s*÷\s*(?:sqrt|√)/);
+  }
+});
 
 test('keeps every activated score phase structurally identical in all later cumulative steps', async () => {
   const phases = ['project', 'compare', 'normalize', 'aggregate'];
@@ -763,6 +774,37 @@ test('keeps every activated score phase structurally identical in all later cumu
       );
     }
   });
+});
+
+test('includes active phase visible text in cumulative signatures so a displayed value mutation fails', async () => {
+  const step3Path =
+    'assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-3.svg';
+  const step4Path =
+    'assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-4.svg';
+  const step3 = parseStrictSvg(await readFile(step3Path, 'utf8'), step3Path);
+  const step4Svg = await readFile(step4Path, 'utf8');
+  const step4 = parseStrictSvg(step4Svg, step4Path);
+  const normalizeSignature = (parsed) =>
+    structuredElementSignature(
+      parsed.elements.find(
+        (node) =>
+          node.attributes.get('data-region') === 'phase-normalize'
+          && node.attributes.get('data-state') === 'active',
+      ),
+    );
+  assert.equal(normalizeSignature(step3), normalizeSignature(step4));
+
+  const mutatedSvg = step4Svg.replace(
+    'weights 行和 = 1.000',
+    'weights 行和 = 0.999',
+  );
+  assert.notEqual(mutatedSvg, step4Svg);
+  const mutated = parseStrictSvg(mutatedSvg, `${step4Path}:mutated-visible-value`);
+  assert.notEqual(
+    normalizeSignature(mutated),
+    normalizeSignature(step3),
+    '可见数字漂移必须改变累计签名',
+  );
 });
 
 test('models the decoder main path, two residual targets and reverse gradient as explicit edges', async () => {
@@ -824,6 +866,130 @@ test('models the decoder main path, two residual targets and reverse gradient as
   assert.equal(gradientEdges[0].attributes.get('data-direction'), 'reverse');
   assert.ok(gradientEdges[0].attributes.has('stroke-dasharray'));
   assert.ok(gradientEdges[0].attributes.has('marker-end'));
+});
+
+function stableSoftmaxForFixture(values) {
+  const maximum = Math.max(...values);
+  const exponentials = values.map((value) => Math.exp(value - maximum));
+  const denominator = exponentials.reduce((sum, value) => sum + value, 0);
+  return exponentials.map((value) => value / denominator);
+}
+
+test('recomputes every multi-head output from fixture scores, weights and Values', () => {
+  const fixture = fixtureForVisual('visual-llm-04-multi-head-merge');
+  assert.equal(fixture.data.heads.length, 2);
+  fixture.data.heads.forEach((head, headIndex) => {
+    assert.ok(Array.isArray(head.scores), `Head ${headIndex + 1} 缺少 scores`);
+    assert.ok(Array.isArray(head.values), `Head ${headIndex + 1} 缺少 values`);
+    const weights = stableSoftmaxForFixture(head.scores);
+    const output = head.values[0].map((_, dimension) =>
+      head.values.reduce(
+        (sum, vector, index) => sum + weights[index] * vector[dimension],
+        0,
+      ),
+    );
+    weights.forEach((value, index) =>
+      assert.ok(
+        Math.abs(value - fixture.result.heads[headIndex].weights[index]) < 1e-12,
+        `Head ${headIndex + 1} weight ${index} 必须可从 scores 复算`,
+      ),
+    );
+    output.forEach((value, index) =>
+      assert.ok(
+        Math.abs(value - fixture.result.heads[headIndex].output[index]) < 1e-12,
+        `Head ${headIndex + 1} output ${index} 必须由 weights 与 Values 复算`,
+      ),
+    );
+  });
+  assert.deepEqual(
+    fixture.result.heads.flatMap(({ output }) => output),
+    fixture.result.concatenated,
+  );
+});
+
+test('draws each fixture-backed head mechanism and a joint-update endpoint as structured nodes and edges', async () => {
+  const fixture = fixtureForVisual('visual-llm-04-multi-head-merge');
+  assert.ok(Array.isArray(fixture.result.heads), 'fixture result 必须逐头保存 weights 与 output');
+  const assetPath = 'assets/visuals/llm-foundation/llm-04-multi-head-merge.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const edgeKey = (edge) =>
+    `${edge.attributes.get('data-from')}->${edge.attributes.get('data-to')}`;
+  fixture.result.heads.forEach((headResult, headIndex) => {
+    const head = String(headIndex + 1);
+    const region = parsed.elements.find(
+      (node) =>
+        node.attributes.get('data-region') === 'attention-head'
+        && node.attributes.get('data-head') === head,
+    );
+    assert.ok(region, `Head ${head} 必须有完整机制 region`);
+    const nodes = parsed.elements.filter(
+      (node) =>
+        node.attributes.get('data-region') === 'head-node'
+        && node.attributes.get('data-head') === head,
+    );
+    assert.deepEqual(
+      nodes.map((node) => node.attributes.get('data-node')).sort(),
+      ['aggregate', 'keys', 'query', 'values', 'weights', `H${head}`].sort(),
+    );
+    const weights = parsed.elements
+      .filter(
+        (node) =>
+          node.attributes.get('data-region') === 'head-weight'
+          && node.attributes.get('data-head') === head,
+      )
+      .sort(
+        (left, right) =>
+          Number(left.attributes.get('data-index')) - Number(right.attributes.get('data-index')),
+      );
+    assert.deepEqual(
+      weights.map((node) => Number(node.attributes.get('data-value'))),
+      headResult.weights,
+    );
+    const output = nodes.find((node) => node.attributes.get('data-node') === `H${head}`);
+    assert.equal(Number(output.attributes.get('data-value')), headResult.output[0]);
+    const edges = parsed.elements.filter(
+      (node) =>
+        node.attributes.get('data-region') === 'head-edge'
+        && node.attributes.get('data-head') === head,
+    );
+    assert.deepEqual(
+      edges.map(edgeKey).sort(),
+      [
+        `H${head}-aggregate->H${head}`,
+        `H${head}-keys->H${head}-weights`,
+        `H${head}-query->H${head}-weights`,
+        `H${head}-values->H${head}-aggregate`,
+        `H${head}-weights->H${head}-aggregate`,
+      ].sort(),
+    );
+  });
+  const jointNode = parsed.elements.find(
+    (node) =>
+      node.attributes.get('data-region') === 'merge-node'
+      && node.attributes.get('data-node') === 'joint-update',
+  );
+  assert.ok(jointNode);
+  const jointEdge = parsed.elements.find(
+    (node) =>
+      node.attributes.get('data-region') === 'merge-edge'
+      && edgeKey(node) === 'output-projection->joint-update',
+  );
+  assert.ok(jointEdge);
+});
+
+test('keeps score main metadata aligned with an SVG that begins at raw QK rather than projection', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const visual = knowledgeVisualsById['visual-llm-04-score-mask-softmax'];
+  const metadata = [visual.title, visual.alt, visual.longDescription].join('\n');
+  assert.doesNotMatch(metadata, /Q\/K\/V 投影|从表示投影|投影为 Q/);
+  for (const fragment of ['raw QK', '缩放', '因果掩码', 'softmax', 'Value']) {
+    assertSvgIncludes(metadata, fragment);
+  }
+  const visibleText = visibleSvgText(
+    await readFile(visual.assetPath, 'utf8'),
+    visual.assetPath,
+  );
+  assert.match(visibleText.split('\n')[0], /QK.*scale.*causal mask.*softmax.*ΣV/);
 });
 
 function fixtureForVisual(visualId) {
@@ -1067,13 +1233,19 @@ test('encodes every llm-01–04 quantitative fixture input, method, result and r
       assertSvgIncludes(text, '教学示例 · 非实测');
     },
     'visual-llm-04-multi-head-merge': (fixture, text) => {
-      fixture.data.heads.forEach((head, index) =>
-        assertSvgIncludes(text, `H${index + 1} ${head.join(' / ')}`),
-      );
+      fixture.data.heads.forEach((head, index) => {
+        const result = fixture.result.heads[index];
+        assertSvgIncludes(text, `Head ${index + 1}`);
+        assertSvgIncludes(text, `scores ${fixed(head.scores, 3)}`);
+        assertSvgIncludes(text, `weights ${fixed(result.weights, 3)}`);
+        assertSvgIncludes(text, `Values ${head.values.flat().join(' / ')}`);
+        assertSvgIncludes(text, `H${index + 1} ${result.output.join(' / ')}`);
+      });
       assertSvgIncludes(text, `W_O ${JSON.stringify(fixture.data.outputProjection)}`);
       assertSvgIncludes(text, '沿特征维 concat');
       assertSvgIncludes(text, `concat ${fixture.result.concatenated.join(' / ')}`);
       assertSvgIncludes(text, `output ${fixture.result.output.join(' / ')}`);
+      assertSvgIncludes(text, '联合更新');
       assertSvgIncludes(text, '独立 Q/K/V 参数');
       assertSvgIncludes(text, '不预设语法职责');
       assertSvgIncludes(text, '教学示例 · 非实测');

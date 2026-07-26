@@ -439,8 +439,16 @@ function recomputeFixture(fixture) {
       };
     }
     case 'visual-llm-04-multi-head-merge': {
-      const concatenated = data.heads.flat();
+      const heads = data.heads.map((head) => {
+        const weights = softmax(head.scores);
+        return {
+          weights,
+          output: weightedSum(weights, head.values),
+        };
+      });
+      const concatenated = heads.flatMap(({ output }) => output);
       return {
+        heads,
         concatenated,
         output: matrixMultiply([concatenated], data.outputProjection)[0],
       };

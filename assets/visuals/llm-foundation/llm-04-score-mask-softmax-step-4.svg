@@ -73,7 +73,7 @@
       <text x="730" y="205" font-family="Trebuchet MS" font-size="26" fill="#18212B">.693</text>
       <text x="820" y="205" font-family="Trebuchet MS" font-size="26" fill="#18212B">9</text>
     </g>
-    <text x="580" y="250" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#8B4A65">scaled ÷ sqrt(d_k)</text>
+    <text x="580" y="250" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#8B4A65">raw ÷ √d_k = scaled</text>
     <g data-region="attention-matrix" data-phase="normalize" data-state="active" data-stage="masked" data-origin-x="632" data-origin-y="294" data-cell-width="80" data-cell-height="52">
       <text x="650" y="282" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#8B4A65">k0</text>
       <text x="730" y="282" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#8B4A65">k1</text>

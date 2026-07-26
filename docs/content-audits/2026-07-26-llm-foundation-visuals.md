@@ -65,10 +65,12 @@
 
 2026-07-26 审查更正：概念稿的 3 头与 fixture numHeads=2（由 data.heads.length 冻结）冲突，采用 fixture 的 2 头作为数值单一真源。对应 inventory 的 Reading order、Nodes/regions、纹理说明、alt 与 long-description 已统一为 Head 1、Head 2 和两组 Q/K/V；visualId、角色、assessed coverage 与 fixture 文件均未改变。此次更正只消除 storyboard 与既有数值真源之间的权威冲突，因此 Fixture git blob SHA 保持不变，Inventory git blob SHA 按修正文档重新计算。
 
+2026-07-27 机制可复算更正：两头 fixture 进一步冻结每头 scores、Values、stable softmax weights 与 ΣV 输出；图与 inventory 均明确展示 `Q/K → weights → ΣV → Hn`，再进入 concat、输出投影和联合更新端点。此次更正改变 fixture 与 inventory 内容，因此下方两个 git blob SHA 均重新计算。
+
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`027af31addd9bdd8dcd98037d2ad3b00e77b8adf`
-- 数值真源标识：Fixture git blob SHA：`dd1c46658cfd5bc600da07db5acc9167f3ef40e7`
+- 清单内容标识：Inventory git blob SHA：`1d624098a1d688c1b755d9243d62f341d22bef86`
+- 数值真源标识：Fixture git blob SHA：`19d4f6e6494aa6d6597b2b550628ed98097e4386`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
 - 人工复核结果：40 / 40 项通过；每项均复核 cognitive question、图形角色、assessed coverage、来源范围、许可决策和 storyboard 七要素。
