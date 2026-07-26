@@ -31,7 +31,7 @@ const sections = Object.freeze([
       '训练误差下降不等于已经泛化，需用未参与训练的验证数据检查过拟合。',
     ]),
     visuals: Object.freeze([
-      Object.freeze({ visualId: 'visual-llm-01-learning-loop', afterParagraph: 1 }),
+      Object.freeze({ visualId: 'visual-llm-01-learning-loop', afterParagraph: 2 }),
     ]),
     sourceIds: Object.freeze(['res-ms-ai', 'res-hf-llm']),
   }),
@@ -70,7 +70,7 @@ const sections = Object.freeze([
       body: '文档只在本次上下文中可见；除非另有训练管线执行目标计算和参数更新，否则模型本身没有因此学会这份文档。',
     }),
     visuals: Object.freeze([
-      Object.freeze({ visualId: 'visual-llm-01-training-inference-boundary', afterParagraph: 1 }),
+      Object.freeze({ visualId: 'visual-llm-01-training-inference-boundary', afterParagraph: 2 }),
     ]),
     sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai']),
   }),
@@ -87,7 +87,7 @@ const sections = Object.freeze([
       '应用可靠性来自评测、工具、校验和降级，不能全部外包给模型。',
     ]),
     visuals: Object.freeze([
-      Object.freeze({ visualId: 'visual-llm-01-application-decision-stack', afterParagraph: 1 }),
+      Object.freeze({ visualId: 'visual-llm-01-application-decision-stack', afterParagraph: 2 }),
     ]),
     sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-openai-agents']),
   }),

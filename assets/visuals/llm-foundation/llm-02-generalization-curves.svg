@@ -13,7 +13,7 @@
   <text x="48" y="100" font-family="system-ui, sans-serif" font-size="26" fill="#475569">epoch 1 / 2 / 3 / 4 / 5　·　loss 两位小数；epoch 为整数。</text>
 
   <rect x="46" y="126" width="350" height="386" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4"/>
-  <text x="70" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">① 欠拟合 · 两者仍高</text>
+  <text x="70" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">① 欠拟合 · 绝对损失高</text>
   <line x1="84" y1="374" x2="360" y2="374" stroke="#64748b" stroke-width="3"/>
   <line x1="84" y1="206" x2="84" y2="374" stroke="#64748b" stroke-width="3"/>
   <polyline points="104,232 164,244 224,254 284,262 344,268" fill="none" stroke="#2563eb" stroke-width="5"/>
@@ -26,7 +26,7 @@
   <text x="70" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">0.92 / 0.90 / 0.89</text>
 
   <rect x="426" y="126" width="350" height="386" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
-  <text x="450" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">② 同步改善</text>
+  <text x="450" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">② 同步趋势 · 改善</text>
   <line x1="464" y1="374" x2="740" y2="374" stroke="#64748b" stroke-width="3"/>
   <line x1="464" y1="206" x2="464" y2="374" stroke="#64748b" stroke-width="3"/>
   <polyline points="484,232 544,276 604,310 664,332 724,346" fill="none" stroke="#2563eb" stroke-width="5"/>
@@ -53,7 +53,7 @@
   <text x="830" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">0.50 / 0.52 / 0.65</text>
 
   <rect x="46" y="530" width="1108" height="112" rx="22" fill="#ffffff" stroke="#94a3b8" stroke-width="3"/>
-  <text x="70" y="568" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">过拟合：最佳 epoch 3 · 分叉始于 epoch 4</text>
+  <text x="70" y="568" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">validation 最小点：最佳 epoch 3 · 分叉始于 epoch 4</text>
   <text x="70" y="614" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">④ 查泄漏 → ⑤ 业务切片 → ⑥ 部署监控</text>
   <line x1="760" y1="600" x2="1110" y2="600" stroke="#1d4ed8" stroke-width="5" marker-end="url(#evidence-arrow)"/>
   <text x="800" y="636" font-family="system-ui, sans-serif" font-size="26" fill="#475569">训练损失不是发布许可</text>

@@ -19,6 +19,9 @@
 
   <rect x="46" y="130" width="1108" height="300" rx="24" fill="#ffffff" stroke="#1d4ed8" stroke-width="4"/>
   <text x="72" y="172" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">① 训练闭环</text>
+  <rect x="282" y="136" width="182" height="52" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="304" y="170" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#4c1d95">当前参数 θ</text>
+  <line x1="373" y1="188" x2="373" y2="204" stroke="#7c3aed" stroke-width="4" marker-end="url(#loop-arrow)"/>
   <rect x="72" y="204" width="152" height="86" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
   <text x="99" y="256" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#172554">数据批次</text>
   <line x1="224" y1="247" x2="268" y2="247" stroke="#1d4ed8" stroke-width="5" marker-end="url(#loop-arrow)"/>

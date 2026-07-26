@@ -14,18 +14,13 @@
   <text x="100" y="202" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">原始 prompt</text>
   <text x="100" y="270" font-family="system-ui, sans-serif" font-size="36" font-weight="800" fill="#172554">资料助理：查</text>
   <line x1="372" y1="242" x2="466" y2="242" stroke="#1d4ed8" stroke-width="6" marker-end="url(#step1-arrow)"/>
-  <rect x="482" y="132" width="646" height="220" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <rect x="482" y="132" width="646" height="250" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
   <text x="510" y="182" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">教学 tokenizer v1 · 最长匹配</text>
-  <rect x="510" y="216" width="134" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
-  <text x="534" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">资料 · 10</text>
-  <rect x="658" y="216" width="134" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
-  <text x="682" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">助理 · 11</text>
-  <rect x="806" y="216" width="130" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
-  <text x="834" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">： · 12</text>
-  <rect x="950" y="216" width="150" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
-  <text x="978" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">查 · 13</text>
-  <text x="510" y="322" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">encoded IDs：10 / 11 / 12 / 13</text>
-  <rect x="72" y="406" width="1056" height="170" rx="22" fill="#ffffff" stroke="#94a3b8" stroke-width="3" stroke-dasharray="13 9"/>
+  <text x="510" y="224" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#172554">长词：资料 10 · 助理 11 · ： 12 · 查 13 · 天气 14</text>
+  <text x="510" y="266" font-family="system-ui, sans-serif" font-size="26" fill="#475569">短回退：资 90 · 料 91 · 助 92 · 理 93</text>
+  <text x="510" y="308" font-family="system-ui, sans-serif" font-size="26" fill="#334155">长词优先，短回退未选</text>
+  <text x="510" y="350" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#1e3a8a">encoded IDs：10 / 11 / 12 / 13</text>
+  <rect x="72" y="410" width="1056" height="166" rx="22" fill="#ffffff" stroke="#94a3b8" stroke-width="3" stroke-dasharray="13 9"/>
   <text x="100" y="458" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">累积状态</text>
   <text x="100" y="510" font-family="system-ui, sans-serif" font-size="28" fill="#334155">模型现在可见 4 个 token ID；尚未选择新的 token。</text>
   <text x="100" y="552" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#4c1d95">输出没有写回参数的边。</text>

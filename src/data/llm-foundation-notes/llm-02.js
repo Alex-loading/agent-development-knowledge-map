@@ -84,7 +84,7 @@ export const llm02Note = {
         '反向传播计算梯度，优化器应用更新；PyTorch 梯度累积与清零是框架行为。',
       ],
       visuals: [
-        { visualId: 'visual-llm-02-learning-rate-trajectories', afterParagraph: 1 },
+        { visualId: 'visual-llm-02-learning-rate-trajectories', afterParagraph: 2 },
       ],
       sourceIds: ['res-d2l-zh', 'res-google-ml', 'res-fastai', 'res-karpathy'],
     },
@@ -101,7 +101,7 @@ export const llm02Note = {
         '训练诊断应联合损失曲线、数据切片、分层梯度、业务切片与部署监控。',
       ],
       visuals: [
-        { visualId: 'visual-llm-02-generalization-curves', afterParagraph: 1 },
+        { visualId: 'visual-llm-02-generalization-curves', afterParagraph: 2 },
       ],
       sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-karpathy'],
     },

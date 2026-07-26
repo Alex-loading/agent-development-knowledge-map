@@ -8,10 +8,12 @@
   </defs>
   <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
   <text x="48" y="60" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">一个神经元怎样把输入变成输出？</text>
+  <rect x="850" y="24" width="302" height="60" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="3"/>
+  <text x="882" y="63" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">教学示例 · 非实测</text>
   <text x="48" y="98" font-family="system-ui, sans-serif" font-size="26" fill="#475569">展示四位小数；断言使用未舍入值。</text>
 
   <rect x="46" y="126" width="1108" height="228" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
-  <text x="72" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">① 单元前向：仿射 → 激活 → 损失</text>
+  <text x="72" y="168" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">① z = wx + b → sigmoid(z) → loss = -ln(p)（y=1）</text>
   <rect x="72" y="204" width="148" height="92" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
   <text x="104" y="242" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#172554">x 2</text>
   <text x="94" y="280" font-family="system-ui, sans-serif" font-size="26" fill="#172554">输入特征</text>

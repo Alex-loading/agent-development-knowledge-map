@@ -427,6 +427,32 @@ test('places every published llm-01/02 visual once in its evidence-owning real s
   }
 });
 
+test('anchors visuals after the earliest paragraph that completes their teaching prerequisite', () => {
+  const expectedAnchors = {
+    'visual-llm-01-learning-loop': 2,
+    'visual-llm-01-training-inference-boundary': 2,
+    'visual-llm-01-application-decision-stack': 2,
+    'visual-llm-02-learning-rate-trajectories': 2,
+    'visual-llm-02-generalization-curves': 2,
+  };
+
+  for (const lesson of llmFoundation.lessons.filter(({ id }) =>
+    ['llm-01', 'llm-02'].includes(id),
+  )) {
+    for (const section of lesson.knowledgeNote.sections) {
+      for (const placement of section.visuals ?? []) {
+        if (Object.hasOwn(expectedAnchors, placement.visualId)) {
+          assert.equal(
+            placement.afterParagraph,
+            expectedAnchors[placement.visualId],
+            `${placement.visualId} 必须放在完整概念定义之后`,
+          );
+        }
+      }
+    }
+  }
+});
+
 test('keeps all ten llm-01/02 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   assert.equal(llmFoundationVisuals.length, 10);
@@ -497,76 +523,109 @@ function assertSvgIncludes(svg, fragment) {
   assert.ok(svg.includes(fragment), `SVG 必须包含 fixture 文本：${fragment}`);
 }
 
-test('encodes every llm-01/02 quantitative fixture input, result and rounding in SVG text', async () => {
+function visibleSvgText(svg, label) {
+  const parsed = parseStrictSvg(svg, label);
+  return (parsed.elementsByName.get('text') ?? [])
+    .map(({ text }) => text.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+test('encodes every llm-01/02 quantitative fixture input, method, result and rounding in visible SVG text', async () => {
   const checks = {
-    'visual-llm-01-autoregressive-generation': (fixture, svg) => {
-      assertSvgIncludes(svg, fixture.data.rawPrompt);
-      assertSvgIncludes(svg, fixture.result.encodedIds.join(' / '));
+    'visual-llm-01-autoregressive-generation': (fixture, text) => {
+      assertSvgIncludes(text, fixture.data.rawPrompt);
+      for (const [token, id] of Object.entries(fixture.data.vocabulary)) {
+        assertSvgIncludes(text, `${token} ${id}`);
+      }
+      assertSvgIncludes(text, '最长匹配');
+      assertSvgIncludes(text, 'stable softmax');
+      assertSvgIncludes(text, 'greedy');
+      assertSvgIncludes(text, '固定下一状态');
+      assertSvgIncludes(text, fixture.result.encodedIds.join(' / '));
       fixture.result.probabilities.forEach((probability) =>
-        assertSvgIncludes(svg, probability.toFixed(4)),
+        assertSvgIncludes(text, probability.toFixed(4)),
       );
-      assertSvgIncludes(svg, `ID ${fixture.result.selectedId}`);
-      assertSvgIncludes(svg, fixture.result.nextToken);
+      assertSvgIncludes(text, `ID ${fixture.result.selectedId}`);
+      assertSvgIncludes(text, fixture.result.nextToken);
     },
-    'visual-llm-02-training-cycle': (fixture, svg) => {
-      assertSvgIncludes(svg, `X ${JSON.stringify(fixture.data.X)}`);
-      assertSvgIncludes(svg, `Z ${JSON.stringify(fixture.result.Z)}`);
-      assertSvgIncludes(svg, `loss ${fixture.result.loss.toFixed(6)}`);
-      assertSvgIncludes(svg, `dW ${JSON.stringify(fixture.result.dW)}`);
-      assertSvgIncludes(svg, `new W ${JSON.stringify(fixture.result.newW)}`);
-      assertSvgIncludes(svg, `new loss ${fixture.result.newLoss.toFixed(6)}`);
+    'visual-llm-02-training-cycle': (fixture, text) => {
+      assertSvgIncludes(text, `X ${JSON.stringify(fixture.data.X)}`);
+      assertSvgIncludes(text, `W ${JSON.stringify(fixture.data.W)}`);
+      assertSvgIncludes(text, `b ${JSON.stringify(fixture.data.b)}`);
+      assertSvgIncludes(text, `Y ${JSON.stringify(fixture.data.Y)}`);
+      assertSvgIncludes(text, 'Z=XW+b');
+      assertSvgIncludes(text, '四元素 MSE');
+      assertSvgIncludes(text, 'backward');
+      assertSvgIncludes(text, 'SGD');
+      assertSvgIncludes(text, `Z ${JSON.stringify(fixture.result.Z)}`);
+      assertSvgIncludes(text, `loss ${fixture.result.loss.toFixed(6)}`);
+      assertSvgIncludes(text, `dW ${JSON.stringify(fixture.result.dW)}`);
+      assertSvgIncludes(text, `new W ${JSON.stringify(fixture.result.newW)}`);
+      assertSvgIncludes(text, `new loss ${fixture.result.newLoss.toFixed(6)}`);
+      assertSvgIncludes(text, '[B] ≠ [B,C]');
     },
-    'visual-llm-02-neuron-forward': (fixture, svg) => {
-      assertSvgIncludes(svg, `x ${fixture.data.x}`);
-      assertSvgIncludes(svg, `w ${fixture.data.w}`);
-      assertSvgIncludes(svg, `z ${fixture.result.z.toFixed(4)}`);
-      assertSvgIncludes(svg, `p ${fixture.result.probability.toFixed(4)}`);
-      assertSvgIncludes(svg, `loss ${fixture.result.loss.toFixed(4)}`);
+    'visual-llm-02-neuron-forward': (fixture, text) => {
+      assertSvgIncludes(text, `x ${fixture.data.x}`);
+      assertSvgIncludes(text, `w ${fixture.data.w}`);
+      assertSvgIncludes(text, `b ${fixture.data.b}`);
+      assertSvgIncludes(text, `y ${fixture.data.y}`);
+      assertSvgIncludes(text, 'z = wx + b');
+      assertSvgIncludes(text, 'sigmoid(z)');
+      assertSvgIncludes(text, 'loss = -ln(p)');
+      assertSvgIncludes(text, `z ${fixture.result.z.toFixed(4)}`);
+      assertSvgIncludes(text, `p ${fixture.result.probability.toFixed(4)}`);
+      assertSvgIncludes(text, `loss ${fixture.result.loss.toFixed(4)}`);
     },
-    'visual-llm-02-backprop-graph': (fixture, svg) => {
-      assertSvgIncludes(svg, `x ${fixture.data.x}`);
-      assertSvgIncludes(svg, `w ${fixture.data.w}`);
-      assertSvgIncludes(svg, `a ${fixture.result.forward.a}`);
-      assertSvgIncludes(svg, `L ${fixture.result.forward.loss}`);
+    'visual-llm-02-backprop-graph': (fixture, text) => {
+      assertSvgIncludes(text, `x ${fixture.data.x}`);
+      assertSvgIncludes(text, `w ${fixture.data.w}`);
+      assertSvgIncludes(text, 'a = xw');
+      assertSvgIncludes(text, 'b = x²');
+      assertSvgIncludes(text, 'c = a + b');
+      assertSvgIncludes(text, 'L = c²/2');
+      assertSvgIncludes(text, 'forward');
+      assertSvgIncludes(text, 'backward');
+      assertSvgIncludes(text, `a ${fixture.result.forward.a}`);
+      assertSvgIncludes(text, `L ${fixture.result.forward.loss}`);
       assertSvgIncludes(
-        svg,
+        text,
         `${fixture.result.pathContributionsToX.viaA} + `
         + `${fixture.result.pathContributionsToX.viaB} = `
         + `${fixture.result.accumulated.dLossDx}`,
       );
-      assertSvgIncludes(svg, `dL/dw ${fixture.result.accumulated.dLossDw}`);
+      assertSvgIncludes(text, `dL/dw ${fixture.result.accumulated.dLossDw}`);
     },
-    'visual-llm-02-learning-rate-trajectories': (fixture, svg) => {
+    'visual-llm-02-learning-rate-trajectories': (fixture, text) => {
+      assertSvgIncludes(text, `w0 = ${fixture.data.initialW}`);
+      assertSvgIncludes(text, 'w_next = w - η · 2(w - 1)');
       for (const trajectory of fixture.result.trajectories) {
-        assertSvgIncludes(svg, `η ${trajectory.learningRate}`);
-        assertSvgIncludes(
-          svg,
-          `权重为 ${trajectory.weights.map((value) => value.toFixed(3)).join('、')}`,
-        );
-        assertSvgIncludes(
-          svg,
-          `损失为 ${trajectory.losses.map((value) => value.toFixed(4)).join('、')}`,
-        );
+        assertSvgIncludes(text, `η ${trajectory.learningRate}`);
+        for (const value of trajectory.weights) {
+          assertSvgIncludes(text, value.toFixed(3));
+        }
+        for (const value of trajectory.losses) {
+          assertSvgIncludes(text, value.toFixed(4));
+        }
       }
+      assertSvgIncludes(text, '参数位置 w');
+      assertSvgIncludes(text, '损失 L');
     },
-    'visual-llm-02-generalization-curves': (fixture, svg) => {
-      assertSvgIncludes(svg, `epoch ${fixture.data.epochs.join(' / ')}`);
+    'visual-llm-02-generalization-curves': (fixture, text) => {
+      assertSvgIncludes(text, `epoch ${fixture.data.epochs.join(' / ')}`);
       for (const series of Object.values(fixture.data.series)) {
-        assertSvgIncludes(
-          svg,
-          `train 为 ${series.train.map((value) => value.toFixed(2)).join('、')}`,
-        );
-        assertSvgIncludes(
-          svg,
-          `validation 为 ${series.validation.map((value) => value.toFixed(2)).join('、')}`,
-        );
+        for (const value of series.train) assertSvgIncludes(text, value.toFixed(2));
+        for (const value of series.validation) assertSvgIncludes(text, value.toFixed(2));
       }
-      assertSvgIncludes(svg, `最佳 epoch ${fixture.result.overfit.bestEpoch}`);
+      assertSvgIncludes(text, '绝对损失');
+      assertSvgIncludes(text, '同步趋势');
+      assertSvgIncludes(text, 'validation 最小点');
+      assertSvgIncludes(text, `最佳 epoch ${fixture.result.overfit.bestEpoch}`);
       assertSvgIncludes(
-        svg,
+        text,
         `分叉始于 epoch ${fixture.result.overfit.divergenceStartsAtEpoch}`,
       );
-      assert.match(svg, /教学示例 · 非实测/);
+      assert.match(text, /教学示例 · 非实测/);
     },
   };
 
@@ -575,9 +634,93 @@ test('encodes every llm-01/02 quantitative fixture input, result and rounding in
     const visual = knowledgeVisualsById[visualId];
     const fixture = fixtureForVisual(visualId);
     const svg = await readFile(visual.assetPath, 'utf8');
-    assertSvgIncludes(svg, fixture.fields.Rounding);
-    assertFixtureText(fixture, svg);
+    const visibleText = visibleSvgText(svg, visual.assetPath);
+    assert.doesNotMatch(visibleText, /<title|<desc/);
+    assertSvgIncludes(visibleText, fixture.fields.Rounding);
+    assertFixtureText(fixture, visibleText);
   }
+});
+
+test('draws three upward-opening learning-rate landscapes with explicit axes', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-02-learning-rate-trajectories.svg';
+  const svg = await readFile(assetPath, 'utf8');
+  const parsed = parseStrictSvg(svg, assetPath);
+  for (const region of ['small', 'matched', 'large']) {
+    const path = parsed.elements.find((node) =>
+      node.attributes.get('data-region') === `loss-landscape-${region}`,
+    );
+    assert.equal(path?.name, 'path', `${region} 必须有可检查的损失地形 path`);
+    const match = /^M[0-9]+ ([0-9]+) Q[0-9]+ ([0-9]+) [0-9]+ ([0-9]+)$/
+      .exec(path.attributes.get('d') ?? '');
+    assert.ok(match, `${region} 的 U 形路径必须使用单段二次曲线`);
+    const [, startY, controlY, endY] = match.map(Number);
+    assert.ok(
+      controlY > startY && controlY > endY,
+      `${region} 的最低损失必须在视觉低处`,
+    );
+  }
+});
+
+test('keeps frozen qualitative nodes visible in the learning and application diagrams', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const expected = {
+    'visual-llm-01-learning-loop': [
+      '数据批次',
+      '当前参数',
+      '预测',
+      '损失',
+      '梯度',
+      '优化器更新',
+      '新参数',
+      '验证旁路 · 只读',
+      '标准推理 · 只读',
+    ],
+    'visual-llm-01-application-decision-stack': [
+      '应用层',
+      '服务层',
+      '模型层',
+      '基础模型',
+      '评测证据门',
+      '修复选择',
+      '换模型 / 微调',
+      '仅在证据门之后',
+    ],
+  };
+  for (const [visualId, labels] of Object.entries(expected)) {
+    const assetPath = knowledgeVisualsById[visualId].assetPath;
+    const visibleText = visibleSvgText(
+      await readFile(assetPath, 'utf8'),
+      assetPath,
+    );
+    for (const label of labels) assertSvgIncludes(visibleText, label);
+  }
+});
+
+test('marks every constructed quantitative teaching visual as non-measured', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  for (const visualId of [
+    'visual-llm-02-training-cycle',
+    'visual-llm-02-neuron-forward',
+    'visual-llm-02-learning-rate-trajectories',
+    'visual-llm-02-generalization-curves',
+  ]) {
+    const assetPath = knowledgeVisualsById[visualId].assetPath;
+    const visibleText = visibleSvgText(
+      await readFile(assetPath, 'utf8'),
+      assetPath,
+    );
+    assertSvgIncludes(visibleText, '教学示例 · 非实测');
+  }
+});
+
+test('draws a real blocked shape edge for the incompatible training label example', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-02-training-cycle.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const blockedEdge = parsed.elements.find((node) =>
+    node.attributes.get('data-region') === 'shape-block-edge',
+  );
+  assert.equal(blockedEdge?.name, 'line');
+  assert.equal(blockedEdge.attributes.get('stroke-dasharray'), '10 7');
 });
 
 test('keeps every llm-01/02 SVG label at least 26px with a 32px viewBox safety margin', async () => {
