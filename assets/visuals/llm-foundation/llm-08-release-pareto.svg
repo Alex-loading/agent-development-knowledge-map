@@ -61,7 +61,6 @@
   <circle cx="1110" cy="385" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
   <text x="490" y="310" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Method：先安全过滤，再判断 dominance</text>
   <text x="490" y="350" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Rounding：质量安全成本一位；P95 整数</text>
-  <text x="55" y="600" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="start">C：safety rejected，未进入面板</text>
   <path d="M614 448 L636 448" stroke="#B94B42" stroke-width="3" marker-end="url(#arrow)" data-region="dominance-edge" data-from="B" data-to="D" data-edge="B-D"/>
   <text x="625" y="425" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="middle">B 支配 D</text>
   <text x="600" y="638" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="middle">A / B / E 非支配 · 两面板独立单位 · 不制造综合分</text>
