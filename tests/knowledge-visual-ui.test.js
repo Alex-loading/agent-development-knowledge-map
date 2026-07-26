@@ -7,6 +7,7 @@ import { renderKnowledgeVisual } from '../src/ui/knowledge-visual.js';
 import {
   FakeDocument,
   FakeEvent,
+  findButton,
   installFakeDom,
 } from './helpers/fake-dom.js';
 
@@ -54,7 +55,8 @@ const stepVisual = {
   id: 'visual-test-step-flow',
   kind: 'step-diagram',
   role: 'process',
-  title: '两步静态流程',
+  title: '两步交互流程',
+  longDescription: '完整序列：第一步读取输入，第二步产生输出。',
   assetPath: 'assets/visuals/test/test-step-flow.svg',
   steps: [
     {
@@ -70,6 +72,37 @@ const stepVisual = {
       description: '再产生输出。',
       alt: '流程产生输出。',
       assetPath: 'assets/visuals/test/test-step-flow-second.svg',
+    },
+  ],
+};
+
+const threeStepVisual = {
+  ...stepVisual,
+  id: 'visual-test-three-step-flow',
+  title: '三步交互流程',
+  longDescription: '完整序列：读取输入，安全处理，最后输出结果。',
+  assetPath: 'assets/visuals/test/test-three-step-flow.svg',
+  steps: [
+    {
+      id: 'read-input',
+      title: '读取输入',
+      description: '读取用户提交的内容。',
+      alt: '输入进入安全流程。',
+      assetPath: 'assets/visuals/test/test-three-step-flow-read.svg',
+    },
+    {
+      id: 'process-input',
+      title: '安全处理',
+      description: '<em>只作为文本显示，不解析标记。</em>',
+      alt: '输入在安全边界内处理。',
+      assetPath: 'assets/visuals/test/test-three-step-flow-process.svg',
+    },
+    {
+      id: 'return-output',
+      title: '返回结果',
+      description: '返回经过处理的结果。',
+      alt: '安全流程返回最终结果。',
+      assetPath: 'assets/visuals/test/test-three-step-flow-return.svg',
     },
   ],
 };
@@ -247,27 +280,206 @@ test('treats visual copy as text and never parses HTML', (t) => {
   assert.ok(figure.textContent.includes(visual.caption));
 });
 
-test('renders a valid step diagram as a static main image and rejects callbacks without executing them', (t) => {
+test('renders a two-step diagram at step one with accessible controls and a complete static description', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
-  const staticFigure = renderKnowledgeVisual(stepVisual);
+  const figure = renderKnowledgeVisual(stepVisual);
+  const image = figure.querySelector('img');
+  const status = figure.querySelector('.knowledge-visual__step-status');
+  const description = figure.querySelector(
+    '.knowledge-visual__step-description',
+  );
+  const previous = findButton(figure, '上一步');
+  const next = findButton(figure, '下一步');
+  const reset = findButton(figure, '重置');
+
+  assert.equal(figure.dataset.kind, 'step-diagram');
+  assert.equal(image.getAttribute('src'), stepVisual.steps[0].assetPath);
+  assert.equal(image.getAttribute('alt'), stepVisual.steps[0].alt);
+  assert.equal(status.textContent, '1 / 2 · 第一步');
+  assert.equal(status.getAttribute('tabindex'), '-1');
+  assert.equal(status.getAttribute('aria-live'), 'polite');
+  assert.equal(status.getAttribute('aria-atomic'), 'true');
+  assert.equal(description.textContent, stepVisual.steps[0].description);
+  assert.equal(previous.getAttribute('aria-label'), '显示上一步');
+  assert.equal(next.getAttribute('aria-label'), '显示下一步');
+  assert.equal(reset.getAttribute('aria-label'), '重置为第一步');
+  assert.equal(previous.disabled, true);
+  assert.notEqual(previous.getAttribute('disabled'), null);
+  assert.equal(next.disabled, false);
+  assert.equal(next.getAttribute('disabled'), null);
+  assert.equal(reset.disabled, false);
+  assert.equal(reset.getAttribute('disabled'), null);
+  assert.ok(figure.querySelector('details').textContent.includes(
+    stepVisual.longDescription,
+  ));
+  assert.equal(
+    figure.querySelector('.knowledge-visual__original-link').getAttribute('href'),
+    stepVisual.assetPath,
+  );
+});
+
+test('moves a two-step diagram by one step, clamps both ends, and resets with status focus', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const figure = renderKnowledgeVisual(stepVisual);
+  const image = figure.querySelector('img');
+  const status = figure.querySelector('.knowledge-visual__step-status');
+  const description = figure.querySelector(
+    '.knowledge-visual__step-description',
+  );
+  const previous = findButton(figure, '上一步');
+  const next = findButton(figure, '下一步');
+  const reset = findButton(figure, '重置');
+
+  next.click();
+  assert.equal(image.getAttribute('src'), stepVisual.steps[1].assetPath);
+  assert.equal(image.getAttribute('alt'), stepVisual.steps[1].alt);
+  assert.equal(status.textContent, '2 / 2 · 第二步');
+  assert.equal(description.textContent, stepVisual.steps[1].description);
+  assert.equal(previous.disabled, false);
+  assert.equal(previous.getAttribute('disabled'), null);
+  assert.equal(next.disabled, true);
+  assert.notEqual(next.getAttribute('disabled'), null);
+  assert.equal(reset.disabled, false);
+  assert.equal(reset.getAttribute('disabled'), null);
+
+  next.click();
+  assert.equal(status.textContent, '2 / 2 · 第二步');
+
+  previous.click();
+  assert.equal(image.getAttribute('src'), stepVisual.steps[0].assetPath);
+  assert.equal(status.textContent, '1 / 2 · 第一步');
+  previous.click();
+  assert.equal(status.textContent, '1 / 2 · 第一步');
+
+  next.click();
+  reset.click();
+  assert.equal(image.getAttribute('src'), stepVisual.steps[0].assetPath);
+  assert.equal(image.getAttribute('alt'), stepVisual.steps[0].alt);
+  assert.equal(status.textContent, '1 / 2 · 第一步');
+  assert.equal(description.textContent, stepVisual.steps[0].description);
+  assert.equal(document.activeElement, status);
+  assert.equal(previous.disabled, true);
+  assert.equal(next.disabled, false);
+  assert.equal(reset.disabled, false);
+
+  next.focus();
+  reset.click();
+  assert.equal(status.textContent, '1 / 2 · 第一步');
+  assert.equal(document.activeElement, status);
+});
+
+test('advances a three-step diagram one step at a time without parsing descriptions as HTML', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const figure = renderKnowledgeVisual(threeStepVisual);
+  const image = figure.querySelector('img');
+  const status = figure.querySelector('.knowledge-visual__step-status');
+  const description = figure.querySelector(
+    '.knowledge-visual__step-description',
+  );
+  const next = findButton(figure, '下一步');
+
+  next.click();
+  assert.equal(status.textContent, '2 / 3 · 安全处理');
+  assert.equal(image.getAttribute('src'), threeStepVisual.steps[1].assetPath);
+  assert.equal(image.getAttribute('alt'), threeStepVisual.steps[1].alt);
+  assert.equal(description.textContent, threeStepVisual.steps[1].description);
+  assert.equal(description.querySelector('em'), null);
+  assert.equal(next.disabled, false);
+
+  next.click();
+  assert.equal(status.textContent, '3 / 3 · 返回结果');
+  assert.equal(image.getAttribute('src'), threeStepVisual.steps[2].assetPath);
+  assert.equal(next.disabled, true);
+  assert.ok(figure.querySelector('details').textContent.includes(
+    threeStepVisual.longDescription,
+  ));
+});
+
+test('re-arms image fallback for a new step while keeping the original link on the main asset', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const figure = renderKnowledgeVisual(stepVisual);
+  const image = figure.querySelector('img');
+  const fallback = figure.querySelector('.knowledge-visual__fallback');
+  const next = findButton(figure, '下一步');
+  const originalLink = figure.querySelector(
+    '.knowledge-visual__original-link',
+  );
+
+  image.dispatchEvent(new FakeEvent('error'));
+  assert.equal(image.hidden, true);
+  assert.equal(image.getAttribute('aria-hidden'), 'true');
+  assert.equal(fallback.hidden, false);
+  assert.equal(image.listeners.get('error').size, 0);
+
+  next.click();
+  assert.equal(image.getAttribute('src'), stepVisual.steps[1].assetPath);
+  assert.equal(image.hidden, false);
+  assert.equal(image.getAttribute('aria-hidden'), null);
+  assert.equal(fallback.hidden, true);
+  assert.notEqual(fallback.getAttribute('hidden'), null);
+  assert.equal(image.listeners.get('error').size, 1);
+  assert.equal(originalLink.getAttribute('href'), stepVisual.assetPath);
+
+  image.dispatchEvent(new FakeEvent('error'));
+  assert.equal(image.hidden, true);
+  assert.equal(fallback.hidden, false);
+});
+
+test('keeps step diagram instances independent and adds no controls to static figures', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const firstFigure = renderKnowledgeVisual(stepVisual);
+  const secondFigure = renderKnowledgeVisual(threeStepVisual);
+  const staticFigure = renderKnowledgeVisual(originalVisual);
+  const sourcedFigure = renderKnowledgeVisual(sourcedVisual);
+
+  findButton(firstFigure, '下一步').click();
+
+  assert.equal(
+    firstFigure.querySelector('.knowledge-visual__step-status').textContent,
+    '2 / 2 · 第二步',
+  );
+  assert.equal(
+    secondFigure.querySelector('.knowledge-visual__step-status').textContent,
+    '1 / 3 · 读取输入',
+  );
+  assert.equal(staticFigure.querySelector('.knowledge-visual__controls'), null);
+  assert.equal(staticFigure.querySelector('[aria-live="polite"]'), null);
+  assert.equal(sourcedFigure.querySelector('.knowledge-visual__controls'), null);
+  assert.equal(sourcedFigure.querySelector('[aria-live="polite"]'), null);
+});
+
+test('rejects callbacks and invalid step assets without rendering or executing them', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
   let callbackCount = 0;
   const callbackVisual = {
     ...stepVisual,
     callback: () => { callbackCount += 1; },
   };
+  const invalidStepVisual = {
+    ...stepVisual,
+    steps: stepVisual.steps.map((step, index) => ({
+      ...step,
+      assetPath: index === 0
+        ? 'javascript:alert(1)'
+        : step.assetPath,
+    })),
+  };
 
   const rejected = renderKnowledgeVisual(callbackVisual);
+  const invalidStep = renderKnowledgeVisual(invalidStepVisual);
 
-  assert.equal(staticFigure.className, 'knowledge-visual');
-  assert.equal(staticFigure.dataset.kind, 'step-diagram');
-  assert.equal(
-    staticFigure.querySelector('img').getAttribute('src'),
-    stepVisual.assetPath,
-  );
   assert.equal(callbackCount, 0);
   assert.equal(rejected.getAttribute('data-visual-diagnostic'), 'true');
   assert.equal(rejected.querySelector('img'), null);
+  assert.equal(invalidStep.getAttribute('data-visual-diagnostic'), 'true');
+  assert.equal(invalidStep.querySelector('img'), null);
+  assert.equal(invalidStep.querySelector('.knowledge-visual__controls'), null);
 });
 
 test('does not mutate or freeze caller-owned visual data', (t) => {
