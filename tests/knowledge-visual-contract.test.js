@@ -161,6 +161,24 @@ test('requires a stable kebab-case visual ID', () => {
   }
 });
 
+test('returns id errors without throwing for malformed main visual IDs', () => {
+  const malformedIds = [
+    ['symbol', Symbol('visual-id')],
+    ['null-prototype object', Object.create(null)],
+    ['plain object', {}],
+    ['array', []],
+    ['function', () => {}],
+  ];
+
+  for (const [label, id] of malformedIds) {
+    let errors;
+    assert.doesNotThrow(() => {
+      errors = errorsFor({ id });
+    }, label);
+    assert.match(errors.join(' '), /id.*kebab-case/i, label);
+  }
+});
+
 test('requires real YYYY-MM-DD calendar dates', () => {
   assert.deepEqual(errorsFor({ verifiedAt: '2024-02-29' }), []);
   for (const verifiedAt of [
@@ -195,6 +213,14 @@ test('rejects remote, embedded and ambiguous local asset paths', () => {
     'assets/visuals/llm-foundation/figure.svg?raw=1',
     'assets/visuals/llm-foundation/figure.svg#panel',
     'assets/visuals//llm-foundation/figure.svg',
+    'assets/visuals/llm-foundation/foo..svg',
+    'assets/visuals/llm..foundation/figure.svg',
+    'assets/visuals/%2E%2E/secret.svg',
+    'assets/visuals/%252e%252e/secret.svg',
+    'assets/visuals/llm-foundation%2Ffigure.svg',
+    'assets/visuals/llm-foundation%5cfigure.svg',
+    'assets/visuals/llm-foundation/figure\u0000.svg',
+    'assets/visuals/llm-foundation/\nfigure.svg',
     './assets/visuals/llm-foundation/figure.svg',
     '/assets/visuals/llm-foundation/figure.svg',
     'assets/visuals/llm-foundation/figure.gif',
@@ -213,6 +239,55 @@ test('rejects remote, embedded and ambiguous local asset paths', () => {
     'assets/visuals/llm-foundation/figure.jpeg',
   ]) {
     assert.deepEqual(errorsFor({ assetPath }), [], assetPath);
+  }
+});
+
+test('returns field errors for malformed URL, date and path value types', () => {
+  const malformedValues = [
+    ['symbol', Symbol('malformed')],
+    ['null-prototype object', Object.create(null)],
+    ['plain object', {}],
+    ['array', []],
+    ['function', () => {}],
+  ];
+
+  for (const [label, value] of malformedValues) {
+    let assetPathErrors;
+    assert.doesNotThrow(() => {
+      assetPathErrors = errorsFor({ assetPath: value });
+    }, `assetPath ${label}`);
+    assert.match(assetPathErrors.join(' '), /assetPath/i, `assetPath ${label}`);
+
+    let verifiedAtErrors;
+    assert.doesNotThrow(() => {
+      verifiedAtErrors = errorsFor({ verifiedAt: value });
+    }, `verifiedAt ${label}`);
+    assert.match(verifiedAtErrors.join(' '), /verifiedAt/i, `verifiedAt ${label}`);
+
+    let sourceUrlErrors;
+    assert.doesNotThrow(() => {
+      sourceUrlErrors = validateVisualAsset({
+        ...licensedReproduction,
+        sourceUrl: value,
+      });
+    }, `sourceUrl ${label}`);
+    assert.match(sourceUrlErrors.join(' '), /sourceUrl/i, `sourceUrl ${label}`);
+
+    let permissionUrlErrors;
+    assert.doesNotThrow(() => {
+      permissionUrlErrors = validateVisualAsset({
+        ...licensedReproduction,
+        permission: {
+          ...licensedReproduction.permission,
+          url: value,
+        },
+      });
+    }, `permission URL ${label}`);
+    assert.match(
+      permissionUrlErrors.join(' '),
+      /permission URL/i,
+      `permission URL ${label}`,
+    );
   }
 });
 
@@ -484,6 +559,43 @@ test('requires unique stable step IDs and unique paths', () => {
   );
 });
 
+test('returns step id errors without throwing for malformed step IDs', () => {
+  const malformedIds = [
+    ['symbol', Symbol('step-id')],
+    ['null-prototype object', Object.create(null)],
+    ['plain object', {}],
+    ['array', []],
+    ['function', () => {}],
+  ];
+  const validStep = {
+    id: 'second',
+    title: '第二步',
+    description: '展示第二步发生的机制。',
+    alt: '第二步机制图',
+    assetPath: 'assets/visuals/llm-foundation/second.svg',
+  };
+
+  for (const [label, id] of malformedIds) {
+    let errors;
+    assert.doesNotThrow(() => {
+      errors = errorsFor({
+        kind: 'step-diagram',
+        steps: [
+          {
+            id,
+            title: '第一步',
+            description: '展示第一步发生的机制。',
+            alt: '第一步机制图',
+            assetPath: 'assets/visuals/llm-foundation/first.svg',
+          },
+          validStep,
+        ],
+      });
+    }, label);
+    assert.match(errors.join(' '), /steps\[0\]\.id.*kebab-case/i, label);
+  }
+});
+
 test('requires step assets to share the main visual directory and format', () => {
   const commonStep = {
     title: '阶段',
@@ -569,14 +681,49 @@ test('deep-freezes nested plain records and arrays without recursing forever on 
   assert.ok(Object.isFrozen(frozen.nested.steps[0]));
 });
 
-test('deepFreezeVisual leaves non-plain objects untouched', () => {
+test('deep-freezes symbol-keyed data properties without invoking getters', () => {
+  const recordKey = Symbol('record');
+  const itemKey = Symbol('item');
+  let getterReads = 0;
+  const value = {
+    [recordKey]: {
+      items: [],
+    },
+  };
+  value[recordKey].items[itemKey] = { owner: value };
+  Object.defineProperty(value, 'computed', {
+    get() {
+      getterReads += 1;
+      return {};
+    },
+  });
+
+  deepFreezeVisual(value);
+
+  assert.equal(getterReads, 0);
+  assert.ok(Object.isFrozen(value));
+  assert.ok(Object.isFrozen(value[recordKey]));
+  assert.ok(Object.isFrozen(value[recordKey].items));
+  assert.ok(Object.isFrozen(value[recordKey].items[itemKey]));
+  assert.equal(value[recordKey].items[itemKey].owner, value);
+});
+
+test('deepFreezeVisual leaves Date, Map and class instances untouched', () => {
+  class VisualMetadata {}
   const date = new Date('2026-07-26T00:00:00Z');
-  const value = { date };
+  const map = new Map([['nested', {}]]);
+  const instance = new VisualMetadata();
+  instance.nested = {};
+  const value = { date, map, instance };
 
   deepFreezeVisual(value);
 
   assert.ok(Object.isFrozen(value));
   assert.equal(Object.isFrozen(date), false);
+  assert.equal(Object.isFrozen(map), false);
+  assert.equal(Object.isFrozen(map.get('nested')), false);
+  assert.equal(Object.isFrozen(instance), false);
+  assert.equal(Object.isFrozen(instance.nested), false);
 });
 
 test('returns readable errors instead of throwing for ordinary invalid input', () => {

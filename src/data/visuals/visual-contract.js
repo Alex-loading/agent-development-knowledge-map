@@ -54,8 +54,12 @@ function isText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function matchesPattern(value, pattern) {
+  return isText(value) && pattern.test(value);
+}
+
 function isValidDate(value) {
-  if (typeof value !== 'string') return false;
+  if (!isText(value)) return false;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return false;
 
@@ -84,8 +88,7 @@ function isValidDate(value) {
 
 function isHttpsUrl(value) {
   if (
-    typeof value !== 'string'
-    || !/^https:\/\/[^/\s]+(?:\/|$)/.test(value)
+    !matchesPattern(value, /^https:\/\/[^/\s]+(?:\/|$)/)
   ) {
     return false;
   }
@@ -104,12 +107,14 @@ function isHttpsUrl(value) {
 
 function isSafeLocalAssetPath(value) {
   if (
-    typeof value !== 'string'
+    !isText(value)
     || value !== value.trim()
     || value.includes('\\')
+    || value.includes('..')
     || value.includes('?')
     || value.includes('#')
     || value.includes('%')
+    || /[\u0000-\u001f\u007f]/.test(value)
   ) {
     return false;
   }
@@ -156,10 +161,11 @@ function freezePlainValue(value, seen) {
   if (seen.has(value)) return value;
   seen.add(value);
 
-  for (const descriptor of Object.values(
-    Object.getOwnPropertyDescriptors(value),
-  )) {
-    if ('value' in descriptor) freezePlainValue(descriptor.value, seen);
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor && 'value' in descriptor) {
+      freezePlainValue(descriptor.value, seen);
+    }
   }
   if (!Object.isFrozen(value)) Object.freeze(value);
   return value;
@@ -195,7 +201,7 @@ export function validateVisualAsset(asset) {
   if (!Number.isInteger(record.height) || record.height <= 0) {
     errors.push('height must be a positive integer');
   }
-  if (!VISUAL_ID.test(record.id ?? '')) {
+  if (!matchesPattern(record.id, VISUAL_ID)) {
     errors.push('id must be stable kebab-case beginning with visual-');
   }
   if (!VISUAL_KINDS.includes(record.kind)) {
@@ -348,7 +354,7 @@ export function validateVisualAsset(asset) {
             errors.push(`steps[${index}].${field} is required`);
           }
         }
-        if (!STEP_ID.test(step.id ?? '')) {
+        if (!matchesPattern(step.id, STEP_ID)) {
           errors.push(`steps[${index}].id must be stable kebab-case`);
         }
         if (!isSafeLocalAssetPath(step.assetPath)) {
