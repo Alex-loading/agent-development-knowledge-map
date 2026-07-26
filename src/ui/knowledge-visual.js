@@ -146,7 +146,7 @@ function setButtonDisabled(control, disabled) {
   }
 }
 
-function stepDiagramControls(visual, image, restoreImageLoadingPath) {
+function stepDiagramControls(visual, image, setStepImage) {
   let currentIndex = 0;
   const status = element('p', {
     className: 'knowledge-visual__step-status',
@@ -167,9 +167,7 @@ function stepDiagramControls(visual, image, restoreImageLoadingPath) {
       id, title, description: stepDescription, assetPath, alt,
     } = visual.steps[currentIndex];
 
-    restoreImageLoadingPath();
-    image.setAttribute('src', assetPath);
-    image.setAttribute('alt', alt);
+    setStepImage({ assetPath, alt });
     status.dataset.stepId = id;
     status.textContent = `${currentIndex + 1} / ${visual.steps.length} · ${title}`;
     description.textContent = stepDescription;
@@ -224,6 +222,50 @@ function stepDiagramControls(visual, image, restoreImageLoadingPath) {
   ]);
 }
 
+function stepImageController(image, fallback) {
+  let generation = 0;
+  let currentErrorHandler = null;
+
+  return ({ assetPath, alt }) => {
+    if (currentErrorHandler) {
+      image.removeEventListener('error', currentErrorHandler);
+    }
+    generation += 1;
+    const capturedGeneration = generation;
+    const expectedAssetPath = assetPath;
+
+    image.hidden = false;
+    image.removeAttribute('aria-hidden');
+    fallback.hidden = true;
+    fallback.setAttribute('hidden', '');
+    image.setAttribute('src', assetPath);
+    image.setAttribute('alt', alt);
+
+    let handled = false;
+    const handleImageError = () => {
+      if (
+        handled
+        || capturedGeneration !== generation
+        || image.getAttribute('src') !== expectedAssetPath
+      ) {
+        return;
+      }
+
+      handled = true;
+      image.hidden = true;
+      image.setAttribute('aria-hidden', 'true');
+      fallback.hidden = false;
+      fallback.removeAttribute('hidden');
+      image.removeEventListener('error', handleImageError);
+      if (currentErrorHandler === handleImageError) {
+        currentErrorHandler = null;
+      }
+    };
+    currentErrorHandler = handleImageError;
+    image.addEventListener('error', handleImageError);
+  };
+}
+
 export function renderKnowledgeVisual(candidate) {
   const validation = validateRenderableVisual(candidate);
   if (!validation.valid) return invalidVisualDiagnostic();
@@ -239,18 +281,7 @@ export function renderKnowledgeVisual(candidate) {
   });
   fallback.hidden = true;
 
-  let image;
-  let imageErrorHandled = false;
-  const handleImageError = () => {
-    if (imageErrorHandled) return;
-    imageErrorHandled = true;
-    image.hidden = true;
-    image.setAttribute('aria-hidden', 'true');
-    fallback.hidden = false;
-    fallback.removeAttribute('hidden');
-    image.removeEventListener('error', handleImageError);
-  };
-  image = element('img', {
+  const image = element('img', {
     className: 'knowledge-visual__image',
     attrs: {
       src: firstImage.assetPath,
@@ -260,20 +291,27 @@ export function renderKnowledgeVisual(candidate) {
       width: visual.width,
       height: visual.height,
     },
-    events: { error: handleImageError },
   });
-  const restoreImageLoadingPath = () => {
-    imageErrorHandled = false;
-    image.hidden = false;
-    image.removeAttribute('aria-hidden');
-    fallback.hidden = true;
-    fallback.setAttribute('hidden', '');
-    image.removeEventListener('error', handleImageError);
+  let controls = null;
+  if (visual.kind === 'step-diagram') {
+    controls = stepDiagramControls(
+      visual,
+      image,
+      stepImageController(image, fallback),
+    );
+  } else {
+    let imageErrorHandled = false;
+    const handleImageError = () => {
+      if (imageErrorHandled) return;
+      imageErrorHandled = true;
+      image.hidden = true;
+      image.setAttribute('aria-hidden', 'true');
+      fallback.hidden = false;
+      fallback.removeAttribute('hidden');
+      image.removeEventListener('error', handleImageError);
+    };
     image.addEventListener('error', handleImageError);
-  };
-  const controls = visual.kind === 'step-diagram'
-    ? stepDiagramControls(visual, image, restoreImageLoadingPath)
-    : null;
+  }
 
   const longDescription = visual.longDescription
     ? element('details', { className: 'knowledge-visual__long-description' }, [

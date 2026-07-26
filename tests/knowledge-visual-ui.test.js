@@ -429,6 +429,116 @@ test('re-arms image fallback for a new step while keeping the original link on t
   assert.equal(fallback.hidden, false);
 });
 
+test('ignores a stale step-one error after Next without consuming the current step-two handler', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const figure = renderKnowledgeVisual(stepVisual);
+  const image = figure.querySelector('img');
+  const fallback = figure.querySelector('.knowledge-visual__fallback');
+  const next = findButton(figure, '下一步');
+  const stepOneError = [...image.listeners.get('error')][0];
+
+  next.click();
+  const stepTwoError = [...image.listeners.get('error')][0];
+  assert.notEqual(stepTwoError, stepOneError);
+
+  stepOneError(new FakeEvent('error'));
+  assert.equal(image.getAttribute('src'), stepVisual.steps[1].assetPath);
+  assert.equal(image.hidden, false);
+  assert.equal(image.getAttribute('aria-hidden'), null);
+  assert.equal(fallback.hidden, true);
+  assert.deepEqual([...image.listeners.get('error')], [stepTwoError]);
+
+  image.setAttribute('src', stepVisual.steps[0].assetPath);
+  stepTwoError(new FakeEvent('error'));
+  assert.equal(image.hidden, false);
+  assert.equal(fallback.hidden, true);
+  assert.deepEqual([...image.listeners.get('error')], [stepTwoError]);
+
+  image.setAttribute('src', stepVisual.steps[1].assetPath);
+  stepTwoError(new FakeEvent('error'));
+  assert.equal(image.hidden, true);
+  assert.equal(image.getAttribute('aria-hidden'), 'true');
+  assert.equal(fallback.hidden, false);
+  assert.equal(image.listeners.get('error').size, 0);
+
+  stepTwoError(new FakeEvent('error'));
+  assert.equal(image.hidden, true);
+  assert.equal(fallback.hidden, false);
+  assert.equal(image.listeners.get('error').size, 0);
+});
+
+test('invalidates every earlier error generation across Previous and Reset without crossing instances', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const firstFigure = renderKnowledgeVisual(stepVisual);
+  const secondFigure = renderKnowledgeVisual(stepVisual);
+  const firstImage = firstFigure.querySelector('img');
+  const secondImage = secondFigure.querySelector('img');
+  const firstFallback = firstFigure.querySelector(
+    '.knowledge-visual__fallback',
+  );
+  const secondFallback = secondFigure.querySelector(
+    '.knowledge-visual__fallback',
+  );
+  const firstNext = findButton(firstFigure, '下一步');
+  const firstPrevious = findButton(firstFigure, '上一步');
+  const firstReset = findButton(firstFigure, '重置');
+  const secondNext = findButton(secondFigure, '下一步');
+
+  const firstGenerationOne = [...firstImage.listeners.get('error')][0];
+  firstNext.click();
+  const firstGenerationTwo = [...firstImage.listeners.get('error')][0];
+  firstPrevious.click();
+  const firstGenerationThree = [...firstImage.listeners.get('error')][0];
+  firstReset.click();
+  const firstGenerationFour = [...firstImage.listeners.get('error')][0];
+  assert.equal(new Set([
+    firstGenerationOne,
+    firstGenerationTwo,
+    firstGenerationThree,
+    firstGenerationFour,
+  ]).size, 4);
+
+  const secondGenerationOne = [...secondImage.listeners.get('error')][0];
+  secondNext.click();
+  const secondGenerationTwo = [...secondImage.listeners.get('error')][0];
+
+  for (const staleHandler of [
+    firstGenerationOne,
+    firstGenerationTwo,
+    firstGenerationThree,
+  ]) {
+    staleHandler(new FakeEvent('error'));
+  }
+  secondGenerationOne(new FakeEvent('error'));
+
+  assert.equal(firstImage.getAttribute('src'), stepVisual.steps[0].assetPath);
+  assert.equal(firstImage.hidden, false);
+  assert.equal(firstFallback.hidden, true);
+  assert.deepEqual(
+    [...firstImage.listeners.get('error')],
+    [firstGenerationFour],
+  );
+  assert.equal(secondImage.getAttribute('src'), stepVisual.steps[1].assetPath);
+  assert.equal(secondImage.hidden, false);
+  assert.equal(secondFallback.hidden, true);
+  assert.deepEqual(
+    [...secondImage.listeners.get('error')],
+    [secondGenerationTwo],
+  );
+
+  firstGenerationFour(new FakeEvent('error'));
+  assert.equal(firstImage.hidden, true);
+  assert.equal(firstFallback.hidden, false);
+  assert.equal(secondImage.hidden, false);
+  assert.equal(secondFallback.hidden, true);
+  assert.deepEqual(
+    [...secondImage.listeners.get('error')],
+    [secondGenerationTwo],
+  );
+});
+
 test('keeps step diagram instances independent and adds no controls to static figures', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
