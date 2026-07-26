@@ -141,9 +141,9 @@
 | Evidence boundaries | 10 / 10 | 40 项唯一 ownership、section source containment、registry/evidence/global resource 三层解析全部通过。 |
 | Teaching value | 9 / 10 | 每张图对应冻结 cognitive question 与 assessed outcome；三轮独立审查修正了注入防御、疑似欠拟合和 Pareto 坐标边界。 |
 | Accessibility | 9 / 10 | `alt`、`longDescription`、caption、SVG title/desc、非颜色编码和键盘分步控制完整。 |
-| Responsive rendering | 9 / 10 | CSS 保证页面不横溢，复杂媒体使用局部横向滚动，390px/320px 与 44px 控件契约有测试；真实浏览器矩阵仍在 Task 14 执行。 |
-| Fallback | 9 / 10 | 未解析 visual ID、加载失败、重复错误事件、step fallback、reduced motion 与 prose preservation 均有 UI 回归。 |
-| **总计** | **55 / 60** | 每项均 ≥8，超过 51 / 60 发布线；无视觉硬阻塞。 |
+| Responsive rendering | 10 / 10 | 1280×720、390×844 与 320×800 真实浏览器矩阵通过；复杂媒体只在 figure 内局部横向滚动，页面无横向溢出。 |
+| Fallback | 10 / 10 | 未解析 visual ID、加载失败、重复错误事件、step fallback、reduced motion 与 prose preservation 均有 UI 回归；Task 14 另以未提交临时夹具请求不存在的 SVG 并观察到完整降级。 |
+| **总计** | **57 / 60** | 每项均 ≥8，超过 51 / 60 发布线；无视觉硬阻塞。 |
 
 ### 每课负载
 
@@ -232,9 +232,44 @@
 - `visual-llm-08-injection-defense` 用路径上的实体屏障表示四项预防控制，并把日志改为影响后的检测、遏制与反馈回路。
 - `visual-llm-08-release-pareto` 显式标注坐标按通过安全门候选范围截断：质量 82–91、成本 1.0–3.4、P95 450–1100。
 
+## 真实浏览器验收（Task 14）
+
+验收日期：2026-07-27。候选由功能工作树执行 `npm run serve`，真实浏览器直接访问 `http://localhost:4173/`；未使用另一个构建产物或修改已提交生产数据。
+
+### HTTP 与路由矩阵
+
+- `/`、`/styles/app.css`、`/src/app.js`：3 / 3 返回 HTTP 200。
+- Registry 40 条主视觉去重展开出的 52 个 SVG：52 / 52 返回 HTTP 200。
+- 总请求：55；成功：55；失败：0。
+- 桌面与两个移动视口均逐一访问：
+  - `/#llm-foundation/lesson/llm-01`
+  - `/#llm-foundation/lesson/llm-02`
+  - `/#llm-foundation/lesson/llm-03`
+  - `/#llm-foundation/lesson/llm-04`
+  - `/#llm-foundation/lesson/llm-05`
+  - `/#llm-foundation/lesson/llm-06`
+  - `/#llm-foundation/lesson/llm-07`
+  - `/#llm-foundation/lesson/llm-08`
+
+### 桌面、移动与可访问性
+
+- 1280×720：8 / 8 lesson 均只有一个 `h1`、5 个 figure、5 个非空 title、5 个 alt、5 个 caption、5 个 long description 和 5 个本地原图链接；overview 顺序均为 introduction → overview → TOC；页面级横向溢出为 0。
+- 390×844 与 320×800：16 / 16 route 的真实 `innerWidth` / `innerHeight` 与目标精确一致；16 / 16 页面无 page-level overflow；每页 5 / 5 figure 都位于视口边界内，title、alt 与 long description 完整。
+- 复杂 SVG 在 `.knowledge-visual__media` 内局部横向滚动，figure 与页面本身不溢出。320px 真实截图抽查了 `llm-04` score/mask/softmax 步骤图，标签、矩阵、步骤状态和控制区均清晰。
+- 浏览器的 lazy-loading 首次快速巡检有 15 个 route 的 overview 尚未触发；逐课把 overview 停留在视口约 1.6 秒后，16 / 16 首图均 `complete=true` 且 `naturalWidth=1200`。其余 64 / 64 section 图在首次巡检已加载。
+- 320px 下三枚步骤按钮实测高度均为 44.398px、宽度 222px；5 / 5 long-description `summary` 均可进入键盘顺序。
+- `llm-04` 真实交互依次到达 1 / 4、2 / 4、3 / 4、4 / 4；终点 Next 正确 disabled，Previous 返回 3 / 4，Reset 恢复第一张 SVG，并把焦点移动到带 `aria-live="polite"` 的步骤状态。
+- 控件均为原生 `<button>`，具备 Tab 与 Enter/Space 原生语义。专项契约测试 `knowledge figure interaction states respect keyboard, reduced-motion, forced-color and print users` 通过；同时核对 `prefers-reduced-motion: reduce` 规则会把步骤控件和图像 transition 归零。当前机器偏好为 `no-preference`，浏览器后端不提供媒体偏好覆写，因此 reduced-motion 采用 CSS 规则与专项测试证明。
+- in-app browser 的合成 `press` 后端未把 Enter/Space 事件发送到已聚焦按钮；系统级输入又被 Codex 应用安全边界禁止，Chrome 扩展在本会话不可用。该限制记录为验收工具约束：真实点击、焦点、disabled 状态、原生 button 语义及专项自动化均通过，没有观察到应用缺陷。
+
+### 断图降级与 console
+
+- 通过未提交临时 HTML 夹具复制一条有效 visual record，只把 `assetPath` 改为安全但不存在的 `assets/visuals/llm-foundation/task14-missing.svg`；验收后立即删除夹具，未修改或破坏生产 registry。
+- 真实浏览器结果：失败图片 `hidden=true`；`role="status"` fallback 可见；fallback 文案、title、caption、long description 和外围 prose 均保留。
+- 恢复正常 lesson 后，浏览器 console warnings/errors：0；页面视口已恢复为 1280×720。
+
 ### 当前浏览器与部署状态
 
-- 本地自动化与独立审查：完成。
-- Task 14 真实浏览器桌面、390px、320px、键盘、reduced motion、断图降级与 console 验收：**尚未执行**。
+- 本地自动化、三项独立审查与 Task 14 真实浏览器验收：完成。
 - Vercel Preview / Production：**尚未部署**。
-- 当前文档不得把本地测试、PR、Preview URL 或部署开始描述为生产上线；只有真实浏览器矩阵、Production `READY`、canonical routes、exact `main` SHA 与 Pages-disabled 检查全部通过后才可更新为完成。
+- 当前文档不得把本地测试、PR、Preview URL 或部署开始描述为生产上线；只有 Production `READY`、canonical routes、exact `main` SHA 与 Pages-disabled 检查全部通过后才可更新为完成。
