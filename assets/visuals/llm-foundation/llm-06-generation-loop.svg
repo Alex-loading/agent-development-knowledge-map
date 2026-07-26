@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="generation-title generation-desc">
   <title id="generation-title">Prefill → decode → 明确停止</title>
-  <desc id="generation-desc">一次请求进入 prefill 后，逐步执行 logits、温度、softmax、top-p、逆 CDF 采样、追加与 KV 更新，下一状态为 EOS。</desc>
+  <desc id="generation-desc">候选经 CDF 抽样后，服务从 input、prefill、decode、logits、sampling 到追加 token/KV 并回到 decode；EOS、stop sequence、max tokens 与业务完成是四种停止条件。</desc>
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
       <path d="M0 0 L9 4.5 L0 9 Z" fill="#18212B"/>
@@ -57,8 +57,14 @@
     <text x="954" y="210" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B" data-phase="sample" data-state="active">u=.7</text>
     <text x="954" y="258" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B" data-phase="sample" data-state="active">selected A</text>
     <text x="954" y="306" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B" data-phase="sample" data-state="active">next → EOS</text>
-    <text x="954" y="414" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B" data-phase="sample" data-state="active">步骤 5</text>
-    <line data-region="cdf-sample" data-value="0.7" x1="1066" y1="340" x2="1066" y2="390" stroke="#A33A24" stroke-width="5"/>
+    <text x="954" y="438" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B" data-phase="sample" data-state="active">步骤 5</text>
+    <rect data-region="cdf-segment" data-token="A" data-value="0.7310585786300049" x="954" y="344" width="116.9694" height="16" fill="#1F7A78"/>
+    <rect data-region="cdf-segment" data-token="B" data-value="0.2689414213699951" x="1070.9694" y="344" width="43.0306" height="16" fill="#A33A24"/>
+    <line data-region="cdf-axis" x1="954" y1="364" x2="1114" y2="364" stroke="#18212B" stroke-width="3"/>
+    <line data-region="cdf-sample" data-value="0.7" x1="1066" y1="326" x2="1066" y2="374" stroke="#A33A24" stroke-width="5"/>
+    <text x="950" y="394" font-family="Trebuchet MS" font-size="26" fill="#18212B">0</text>
+    <text x="1020" y="394" font-family="Trebuchet MS" font-size="26" fill="#18212B">.7311</text>
+    <text x="1102" y="394" font-family="Trebuchet MS" font-size="26" fill="#18212B">1</text>
   </g>
   <path data-region="phase-direction" data-from="raw" data-to="temperature" d="M251 108 H261 M261 101 L269 108 L261 115" fill="none" stroke="#18212B" stroke-width="4"/>
   <path data-region="phase-direction" data-from="temperature" data-to="softmax" d="M473 108 H483 M483 101 L491 108 L483 115" fill="none" stroke="#18212B" stroke-width="4"/>
@@ -66,25 +72,25 @@
   <path data-region="phase-direction" data-from="nucleus" data-to="sample" d="M917 108 H927 M927 101 L935 108 L927 115" fill="none" stroke="#18212B" stroke-width="4"/>
   <g data-region="generation-value" data-kind="candidates" data-value="C,A,B"/><g data-region="generation-value" data-kind="logits" data-value="0,2,1"/><g data-region="generation-value" data-kind="temperature" data-value="1"/><g data-region="generation-value" data-kind="probabilities" data-value="0.0900,0.6652,0.2447"/><g data-region="generation-value" data-kind="top-p" data-value="0.8"/><g data-region="generation-value" data-kind="nucleus" data-value="A,B"/><g data-region="generation-value" data-kind="renormalized" data-value="0.7311,0.2689"/><g data-region="generation-value" data-kind="uniform-sample" data-value="0.7"/><g data-region="generation-value" data-kind="selected" data-value="A"/><g data-region="generation-value" data-kind="next-token" data-value="EOS"/>
   <rect x="48" y="466" width="1104" height="178" rx="16" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
-  <g data-region="service-node" data-node="input"><rect x="60" y="480" width="100" height="42" rx="8" fill="#FFF3D5" stroke="#18212B" stroke-width="3"/><text x="76" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">input</text></g>
-  <g data-region="service-node" data-node="prefill"><rect x="186" y="480" width="110" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="198" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">prefill</text></g>
-  <g data-region="service-node" data-node="decode"><rect x="322" y="480" width="110" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="332" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">decode</text></g>
-  <g data-region="service-node" data-node="logits"><rect x="458" y="480" width="100" height="42" rx="8" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/><text x="472" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">logits</text></g>
-  <g data-region="service-node" data-node="sampling"><rect x="584" y="480" width="126" height="42" rx="8" fill="#FFF3D5" stroke="#18212B" stroke-width="3"/><text x="594" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">sampling</text></g>
-  <g data-region="service-node" data-node="append-kv"><rect x="736" y="480" width="150" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="748" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">append+KV</text></g>
-  <line data-region="service-edge" data-edge="input-prefill" x1="160" y1="501" x2="186" y2="501" stroke="#18212B" stroke-width="3"/>
-  <line data-region="service-edge" data-edge="prefill-decode" x1="296" y1="501" x2="322" y2="501" stroke="#18212B" stroke-width="3"/>
-  <line data-region="service-edge" data-edge="decode-logits" x1="432" y1="501" x2="458" y2="501" stroke="#18212B" stroke-width="3"/>
-  <line data-region="service-edge" data-edge="logits-sampling" x1="558" y1="501" x2="584" y2="501" stroke="#18212B" stroke-width="3"/>
-  <line data-region="service-edge" data-edge="sampling-append" x1="710" y1="501" x2="736" y2="501" stroke="#18212B" stroke-width="3"/>
-  <path data-region="service-edge" data-edge="append-decode" d="M811 522 V540 H377 V522" fill="none" stroke="#315C9B" stroke-width="3"/>
-  <g data-region="service-node" data-node="eos"><rect x="60" y="558" width="120" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="96" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">EOS</text></g>
-  <g data-region="service-node" data-node="stop-sequence"><rect x="200" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="214" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">stop 序列</text></g>
-  <g data-region="service-node" data-node="max-tokens"><rect x="400" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="416" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">max tokens</text></g>
-  <g data-region="service-node" data-node="business-complete"><rect x="600" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="616" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">业务完成</text></g>
-  <path data-region="service-edge" data-edge="sampling-eos" d="M647 522 V548 H120 V558" fill="none" stroke="#A33A24" stroke-width="3"/>
-  <path data-region="service-edge" data-edge="sampling-stop" d="M647 522 V548 H290 V558" fill="none" stroke="#A33A24" stroke-width="3"/>
-  <path data-region="service-edge" data-edge="sampling-max" d="M647 522 V548 H490 V558" fill="none" stroke="#A33A24" stroke-width="3"/>
-  <path data-region="service-edge" data-edge="sampling-business" d="M647 522 V558" fill="none" stroke="#A33A24" stroke-width="3"/>
+  <g><rect data-region="service-node" data-node="input" x="60" y="480" width="100" height="42" rx="8" fill="#FFF3D5" stroke="#18212B" stroke-width="3"/><text x="76" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">input</text></g>
+  <g><rect data-region="service-node" data-node="prefill" x="186" y="480" width="110" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="198" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">prefill</text></g>
+  <g><rect data-region="service-node" data-node="decode" x="322" y="480" width="110" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="332" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">decode</text></g>
+  <g><rect data-region="service-node" data-node="logits" x="458" y="480" width="100" height="42" rx="8" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/><text x="472" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">logits</text></g>
+  <g><rect data-region="service-node" data-node="sampling" x="584" y="480" width="126" height="42" rx="8" fill="#FFF3D5" stroke="#18212B" stroke-width="3"/><text x="594" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">sampling</text></g>
+  <g><rect data-region="service-node" data-node="append-kv" x="736" y="480" width="150" height="42" rx="8" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/><text x="748" y="510" font-family="Trebuchet MS" font-size="26" fill="#18212B">append+KV</text></g>
+  <line data-region="service-edge" data-edge="input-prefill" x1="160" y1="501" x2="186" y2="501" stroke="#18212B" stroke-width="3" marker-end="url(#arrow)"/>
+  <line data-region="service-edge" data-edge="prefill-decode" x1="296" y1="501" x2="322" y2="501" stroke="#18212B" stroke-width="3" marker-end="url(#arrow)"/>
+  <line data-region="service-edge" data-edge="decode-logits" x1="432" y1="501" x2="458" y2="501" stroke="#18212B" stroke-width="3" marker-end="url(#arrow)"/>
+  <line data-region="service-edge" data-edge="logits-sampling" x1="558" y1="501" x2="584" y2="501" stroke="#18212B" stroke-width="3" marker-end="url(#arrow)"/>
+  <line data-region="service-edge" data-edge="sampling-append" x1="710" y1="501" x2="736" y2="501" stroke="#18212B" stroke-width="3" marker-end="url(#arrow)"/>
+  <path data-region="service-edge" data-edge="append-decode" d="M811 522 V540 H377 V522" fill="none" stroke="#315C9B" stroke-width="3" marker-end="url(#arrow)"/>
+  <g><rect data-region="service-node" data-node="eos" x="60" y="558" width="120" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="96" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">EOS</text></g>
+  <g><rect data-region="service-node" data-node="stop-sequence" x="200" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="214" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">stop 序列</text></g>
+  <g><rect data-region="service-node" data-node="max-tokens" x="400" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="416" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">max tokens</text></g>
+  <g><rect data-region="service-node" data-node="business-complete" x="600" y="558" width="180" height="42" rx="8" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/><text x="616" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">业务完成</text></g>
+  <path data-region="service-edge" data-edge="sampling-eos" d="M647 522 V548 H120 V558" fill="none" stroke="#A33A24" stroke-width="3" marker-end="url(#arrow)"/>
+  <path data-region="service-edge" data-edge="sampling-stop" d="M647 522 V548 H290 V558" fill="none" stroke="#A33A24" stroke-width="3" marker-end="url(#arrow)"/>
+  <path data-region="service-edge" data-edge="sampling-max" d="M647 522 V548 H490 V558" fill="none" stroke="#A33A24" stroke-width="3" marker-end="url(#arrow)"/>
+  <path data-region="service-edge" data-edge="sampling-business" d="M647 522 V558" fill="none" stroke="#A33A24" stroke-width="3" marker-end="url(#arrow)"/>
   <text x="60" y="632" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：概率四位小数；累计比较使用未舍入值。</text>
 </svg>

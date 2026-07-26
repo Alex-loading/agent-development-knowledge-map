@@ -13,27 +13,27 @@
   <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">KV Cache：少重算，显存换并发</text>
   <text x="48" y="88" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">无缓存：每步重算历史前缀</text>
   <text x="48" y="252" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#1F7A78">有缓存：读取历史 K/V，只追加当前 K/V</text>
-  <rect x="48" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/>
+  <rect x="48" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3" data-region="kv-recompute-stage" data-step="1"/>
   <text x="68" y="150" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 1</text>
   <text x="68" y="184" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">重算 2 个位置</text>
   <rect data-region="kv-recompute-block" data-step="1" data-index="0" x="68" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="1" data-index="1" x="110" y="188" width="38" height="10" fill="#A33A24"/>
-  <rect x="298" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/>
+  <rect x="298" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3" data-region="kv-recompute-stage" data-step="2"/>
   <text x="318" y="150" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 2</text>
   <text x="318" y="184" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">重算 3 个位置</text>
   <rect data-region="kv-recompute-block" data-step="2" data-index="0" x="318" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="2" data-index="1" x="360" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="2" data-index="2" x="402" y="188" width="38" height="10" fill="#A33A24"/>
-  <rect x="548" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/>
+  <rect x="548" y="112" width="220" height="90" rx="16" fill="#F4E8EB" stroke="#A33A24" stroke-width="3" data-region="kv-recompute-stage" data-step="3"/>
   <text x="568" y="150" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 3</text>
   <text x="568" y="184" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">重算 4 个位置</text>
   <rect data-region="kv-recompute-block" data-step="3" data-index="0" x="568" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="3" data-index="1" x="610" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="3" data-index="2" x="652" y="188" width="38" height="10" fill="#A33A24"/><rect data-region="kv-recompute-block" data-step="3" data-index="3" x="694" y="188" width="38" height="10" fill="#A33A24"/>
-  <rect x="48" y="276" width="220" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="0"/>
+  <rect x="48" y="276" width="220" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="0" data-step="1"/>
   <text x="68" y="314" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 1</text>
   <text x="68" y="348" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">读旧 K/V + 添新</text>
   <rect data-region="kv-prefill-history" data-step="1" data-count="2" x="68" y="352" width="84" height="10" fill="#315C9B"/><rect data-region="kv-append-block" data-step="1" data-count="1" x="158" y="352" width="38" height="10" fill="#1F7A78"/><path data-region="kv-edge" data-edge="read-append-1" data-from="history-1" data-to="append-1" d="M152 357 H158" stroke="#18212B" stroke-width="3"/>
-  <rect x="298" y="276" width="220" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="1"/>
+  <rect x="298" y="276" width="220" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="1" data-step="2"/>
   <text x="318" y="314" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 2</text>
   <text x="318" y="348" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">读旧 K/V + 添新</text>
   <rect data-region="kv-prefill-history" data-step="2" data-count="3" x="318" y="352" width="126" height="10" fill="#315C9B"/><rect data-region="kv-append-block" data-step="2" data-count="1" x="450" y="352" width="38" height="10" fill="#1F7A78"/><path data-region="kv-edge" data-edge="read-append-2" data-from="history-2" data-to="append-2" d="M444 357 H450" stroke="#18212B" stroke-width="3"/>
-  <rect x="548" y="276" width="220" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="2"/>
+  <rect x="548" y="276" width="240" height="90" rx="16" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3" data-region="kv-cache-read" data-index="2" data-step="3"/>
   <text x="568" y="314" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">decode 3</text>
   <text x="568" y="348" font-family="Trebuchet MS" font-size="26" font-weight="400" fill="#18212B">读旧 K/V + 添新</text>
   <rect data-region="kv-prefill-history" data-step="3" data-count="4" x="568" y="352" width="168" height="10" fill="#315C9B"/><rect data-region="kv-append-block" data-step="3" data-count="1" x="742" y="352" width="38" height="10" fill="#1F7A78"/><path data-region="kv-edge" data-edge="read-append-3" data-from="history-3" data-to="append-3" d="M736 357 H742" stroke="#18212B" stroke-width="3"/>

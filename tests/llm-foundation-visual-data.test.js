@@ -1576,13 +1576,13 @@ test('models the complete service loop, LoRA paths, RAG axes, latency diagnosis 
 
   const lora = await parse('llm-05-lora-update');
   const loraNodes = new Set(lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-node').map((n) => n.attributes.get('data-node')));
-  ['x', 'frozen-w', 'a', 'b', 'delta-w', 'plus', 'adapted-output', 'train-boundary', 'deploy-boundary'].forEach((id) => assert.ok(loraNodes.has(id), id));
+  ['x', 'wx', 'ax', 'bax', 'plus', 'adapted-output', 'train-boundary', 'deploy-boundary'].forEach((id) => assert.ok(loraNodes.has(id), id));
   const loraEdges = new Set(lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-edge').map((n) => n.attributes.get('data-edge')));
-  ['x-w', 'x-a', 'a-b', 'b-delta', 'w-plus', 'delta-plus', 'plus-output'].forEach((id) => assert.ok(loraEdges.has(id), id));
+  ['x-wx', 'x-ax', 'ax-bax', 'wx-plus', 'bax-plus', 'plus-output'].forEach((id) => assert.ok(loraEdges.has(id), id));
   const expectedLoraEdges = {
-    'x-w': ['x', 'frozen-w'], 'x-a': ['x', 'a'], 'a-b': ['a', 'b'],
-    'b-delta': ['b', 'delta-w'], 'w-plus': ['frozen-w', 'plus'],
-    'delta-plus': ['delta-w', 'plus'], 'plus-output': ['plus', 'adapted-output'],
+    'x-wx': ['x', 'wx'], 'x-ax': ['x', 'ax'], 'ax-bax': ['ax', 'bax'],
+    'wx-plus': ['wx', 'plus'], 'bax-plus': ['bax', 'plus'],
+    'plus-output': ['plus', 'adapted-output'],
   };
   lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-edge').forEach((edge) => {
     assert.deepEqual(
@@ -2165,6 +2165,86 @@ test('keeps every llm-01–06 SVG label at least 26px with a 32px viewBox safety
         assert.ok(fontSize >= 26n, `${assetPath}:${textNode.text} 字号小于 26`);
         assert.ok(x >= 32n && x <= 1168n, `${assetPath}:${textNode.text} 横向越界`);
         assert.ok(y >= 32n && y <= 643n, `${assetPath}:${textNode.text} 纵向越界`);
+      }
+    }
+  }
+});
+
+test('plots every sorted latency sample on a visible rank axis with fixture-derived geometry', async () => {
+  const visualId = 'visual-llm-06-latency-breakdown';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = 'assets/visuals/llm-foundation/llm-06-latency-breakdown.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const plot = parsed.elements.find(
+    (node) => node.attributes.get('data-region') === 'latency-rank-plot',
+  );
+  assert.ok(plot, '必须声明可见的 rank 排序图');
+  const originX = finiteNumberAttribute(plot, 'data-origin-x', 'latency-rank-plot');
+  const stepX = finiteNumberAttribute(plot, 'data-scale', 'latency-rank-plot');
+  const sortedSamples = [...fixture.data.samplesMs].sort((a, b) => a - b);
+  const points = parsed.elements.filter(
+    (node) => node.name === 'rect' && node.attributes.get('data-region') === 'latency-rank-point',
+  );
+  assert.equal(points.length, sortedSamples.length);
+  sortedSamples.forEach((expectedValue, index) => {
+    const rank = index + 1;
+    const point = points.find((node) => node.attributes.get('data-index') === String(rank));
+    assert.ok(point, `rank ${rank} 必须有可见点`);
+    assert.equal(finiteNumberAttribute(point, 'data-value', `rank ${rank}`), expectedValue);
+    assert.equal(finiteNumberAttribute(point, 'x', `rank ${rank}`), originX + index * stepX);
+    assert.ok(finiteNumberAttribute(point, 'width', `rank ${rank}`) > 0);
+    assert.ok(finiteNumberAttribute(point, 'height', `rank ${rank}`) > 0);
+  });
+  const marker = parsed.elements.find(
+    (node) => node.attributes.get('data-region') === 'p95-marker',
+  );
+  assert.equal(finiteNumberAttribute(marker, 'data-index', 'p95-marker'), fixture.result.nearestRank);
+  assert.equal(finiteNumberAttribute(marker, 'data-value', 'p95-marker'), fixture.result.p95Ms);
+  assert.equal(
+    finiteNumberAttribute(marker, 'x1', 'p95-marker'),
+    originX + (fixture.result.nearestRank - 1) * stepX,
+  );
+  assert.ok(finiteNumberAttribute(marker, 'y2', 'p95-marker') > finiteNumberAttribute(marker, 'y1', 'p95-marker'));
+  assert.equal(
+    finiteNumberAttribute(points.at(-1), 'data-value', 'max-rank-point'),
+    fixture.result.maxMs,
+  );
+});
+
+test('contains every KV history and append block inside its visible decode card', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-06-kv-cache.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  for (const mode of ['recompute', 'cached']) {
+    for (const step of ['1', '2', '3']) {
+      const cardRegion = mode === 'recompute' ? 'kv-recompute-stage' : 'kv-cache-read';
+      const card = parsed.elements.find(
+        (node) =>
+          node.name === 'rect'
+          && node.attributes.get('data-region') === cardRegion
+          && node.attributes.get('data-step') === step,
+      );
+      assert.ok(card, `${mode} step ${step} 必须有可检查的可见卡片`);
+      const cardLeft = finiteNumberAttribute(card, 'x', `${mode}-${step}`);
+      const cardTop = finiteNumberAttribute(card, 'y', `${mode}-${step}`);
+      const cardRight = cardLeft + finiteNumberAttribute(card, 'width', `${mode}-${step}`);
+      const cardBottom = cardTop + finiteNumberAttribute(card, 'height', `${mode}-${step}`);
+      const blockRegions = mode === 'recompute'
+        ? ['kv-recompute-block']
+        : ['kv-prefill-history', 'kv-append-block'];
+      const blocks = parsed.elements.filter(
+        (node) =>
+          node.name === 'rect'
+          && blockRegions.includes(node.attributes.get('data-region'))
+          && node.attributes.get('data-step') === step,
+      );
+      assert.ok(blocks.length > 0, `${mode} step ${step} 必须有历史/追加块`);
+      for (const block of blocks) {
+        const left = finiteNumberAttribute(block, 'x', `${mode}-${step}-block`);
+        const top = finiteNumberAttribute(block, 'y', `${mode}-${step}-block`);
+        const right = left + finiteNumberAttribute(block, 'width', `${mode}-${step}-block`);
+        const bottom = top + finiteNumberAttribute(block, 'height', `${mode}-${step}-block`);
+        assert.ok(left >= cardLeft && right <= cardRight, `${mode} step ${step} 块横向越出卡片`);
+        assert.ok(top >= cardTop && bottom <= cardBottom, `${mode} step ${step} 块纵向越出卡片`);
       }
     }
   }
