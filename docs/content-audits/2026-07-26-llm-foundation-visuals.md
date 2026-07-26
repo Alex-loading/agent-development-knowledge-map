@@ -63,12 +63,14 @@
 
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`531b705fc6dc314af83dfdeb3d14466bab3a37a0`
+- 清单内容标识：Inventory git blob SHA：`d5550c97a446dfd3e977d8d6a9b68418a96b27a1`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
 - 人工复核结果：40 / 40 项通过；每项均复核 cognitive question、图形角色、assessed coverage、来源范围、许可决策和 storyboard 七要素。
 - 角色字段已改为确定性语法 `图形形式；primary=<role>；tags=<tag,...>`。primary allowlist 为 `overview`、`mechanism`、`process`、`comparison`、`boundary`、`decision`；secondary tags allowlist 为 `mechanism`、`process`、`comparison`、`boundary`、`decision`、`relationship`、`failure-mode`、`tradeoff`。每项只能有一个 primary，tags 不得重复 primary。
-- 逐项扫描确认 40 项中有 25 项包含定量计算、固定数值、坐标点、预算或阈值；这 25 项均冻结了 `Input`、`Rule/version`、逐步 `Expected` 与 `Rounding`，其余 15 项为定性结构或概念关系图。
+- 清单 40 行均显式声明 `fixture=quantitative` 或 `fixture=qualitative`；测试从文档自身派生出 25 项定量与 15 项定性 scope，再与冻结 ID 集合做双向比较。
+- 25 项定量输入的单一数值真源为 `tests/fixtures/llm-foundation-visual-fixtures.js`。清单只保存 `fixtureId` 引用，不复制数值；真源按固定顺序保存非空 `Input`、`Method`、`Expected`、`Rounding`、机器输入与预期结果。
+- 第二轮逐项扫描了全部 25 个定量 fixture：重点补全 training-cycle 的 forward/MSE/backward/SGD/新参数与复算、backprop-graph 的真实分叉/局部梯度/共享变量累加、generalization-curves 的三组完整数组，以及 score-mask-softmax 的原始 QK/缩放/mask/softmax/V 聚合；其余 21 项也均由测试执行 storyboard 承诺的完整定量链。
 - Transformer 总览明确以 GPT-like decoder-only、Pre-Norm 为主例，同时标出 Post-Norm 对比，并保留原论文 encoder-decoder 与 cross-attention 的历史边界。
 - 发布 Pareto 图取消未定义的单一合并指标，改为质量–成本、质量–延迟两个小倍图和独立安全硬门表；固定 A–E 候选值、淘汰结果、dominance 关系和非支配集合。
 
@@ -76,10 +78,11 @@
 
 1. 修正两处不匹配 quiz，并收紧只与课程主题相邻、但不能由图直接回答的 assessed coverage。
 2. 将视觉角色从自然语言混写改为单 primary 加 secondary tags，消除 overview 与其他角色的计数歧义。
-3. 补齐 25 项定量视觉的可执行示例 fixture，并把 tokenization 明确限定为教学规则、把延迟分位数明确到最近秩定义。
+3. 将 25 项定量视觉迁移到无依赖、机器可读的单一 fixture 真源；把 tokenization 明确限定为教学规则，把延迟分位数明确到最近秩定义，并补齐四条曾被截断的计算链。
 4. 补齐 Transformer 的现代 decoder-only 主例、规范化位置对比和原论文架构边界。
 5. 删除 Pareto 图的未定义合并指标，拆分独立单位，并加入安全硬门与支配关系。
 6. 第三方媒体例外为 0；40 项继续采用 `original-synthesis`，没有新增许可推断。
+7. `version-eval-loop` 明确失败样本 3 属于安全切片，因此 v1 被安全 hard gate 阻断；`causal-visibility` 使用嵌套 0/1 数组冻结 4×4 可见矩阵。
 
 ### 可复现校验
 
@@ -87,9 +90,9 @@
 
 | 命令 | 预期结果 |
 | --- | --- |
-| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 5`、`pass 5`、`fail 0` |
-| `npm test` | `tests 324`、`pass 324`、`fail 0` |
-| `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[知]\|unk[n]own' docs/research/2026-07-26-llm-foundation-visual-inventory.md docs/content-audits/2026-07-26-llm-foundation-visuals.md` | 无匹配，退出码 1 |
+| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 8`、`pass 8`、`fail 0` |
+| `npm test` | `tests 327`、`pass 327`、`fail 0` |
+| `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[知]\|unk[n]own' docs/research/2026-07-26-llm-foundation-visual-inventory.md docs/content-audits/2026-07-26-llm-foundation-visuals.md tests/fixtures/llm-foundation-visual-fixtures.js` | 无匹配，退出码 1 |
 | `git diff --check` | 无输出，退出码 0 |
 
-项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、decision/status、storyboard 七要素、section/source/assessed 路径解析、25 项 fixture 字段、关键架构边界、Pareto 边界、清单内容 SHA 与未决标记扫描。机器校验不能证明语义正确；它不能判断认知问题是否教学上最佳、assessed coverage 是否真正足以支持学习判断、来源主张是否被正确解释，或图形在实际渲染后是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。
+项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、storyboard 七要素、section/source/assessed 路径解析、文档派生的 25/15 fixture 分类、单一真源字段与引用，并实际重算 softmax、BCE/MSE、SGD、上下文预算、KV 容量、nearest-rank P95、切片通过率、Pareto 支配关系和全部 25 条预期结果。冻结状态还精确要求 40 项 `decision=original-synthesis`、40 项 `status=verified`，并检查 candidate URL 与 permission evidence 一致；突变等价测试证明空 `Expected`、`blocked`、`licensed-reproduction` 和第三方候选 URL 均会失败。机器校验不能证明语义正确；它不能判断认知问题是否教学上最佳、assessed coverage 是否真正足以支持学习判断、来源主张是否被正确解释，或图形在实际渲染后是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。
