@@ -111,6 +111,15 @@ const LOCAL_FRAGMENT_ATTRIBUTES = new Set([
   'marker-end',
 ]);
 const LOCAL_HREF_ELEMENTS = new Set(['use', 'textPath']);
+const SVG_NUMBER_SOURCE = '[+-]?(?:(?:[0-9]+(?:\\.[0-9]*)?)|(?:\\.[0-9]+))(?:[eE][+-]?[0-9]+)?';
+const SVG_NUMBER_PATTERN = new RegExp(`^${SVG_NUMBER_SOURCE}$`);
+const SVG_VIEW_BOX_PATTERN = new RegExp(
+  `^(${SVG_NUMBER_SOURCE})[\\x20\\x09\\x0D\\x0A]+`
+  + `(${SVG_NUMBER_SOURCE})[\\x20\\x09\\x0D\\x0A]+`
+  + `(${SVG_NUMBER_SOURCE})[\\x20\\x09\\x0D\\x0A]+`
+  + `(${SVG_NUMBER_SOURCE})$`,
+);
+const POSITIVE_DECIMAL_INTEGER_PATTERN = /^[1-9][0-9]*$/;
 
 async function loadRegistry() {
   return import('../src/data/visuals/index.js');
@@ -403,6 +412,61 @@ function parseStrictSvg(svg, label) {
   };
 }
 
+function svgNumberEqualsInteger(token, expected) {
+  const parts = /^([+-]?)(?:([0-9]+)(?:\.([0-9]*))?|\.([0-9]+))(?:[eE]([+-]?[0-9]+))?$/
+    .exec(token);
+  if (!parts || !Number.isSafeInteger(expected) || expected < 0) return false;
+
+  const integerPart = parts[2] ?? '';
+  const fractionPart = parts[2] === undefined ? parts[4] : (parts[3] ?? '');
+  const significantDigits = `${integerPart}${fractionPart}`.replace(/^0+/, '');
+  if (significantDigits === '') return expected === 0;
+  if (parts[1] === '-') return false;
+
+  const decimalShift = BigInt(parts[5] ?? '0') - BigInt(fractionPart.length);
+  const expectedDigits = String(expected);
+  if (decimalShift >= 0n) {
+    const zeroCount = expectedDigits.length - significantDigits.length;
+    return (
+      zeroCount >= 0
+      && decimalShift === BigInt(zeroCount)
+      && `${significantDigits}${'0'.repeat(zeroCount)}` === expectedDigits
+    );
+  }
+
+  const removedCount = significantDigits.length - expectedDigits.length;
+  return (
+    removedCount > 0
+    && -decimalShift === BigInt(removedCount)
+    && significantDigits.slice(0, -removedCount) === expectedDigits
+    && /^[0]+$/.test(significantDigits.slice(-removedCount))
+  );
+}
+
+function assertRootDimension(value, expected, label) {
+  assert.equal(typeof value, 'string', `${label}: 必须存在`);
+  assert.match(value, POSITIVE_DECIMAL_INTEGER_PATTERN, `${label}: 必须是无单位正十进制整数`);
+  assert.ok(Number.isSafeInteger(expected) && expected > 0, `${label}: registry 尺寸必须是安全正整数`);
+  assert.equal(BigInt(value), BigInt(expected), `${label}: 必须与 registry 尺寸精确一致`);
+}
+
+function assertViewBox(value, expected, label) {
+  assert.equal(typeof value, 'string', `${label}: 必须存在`);
+  const match = SVG_VIEW_BOX_PATTERN.exec(value);
+  assert.ok(
+    match,
+    `${label}: 必须是四个以 XML wsp 分隔的 SVG number，禁止逗号与 Unicode 空白`,
+  );
+  const tokens = match.slice(1);
+  for (let index = 0; index < expected.length; index += 1) {
+    assert.match(tokens[index], SVG_NUMBER_PATTERN, `${label}: 第 ${index + 1} 项词法无效`);
+    assert.ok(
+      svgNumberEqualsInteger(tokens[index], expected[index]),
+      `${label}: 第 ${index + 1} 项必须与 registry 数值精确一致`,
+    );
+  }
+}
+
 function assertSafeSvg(svg, visual, assetPath) {
   const label = `${visual.id}:${assetPath}`;
   const parsed = parseStrictSvg(svg, label);
@@ -419,28 +483,24 @@ function assertSafeSvg(svg, visual, assetPath) {
   assert.ok(titleId, `${label}: title 必须有 id`);
   assert.ok(descId, `${label}: desc 必须有 id`);
   assert.notEqual(titleId, descId, `${label}: title 与 desc id 必须不同`);
-  assert.ok(titleNode.text.trim(), `${label}: title 必须有正文`);
-  assert.ok(descNode.text.trim(), `${label}: desc 必须有正文`);
-  const labelledBy = parsed.root.attributes.get('aria-labelledby')?.trim().split(/\s+/);
-  assert.deepEqual(
+  assert.match(titleNode.text, /[^\x20\x09\x0D\x0A]/, `${label}: title 必须有正文`);
+  assert.match(descNode.text, /[^\x20\x09\x0D\x0A]/, `${label}: desc 必须有正文`);
+  const labelledBy = parsed.root.attributes.get('aria-labelledby');
+  assert.equal(
     labelledBy,
-    [titleId, descId],
-    `${label}: aria-labelledby 必须依次引用真实 title 与 desc`,
+    `${titleId} ${descId}`,
+    `${label}: aria-labelledby 必须以单个 ASCII 空格依次引用真实 title 与 desc`,
   );
-  assert.equal(parsed.ids.get(labelledBy?.[0]), titleNode, `${label}: aria 首项必须指向真实 title`);
-  assert.equal(parsed.ids.get(labelledBy?.[1]), descNode, `${label}: aria 次项必须指向真实 desc`);
+  assert.equal(parsed.ids.get(titleId), titleNode, `${label}: aria 首项必须指向真实 title`);
+  assert.equal(parsed.ids.get(descId), descNode, `${label}: aria 次项必须指向真实 desc`);
 
-  const viewBox = parsed.root.attributes.get('viewBox')
-    ?.trim()
-    .split(/[\s,]+/)
-    .map(Number);
-  assert.deepEqual(
-    viewBox,
+  assertViewBox(
+    parsed.root.attributes.get('viewBox'),
     [0, 0, visual.width, visual.height],
-    `${label}: viewBox 必须与 registry 尺寸一致`,
+    `${label}: viewBox`,
   );
-  assert.equal(Number(parsed.root.attributes.get('width')), visual.width, `${label}: width 必须固定`);
-  assert.equal(Number(parsed.root.attributes.get('height')), visual.height, `${label}: height 必须固定`);
+  assertRootDimension(parsed.root.attributes.get('width'), visual.width, `${label}: width`);
+  assertRootDimension(parsed.root.attributes.get('height'), visual.height, `${label}: height`);
 }
 
 test('publishes the frozen llm-01 overview visual reference', () => {
@@ -760,6 +820,91 @@ test('parsed SVG semantics cannot be spoofed by attribute-value text', () => {
   assert.equal(parsed.elementsByName.get('desc')[0].attributes.get('id'), 'd');
   assert.doesNotThrow(() => assertSafeSvg(safeAttributeText, visual, 'safe-attribute-text.svg'));
   for (const [name, svg] of malformedSemantics) {
+    assert.throws(
+      () => assertSafeSvg(svg, visual, `${name}.svg`),
+      assert.AssertionError,
+      name,
+    );
+  }
+});
+
+test('SVG dimensions and viewBox use explicit number and XML-wsp grammar', () => {
+  const visual = { id: 'visual-test', width: 1200, height: 675 };
+  const svgWith = ({
+    width = '1200',
+    height = '675',
+    viewBox = '0 0 1200 675',
+  } = {}) => (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" `
+    + `viewBox="${viewBox}" role="img" aria-labelledby="t d">`
+    + '<title id="t">标题</title><desc id="d">描述</desc></svg>'
+  );
+  const invalidNumbers = new Map([
+    ['hexadecimal width', svgWith({ width: '0x4b0' })],
+    ['binary height', svgWith({ height: '0b1010100011' })],
+    ['exponent width', svgWith({ width: '12e2' })],
+    ['signed width', svgWith({ width: '+1200' })],
+    ['zero-padded width', svgWith({ width: '01200' })],
+    ['numeric separator width', svgWith({ width: '1_200' })],
+    ['NBSP viewBox separator', svgWith({ viewBox: '0\u00A00 1200 675' })],
+    ['EM SPACE viewBox separator', svgWith({ viewBox: '0\u20030 1200 675' })],
+    ['hexadecimal and binary viewBox', svgWith({ viewBox: '0x0 0b0 0x4b0 0x2a3' })],
+    ['Infinity viewBox number', svgWith({ viewBox: '0 0 Infinity 675' })],
+    ['NaN viewBox number', svgWith({ viewBox: '0 0 NaN 675' })],
+    ['incomplete exponent', svgWith({ viewBox: '0 0 12e+ 675' })],
+    ['overflowing exponent', svgWith({ viewBox: '0 0 1e9999 675' })],
+    ['fraction rounded by JS Number', svgWith({ viewBox: '0 0 1200.0000000000000001 675' })],
+    ['comma-separated viewBox', svgWith({ viewBox: '0,0,1200,675' })],
+    ['repeated comma viewBox', svgWith({ viewBox: '0,,0,,,1200,675' })],
+  ]);
+
+  assert.doesNotThrow(() => assertSafeSvg(svgWith(), visual, 'decimal.svg'));
+  assert.doesNotThrow(
+    () => assertSafeSvg(
+      svgWith({ viewBox: '0e0 .0 1.2e3 6.75e2' }),
+      visual,
+      'exponent.svg',
+    ),
+  );
+  assert.doesNotThrow(
+    () => assertSafeSvg(
+      svgWith({ viewBox: '0.0 0. 1200.000 675.0' }),
+      visual,
+      'fraction.svg',
+    ),
+  );
+  assert.doesNotThrow(
+    () => assertSafeSvg(svgWith({ viewBox: '0\t0\n1200\r675' }), visual, 'xml-wsp.svg'),
+  );
+  for (const [name, svg] of invalidNumbers) {
+    assert.throws(
+      () => assertSafeSvg(svg, visual, `${name}.svg`),
+      assert.AssertionError,
+      name,
+    );
+  }
+});
+
+test('aria-labelledby uses exactly two IDs separated by one ASCII space', () => {
+  const visual = { id: 'visual-test', width: 1200, height: 675 };
+  const svgWithAria = (ariaLabelledBy) => (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+    + `viewBox="0 0 1200 675" role="img" aria-labelledby="${ariaLabelledBy}">`
+    + '<title id="t">标题</title><desc id="d">描述</desc></svg>'
+  );
+  const invalidIdRefLists = new Map([
+    ['NBSP separator', svgWithAria('t\u00A0d')],
+    ['EM SPACE separator', svgWithAria('t\u2003d')],
+    ['leading NBSP', svgWithAria('\u00A0t d')],
+    ['trailing NBSP', svgWithAria('t d\u00A0')],
+    ['repeated ASCII spaces', svgWithAria('t  d')],
+    ['Tab separator', svgWithAria('t\td')],
+    ['leading ASCII space', svgWithAria(' t d')],
+    ['trailing ASCII space', svgWithAria('t d ')],
+  ]);
+
+  assert.doesNotThrow(() => assertSafeSvg(svgWithAria('t d'), visual, 'aria-space.svg'));
+  for (const [name, svg] of invalidIdRefLists) {
     assert.throws(
       () => assertSafeSvg(svg, visual, `${name}.svg`),
       assert.AssertionError,
