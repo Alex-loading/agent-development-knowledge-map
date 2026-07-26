@@ -277,6 +277,60 @@ const EXPECTED_VISUALS = Object.freeze({
     sourceIds: ['res-hf-llm', 'res-openai-cookbook'],
     fixtureId: 'fixture-llm-06-latency-breakdown',
   },
+  'visual-llm-07-runtime-contract': {
+    lessonId: 'llm-07', sectionId: 'prompt-as-runtime-contract',
+    kind: 'diagram', role: 'overview', tags: ['boundary'],
+    sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-agents'],
+  },
+  'visual-llm-07-instruction-boundary': {
+    lessonId: 'llm-07', sectionId: 'instruction-and-untrusted-data-boundaries',
+    kind: 'diagram', role: 'boundary', tags: ['failure-mode'],
+    sourceIds: ['res-owasp-prompt-injection', 'res-ms-genai', 'res-hf-agents'],
+  },
+  'visual-llm-07-schema-pipeline': {
+    lessonId: 'llm-07', sectionId: 'schema-and-structured-output',
+    kind: 'diagram', role: 'mechanism', tags: ['process'],
+    sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
+  },
+  'visual-llm-07-retry-state-machine': {
+    lessonId: 'llm-07', sectionId: 'validation-retry-and-side-effects',
+    kind: 'diagram', role: 'mechanism', tags: ['failure-mode', 'process'],
+    sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-owasp-prompt-injection'],
+    fixtureId: 'fixture-llm-07-retry-state-machine',
+  },
+  'visual-llm-07-version-eval-loop': {
+    lessonId: 'llm-07', sectionId: 'observable-versioned-evaluation',
+    kind: 'diagram', role: 'process', tags: ['decision'],
+    sourceIds: ['res-openai-cookbook', 'res-llm-universe', 'res-ms-genai', 'res-owasp-prompt-injection'],
+    fixtureId: 'fixture-llm-07-version-eval-loop',
+  },
+  'visual-llm-08-failure-map': {
+    lessonId: 'llm-08', sectionId: 'failure-taxonomy-not-fluency',
+    kind: 'diagram', role: 'overview', tags: ['boundary'],
+    sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-agents'],
+  },
+  'visual-llm-08-grounding-chain': {
+    lessonId: 'llm-08', sectionId: 'evidence-grounding-and-uncertainty',
+    kind: 'diagram', role: 'mechanism', tags: ['failure-mode', 'process'],
+    sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-llm-universe'],
+  },
+  'visual-llm-08-eval-funnel': {
+    lessonId: 'llm-08', sectionId: 'eval-dataset-and-slices',
+    kind: 'diagram', role: 'process', tags: ['decision'],
+    sourceIds: ['res-openai-evals', 'res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
+    fixtureId: 'fixture-llm-08-eval-funnel',
+  },
+  'visual-llm-08-injection-defense': {
+    lessonId: 'llm-08', sectionId: 'prompt-injection-threat-model',
+    kind: 'diagram', role: 'mechanism', tags: ['boundary', 'failure-mode'],
+    sourceIds: ['res-owasp-prompt-injection'],
+  },
+  'visual-llm-08-release-pareto': {
+    lessonId: 'llm-08', sectionId: 'defense-in-depth-and-runtime-operations',
+    kind: 'diagram', role: 'decision', tags: ['comparison', 'tradeoff'],
+    sourceIds: ['res-owasp-prompt-injection', 'res-hf-agents', 'res-ms-genai', 'res-anthropic-agents'],
+    fixtureId: 'fixture-llm-08-release-pareto',
+  },
 });
 const EXPECTED_VISUAL_IDS = Object.freeze(Object.keys(EXPECTED_VISUALS));
 const FIXTURES_BY_ID = new Map(
@@ -535,14 +589,14 @@ test('field map preserves the frozen reading order, encodings and counterexample
   assert.match(svg, /斜线阴影：两轴交叉/);
 });
 
-test('publishes exactly five frozen visual references per llm-01–06 lesson with all coverage groups', async () => {
+test('publishes exactly five frozen visual references per llm-01–08 lesson with all coverage groups', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   assert.deepEqual(
     llmFoundationVisuals.map(({ id }) => id).sort(),
     [...EXPECTED_VISUAL_IDS].sort(),
-    '01–06 registry 必须精确使用冻结的三十个 visual ID',
+    '01–08 registry 必须精确使用冻结的四十个 visual ID',
   );
-  assert.equal(llmFoundationVisuals.length, 30);
+  assert.equal(llmFoundationVisuals.length, 40);
 
   for (const lessonId of VISUALIZED_LESSON_IDS) {
     const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
@@ -570,7 +624,7 @@ test('publishes exactly five frozen visual references per llm-01–06 lesson wit
   }
 });
 
-test('places every published llm-01–06 visual once in its evidence-owning real section', async () => {
+test('places every published llm-01–08 visual once in its evidence-owning real section', async () => {
   const { knowledgeVisuals } = await loadRegistry();
   const result = await validateKnowledgeVisualOwnership({
     courseRegistry: { 'llm-foundation': llmFoundation },
@@ -581,7 +635,7 @@ test('places every published llm-01–06 visual once in its evidence-owning real
     },
   });
   assert.deepEqual(result.errors, []);
-  assert.equal(result.placements.length, 30);
+  assert.equal(result.placements.length, 40);
 
   const placementsById = new Map(
     result.placements.map((placement) => [placement.visualId, placement]),
@@ -617,6 +671,12 @@ test('places every published llm-01–06 visual once in its evidence-owning real
     llm06.knowledgeNote.overviewVisualSectionId,
     'sampling-experiment-and-serving-tradeoffs',
   );
+  const llm07 = llmFoundation.lessons.find(({ id }) => id === 'llm-07');
+  assert.equal(llm07.knowledgeNote.overviewVisualId, 'visual-llm-07-runtime-contract');
+  assert.equal(llm07.knowledgeNote.overviewVisualSectionId, 'prompt-as-runtime-contract');
+  const llm08 = llmFoundation.lessons.find(({ id }) => id === 'llm-08');
+  assert.equal(llm08.knowledgeNote.overviewVisualId, 'visual-llm-08-failure-map');
+  assert.equal(llm08.knowledgeNote.overviewVisualSectionId, 'failure-taxonomy-not-fluency');
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
     VISUALIZED_LESSON_IDS.includes(id),
@@ -654,6 +714,14 @@ test('anchors visuals after the earliest paragraph that completes their teaching
     'visual-llm-06-temperature-top-p': 2,
     'visual-llm-06-kv-cache': 2,
     'visual-llm-06-latency-breakdown': 3,
+    'visual-llm-07-instruction-boundary': 2,
+    'visual-llm-07-schema-pipeline': 2,
+    'visual-llm-07-retry-state-machine': 2,
+    'visual-llm-07-version-eval-loop': 2,
+    'visual-llm-08-grounding-chain': 2,
+    'visual-llm-08-eval-funnel': 2,
+    'visual-llm-08-injection-defense': 2,
+    'visual-llm-08-release-pareto': 3,
   };
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
@@ -673,9 +741,9 @@ test('anchors visuals after the earliest paragraph that completes their teaching
   }
 });
 
-test('keeps all thirty llm-01–06 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
+test('keeps all forty llm-01–08 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
-  assert.equal(llmFoundationVisuals.length, 30);
+  assert.equal(llmFoundationVisuals.length, 40);
   const countByLesson = new Map();
 
   for (const visual of llmFoundationVisuals) {
@@ -705,6 +773,8 @@ test('keeps all thirty llm-01–06 registry records aligned with frozen roles, t
     'llm-04': 5,
     'llm-05': 5,
     'llm-06': 5,
+    'llm-07': 5,
+    'llm-08': 5,
   });
 });
 
@@ -2154,7 +2224,7 @@ test('lays out raw attention scores and causal visibility as fixture-derived mat
   });
 });
 
-test('keeps every llm-01–06 SVG label at least 26px with a 32px viewBox safety margin', async () => {
+test('keeps every llm-01–08 SVG label at least 26px with a 32px viewBox safety margin', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   for (const visual of llmFoundationVisuals) {
     for (const assetPath of assetPathsFor(visual)) {

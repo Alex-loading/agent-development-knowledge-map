@@ -1,5 +1,7 @@
 export const llm08Note = {
   readingMinutes: 38,
+  overviewVisualId: 'visual-llm-08-failure-map',
+  overviewVisualSectionId: 'failure-taxonomy-not-fluency',
   introduction: '上一课把 Prompt、Schema、三层校验和副作用隔离组织成了单次调用的运行时契约，但契约只是可靠系统的一层：它不能证明答案有证据、评测能代表生产分布，也不能阻止一个拥有过大权限的应用执行危险动作。本课把视角从“这次输出能否解析”提升到“这个功能能否发布并持续运营”。我们会先区分无证据生成、非确定性、上下文污染与 Prompt Injection，再分别建立证据忠实度、版本化评测、裁判校准、注入威胁路径、纵深防御和线上观测。贯穿案例是“读取知识库并起草退款答复”：学完后，你应能提交至少十五条尚待执行的具体用例，为正确性、忠实度、格式、安全、成本与 P95 延迟指定项目自己的指标、阈值和责任人，并写出满足哪些硬门槛才允许上线。',
   sections: [
     {
@@ -38,6 +40,7 @@ export const llm08Note = {
         title: '模型裁判不是 gold truth',
         body: '裁判可以规模化比较答案与证据，但也会偏置和漂移；高风险结论仍要用人工 gold 标签与确定性检查校准。',
       },
+      visuals: [{ visualId: 'visual-llm-08-grounding-chain', afterParagraph: 2 }],
       sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-llm-universe'],
     },
     {
@@ -52,6 +55,7 @@ export const llm08Note = {
         '评测集从真实需求、边界、对抗和生产失败演进，并以固定回归集、failure set 与 heldout 集分工。',
         '按语言、长度、风险、权限和证据冲突切片，分别衡量任务质量、grounding、格式、安全、成本与延迟。',
       ],
+      visuals: [{ visualId: 'visual-llm-08-eval-funnel', afterParagraph: 2 }],
       sourceIds: ['res-openai-evals', 'res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
     },
     {
@@ -90,6 +94,7 @@ export const llm08Note = {
         title: 'Guardrail 也在攻击面里',
         body: '过滤和模型护栏可帮助识别风险，但会有漏报、误报和对抗绕过；不能让它们成为危险工具前唯一一道门。',
       },
+      visuals: [{ visualId: 'visual-llm-08-injection-defense', afterParagraph: 2 }],
       sourceIds: ['res-owasp-prompt-injection'],
     },
     {
@@ -105,6 +110,7 @@ export const llm08Note = {
         '最小权限、会话授权、工具专用校验、人工确认、内容清理、租户隔离、监控与 kill switch 共同限制影响。',
         '先守安全硬门槛，再按切片比较质量、成本与尾延迟的 Pareto 权衡；路由和缓存也需验证隐私与失效边界。',
       ],
+      visuals: [{ visualId: 'visual-llm-08-release-pareto', afterParagraph: 3 }],
       sourceIds: ['res-owasp-prompt-injection', 'res-hf-agents', 'res-ms-genai', 'res-anthropic-agents'],
     },
     {

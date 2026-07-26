@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">同一个流畅症状，可能来自六种不同失败</title>
+  <desc id="desc">一个流畅但不可用的症状分别连接事实、推理、格式、指令、权限和性能六类；每类都有独立证据和匹配缓解。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#0B766E"/>
+    </marker>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#49645E" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F6F0E3"/>
+  <path d="M34 112 H1166" stroke="#18312D" stroke-width="2"/>
+  <text x="42" y="62" font-family="Avenir Next, PingFang SC, sans-serif" font-size="32" font-weight="800" fill="#18312D" text-anchor="start">同一个流畅症状，可能来自六种不同失败</text>
+  <rect x="35" y="276" width="170" height="110" rx="14" fill="#F5D7D2" stroke="#18312D" stroke-width="3" data-region="failure-symptom" data-node="fluent-symptom"/>
+  <text x="120" y="325" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">流畅但不可用</text>
+  <text x="120" y="359" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">症状不是原因</text>
+  <rect x="245" y="140" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="fact"/>
+  <text x="313" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">① 事实</text>
+  <rect x="400" y="140" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="fact-evidence"/>
+  <text x="468" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">证据不支持</text>
+  <rect x="322" y="255" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="fact-mitigation"/>
+  <text x="412" y="297" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">检索/引用校验</text>
+  <path d="M205 331 H225 V176 H240" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="fact" data-edge="fluent-symptom-fact"/>
+  <line x1="380" y1="176" x2="395" y2="176" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="fact" data-to="fact-evidence" data-edge="fact-fact-evidence"/>
+  <line x1="467" y1="212" x2="422" y2="250" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="fact-evidence" data-to="fact-mitigation" data-edge="fact-evidence-fact-mitigation"/>
+  <rect x="550" y="140" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="reasoning"/>
+  <text x="618" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">② 推理</text>
+  <rect x="705" y="140" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="reasoning-evidence"/>
+  <text x="773" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">步骤矛盾</text>
+  <rect x="627" y="255" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="reasoning-mitigation"/>
+  <text x="717" y="297" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">分步验算</text>
+  <path d="M205 331 H220 V125 H545 V176" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="reasoning" data-edge="fluent-symptom-reasoning"/>
+  <line x1="685" y1="176" x2="700" y2="176" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="reasoning" data-to="reasoning-evidence" data-edge="reasoning-reasoning-evidence"/>
+  <line x1="772" y1="212" x2="727" y2="250" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="reasoning-evidence" data-to="reasoning-mitigation" data-edge="reasoning-evidence-reasoning-mitigation"/>
+  <rect x="855" y="140" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="format"/>
+  <text x="923" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">③ 格式</text>
+  <rect x="1010" y="140" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="format-evidence"/>
+  <text x="1078" y="184" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">Schema 失败</text>
+  <rect x="932" y="255" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="format-mitigation"/>
+  <text x="1022" y="297" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">解析和约束</text>
+  <path d="M205 331 H215 V118 H850 V176" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="format" data-edge="fluent-symptom-format"/>
+  <line x1="990" y1="176" x2="1005" y2="176" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="format" data-to="format-evidence" data-edge="format-format-evidence"/>
+  <line x1="1077" y1="212" x2="1032" y2="250" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="format-evidence" data-to="format-mitigation" data-edge="format-evidence-format-mitigation"/>
+  <rect x="245" y="400" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="instruction"/>
+  <text x="313" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">④ 指令</text>
+  <rect x="400" y="400" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="instruction-evidence"/>
+  <text x="468" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">越过规则</text>
+  <rect x="322" y="515" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="instruction-mitigation"/>
+  <text x="412" y="557" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">对抗测试</text>
+  <path d="M205 331 H225 V436 H240" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="instruction" data-edge="fluent-symptom-instruction"/>
+  <line x1="380" y1="436" x2="395" y2="436" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="instruction" data-to="instruction-evidence" data-edge="instruction-instruction-evidence"/>
+  <line x1="467" y1="472" x2="422" y2="510" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="instruction-evidence" data-to="instruction-mitigation" data-edge="instruction-evidence-instruction-mitigation"/>
+  <rect x="550" y="400" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="permission"/>
+  <text x="618" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">⑤ 权限</text>
+  <rect x="705" y="400" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="permission-evidence"/>
+  <text x="773" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">跨租户</text>
+  <rect x="627" y="515" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="permission-mitigation"/>
+  <text x="717" y="557" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">最小权限</text>
+  <path d="M205 331 H220 V500 H545 V436" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="permission" data-edge="fluent-symptom-permission"/>
+  <line x1="685" y1="436" x2="700" y2="436" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="permission" data-to="permission-evidence" data-edge="permission-permission-evidence"/>
+  <line x1="772" y1="472" x2="727" y2="510" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="permission-evidence" data-to="permission-mitigation" data-edge="permission-evidence-permission-mitigation"/>
+  <rect x="855" y="400" width="135" height="72" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="failure-type" data-node="performance"/>
+  <text x="923" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">⑥ 性能</text>
+  <rect x="1010" y="400" width="135" height="72" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="failure-evidence" data-node="performance-evidence"/>
+  <text x="1078" y="444" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">P95 飙升</text>
+  <rect x="932" y="515" width="180" height="68" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="failure-mitigation" data-node="performance-mitigation"/>
+  <text x="1022" y="557" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">分段诊断</text>
+  <path d="M205 331 H215 V510 H850 V436" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="failure-edge" data-from="fluent-symptom" data-to="performance" data-edge="fluent-symptom-performance"/>
+  <line x1="990" y1="436" x2="1005" y2="436" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="performance" data-to="performance-evidence" data-edge="performance-performance-evidence"/>
+  <line x1="1077" y1="472" x2="1032" y2="510" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="failure-edge" data-from="performance-evidence" data-to="performance-mitigation" data-edge="performance-evidence-performance-mitigation"/>
+  <text x="600" y="640" font-family="Avenir Next, PingFang SC, sans-serif" font-size="27" font-weight="800" fill="#18312D" text-anchor="middle">先分类，再用匹配证据定位；不要把六类问题扔进一个“幻觉”桶。</text>
+</svg>

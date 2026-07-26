@@ -1,5 +1,7 @@
 export const llm07Note = {
   readingMinutes: 38,
+  overviewVisualId: 'visual-llm-07-runtime-contract',
+  overviewVisualSectionId: 'prompt-as-runtime-contract',
   introduction: '上一课已经说明 EOS、stop 或最大输出限制只代表生成过程停下，并不代表结果完整、合法或可以执行。本课把这一边界推进到应用接口：Prompt 不再被当作寻找“神奇措辞”的文案，而是一份可测试的运行时契约；模型输出也不再因看起来像 JSON 就获得信任，而要依次通过解析、JSON Schema 和业务规则。我们还会把请求中携带的工单、邮件等业务载荷，以及外部文档与工具结果视为不可信数据，沿间接 Prompt Injection 的攻击路径说明为何提示层只能降低混淆概率，真正的安全边界必须落在权限、参数校验、人工确认、隔离和日志中。学完后，你应能把模糊需求改写成包含输入边界、成功标准与失败行为的提示契约，选择少量边界示例，设计 Schema、有限修复、降级与可观测链路，并交付一套可落实的工单分类器接口。',
   sections: [
     {
@@ -38,6 +40,7 @@ export const llm07Note = {
         title: '把攻击链截断在模型之外',
         body: '模型可能提出危险动作，但执行层仍可拒绝越权参数、要求人工批准或只返回只读结果；不要让自然语言直接成为系统调用权限。',
       },
+      visuals: [{ visualId: 'visual-llm-07-instruction-boundary', afterParagraph: 2 }],
       sourceIds: ['res-owasp-prompt-injection', 'res-ms-genai', 'res-hf-agents'],
     },
     {
@@ -71,6 +74,7 @@ export const llm07Note = {
         title: 'Schema 是容器模具，不是内容鉴定书',
         body: '模具能保证字段、类型与枚举的位置，却不能证明装进去的理由真实、证据可定位或动作已经获权。',
       },
+      visuals: [{ visualId: 'visual-llm-07-schema-pipeline', afterParagraph: 2 }],
       sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
     },
     {
@@ -90,6 +94,7 @@ export const llm07Note = {
         title: '不要把所有错误都包装成重试',
         body: '有限修复针对可修复输出，退避针对瞬时服务故障；越权、业务无效和高风险动作需要拒绝或人工，而不是再问模型一次。',
       },
+      visuals: [{ visualId: 'visual-llm-07-retry-state-machine', afterParagraph: 2 }],
       sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-owasp-prompt-injection'],
     },
     {
@@ -104,6 +109,7 @@ export const llm07Note = {
         'Prompt、Schema、模型配置和评测集共同版本化，变更必须在代表性与对抗性样例上回归。',
         '记录校验阶段、修复次数、延迟和最终路径，同时对日志实施脱敏、访问控制与留存边界。',
       ],
+      visuals: [{ visualId: 'visual-llm-07-version-eval-loop', afterParagraph: 2 }],
       sourceIds: ['res-openai-cookbook', 'res-llm-universe', 'res-ms-genai', 'res-owasp-prompt-injection'],
     },
     {
