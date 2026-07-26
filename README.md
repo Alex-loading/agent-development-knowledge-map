@@ -20,6 +20,8 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 五个模块仍保留原有 `explanations` 作为兼容 fallback；正常课程详情优先渲染经过来源审计的 `knowledgeNote`。
 
+**视觉教学当前只完成 LLM 基础试点**：八课共接入 40 张主视觉，每课 1 张总览图与 4 张段落视觉。它们通过统一 visual registry 解析本地静态资产、证据归属、替代文本、长描述、图注与分步状态；其他四个已开放模块仍是知识笔记主教材，不能据此视为已经完成视觉化迁移。
+
 ## 功能导览
 
 站点有六个一级视图：
@@ -205,6 +207,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 - `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
 - `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js`、`src/data/context-rag-memory.js` 与 `src/data/backend-engineering.js` 分别保存五个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。五个模块的八课长文分别保存在 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/`、`src/data/agent-harness-notes/`、`src/data/context-rag-memory-notes/` 与 `src/data/backend-engineering-notes/`。`src/data/llm-foundation-notes.js` 是 LLM 聚合入口，`src/data/agent-mechanism-notes.js` 是 Agent 聚合入口，`src/data/agent-harness-notes.js` 是 Harness 聚合入口，`src/data/context-rag-memory-notes.js` 是 Context/RAG/Memory 聚合入口，`src/data/backend-engineering-notes.js` 是 AI 后端聚合入口；五者负责精确接线与递归冻结。
+- `src/data/visuals/` 保存共享 visual registry 与视觉数据契约；当前只注册 LLM 基础 40 张主视觉。知识笔记用稳定 `visualId` 声明总览或段落插入位置，registry 统一管理本地资产、来源、许可和可访问描述，通用 UI 不按课程 ID 特判。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，`src/core/context-rag-memory.js` 负责上下文组装、混合检索/证据打包与记忆生命周期，`src/core/backend-engineering.js` 负责流式生命周期、服务准入和任务投递账本，四者均不查询 DOM。
 - `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js`、`src/ui/harness-experiments.js`、`src/ui/context-experiments.js` 与 `src/ui/backend-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
@@ -364,10 +367,10 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 1. 读取当前仓库、模块依赖、注册表、已有模块、测试基线和 `AGENTS.md`，不复用旧计划中的过期部署规则。
 2. 先定义学习者入口能力、最终能力、综合交付物、模块边界和相邻模块接口；产品先修关系不可为了赶进度被改写。
-3. 将官方/标准、论文/原始工作、工程/GitHub、中文/视频导航拆成只读并行调研，由主代理直接复核正文、去重并建立证据账本；子代理摘要和搜索结果只作线索。
-4. 先冻结核心主张、版本、访问失败、冲突和证据缺口，再从知识依赖推导课程。模块 1、2 的八课、28/29 个资源和三项实验是成熟参考中心，不是凑数指标；课数、资源数和实验数按复杂度说明理由。
+3. 将官方/标准、论文/原始工作、工程/GitHub、中文/视频导航拆成只读并行调研，由主代理直接复核正文、去重并建立证据账本；子代理摘要和搜索结果只作线索。此阶段的视觉清单只暂记认知问题、事实证据线索、候选形式和来源/许可线索，不提前指定考核、所属章节、插入位置或 storyboard。
+4. 先冻结核心主张、版本、访问失败、冲突和证据缺口，再从知识依赖推导课程与真实笔记章节；此后、绘制 storyboard 之前，才冻结视觉对应的考核产出、真实归属章节、总览或段落插入位置、证据 ID 与许可决策。许可不明确时只保留原链接，以独立证据制作原创替代图。模块 1、2 的八课、28/29 个资源和三项实验是成熟参考中心，不是凑数指标；课数、资源数和实验数按复杂度说明理由。
 5. 用 Skill 模板固化规格、覆盖矩阵、所有权与验收门，再在隔离 worktree 中按 TDD 实施。不同作者只处理互不重叠的资料或单课文件，共享 registry 和聚合入口由单一集成人负责。
-6. 每课必须调用 `$build-learning-module-notes`，完成来源卡、考核/练习覆盖、可解析 `sourceIds`、测试审计和质量评分；低于 85/100、存在断裂引用或关键证据缺口时保持阻塞，不发布看似完整的正文。
+6. 每课必须调用 `$build-learning-module-notes`，完成来源卡、考核/练习覆盖、可解析 `sourceIds`、测试审计和质量评分；声明视觉完成的模块还必须通过 visual registry、唯一证据归属、许可、静态资产安全、可访问性、窄屏与 fallback 门。低于 85/100、存在断裂引用或关键证据缺口时保持阻塞，不发布看似完整的正文。
 7. 每项任务按作者 → 规格审查 → 质量审查推进；缺陷退回原作者并复审。课程数据、纯逻辑、实验 UI、通用注册与文档按文件边界集成。
 8. 开发期间模块保持 `planned` 且不注册；只有知识内容、目标测试、全量回归、旧模块兼容和真实浏览器矩阵全部通过，才最后加入 registry 并切换为 `active`。
 9. 同步最新 `main`、通过一个 PR 和 Vercel Preview 后合并；Production 只有在状态为 Ready、线上关键路由可访问且部署 Git SHA 与目标 `main` 完全一致时才算完成。GitHub Pages 必须继续关闭。

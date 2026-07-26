@@ -33,6 +33,8 @@ Write learner entry capability, terminal capability, observable capstone, prereq
 
 Create bounded, read-only streams for primary/official evidence, academic/original work, engineering/open-source practice, and Chinese/video learning navigation. A fifth stream may collect interview demand. The main agent owns deduplication, direct-body verification, registry IDs, conflicts, and the final evidence ledger. Subagent summaries are leads, not evidence.
 
+When visuals are in scope, create only a provisional cognitive inventory during research: learner question, factual evidence leads, candidate visual form, and source/permission leads. Start from the question, not an image search. Do not freeze an assessed outcome, owner section, placement, or storyboard before the curriculum exists. Apply the child Skill's source policy before downloading any third-party figure.
+
 ### 3. Freeze evidence before curriculum
 
 Produce a claim inventory, source ledger, access-failure list, freshness/version notes, and unresolved evidence gaps. Apply the research gate in the reference. If central assessed claims lack accessible bodies, narrow the module or continue research; do not freeze a polished curriculum around unsupported claims.
@@ -40,6 +42,8 @@ Produce a claim inventory, source ledger, access-failure list, freshness/version
 ### 4. Derive the curriculum
 
 Build a dependency graph from capabilities and claims, then group it into the smallest coherent lesson sequence. Default to the proven eight-lesson shape only when it fits. Create per-lesson outcomes, exercise deliverables, quiz reasoning, interview coverage, source candidates, and next-lesson bridges. Choose experiments only where deterministic interaction materially improves understanding.
+
+After lesson outcomes and real note sections are derived, refine the provisional inventory before storyboarding: freeze the assessed outcome, exact owner section, overview-or-section placement, evidence source IDs, permission decision, and only then the storyboard. Decide visual scope explicitly. Legacy modules may remain text-only until migration, but a module that declares visual completion accepts every child-Skill visual gate as mandatory.
 
 ### 5. Approve specification and plan
 
@@ -49,9 +53,11 @@ Write the design specification with research audit, count rationale, boundaries,
 
 Use small tasks in this order: data contract tests; resource/evidence registry; lesson skeleton and assessments; per-lesson knowledge notes; domain core logic; experiment UI; registry integration; documentation. Partition authors by lesson/file. For each task use author → specification reviewer → quality reviewer; return defects to the author and re-review. Shared registries and aggregators have one integration owner.
 
+For visual work, one owner integrates the deeply frozen visual registry and renderer. Note authors own only placements and their evidence-owning sections; visual authors own disjoint assets/records. Write visible-geometry and asset-safety tests, not hidden data proxies. Reject active SVG content, remote hotlinks, broken ownership, and inaccessible fallbacks before browser review.
+
 ### 7. Apply the knowledge-note gate
 
-For every lesson, run `$build-learning-module-notes` against the actual lesson, resource bodies, and project registry. Require complete assessment/exercise coverage, valid source IDs, evidence cards, zero broken references, truthful test audit, and score ≥85/100. A blocked lesson blocks module activation.
+For every lesson, run `$build-learning-module-notes` against the actual lesson, resource bodies, and project registry. Require complete assessment/exercise coverage, valid source IDs, evidence cards, zero broken references, truthful test audit, and score ≥85/100. For declared visual completion, also require exact note placements, one evidence-owning section per visual, resolved registry assets/source IDs/permissions, the six-category visual score, and zero visual blockers. A blocked lesson blocks module activation.
 
 ### 8. Integrate and activate last
 
@@ -59,13 +65,14 @@ Run targeted tests first, then full regression. Verify global ID uniqueness, bid
 
 ### 9. Verify preview and production
 
-Complete desktop/mobile/keyboard/browser checks, review the actual diff, sync current `main`, use one PR, and verify Vercel Preview. After merge, deploy Vercel Production and match its Git SHA to `main`. GitHub Pages must stay disabled. Do not call a push, merge, build start, or URL a completed deployment.
+Complete desktop/mobile/keyboard/browser checks, including local media scroll, keyboard step controls, reduced motion, long-description/original-source links, unknown-asset fallback, and console state when visuals changed. Review the actual diff, sync current `main`, use one PR, and verify Vercel Preview. After merge, deploy Vercel Production and require `READY`, `target=production`, and its exact Git SHA equal to current `main`; verify canonical routes and confirm GitHub Pages remains disabled. Do not call a push, merge, build start, preview URL, or unmatched production URL a completed deployment.
 
 ## Stop and rescope conditions
 
 - A required outcome depends only on metadata, inaccessible media, course fields, or model memory.
 - Product prerequisites are unmet or an adjacent module must exist first.
 - A lesson fails the note score/reference gate.
+- A module declares visual completion while any placement, source, permission, asset safety, accessibility, responsive, fallback, or visual-score gate fails.
 - The deadline cannot support source-body review, independent review, tests, and browser verification.
 - Full regression, public routes, or exact Vercel SHA verification fails.
 

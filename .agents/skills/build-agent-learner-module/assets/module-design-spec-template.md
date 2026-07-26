@@ -24,6 +24,7 @@
 - Candidate/evidence ledger location:
 - Access failures and conflicts:
 - Central claims and evidence gaps:
+- Provisional visual inventory: cognitive questions, factual evidence leads, candidate forms, and source/permission leads only:
 - Research gate decision:
 
 ## 4. Curriculum rationale
@@ -34,6 +35,7 @@
 - Resource count rationale:
 - Experiment decisions and simulation boundaries:
 - Interview coverage rationale:
+- Post-curriculum visual freeze: assessed outcome → real owner section → overview/section placement → evidence IDs → permission decision → storyboard:
 
 ## 5. Coverage and evidence
 
@@ -41,33 +43,50 @@
 - Knowledge-note production plan using `$build-learning-module-notes`:
 - Blocked claims or lessons:
 
-## 6. Architecture and ownership
+## 6. Visual teaching declaration
+
+- Scope: `legacy-text-only` / limited pilot without completion declaration / `visual-complete`:
+- Legacy compatibility and migration boundary:
+- Required visual count/coverage rationale:
+- Placement contract: `overviewVisualId` + `overviewVisualSectionId`; section `visualId` + valid `afterParagraph`:
+- Registry field matrix and deep-freeze owner:
+- Visual source IDs → owner section → lesson evidence → project registry audit:
+- Original/sourced/step asset ownership and deterministic fixture plan:
+- Third-party source, license/policy, redistribution, modification, retrieval, and verification audit:
+- Unclear-permission decisions recorded as `link-only-original-replacement` with original link and independently evidenced replacement:
+- Active-SVG, local-asset, orphan, duplicate, and fallback blockers:
+
+## 7. Architecture and ownership
 
 - Data/note/core/UI/registry files:
 - Stable ID prefixes:
 - Shared-file integration owner:
 - Author → specification review → quality review assignments:
+- Disjoint note-placement and visual-asset ownership:
 - Cross-module state and compatibility risks:
 
-## 7. TDD and verification
+## 8. TDD and verification
 
 - RED contract tests:
 - Targeted test groups:
 - Full regression command:
 - Browser viewport/route/interaction matrix:
 - Accessibility and console checks:
+- Visual browser gates: overview/section placement, long description, credit/source/permission links, fallback, reduced motion, keyboard step controls, and local media scroll at 390px/320px:
+- Visible-geometry/fixture and static-SVG inspection:
 
-## 8. Activation and release
+## 9. Activation and release
 
 - Conditions for `planned` → registered → `active`:
 - PR and current-main synchronization:
 - Vercel Preview checks:
-- Vercel Production SHA and route checks:
+- Vercel Production `READY`, `target=production`, exact current-`main` SHA, alias, and route checks:
 - GitHub Pages disabled check:
 
-## 9. Stop conditions
+## 10. Stop conditions
 
 - Evidence blockers:
 - Prerequisite blockers:
 - Quality/test blockers:
+- Visual ownership/permission/safety/accessibility/browser blockers:
 - Deadline rescope decision:
