@@ -24,7 +24,7 @@
 - 视觉条目：40
 - 课程分布：`llm-01` 至 `llm-08` 各 5 项
 - 认知结构：每课 1 项 overview、至少 2 项机制/过程/关系图、至少 1 项边界/对比/失败模式/决策图
-- assessed coverage：每项至少绑定一个学习目标、quiz、练习步骤、完成标准或面试题；40 项均映射到对应知识笔记的真实 section ID
+- assessed coverage：每项至少绑定一个与 cognitive question/storyboard 直接吻合的学习目标、quiz、练习步骤、完成标准或面试判断；40 项均映射到对应知识笔记的真实 section ID
 - 来源：每项 `sourceIds` 均取自对应 section 的已核验来源范围；课程字段仅作为 coverage basis
 
 ### 许可决策汇总
@@ -47,3 +47,16 @@
 | `blocked` | 0 | 当前没有阻塞项。若后续证据或媒体许可不足，条目必须停在发布门外并改为 `link-only-original-replacement` 或继续原创，不得猜测许可。 |
 
 本节更新的是“发布前基线”之后的内容状态；图形资产制作、数据注册、页面组件、浏览器验收和部署仍由后续任务完成。
+
+### assessed coverage 语义复核
+
+规格审查后对 40 项重新执行了逐行语义复核，而不是只检查字段路径是否存在：
+
+1. 从 `src/data/llm-foundation.js` 展开每个引用的学习目标、quiz prompt、练习步骤、完成标准和面试题全文；面试判断同时核对其 short answer 与 deep dive。
+2. 将课程字段原文与该图的 cognitive question、nodes/regions、caption、alt 和 long-description outline 并排比较。
+3. 只有图能直接回答该判断，或明确覆盖该考核结果的必要子步骤时才保留映射；仅“属于同一课程”或字段范围过宽不算覆盖。
+4. 修正两处错误 quiz：有限重试状态机移除与不可信文档优先级相关的 `quiz-llm-07-2`，改用结构校验面试判断、练习步骤和完成标准；Prompt Injection 防御图由评测集来源题 `quiz-llm-08-2` 改为系统性防线题 `quiz-llm-08-1`。
+5. 自回归生成图明确收窄为“不更新参数的标准推理”，改绑训练/推理目标与面试判断；泛化曲线移除与梯度、学习率、激活函数相关的完成标准。
+6. 同轮还删除了训练/推理边界、tokenization、训练阶段、logit/softmax、因果可见性、版本评测与 grounding 图中的过宽或非必要引用，避免用数量夸大 assessed coverage。
+
+复核后仍为 40 / 40 项各至少一个直接语义映射，许可决策与 blocked 数量不变。
