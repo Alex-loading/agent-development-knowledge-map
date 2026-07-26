@@ -264,7 +264,7 @@ function recomputeFixture(fixture) {
         segments: encoding.segments,
         encodedIds: encoding.tokenIds,
         probabilities,
-        selectedId: data.candidates[selectedIndex].id,
+        selectedId: data.vocabulary[data.candidates[selectedIndex]],
         nextToken: data.nextStateToken,
       };
     }
@@ -306,7 +306,10 @@ function recomputeFixture(fixture) {
     case 'visual-llm-02-neuron-forward': {
       const z = data.x * data.w + data.b;
       const probability = 1 / (1 + Math.exp(-z));
-      return { z, probability, loss: -Math.log(probability) };
+      const loss =
+        -data.y * Math.log(probability) -
+        (1 - data.y) * Math.log(1 - probability);
+      return { z, probability, loss };
     }
     case 'visual-llm-02-backprop-graph': {
       const a = data.x * data.w;
@@ -353,6 +356,10 @@ function recomputeFixture(fixture) {
       const minimumIndex = overfitValidation.indexOf(minimumValidation);
       return {
         underfit: {
+          trainMonotonicDown: isMonotonicDown(data.series.underfit.train),
+          validationMonotonicDown: isMonotonicDown(
+            data.series.underfit.validation,
+          ),
           finalTrain: data.series.underfit.train.at(-1),
           finalValidation: data.series.underfit.validation.at(-1),
         },
@@ -363,6 +370,7 @@ function recomputeFixture(fixture) {
           ),
         },
         overfit: {
+          trainMonotonicDown: isMonotonicDown(data.series.overfit.train),
           bestEpoch: data.epochs[minimumIndex],
           divergenceStartsAtEpoch: data.epochs[minimumIndex + 1],
         },
@@ -438,30 +446,81 @@ function recomputeFixture(fixture) {
       };
     }
     case 'visual-llm-04-causal-visibility': {
-      const visibility = Array.from({ length: data.sequenceLength }, (_, row) =>
-        Array.from({ length: data.sequenceLength }, (_, column) =>
+      const sequenceLength = data.allowedScores.length;
+      const visibility = Array.from({ length: sequenceLength }, (_, row) =>
+        Array.from({ length: sequenceLength }, (_, column) =>
           column <= row ? 1 : 0,
         ),
       );
       return {
         visibility,
-        rowWeights: visibility.map((row) => {
-          const visibleCount = sum(row);
-          return row.map((visible) => (visible ? 1 / visibleCount : 0));
+        rowWeights: visibility.map((row, rowIndex) => {
+          assert.equal(data.allowedScores[rowIndex].length, rowIndex + 1);
+          const scores = row.map((visible, columnIndex) =>
+            visible ? data.allowedScores[rowIndex][columnIndex] : -Infinity,
+          );
+          return softmax(scores);
         }),
       };
     }
     case 'visual-llm-05-lora-update':
+      assert.equal(data.rank, 1, '教学 LoRA fixture 当前冻结 rank=1');
+      assert.equal(data.A.length, data.baseShape[1]);
+      assert.equal(data.B.length, data.baseShape[0]);
       return {
         deltaW: data.B.map((value) => data.A.map((item) => value * item)),
-        adapterParameters: data.A.length + data.B.length,
+        adapterParameters:
+          data.rank * (data.baseShape[0] + data.baseShape[1]),
         fullParameters: data.baseShape[0] * data.baseShape[1],
       };
     case 'visual-llm-05-rag-finetune-matrix':
       return {
-        decisions: data.cases.map(({ scores }) =>
-          scores[2] === 3 || scores[3] === 3 ? 'RAG' : 'SFT/LoRA',
-        ),
+        decisions: data.cases.map(({ name, axes, hasExamples }) => {
+          const evaluationProfile = {
+            riskControl:
+              axes.risk >= data.highThreshold
+                ? 'high-risk slices + rollback'
+                : 'standard slices + rollback',
+            costCheck:
+              axes.computeBudget <= 1
+                ? 'low-compute baseline required'
+                : 'compare training and serving cost',
+          };
+          if (
+            axes.updateFrequency >= data.highThreshold ||
+            axes.citationNeed >= data.highThreshold
+          ) {
+            return {
+              name,
+              route: 'RAG',
+              reason: 'updateFrequency/citationNeed reached high threshold',
+              nextStep: 'evaluate retrieval, citations and permissions',
+              evaluationProfile,
+            };
+          }
+          if (axes.stableBehavior === true && hasExamples === true) {
+            return {
+              name,
+              route: 'SFT/LoRA',
+              reason: 'stable behavior gap with representative examples',
+              nextStep: 'compare against the Prompt/tool baseline before training',
+              evaluationProfile,
+            };
+          }
+          return {
+            name,
+            route: 'insufficient evidence—do not fine-tune',
+            reason:
+              axes.stableBehavior !== true
+                ? 'behavior target is not stable'
+                : 'representative examples are missing',
+            nextStep:
+              axes.stableBehavior !== true
+                ? 'establish Prompt/tool baseline and clarify the target'
+                : 'establish Prompt/tool baseline and continue collecting data',
+            evaluationProfile,
+          };
+        }),
       };
     case 'visual-llm-06-generation-loop': {
       const probabilities = softmax(
@@ -549,12 +608,49 @@ function recomputeFixture(fixture) {
       );
       const validated =
         firstValidIndex >= 0 && firstValidIndex < data.maxAttempts;
+      if (!validated) {
+        return {
+          states: ['schema-failed', 'exhausted'],
+          attemptsUsed: data.maxAttempts,
+          eventResults: [],
+          sideEffectExecutions: 0,
+          cacheKeys: [],
+        };
+      }
+
+      const keyPattern = new RegExp(data.idempotencyKeyPattern);
+      const resultCache = new Map();
+      let sideEffectExecutions = 0;
+      const eventResults = data.events.map(({ key, payload }) => {
+        if (typeof key !== 'string' || !keyPattern.test(key)) {
+          return {
+            key,
+            status: 'rejected',
+            error: 'invalid idempotency key',
+            result: null,
+          };
+        }
+        if (resultCache.has(key)) {
+          return {
+            key,
+            status: 'deduplicated',
+            result: resultCache.get(key),
+          };
+        }
+        sideEffectExecutions += 1;
+        const result = {
+          receiptId: `effect-${sideEffectExecutions}`,
+          payload,
+        };
+        resultCache.set(key, result);
+        return { key, status: 'executed', result };
+      });
       return {
-        states: validated
-          ? ['schema-failed', 'retry', 'validated', 'executed', 'deduplicated']
-          : ['schema-failed', 'exhausted'],
-        attemptsUsed: validated ? firstValidIndex + 1 : data.maxAttempts,
-        sideEffectExecutions: validated && data.submissions > 0 ? 1 : 0,
+        states: ['schema-failed', 'retry', 'validated', 'events-processed'],
+        attemptsUsed: firstValidIndex + 1,
+        eventResults,
+        sideEffectExecutions,
+        cacheKeys: [...resultCache.keys()],
       };
     }
     case 'visual-llm-07-version-eval-loop': {
@@ -905,6 +1001,97 @@ test('tokenizer, top-p and P95 execute from raw deliberately unordered inputs', 
     [...latency.data.samplesMs].sort((left, right) => left - right),
     'P95 fixture 必须故意使用未排序观测值',
   );
+});
+
+test('RAG and SFT decisions execute named axes, examples and both negative paths', () => {
+  const decisionFixture = fixturesById.get(
+    'fixture-llm-05-rag-finetune-matrix',
+  );
+  assert.ok(
+    decisionFixture.data.cases.every(
+      (item) =>
+        item.axes &&
+        !Array.isArray(item.axes) &&
+        typeof item.hasExamples === 'boolean',
+    ),
+    '每个用例必须用命名 axes 与结构化 hasExamples',
+  );
+  assert.deepEqual(
+    decisionFixture.result.decisions.map(({ route }) => route),
+    [
+      'RAG',
+      'SFT/LoRA',
+      'insufficient evidence—do not fine-tune',
+      'insufficient evidence—do not fine-tune',
+    ],
+  );
+
+  const reordered = structuredClone(decisionFixture);
+  reordered.data.cases = reordered.data.cases.map((item) => ({
+    ...item,
+    axes: Object.fromEntries(Object.entries(item.axes).reverse()),
+  }));
+  assertDeepClose(
+    recomputeFixture(reordered),
+    decisionFixture.result,
+    'RAG/SFT 属性顺序不变性',
+  );
+});
+
+test('retry fixture executes idempotency events and rejects invalid keys', () => {
+  const retryFixture = fixturesById.get(
+    'fixture-llm-07-retry-state-machine',
+  );
+  assert.ok(Array.isArray(retryFixture.data.events));
+  assert.ok(
+    !Object.hasOwn(retryFixture.data, 'submissions'),
+    '幂等 fixture 不得用 submissions 数字预置结果',
+  );
+
+  const actual = recomputeFixture(retryFixture);
+  assert.deepEqual(
+    actual.eventResults.map(({ status }) => status),
+    ['executed', 'deduplicated', 'executed', 'rejected', 'rejected'],
+  );
+  assert.deepEqual(actual.eventResults[1].result, actual.eventResults[0].result);
+  assert.notDeepEqual(actual.eventResults[2].result, actual.eventResults[0].result);
+  assert.equal(actual.sideEffectExecutions, 2);
+  assert.deepEqual(actual.cacheKeys, ['ticket-42:v1', 'ticket-43:v1']);
+});
+
+test('method scan keeps every previously ignored input behaviorally observable', () => {
+  const neuron = structuredClone(
+    fixturesById.get('fixture-llm-02-neuron-forward'),
+  );
+  const positiveLoss = recomputeFixture(neuron).loss;
+  neuron.data.y = 0;
+  assert.notEqual(recomputeFixture(neuron).loss, positiveLoss);
+
+  const generalization = structuredClone(
+    fixturesById.get('fixture-llm-02-generalization-curves'),
+  );
+  generalization.data.series.underfit.train[2] = 1;
+  generalization.data.series.overfit.train[2] = 0.7;
+  const changedCurves = recomputeFixture(generalization);
+  assert.equal(changedCurves.underfit.trainMonotonicDown, false);
+  assert.equal(changedCurves.overfit.trainMonotonicDown, false);
+
+  const causal = structuredClone(
+    fixturesById.get('fixture-llm-04-causal-visibility'),
+  );
+  assert.ok(
+    Array.isArray(causal.data.allowedScores),
+    '因果遮罩必须计算原始允许分数，而不是读取无行为影响的统一偏移量',
+  );
+  causal.data.allowedScores[1][1] = Math.log(2);
+  assert.notDeepEqual(
+    recomputeFixture(causal).rowWeights[1],
+    [0.5, 0.5, 0, 0],
+  );
+
+  const lora = structuredClone(fixturesById.get('fixture-llm-05-lora-update'));
+  lora.data.rank = 2;
+  assert.throws(() => recomputeFixture(lora), /rank=1/);
 });
 
 test('frozen decisions and fixture contracts reject review mutations', () => {

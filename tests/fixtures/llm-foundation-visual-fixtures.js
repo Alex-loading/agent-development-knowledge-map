@@ -51,10 +51,7 @@ export const llmFoundationVisualFixtures = deepFreeze([
         助: 92,
         理: 93,
       },
-      candidates: [
-        { token: '天气', id: 14 },
-        { token: '资料', id: 10 },
-      ],
+      candidates: ['天气', '资料'],
       logits: [2, 1],
       nextStateToken: 'EOS',
     },
@@ -213,9 +210,18 @@ export const llmFoundationVisualFixtures = deepFreeze([
       },
     },
     {
-      underfit: { finalTrain: 0.81, finalValidation: 0.89 },
+      underfit: {
+        trainMonotonicDown: true,
+        validationMonotonicDown: true,
+        finalTrain: 0.81,
+        finalValidation: 0.89,
+      },
       improving: { trainMonotonicDown: true, validationMonotonicDown: true },
-      overfit: { bestEpoch: 3, divergenceStartsAtEpoch: 4 },
+      overfit: {
+        trainMonotonicDown: true,
+        bestEpoch: 3,
+        divergenceStartsAtEpoch: 4,
+      },
     },
   ),
   fixture(
@@ -388,7 +394,9 @@ export const llmFoundationVisualFixtures = deepFreeze([
       Method: '0-based 规则 j≤i 生成嵌套 0/1 可见矩阵；每行仅对可见位置 softmax。',
       Rounding: '权重四位小数；矩阵元素为整数 0/1。',
     },
-    { sequenceLength: 4, allowedScore: 0 },
+    {
+      allowedScores: [[0], [0, 0], [0, 0, 0], [0, 0, 0, 0]],
+    },
     {
       visibility: [
         [1, 0, 0, 0],
@@ -431,19 +439,104 @@ export const llmFoundationVisualFixtures = deepFreeze([
   fixture(
     'visual-llm-05-rag-finetune-matrix',
     {
-      Input: '三个用例的五轴 1–3 评分数组。',
-      Method: '更新频率或可引用性为 3 时优先 RAG；否则稳定行为且有示例时优先 SFT/LoRA。',
-      Rounding: '评分为整数；不求伪精确总分。',
+      Input: '四个用例的命名决策轴、结构化示例证据、计算预算与风险等级。',
+      Method:
+        '更新频率或引用需求达到高阈值时选 RAG；否则仅稳定行为目标且已有代表性示例时选 SFT/LoRA；其余停在 Prompt/工具基线与继续收集数据。',
+      Rounding: '等级为整数；布尔证据不换算总分。',
     },
     {
-      axes: ['stableBehavior', 'compute', 'updateFrequency', 'citationNeed', 'risk'],
+      highThreshold: 3,
       cases: [
-        { name: '客服语气', scores: [3, 2, 1, 1, 2] },
-        { name: '每日制度问答', scores: [2, 1, 3, 3, 3] },
-        { name: '专业分类', scores: [3, 2, 1, 1, 2] },
+        {
+          name: '每日制度问答',
+          axes: {
+            citationNeed: 3,
+            risk: 3,
+            updateFrequency: 3,
+            stableBehavior: false,
+            computeBudget: 1,
+          },
+          hasExamples: false,
+        },
+        {
+          name: '稳定客服语气',
+          axes: {
+            computeBudget: 2,
+            stableBehavior: true,
+            citationNeed: 1,
+            risk: 2,
+            updateFrequency: 1,
+          },
+          hasExamples: true,
+        },
+        {
+          name: '不稳定任务目标',
+          axes: {
+            risk: 2,
+            updateFrequency: 1,
+            stableBehavior: false,
+            computeBudget: 2,
+            citationNeed: 1,
+          },
+          hasExamples: true,
+        },
+        {
+          name: '稳定但无示例',
+          axes: {
+            stableBehavior: true,
+            updateFrequency: 1,
+            citationNeed: 1,
+            computeBudget: 2,
+            risk: 2,
+          },
+          hasExamples: false,
+        },
       ],
     },
-    { decisions: ['SFT/LoRA', 'RAG', 'SFT/LoRA'] },
+    {
+      decisions: [
+        {
+          name: '每日制度问答',
+          route: 'RAG',
+          reason: 'updateFrequency/citationNeed reached high threshold',
+          nextStep: 'evaluate retrieval, citations and permissions',
+          evaluationProfile: {
+            riskControl: 'high-risk slices + rollback',
+            costCheck: 'low-compute baseline required',
+          },
+        },
+        {
+          name: '稳定客服语气',
+          route: 'SFT/LoRA',
+          reason: 'stable behavior gap with representative examples',
+          nextStep: 'compare against the Prompt/tool baseline before training',
+          evaluationProfile: {
+            riskControl: 'standard slices + rollback',
+            costCheck: 'compare training and serving cost',
+          },
+        },
+        {
+          name: '不稳定任务目标',
+          route: 'insufficient evidence—do not fine-tune',
+          reason: 'behavior target is not stable',
+          nextStep: 'establish Prompt/tool baseline and clarify the target',
+          evaluationProfile: {
+            riskControl: 'standard slices + rollback',
+            costCheck: 'compare training and serving cost',
+          },
+        },
+        {
+          name: '稳定但无示例',
+          route: 'insufficient evidence—do not fine-tune',
+          reason: 'representative examples are missing',
+          nextStep: 'establish Prompt/tool baseline and continue collecting data',
+          evaluationProfile: {
+            riskControl: 'standard slices + rollback',
+            costCheck: 'compare training and serving cost',
+          },
+        },
+      ],
+    },
   ),
   fixture(
     'visual-llm-06-generation-loop',
@@ -544,21 +637,82 @@ export const llmFoundationVisualFixtures = deepFreeze([
   fixture(
     'visual-llm-07-retry-state-machine',
     {
-      Input: 'attempt1 priority=urgent、Schema enum=[low,high]、maxAttempts=2、幂等键 ticket-42:v1。',
-      Method: 'Schema 失败且仍有预算时反馈重试；通过后按幂等键执行；重复键返回既有结果。',
+      Input: '两次结构化输出尝试，以及包含 key/payload 的首次、重复、不同 key 和非法 key 事件。',
+      Method:
+        'Schema 通过后逐事件执行：合法新 key 执行并缓存，相同 key 复用结果，不同 key 再执行，空或非法 key 拒绝且无副作用。',
       Rounding: 'attempt 与执行次数为整数。',
     },
     {
       attempts: [{ priority: 'urgent' }, { priority: 'high' }],
       allowedPriorities: ['low', 'high'],
       maxAttempts: 2,
-      idempotencyKey: 'ticket-42:v1',
-      submissions: 2,
+      idempotencyKeyPattern: '^[a-z0-9-]+:v[0-9]+$',
+      events: [
+        {
+          key: 'ticket-42:v1',
+          payload: { ticketId: 42, priority: 'high' },
+        },
+        {
+          key: 'ticket-42:v1',
+          payload: { ticketId: 42, priority: 'high' },
+        },
+        {
+          key: 'ticket-43:v1',
+          payload: { ticketId: 43, priority: 'low' },
+        },
+        {
+          key: '',
+          payload: { ticketId: 44, priority: 'high' },
+        },
+        {
+          key: 'invalid key',
+          payload: { ticketId: 45, priority: 'high' },
+        },
+      ],
     },
     {
-      states: ['schema-failed', 'retry', 'validated', 'executed', 'deduplicated'],
+      states: ['schema-failed', 'retry', 'validated', 'events-processed'],
       attemptsUsed: 2,
-      sideEffectExecutions: 1,
+      eventResults: [
+        {
+          key: 'ticket-42:v1',
+          status: 'executed',
+          result: {
+            receiptId: 'effect-1',
+            payload: { ticketId: 42, priority: 'high' },
+          },
+        },
+        {
+          key: 'ticket-42:v1',
+          status: 'deduplicated',
+          result: {
+            receiptId: 'effect-1',
+            payload: { ticketId: 42, priority: 'high' },
+          },
+        },
+        {
+          key: 'ticket-43:v1',
+          status: 'executed',
+          result: {
+            receiptId: 'effect-2',
+            payload: { ticketId: 43, priority: 'low' },
+          },
+        },
+        {
+          key: '',
+          status: 'rejected',
+          error: 'invalid idempotency key',
+          result: null,
+        },
+        {
+          key: 'invalid key',
+          status: 'rejected',
+          error: 'invalid idempotency key',
+          result: null,
+        },
+      ],
+      sideEffectExecutions: 2,
+      cacheKeys: ['ticket-42:v1', 'ticket-43:v1'],
     },
   ),
   fixture(
