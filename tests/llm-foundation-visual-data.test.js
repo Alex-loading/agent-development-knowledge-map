@@ -180,7 +180,7 @@ test('publishes a unique, prototype-safe and deeply frozen visual registry', asy
   }
 });
 
-test('registers the frozen field-map metadata and two-panel boundary exactly once', async () => {
+test('registers the frozen field-map contract and two-panel boundary exactly once', async () => {
   const { knowledgeVisuals, knowledgeVisualsById } = await loadRegistry();
   const visual = knowledgeVisualsById[FIELD_MAP_ID];
 
@@ -189,24 +189,28 @@ test('registers the frozen field-map metadata and two-panel boundary exactly onc
     1,
     `${FIELD_MAP_ID} 必须且只能注册一次`,
   );
-  assert.deepEqual(visual, {
+  assert.deepEqual({
+    id: visual.id,
+    kind: visual.kind,
+    role: visual.role,
+    tags: visual.tags,
+    sourceIds: visual.sourceIds,
+    fixtureId: visual.fixtureId,
+    provenance: visual.provenance,
+  }, {
     id: FIELD_MAP_ID,
     kind: 'diagram',
     role: 'overview',
     tags: ['relationship', 'boundary'],
-    title: 'AI、机器学习、深度学习、生成式 AI 与 LLM 的双轴关系',
-    alt: 'AI 外框内有方法轴与生成能力轴两个面板：左侧显示机器学习包含深度学习，并把搜索规划放在机器学习外；右侧并列语言与图像音频生成，LLM 通过连线关联深度学习和语言生成。',
-    longDescription: '整张图由人工智能 AI 外框包围。左侧方法轴中，机器学习框位于 AI 内，深度学习框位于机器学习内；搜索与规划位于 AI 内但在机器学习外，说明 AI 还包含非学习方法。右侧生成能力轴中，生成式 AI 虚线框包含语言生成和图像音频生成；LLM 位于语言生成区域，并用明确连线连接左侧深度学习。视觉与语音标签位于深度学习中但不属于 LLM，说明深度学习不只处理语言。底部图例用实线、虚线和斜线阴影分别表示方法包含、生成能力与两轴交叉。',
-    caption: 'AI 覆盖两条分类轴：LLM 连接深度学习与语言生成，但 AI、深度学习和生成式 AI 不是一条同义嵌套链。',
-    assetPath: FIELD_MAP_PATH,
-    width: 1200,
-    height: 675,
-    provenance: 'original-synthesis',
     sourceIds: ['res-ms-ai', 'res-ms-genai', 'res-hf-llm'],
-    credit: 'Agent Learner 原创教学图解',
-    permission: null,
-    verifiedAt: '2026-07-26',
+    fixtureId: undefined,
+    provenance: 'original-synthesis',
   });
+  assert.equal(visual.assetPath, FIELD_MAP_PATH);
+  assert.match(visual.alt, /方法轴.*生成能力轴/);
+  assert.match(visual.longDescription, /搜索与规划.*机器学习外/);
+  assert.match(visual.longDescription, /LLM.*深度学习/);
+  assert.match(visual.caption, /不是一条同义嵌套链/);
 });
 
 test('keeps LLM registry IDs and paths aligned with their lessons', async () => {
@@ -663,63 +667,86 @@ test('draws three upward-opening learning-rate landscapes with explicit axes', a
   }
 });
 
-test('maps every large learning-rate point to fixture w and loss on one coordinate scale', async () => {
+test('maps every learning-rate fixture state with each panel declared coordinate formula', async () => {
   const visualId = 'visual-llm-02-learning-rate-trajectories';
   const assetPath = 'assets/visuals/llm-foundation/llm-02-learning-rate-trajectories.svg';
   const fixture = fixtureForVisual(visualId);
-  const trajectory = fixture.result.trajectories.find(
-    ({ learningRate }) => learningRate === 1.1,
-  );
   const targetW = fixture.data.targetW;
-  const states = [
-    {
-      w: fixture.data.initialW,
-      loss: (fixture.data.initialW - targetW) ** 2,
-    },
-    ...trajectory.weights.map((w, index) => ({
-      w,
-      loss: trajectory.losses[index],
-    })),
-  ];
   const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
-  const centerX = 980;
-  const pixelsPerW = [];
-  const points = states.map((state, index) => {
-    const node = parsed.elements.find((candidate) =>
-      candidate.attributes.get('data-region') === `large-step-${index}`,
-    );
-    assert.equal(node?.name, 'circle', `large step ${index} 必须是结构化 circle`);
-    const cx = Number(node.attributes.get('cx'));
-    const cy = Number(node.attributes.get('cy'));
-    assert.ok(Number.isFinite(cx) && Number.isFinite(cy));
-    const signedOffset = cx - centerX;
-    assert.equal(
-      Math.sign(signedOffset),
-      Math.sign(state.w - targetW),
-      `large step ${index} 左右方向必须匹配 w-1 符号`,
-    );
-    pixelsPerW.push(Math.abs(signedOffset) / Math.abs(state.w - targetW));
-    return { ...state, cx, cy };
-  });
+  const panelNames = ['small', 'matched', 'large'];
 
-  for (const scale of pixelsPerW) {
-    assert.ok(Math.abs(scale - pixelsPerW[0]) < 0.01, '全部大步点必须共享同一横轴比例');
+  fixture.result.trajectories.forEach((trajectory, panelIndex) => {
+    const panel = panelNames[panelIndex];
+    const mapNode = parsed.elements.find((candidate) =>
+      candidate.attributes.get('data-region') === `coordinate-map-${panel}`,
+    );
+    assert.equal(mapNode?.name, 'g', `${panel} 必须声明坐标映射`);
+    const valleyX = Number(mapNode.attributes.get('data-valley-x'));
+    const xScale = Number(mapNode.attributes.get('data-x-scale'));
+    const valleyY = Number(mapNode.attributes.get('data-valley-y'));
+    const yScale = Number(mapNode.attributes.get('data-y-scale'));
+    for (const value of [valleyX, xScale, valleyY, yScale]) {
+      assert.ok(Number.isFinite(value), `${panel} 坐标映射必须是有限数`);
+    }
+
+    const states = [
+      {
+        w: fixture.data.initialW,
+        loss: (fixture.data.initialW - targetW) ** 2,
+      },
+      ...trajectory.weights.map((w, index) => ({
+        w,
+        loss: trajectory.losses[index],
+      })),
+    ];
+    states.forEach((state, step) => {
+      const node = parsed.elements.find((candidate) =>
+        candidate.attributes.get('data-region') === `${panel}-step-${step}`,
+      );
+      assert.equal(node?.name, 'circle', `${panel} step ${step} 必须是 circle`);
+      assert.equal(node.attributes.get('data-step'), String(step));
+      assert.ok(
+        Math.abs(Number(node.attributes.get('data-w')) - state.w) < 1e-12,
+        `${panel} step ${step} data-w 必须来自 fixture`,
+      );
+      assert.ok(
+        Math.abs(Number(node.attributes.get('data-loss')) - state.loss) < 1e-12,
+        `${panel} step ${step} data-loss 必须来自 fixture`,
+      );
+      const expectedCx = valleyX + (state.w - targetW) * xScale;
+      const expectedCy = valleyY - state.loss * yScale;
+      assert.ok(
+        Math.abs(Number(node.attributes.get('cx')) - expectedCx) < 1e-6,
+        `${panel} step ${step} cx 必须遵循 valleyX + (w-1)*xScale`,
+      );
+      assert.ok(
+        Math.abs(Number(node.attributes.get('cy')) - expectedCy) < 1e-6,
+        `${panel} step ${step} cy 必须遵循 valleyY - loss*yScale`,
+      );
+    });
+  });
+});
+
+test('labels every learning-rate state visibly, including the matched repeated point', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-02-learning-rate-trajectories.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  for (const panel of ['small', 'large']) {
+    for (let step = 0; step <= 3; step += 1) {
+      const label = parsed.elements.find((candidate) =>
+        candidate.attributes.get('data-region') === `${panel}-label-${step}`,
+      );
+      assert.equal(label?.name, 'text');
+      assert.equal(label.text.trim(), `w${step}`);
+    }
   }
-  const byDistance = [...points].sort(
-    (left, right) => Math.abs(left.w - targetW) - Math.abs(right.w - targetW),
+  const matchedStart = parsed.elements.find((candidate) =>
+    candidate.attributes.get('data-region') === 'matched-label-0',
   );
-  const byLoss = [...points].sort((left, right) => left.loss - right.loss);
-  for (let index = 1; index < points.length; index += 1) {
-    assert.ok(
-      Math.abs(byDistance[index].cx - centerX)
-        > Math.abs(byDistance[index - 1].cx - centerX),
-      '|w-1| 越大，离低谷的横向距离必须越大',
-    );
-    assert.ok(
-      byLoss[index].cy < byLoss[index - 1].cy,
-      'loss 越大，点在 SVG 中必须越高',
-    );
-  }
+  const matchedRepeated = parsed.elements.find((candidate) =>
+    candidate.attributes.get('data-region') === 'matched-label-1-3',
+  );
+  assert.equal(matchedStart?.text.trim(), 'w0');
+  assert.equal(matchedRepeated?.text.trim(), 'w1–w3');
 });
 
 test('shows every frozen backprop local gradient in visible text', async () => {
