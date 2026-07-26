@@ -63,6 +63,7 @@ const SAFE_SVG_ATTRIBUTES = new Set([
   'data-vector-x',
   'data-vector-y',
   'data-node',
+  'data-edge',
   'data-from',
   'data-to',
   'data-kind',

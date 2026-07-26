@@ -1,5 +1,7 @@
 export const llm05Note = {
   readingMinutes: 36,
+  overviewVisualId: 'visual-llm-05-method-map',
+  overviewVisualSectionId: 'objectives-before-methods',
   introduction: '上一课解释了 Transformer 怎样把上下文表示逐层变成下一 token 的 logits，但模型中的投影、注意力和前馈层参数从哪里来，以及为什么基础模型还要经历后训练，仍需要另一张地图。本课不把所有“继续训练”混成一种方法，而是先以目标为坐标：预训练和继续预训练优化语言建模目标，监督微调（SFT）用输入—期望输出对塑造任务行为，偏好优化用相对选择信号进一步调整回答倾向，低秩适配（Low-Rank Adaptation，LoRA）则是承载这些目标的一种参数高效更新方式。随后再把检索增强生成（Retrieval-Augmented Generation，RAG）放到应用层比较：它在推理时提供可更新证据，而不是把知识写进参数。这张坐标系的目的不是给出一条固定流水线，而是让你在任何新需求中先问“要改变什么、证据放在哪里、怎样验证”，避免用训练掩盖资料、检索或接口问题。学完后，你应能按行为、事实更新、引用、权限和风险选择 prompt、RAG、SFT、偏好优化或 LoRA，并用一张可验证的决策表说明为什么选择、如何评测以及何时回滚。',
   sections: [
     {
@@ -52,6 +54,7 @@ export const llm05Note = {
         'SFT 用输入—期望输出对塑造指令遵循、格式、语气和任务映射，核心是稳定行为。',
         'SFT 需要基线、隔离数据、关键切片与回归评测，不能凭空补回基础能力。',
       ],
+      visuals: [{ visualId: 'visual-llm-05-stage-objectives', afterParagraph: 1 }],
       sourceIds: ['res-hf-llm', 'res-rasbt', 'res-stanford-cs336'],
     },
     {
@@ -71,6 +74,7 @@ export const llm05Note = {
         title: '“更受偏好”不是“在所有维度更好”',
         body: '标注群体、候选长度和风格都会影响偏好；优化前应定义要保留的任务能力、校准和多样性，并用回归集守住边界。',
       },
+      visuals: [{ visualId: 'visual-llm-05-preference-boundary', afterParagraph: 2 }],
       sourceIds: ['res-hf-llm', 'res-rasbt', 'res-happy-llm'],
     },
     {
@@ -90,6 +94,7 @@ export const llm05Note = {
         title: '参数高效不等于系统零成本',
         body: '基础模型、前向激活、训练数据、评测和部署仍然存在；LoRA 节省的是特定参数更新与适配存储负担，不是整个训练服务栈。',
       },
+      visuals: [{ visualId: 'visual-llm-05-lora-update', afterParagraph: 1 }],
       sourceIds: ['res-rasbt', 'res-hf-llm', 'res-happy-llm'],
     },
     {
@@ -124,6 +129,7 @@ export const llm05Note = {
         title: '构造决策表不是来源基准',
         body: '表中的高低判断只是教学假设。不要填入虚构的 GPU、数据量、成本或质量数字；先定义测量方法，再用自己的模型、数据和流量验证。',
       },
+      visuals: [{ visualId: 'visual-llm-05-rag-finetune-matrix', afterParagraph: 2 }],
       sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-llm', 'res-rasbt'],
     },
   ],

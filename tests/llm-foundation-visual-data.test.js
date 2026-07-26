@@ -189,6 +189,93 @@ const EXPECTED_VISUALS = Object.freeze({
     sourceIds: ['res-attention-paper', 'res-rasbt', 'res-happy-llm'],
     fixtureId: 'fixture-llm-04-causal-visibility',
   },
+  'visual-llm-05-method-map': {
+    lessonId: 'llm-05',
+    sectionId: 'objectives-before-methods',
+    kind: 'diagram',
+    role: 'overview',
+    tags: ['decision'],
+    sourceIds: ['res-hf-llm', 'res-ms-genai', 'res-openai-cookbook'],
+  },
+  'visual-llm-05-stage-objectives': {
+    lessonId: 'llm-05',
+    sectionId: 'sft-and-behavior-shaping',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['comparison'],
+    sourceIds: ['res-hf-llm', 'res-rasbt', 'res-stanford-cs336'],
+  },
+  'visual-llm-05-preference-boundary': {
+    lessonId: 'llm-05',
+    sectionId: 'preference-optimization-boundaries',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['boundary', 'comparison'],
+    sourceIds: ['res-hf-llm', 'res-rasbt', 'res-happy-llm'],
+  },
+  'visual-llm-05-lora-update': {
+    lessonId: 'llm-05',
+    sectionId: 'lora-as-parameter-efficient-update',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-rasbt', 'res-hf-llm', 'res-happy-llm'],
+    fixtureId: 'fixture-llm-05-lora-update',
+  },
+  'visual-llm-05-rag-finetune-matrix': {
+    lessonId: 'llm-05',
+    sectionId: 'rag-finetuning-decision-lab',
+    kind: 'diagram',
+    role: 'decision',
+    tags: ['failure-mode', 'comparison'],
+    sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-llm', 'res-rasbt'],
+    fixtureId: 'fixture-llm-05-rag-finetune-matrix',
+  },
+  'visual-llm-06-generation-loop': {
+    lessonId: 'llm-06',
+    sectionId: 'sampling-experiment-and-serving-tradeoffs',
+    kind: 'step-diagram',
+    role: 'overview',
+    tags: ['process'],
+    sourceIds: ['res-rasbt', 'res-hf-llm', 'res-openai-cookbook'],
+    fixtureId: 'fixture-llm-06-generation-loop',
+  },
+  'visual-llm-06-logit-softmax': {
+    lessonId: 'llm-06',
+    sectionId: 'logits-softmax-next-token',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-rasbt', 'res-hf-llm'],
+    fixtureId: 'fixture-llm-06-logit-softmax',
+  },
+  'visual-llm-06-temperature-top-p': {
+    lessonId: 'llm-06',
+    sectionId: 'top-p-and-combined-sampling',
+    kind: 'diagram',
+    role: 'comparison',
+    tags: ['mechanism'],
+    sourceIds: ['res-hf-llm', 'res-openai-cookbook', 'res-rasbt'],
+    fixtureId: 'fixture-llm-06-temperature-top-p',
+  },
+  'visual-llm-06-kv-cache': {
+    lessonId: 'llm-06',
+    sectionId: 'kv-cache-reuse-memory-and-concurrency',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['tradeoff', 'comparison'],
+    sourceIds: ['res-hf-llm', 'res-rasbt', 'res-openai-cookbook'],
+    fixtureId: 'fixture-llm-06-kv-cache',
+  },
+  'visual-llm-06-latency-breakdown': {
+    lessonId: 'llm-06',
+    sectionId: 'prefill-decode-and-latency-metrics',
+    kind: 'diagram',
+    role: 'boundary',
+    tags: ['decision', 'tradeoff'],
+    sourceIds: ['res-hf-llm', 'res-openai-cookbook'],
+    fixtureId: 'fixture-llm-06-latency-breakdown',
+  },
 });
 const EXPECTED_VISUAL_IDS = Object.freeze(Object.keys(EXPECTED_VISUALS));
 const FIXTURES_BY_ID = new Map(
@@ -447,16 +534,16 @@ test('field map preserves the frozen reading order, encodings and counterexample
   assert.match(svg, /斜线阴影：两轴交叉/);
 });
 
-test('publishes exactly five frozen visual references per llm-01–04 lesson with all coverage groups', async () => {
+test('publishes exactly five frozen visual references per llm-01–06 lesson with all coverage groups', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   assert.deepEqual(
     llmFoundationVisuals.map(({ id }) => id).sort(),
     [...EXPECTED_VISUAL_IDS].sort(),
-    '01–04 registry 必须精确使用冻结的二十个 visual ID',
+    '01–06 registry 必须精确使用冻结的三十个 visual ID',
   );
-  assert.equal(llmFoundationVisuals.length, 20);
+  assert.equal(llmFoundationVisuals.length, 30);
 
-  for (const lessonId of ['llm-01', 'llm-02', 'llm-03', 'llm-04']) {
+  for (const lessonId of ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06']) {
     const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
     const references = [
       lesson.knowledgeNote.overviewVisualId,
@@ -482,7 +569,7 @@ test('publishes exactly five frozen visual references per llm-01–04 lesson wit
   }
 });
 
-test('places every published llm-01–04 visual once in its evidence-owning real section', async () => {
+test('places every published llm-01–06 visual once in its evidence-owning real section', async () => {
   const { knowledgeVisuals } = await loadRegistry();
   const result = await validateKnowledgeVisualOwnership({
     courseRegistry: { 'llm-foundation': llmFoundation },
@@ -493,7 +580,7 @@ test('places every published llm-01–04 visual once in its evidence-owning real
     },
   });
   assert.deepEqual(result.errors, []);
-  assert.equal(result.placements.length, 20);
+  assert.equal(result.placements.length, 30);
 
   const placementsById = new Map(
     result.placements.map((placement) => [placement.visualId, placement]),
@@ -520,9 +607,18 @@ test('places every published llm-01–04 visual once in its evidence-owning real
     llm04.knowledgeNote.overviewVisualSectionId,
     'decoder-block-information-flow',
   );
+  const llm05 = llmFoundation.lessons.find(({ id }) => id === 'llm-05');
+  assert.equal(llm05.knowledgeNote.overviewVisualId, 'visual-llm-05-method-map');
+  assert.equal(llm05.knowledgeNote.overviewVisualSectionId, 'objectives-before-methods');
+  const llm06 = llmFoundation.lessons.find(({ id }) => id === 'llm-06');
+  assert.equal(llm06.knowledgeNote.overviewVisualId, 'visual-llm-06-generation-loop');
+  assert.equal(
+    llm06.knowledgeNote.overviewVisualSectionId,
+    'sampling-experiment-and-serving-tradeoffs',
+  );
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02', 'llm-03', 'llm-04'].includes(id),
+    ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06'].includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -549,10 +645,18 @@ test('anchors visuals after the earliest paragraph that completes their teaching
     'visual-llm-04-score-mask-softmax': 2,
     'visual-llm-04-multi-head-merge': 1,
     'visual-llm-04-causal-visibility': 1,
+    'visual-llm-05-stage-objectives': 1,
+    'visual-llm-05-preference-boundary': 2,
+    'visual-llm-05-lora-update': 1,
+    'visual-llm-05-rag-finetune-matrix': 2,
+    'visual-llm-06-logit-softmax': 2,
+    'visual-llm-06-temperature-top-p': 2,
+    'visual-llm-06-kv-cache': 2,
+    'visual-llm-06-latency-breakdown': 3,
   };
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02', 'llm-03', 'llm-04'].includes(id),
+    ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06'].includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -568,9 +672,9 @@ test('anchors visuals after the earliest paragraph that completes their teaching
   }
 });
 
-test('keeps all twenty llm-01–04 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
+test('keeps all thirty llm-01–06 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
-  assert.equal(llmFoundationVisuals.length, 20);
+  assert.equal(llmFoundationVisuals.length, 30);
   const countByLesson = new Map();
 
   for (const visual of llmFoundationVisuals) {
@@ -598,6 +702,8 @@ test('keeps all twenty llm-01–04 registry records aligned with frozen roles, t
     'llm-02': 5,
     'llm-03': 5,
     'llm-04': 5,
+    'llm-05': 5,
+    'llm-06': 5,
   });
 });
 
@@ -684,6 +790,94 @@ test('keeps score-mask-softmax as four ordered, cumulative and renderable teachi
         `${step.id} 必须有进入当前阶段的方向标记`,
       );
     }
+  }
+});
+
+test('keeps generation-loop as five ordered, strictly cumulative and renderable teaching steps', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const visual = knowledgeVisualsById['visual-llm-06-generation-loop'];
+  assert.equal(visual.kind, 'step-diagram');
+  assert.equal(validateRenderableVisual(visual).valid, true);
+  assert.deepEqual(
+    visual.steps.map(({ id }) => id),
+    ['raw-logits', 'temperature', 'softmax', 'nucleus', 'sample'],
+  );
+  assert.deepEqual(
+    visual.steps.map(({ assetPath }) => assetPath),
+    [1, 2, 3, 4, 5].map(
+      (step) => `assets/visuals/llm-foundation/llm-06-generation-loop-step-${step}.svg`,
+    ),
+  );
+
+  const phases = ['raw', 'temperature', 'softmax', 'nucleus', 'sample'];
+  const snapshots = [];
+  for (let stepNumber = 1; stepNumber <= phases.length; stepNumber += 1) {
+    const assetPath = visual.steps[stepNumber - 1].assetPath;
+    const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+    const phaseStates = new Map();
+    for (const phase of phases) {
+      const region = parsed.elements.find(
+        (node) =>
+          node.attributes.get('data-region') === `phase-${phase}`
+          && node.attributes.get('data-phase') === phase,
+      );
+      assert.ok(region, `${assetPath} 缺少固定布局 phase-${phase}`);
+      const expectedState = phases.indexOf(phase) < stepNumber ? 'active' : 'placeholder';
+      assert.equal(region.attributes.get('data-state'), expectedState);
+      const activeElements = parsed.elements
+        .filter(
+          (node) =>
+            node.attributes.get('data-phase') === phase
+            && node.attributes.get('data-state') === 'active',
+        )
+        .map(structuredElementSignature)
+        .sort();
+      assert.equal(
+        expectedState === 'active' ? activeElements.length >= 4 : activeElements.length,
+        expectedState === 'active' ? true : 0,
+      );
+      phaseStates.set(phase, activeElements);
+    }
+    snapshots.push(phaseStates);
+  }
+  phases.forEach((phase, phaseIndex) => {
+    const canonical = snapshots[phaseIndex].get(phase);
+    for (let later = phaseIndex + 1; later < snapshots.length; later += 1) {
+      assert.deepEqual(snapshots[later].get(phase), canonical, `${phase} 后续步骤不得改值或移动`);
+    }
+  });
+});
+
+test('freezes qualitative llm-05 structures as explicit nodes, routes and boundaries', async () => {
+  const requirements = {
+    'visual-llm-05-method-map': {
+      nodes: ['business-failure', 'capability', 'behavior', 'knowledge', 'evidence', 'pretrain', 'sft', 'preference', 'lora', 'rag', 'evaluation'],
+      edges: ['capability-pretrain', 'behavior-sft', 'behavior-preference', 'behavior-lora', 'knowledge-rag', 'evidence-rag'],
+    },
+    'visual-llm-05-stage-objectives': {
+      nodes: ['base-model', 'pretraining', 'continued-pretraining', 'sft', 'evaluation'],
+      edges: ['base-pretrain', 'pretrain-continue', 'continue-sft', 'sft-evaluate'],
+    },
+    'visual-llm-05-preference-boundary': {
+      nodes: ['prompt', 'answer-a', 'answer-b', 'preference-label', 'optimization-signal', 'behavior-distribution', 'helpful', 'safe', 'informative', 'calibrated'],
+      edges: ['prompt-a', 'prompt-b', 'answers-label', 'label-signal', 'signal-distribution'],
+    },
+  };
+  for (const [visualId, expected] of Object.entries(requirements)) {
+    const assetPath = `assets/visuals/llm-foundation/${visualId.replace('visual-', '')}.svg`;
+    const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+    const nodes = new Set(
+      parsed.elements
+        .filter((node) => node.attributes.get('data-region') === 'teaching-node')
+        .map((node) => node.attributes.get('data-node')),
+    );
+    const edges = new Set(
+      parsed.elements
+        .filter((node) => node.attributes.get('data-region') === 'teaching-edge')
+        .map((node) => node.attributes.get('data-edge')),
+    );
+    expected.nodes.forEach((node) => assert.ok(nodes.has(node), `${visualId} 缺少 ${node}`));
+    expected.edges.forEach((edge) => assert.ok(edges.has(edge), `${visualId} 缺少 ${edge}`));
   }
 });
 
@@ -1277,6 +1471,62 @@ test('encodes every llm-01–04 quantitative fixture input, method, result and r
   }
 });
 
+test('encodes every llm-05–06 quantitative fixture input, method, result and rounding in visible SVG text', async () => {
+  const expectations = {
+    'visual-llm-05-lora-update': ['冻结 W 为 4×4', 'ΔW=BA', 'adapter 参数', '8 vs fullParameters 16', 'Rounding：整数原样'],
+    'visual-llm-05-rag-finetune-matrix': ['高阈值 = 3', 'updateFrequency', 'citationNeed', 'stableBehavior', 'hasExamples', 'RAG', 'SFT/LoRA', 'insufficient evidence—do not fine-tune', 'Rounding：等级为整数'],
+    'visual-llm-06-generation-loop': ['logits 0/2/1', 'T=1', 'top-p=.8', 'u=.7', 'stable softmax', '最小 nucleus', '逆 CDF', '0.0900/0.6652/0.2447', '0.7311/0.2689', 'selected A', 'EOS', 'Rounding：概率四位小数'],
+    'visual-llm-06-logit-softmax': ['logits=[2,1,0]', 'stable softmax', '1.0000 / 0.3679 / 0.1353', '0.6652 / 0.2447 / 0.0900', 'sum = 1.0000', 'greedy = A', 'Rounding：指数与概率四位小数'],
+    'visual-llm-06-temperature-top-p': ['logits 0 / 2 / 1', 'T = 0.5 / 1 / 2', 'top-p = 0.8', '0.0159', '0.8668', '0.5065', 'nucleus = A / B', 'Rounding：概率四位小数'],
+    'visual-llm-06-kv-cache': ['layers=2', 'length=4', 'KV heads=1', 'head dim=2', '预算 576 bytes', '64 bytes/seq', '9 并发', '128 bytes/seq', '4 并发', 'Rounding：bytes 与序列数为整数'],
+    'visual-llm-06-latency-breakdown': ['queue=40', 'prefill=80', '首包=20', '5 个 decode', 'TTFT 140', 'E2E', '240 ms', 'rank 19', 'P95 = 280 ms', 'max = 500 ms', 'Rounding：毫秒整数'],
+  };
+  const { knowledgeVisualsById } = await loadRegistry();
+  for (const [visualId, fragments] of Object.entries(expectations)) {
+    const visual = knowledgeVisualsById[visualId];
+    const fixture = fixtureForVisual(visualId);
+    const visibleText = visibleSvgText(await readFile(visual.assetPath, 'utf8'), visual.assetPath);
+    assertSvgIncludes(visibleText, fixture.fields.Rounding);
+    fragments.forEach((fragment) => assertSvgIncludes(visibleText, fragment));
+  }
+});
+
+test('maps LoRA delta cells and inference distributions to fixture-derived geometry', async () => {
+  const lora = fixtureForVisual('visual-llm-05-lora-update');
+  const loraPath = 'assets/visuals/llm-foundation/llm-05-lora-update.svg';
+  const loraParsed = parseStrictSvg(await readFile(loraPath, 'utf8'), loraPath);
+  const cells = loraParsed.elements.filter(
+    (node) => node.attributes.get('data-region') === 'lora-delta-cell',
+  );
+  assert.equal(cells.length, 16);
+  cells.forEach((cell) => {
+    const row = Number(cell.attributes.get('data-row'));
+    const column = Number(cell.attributes.get('data-column'));
+    assert.equal(Number(cell.attributes.get('data-value')), lora.result.deltaW[row][column]);
+    assert.equal(Number(cell.attributes.get('x')), 686 + column * 84);
+    assert.equal(Number(cell.attributes.get('y')), 174 + row * 44);
+  });
+
+  for (const visualId of ['visual-llm-06-logit-softmax', 'visual-llm-06-temperature-top-p']) {
+    const fixture = fixtureForVisual(visualId);
+    const path = `assets/visuals/llm-foundation/${visualId.replace('visual-', '')}.svg`;
+    const parsed = parseStrictSvg(await readFile(path, 'utf8'), path);
+    const bars = parsed.elements.filter(
+      (node) => node.attributes.get('data-region') === (
+        visualId.endsWith('logit-softmax') ? 'probability-bar' : 'temperature-bar'
+      ),
+    );
+    const expected = visualId.endsWith('logit-softmax')
+      ? fixture.result.probabilities
+      : fixture.result.distributions.flat();
+    assert.equal(bars.length, expected.length);
+    bars.forEach((bar, index) => {
+      assert.ok(Math.abs(Number(bar.attributes.get('data-value')) - expected[index]) < 1e-12);
+      assert.equal(Number(bar.attributes.get('width')), Math.round(expected[index] * (visualId.endsWith('logit-softmax') ? 260 : 100)));
+    });
+  }
+});
+
 test('draws three upward-opening learning-rate landscapes with explicit axes', async () => {
   const assetPath = 'assets/visuals/llm-foundation/llm-02-learning-rate-trajectories.svg';
   const svg = await readFile(assetPath, 'utf8');
@@ -1742,7 +1992,7 @@ test('lays out raw attention scores and causal visibility as fixture-derived mat
   });
 });
 
-test('keeps every llm-01–04 SVG label at least 26px with a 32px viewBox safety margin', async () => {
+test('keeps every llm-01–06 SVG label at least 26px with a 32px viewBox safety margin', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   for (const visual of llmFoundationVisuals) {
     for (const assetPath of assetPathsFor(visual)) {
