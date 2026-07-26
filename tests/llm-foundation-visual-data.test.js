@@ -687,6 +687,145 @@ test('keeps score-mask-softmax as four ordered, cumulative and renderable teachi
   }
 });
 
+function structuredElementSignature(node) {
+  const structuralAttributes = [
+    'data-region',
+    'data-node',
+    'data-stage',
+    'data-row',
+    'data-column',
+    'data-value',
+    'data-from',
+    'data-to',
+    'data-kind',
+    'x',
+    'y',
+    'width',
+    'height',
+    'cx',
+    'cy',
+    'r',
+    'x1',
+    'y1',
+    'x2',
+    'y2',
+    'points',
+    'd',
+  ];
+  return JSON.stringify([
+    node.name,
+    ...structuralAttributes.map((attribute) => node.attributes.get(attribute) ?? null),
+  ]);
+}
+
+test('keeps every activated score phase structurally identical in all later cumulative steps', async () => {
+  const phases = ['project', 'compare', 'normalize', 'aggregate'];
+  const snapshots = [];
+  for (let stepNumber = 1; stepNumber <= phases.length; stepNumber += 1) {
+    const assetPath =
+      `assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-${stepNumber}.svg`;
+    const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+    const phaseStates = new Map();
+    for (const phase of phases) {
+      const region = parsed.elements.find(
+        (node) =>
+          node.attributes.get('data-region') === `phase-${phase}`
+          && node.attributes.get('data-phase') === phase,
+      );
+      assert.ok(region, `${assetPath} 缺少固定布局 phase-${phase}`);
+      const expectedState = phases.indexOf(phase) < stepNumber ? 'active' : 'placeholder';
+      assert.equal(region.attributes.get('data-state'), expectedState);
+      const activeElements = parsed.elements
+        .filter(
+          (node) =>
+            node.attributes.get('data-phase') === phase
+            && node.attributes.get('data-state') === 'active',
+        )
+        .map(structuredElementSignature)
+        .sort();
+      if (expectedState === 'active') {
+        assert.ok(activeElements.length >= 4, `${phase} 必须保留完整结构节点`);
+      } else {
+        assert.deepEqual(activeElements, [], `${phase} 尚未激活时只能是占位`);
+      }
+      phaseStates.set(phase, activeElements);
+    }
+    snapshots.push(phaseStates);
+  }
+
+  phases.forEach((phase, phaseIndex) => {
+    const canonical = snapshots[phaseIndex].get(phase);
+    for (let laterStep = phaseIndex + 1; laterStep < snapshots.length; laterStep += 1) {
+      assert.deepEqual(
+        snapshots[laterStep].get(phase),
+        canonical,
+        `${phase} 在后续步骤不得压缩、改值或移动`,
+      );
+    }
+  });
+});
+
+test('models the decoder main path, two residual targets and reverse gradient as explicit edges', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-04-decoder-block.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const nodes = new Set(
+    parsed.elements
+      .filter((node) => node.attributes.get('data-region') === 'decoder-node')
+      .map((node) => node.attributes.get('data-node')),
+  );
+  assert.deepEqual(
+    [...nodes].sort(),
+    [
+      'block-output',
+      'ffn',
+      'h',
+      'h-prime',
+      'ln1',
+      'ln2',
+      'masked-mha',
+      'plus1',
+      'plus2',
+      'stack-exit',
+    ].sort(),
+  );
+
+  const edges = parsed.elements.filter(
+    (node) => node.attributes.get('data-region') === 'decoder-edge',
+  );
+  const edgeKey = (edge) =>
+    `${edge.attributes.get('data-from')}->${edge.attributes.get('data-to')}`;
+  const mainEdges = edges
+    .filter((edge) => edge.attributes.get('data-kind') === 'main')
+    .map(edgeKey);
+  assert.deepEqual(mainEdges, [
+    'h->ln1',
+    'ln1->masked-mha',
+    'masked-mha->plus1',
+    'plus1->h-prime',
+    'h-prime->ln2',
+    'ln2->ffn',
+    'ffn->plus2',
+    'plus2->block-output',
+    'block-output->stack-exit',
+  ]);
+
+  const residualEdges = edges
+    .filter((edge) => edge.attributes.get('data-kind') === 'residual');
+  assert.deepEqual(residualEdges.map(edgeKey).sort(), ['h->plus1', 'h-prime->plus2']);
+  assert.ok(residualEdges.every((edge) => !edge.attributes.has('stroke-dasharray')));
+  assert.ok(residualEdges.every((edge) => edge.attributes.get('data-to')?.startsWith('plus')));
+  assert.ok(!residualEdges.some((edge) => edge.attributes.get('data-to') === 'ffn'));
+
+  const gradientEdges = edges.filter(
+    (edge) => edge.attributes.get('data-kind') === 'gradient',
+  );
+  assert.equal(gradientEdges.length, 1);
+  assert.equal(edgeKey(gradientEdges[0]), 'block-output->h');
+  assert.equal(gradientEdges[0].attributes.get('data-direction'), 'reverse');
+  assert.ok(gradientEdges[0].attributes.has('stroke-dasharray'));
+  assert.ok(gradientEdges[0].attributes.has('marker-end'));
+});
+
 function fixtureForVisual(visualId) {
   const expected = EXPECTED_VISUALS[visualId];
   const fixture = FIXTURES_BY_ID.get(expected.fixtureId);
@@ -1325,21 +1464,81 @@ test('lays out raw attention scores and causal visibility as fixture-derived mat
   const scoreFixture = fixtureForVisual('visual-llm-04-score-mask-softmax');
   const scorePath = `assets/visuals/llm-foundation/llm-04-score-mask-softmax.svg`;
   const scoreParsed = parseStrictSvg(await readFile(scorePath, 'utf8'), scorePath);
-  const scoreCells = scoreParsed.elements.filter(
-    (node) => node.name === 'rect' && node.attributes.get('data-region') === 'raw-score-cell',
+  const expectedStages = new Map([
+    ['raw', scoreFixture.data.rawQKScores],
+    ['scaled', scoreFixture.result.scaledScores],
+    ['masked', scoreFixture.result.maskedScores],
+    ['weights', scoreFixture.result.weights],
+  ]);
+  for (const [stage, expectedValues] of expectedStages) {
+    const matrix = scoreParsed.elements.find(
+      (node) =>
+        node.attributes.get('data-region') === 'attention-matrix'
+        && node.attributes.get('data-stage') === stage,
+    );
+    assert.ok(matrix, `${stage} 必须是真正的 1×3 matrix`);
+    const originX = finiteNumberAttribute(matrix, 'data-origin-x', `${stage}-matrix`);
+    const originY = finiteNumberAttribute(matrix, 'data-origin-y', `${stage}-matrix`);
+    const cellWidth = finiteNumberAttribute(matrix, 'data-cell-width', `${stage}-matrix`);
+    const cellHeight = finiteNumberAttribute(matrix, 'data-cell-height', `${stage}-matrix`);
+    const cells = scoreParsed.elements.filter(
+      (node) =>
+        node.name === 'rect'
+        && node.attributes.get('data-region') === 'attention-cell'
+        && node.attributes.get('data-stage') === stage,
+    );
+    assert.equal(cells.length, expectedValues.length);
+    expectedValues.forEach((expectedValue, column) => {
+      const cell = cells.find(
+        (candidate) =>
+          candidate.attributes.get('data-row') === '0'
+          && candidate.attributes.get('data-column') === String(column),
+      );
+      assert.ok(cell, `${stage}[0][${column}]`);
+      const encodedValue = cell.attributes.get('data-value');
+      if (expectedValue === -Infinity) {
+        assert.equal(encodedValue, '-Infinity');
+        assert.equal(cell.attributes.get('data-kind'), 'masked-future');
+        assert.match(cell.attributes.get('fill') ?? '', /^url\(#[-A-Za-z0-9_]+\)$/);
+      } else {
+        assert.ok(Math.abs(Number(encodedValue) - expectedValue) < 1e-12);
+      }
+      assert.equal(finiteNumberAttribute(cell, 'x', `${stage}-cell`), originX + column * cellWidth);
+      assert.equal(finiteNumberAttribute(cell, 'y', `${stage}-cell`), originY);
+      assert.equal(finiteNumberAttribute(cell, 'width', `${stage}-cell`), cellWidth);
+      assert.equal(finiteNumberAttribute(cell, 'height', `${stage}-cell`), cellHeight);
+    });
+    const keyLabels = scoreParsed.elements.filter(
+      (node) =>
+        node.attributes.get('data-region') === 'attention-key-label'
+        && node.attributes.get('data-stage') === stage,
+    );
+    assert.deepEqual(
+      keyLabels.map((node) => node.attributes.get('data-column')),
+      expectedValues.map((_, column) => String(column)),
+      `${stage} 必须有 k0/k1/k2 列轴`,
+    );
+    const queryLabel = scoreParsed.elements.find(
+      (node) =>
+        node.attributes.get('data-region') === 'attention-query-label'
+        && node.attributes.get('data-stage') === stage,
+    );
+    assert.equal(queryLabel?.attributes.get('data-row'), '0', `${stage} 必须有 q0 行轴`);
+  }
+  assert.ok(
+    Math.abs(scoreFixture.result.weights.reduce((sum, value) => sum + value, 0) - 1) < 1e-12,
   );
-  assert.equal(scoreCells.length, scoreFixture.data.rawQKScores.length);
-  const scoreStartX = Math.min(...scoreCells.map((cell) => finiteNumberAttribute(cell, 'x', 'raw-score-cell')));
-  const scoreY = finiteNumberAttribute(scoreCells[0], 'y', 'raw-score-cell');
-  const scoreCellSize = finiteNumberAttribute(scoreCells[0], 'width', 'raw-score-cell');
-  scoreCells.forEach((cell, column) => {
+  const outputCells = scoreParsed.elements.filter(
+    (node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'attention-output-cell',
+  );
+  assert.equal(outputCells.length, scoreFixture.result.output.length);
+  outputCells.forEach((cell, column) => {
     assert.equal(cell.attributes.get('data-column'), String(column));
     assert.ok(
-      Math.abs(finiteNumberAttribute(cell, 'data-value', 'raw-score-cell') - scoreFixture.data.rawQKScores[column]) < 1e-12,
+      Math.abs(Number(cell.attributes.get('data-value')) - scoreFixture.result.output[column]) < 1e-12,
     );
-    assert.equal(finiteNumberAttribute(cell, 'x', 'raw-score-cell'), scoreStartX + column * scoreCellSize);
-    assert.equal(finiteNumberAttribute(cell, 'y', 'raw-score-cell'), scoreY);
-    assert.equal(finiteNumberAttribute(cell, 'height', 'raw-score-cell'), scoreCellSize);
   });
 
   const causalFixture = fixtureForVisual('visual-llm-04-causal-visibility');

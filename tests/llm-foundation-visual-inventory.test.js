@@ -1149,6 +1149,30 @@ test('architecture and Pareto storyboards preserve their implementation boundari
   }
 });
 
+test('multi-head inventory derives its head count from the frozen fixture authority', () => {
+  const multiHead = rowsById.get('visual-llm-04-multi-head-merge');
+  const fixtureItem = fixturesById.get('fixture-llm-04-multi-head-merge');
+  const numHeads = fixtureItem.data.heads.length;
+  const declaredHeads = [...multiHead.storyboard.matchAll(/Head ([0-9]+(?:\/[0-9]+)*)/g)]
+    .flatMap((match) => match[1].split('/').map(Number));
+  assert.deepEqual(
+    [...new Set(declaredHeads)].sort((left, right) => left - right),
+    Array.from({ length: numHeads }, (_, index) => index + 1),
+    'inventory Head 节点必须完全由 fixture heads.length 派生',
+  );
+  assert.ok(
+    multiHead.storyboard.includes(`${numHeads === 2 ? '两' : numHeads}组独立 Q/K/V 投影`),
+    'Reading order 必须与 fixture 头数一致',
+  );
+  assert.ok(!multiHead.storyboard.includes(`Head ${numHeads + 1}`));
+  assert.ok(
+    audit.includes(
+      '2026-07-26 审查更正：概念稿的 3 头与 fixture numHeads=2（由 data.heads.length 冻结）冲突，采用 fixture 的 2 头作为数值单一真源。',
+    ),
+    'audit 必须记录 3→2 权威冲突与裁决',
+  );
+});
+
 test('audit records reproducible commands, human review limits and both blobs', () => {
   const placeholderPattern = /TODO|TBD|placeholder|待补|未知|unknown/iu;
   assert.ok(!placeholderPattern.test(inventory), 'inventory 不得含占位符');

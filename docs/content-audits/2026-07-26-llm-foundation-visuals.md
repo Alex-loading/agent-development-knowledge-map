@@ -61,9 +61,13 @@
 
 复核后仍为 40 / 40 项各至少一个直接语义映射，许可决策与 blocked 数量不变。
 
+### 多头权威更正
+
+2026-07-26 审查更正：概念稿的 3 头与 fixture numHeads=2（由 data.heads.length 冻结）冲突，采用 fixture 的 2 头作为数值单一真源。对应 inventory 的 Reading order、Nodes/regions、纹理说明、alt 与 long-description 已统一为 Head 1、Head 2 和两组 Q/K/V；visualId、角色、assessed coverage 与 fixture 文件均未改变。此次更正只消除 storyboard 与既有数值真源之间的权威冲突，因此 Fixture git blob SHA 保持不变，Inventory git blob SHA 按修正文档重新计算。
+
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`3a7cb8d3366f67d776b3feb4f103c2fc037ae46c`
+- 清单内容标识：Inventory git blob SHA：`027af31addd9bdd8dcd98037d2ad3b00e77b8adf`
 - 数值真源标识：Fixture git blob SHA：`dd1c46658cfd5bc600da07db5acc9167f3ef40e7`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
