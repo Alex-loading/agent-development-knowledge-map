@@ -49,6 +49,31 @@ const sourcedVisual = {
   modifications: [],
 };
 
+const stepVisual = {
+  ...originalVisual,
+  id: 'visual-test-step-flow',
+  kind: 'step-diagram',
+  role: 'process',
+  title: '两步静态流程',
+  assetPath: 'assets/visuals/test/test-step-flow.svg',
+  steps: [
+    {
+      id: 'first-step',
+      title: '第一步',
+      description: '先读取输入。',
+      alt: '输入进入流程。',
+      assetPath: 'assets/visuals/test/test-step-flow-first.svg',
+    },
+    {
+      id: 'second-step',
+      title: '第二步',
+      description: '再产生输出。',
+      alt: '流程产生输出。',
+      assetPath: 'assets/visuals/test/test-step-flow-second.svg',
+    },
+  ],
+};
+
 function visualWith(id, title = id) {
   return {
     ...originalVisual,
@@ -77,6 +102,32 @@ function lessonWithNote(noteOverrides = {}, sectionOverrides = {}) {
       ...noteOverrides,
     },
   };
+}
+
+function registryWith(kind, visualId, visual) {
+  if (kind === 'map') return new Map([[visualId, visual]]);
+  const registry = kind === 'null-prototype'
+    ? Object.create(null)
+    : {};
+  Object.defineProperty(registry, visualId, {
+    value: visual,
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  });
+  return registry;
+}
+
+function noteForVisual(visualId, visualsById) {
+  const lesson = lessonWithNote({}, {
+    visuals: [{ visualId, afterParagraph: 0 }],
+  });
+  const note = renderKnowledgeNote(
+    { resources: [] },
+    lesson,
+    { visualsById },
+  );
+  return { lesson, note };
 }
 
 test('renders an original knowledge figure with accessible local media metadata', (t) => {
@@ -171,31 +222,47 @@ test('renders sourced attribution with exactly two HTTPS links plus one local or
   assert.ok(figure.textContent.includes(sourcedVisual.permission.name));
 });
 
-test('treats visual copy as text and never executes step callbacks or parses HTML', (t) => {
+test('treats visual copy as text and never parses HTML', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
-  let callbackCount = 0;
   const visual = {
     ...originalVisual,
     id: 'visual-test-hostile',
-    kind: 'step-diagram',
     title: '<script>globalThis.compromised = true</script>',
     caption: '<button>伪造按钮</button>',
     credit: '<img src=x onerror=alert(1)>',
-    steps: [{
-      assetPath: 'assets/visuals/test/step.svg',
-      callback: () => { callbackCount += 1; },
-    }],
   };
 
   const figure = renderKnowledgeVisual(visual);
 
-  assert.equal(callbackCount, 0);
   assert.equal(figure.querySelector('script'), null);
   assert.equal(figure.querySelector('button'), null);
   assert.equal(figure.querySelectorAll('img').length, 1);
   assert.ok(figure.textContent.includes(visual.title));
   assert.ok(figure.textContent.includes(visual.caption));
+});
+
+test('renders a valid step diagram as a static main image and rejects callbacks without executing them', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const staticFigure = renderKnowledgeVisual(stepVisual);
+  let callbackCount = 0;
+  const callbackVisual = {
+    ...stepVisual,
+    callback: () => { callbackCount += 1; },
+  };
+
+  const rejected = renderKnowledgeVisual(callbackVisual);
+
+  assert.equal(staticFigure.className, 'knowledge-visual');
+  assert.equal(staticFigure.dataset.kind, 'step-diagram');
+  assert.equal(
+    staticFigure.querySelector('img').getAttribute('src'),
+    stepVisual.assetPath,
+  );
+  assert.equal(callbackCount, 0);
+  assert.equal(rejected.getAttribute('data-visual-diagnostic'), 'true');
+  assert.equal(rejected.querySelector('img'), null);
 });
 
 test('does not mutate or freeze caller-owned visual data', (t) => {
@@ -358,6 +425,270 @@ test('rejects malformed own object and Map registry keys before lookup', (t) => 
       } finally {
         restore();
       }
+    }
+  }
+});
+
+test('rejects incomplete, invalid-provenance and remote visual records in every registry shape', (t) => {
+  const invalidRecords = [
+    ['visual-test-empty', {}],
+    ['visual-test-missing-field', {
+      ...originalVisual,
+      id: 'visual-test-missing-field',
+      alt: '',
+    }],
+    ['visual-test-invalid-provenance', {
+      ...originalVisual,
+      id: 'visual-test-invalid-provenance',
+      provenance: 'unverified-copy',
+    }],
+    ['visual-test-remote-asset', {
+      ...originalVisual,
+      id: 'visual-test-remote-asset',
+      assetPath: 'https://evil.example/remote.svg',
+    }],
+  ];
+
+  for (const registryKind of ['map', 'object', 'null-prototype']) {
+    for (const [visualId, visual] of invalidRecords) {
+      const document = new FakeDocument();
+      const restore = installFakeDom(document);
+      try {
+        const { note } = noteForVisual(
+          visualId,
+          registryWith(registryKind, visualId, visual),
+        );
+
+        assert.ok(note.textContent.includes('第一段'));
+        assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
+        assert.equal(
+          note.querySelectorAll('[data-visual-diagnostic="true"]').length,
+          1,
+          `${registryKind}/${visualId}`,
+        );
+        assert.equal(note.querySelector('img'), null);
+        assert.equal(
+          note.textContent.includes('https://evil.example/remote.svg'),
+          false,
+        );
+      } finally {
+        restore();
+      }
+    }
+  }
+});
+
+test('does not invoke top-level or nested visual accessors for any registry shape', (t) => {
+  let getterCount = 0;
+  const topLevelGetter = {
+    ...originalVisual,
+    id: 'visual-test-top-level-getter',
+  };
+  Object.defineProperty(topLevelGetter, 'title', {
+    enumerable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('top-level getter must not execute');
+    },
+  });
+
+  const nestedPermissionGetter = {
+    ...sourcedVisual,
+    id: 'visual-test-permission-getter',
+    permission: { ...sourcedVisual.permission },
+  };
+  Object.defineProperty(nestedPermissionGetter.permission, 'name', {
+    enumerable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('permission getter must not execute');
+    },
+  });
+
+  const nestedStepGetter = {
+    ...stepVisual,
+    id: 'visual-test-step-getter',
+    steps: stepVisual.steps.map((step) => ({ ...step })),
+  };
+  Object.defineProperty(nestedStepGetter.steps[0], 'description', {
+    enumerable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('step getter must not execute');
+    },
+  });
+
+  const accessorRecords = [
+    [topLevelGetter.id, topLevelGetter],
+    [nestedPermissionGetter.id, nestedPermissionGetter],
+    [nestedStepGetter.id, nestedStepGetter],
+  ];
+
+  for (const registryKind of ['map', 'object', 'null-prototype']) {
+    for (const [visualId, visual] of accessorRecords) {
+      const document = new FakeDocument();
+      const restore = installFakeDom(document);
+      try {
+        assert.doesNotThrow(() => {
+          const { note } = noteForVisual(
+            visualId,
+            registryWith(registryKind, visualId, visual),
+          );
+          assert.ok(note.textContent.includes('第一段'));
+          assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
+          assert.equal(
+            note.querySelectorAll('[data-visual-diagnostic="true"]').length,
+            1,
+          );
+        });
+      } finally {
+        restore();
+      }
+    }
+  }
+
+  const registryAccessorId = 'visual-test-registry-accessor';
+  const registry = {};
+  Object.defineProperty(registry, registryAccessorId, {
+    enumerable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('registry getter must not execute');
+    },
+  });
+  const document = new FakeDocument();
+  const restore = installFakeDom(document);
+  try {
+    const { note } = noteForVisual(registryAccessorId, registry);
+    assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
+    assert.equal(
+      note.querySelectorAll('[data-visual-diagnostic="true"]').length,
+      1,
+    );
+  } finally {
+    restore();
+  }
+
+  assert.equal(getterCount, 0);
+});
+
+test('direct renderer safely diagnoses malformed, remote, cyclic and reflection-throwing records', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  let getterCount = 0;
+  const getterVisual = {
+    ...originalVisual,
+    id: 'visual-test-direct-getter',
+  };
+  Object.defineProperty(getterVisual, 'assetPath', {
+    enumerable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('asset getter must not execute');
+    },
+  });
+  const remoteVisual = {
+    ...originalVisual,
+    id: 'visual-test-direct-remote',
+    assetPath: 'javascript:alert(1)',
+  };
+  const cyclicVisual = {
+    ...originalVisual,
+    id: 'visual-test-direct-cycle',
+  };
+  cyclicVisual.extra = cyclicVisual;
+  const reflectionThrowingVisual = new Proxy(
+    { ...originalVisual, id: 'visual-test-direct-proxy' },
+    {
+      ownKeys() {
+        throw new Error('proxy reflection failed');
+      },
+    },
+  );
+
+  for (const visual of [
+    {},
+    getterVisual,
+    remoteVisual,
+    cyclicVisual,
+    reflectionThrowingVisual,
+  ]) {
+    let diagnostic;
+    assert.doesNotThrow(() => {
+      diagnostic = renderKnowledgeVisual(visual);
+    });
+    assert.equal(diagnostic.getAttribute('role'), 'status');
+    assert.equal(
+      diagnostic.getAttribute('data-visual-diagnostic'),
+      'true',
+    );
+    assert.equal(diagnostic.querySelector('img'), null);
+    assert.equal(diagnostic.querySelector('a'), null);
+    assert.equal(
+      diagnostic.textContent.includes('javascript:alert(1)'),
+      false,
+    );
+    assert.equal(diagnostic.textContent.includes('proxy reflection failed'), false);
+  }
+  assert.equal(getterCount, 0);
+});
+
+test('preserves trailing sparse array slots for complete contract validation', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const sparseVisual = {
+    ...originalVisual,
+    id: 'visual-test-sparse-source-ids',
+    sourceIds: [...originalVisual.sourceIds],
+  };
+  sparseVisual.sourceIds.length = 2;
+
+  const { note } = noteForVisual(
+    sparseVisual.id,
+    new Map([[sparseVisual.id, sparseVisual]]),
+  );
+
+  assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
+  assert.equal(
+    note.querySelectorAll('[data-visual-diagnostic="true"]').length,
+    1,
+  );
+});
+
+test('validates null-prototype snapshots without consulting inherited accessors', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const inheritedDescriptor = Object.getOwnPropertyDescriptor(
+    Object.prototype,
+    'credit',
+  );
+  let getterCount = 0;
+  const visual = {
+    ...originalVisual,
+    id: 'visual-test-inherited-accessor',
+  };
+  delete visual.credit;
+  Object.defineProperty(Object.prototype, 'credit', {
+    configurable: true,
+    get() {
+      getterCount += 1;
+      throw new Error('inherited getter must not execute');
+    },
+  });
+
+  try {
+    const diagnostic = renderKnowledgeVisual(visual);
+    assert.equal(
+      diagnostic.getAttribute('data-visual-diagnostic'),
+      'true',
+    );
+    assert.equal(diagnostic.querySelector('img'), null);
+    assert.equal(getterCount, 0);
+  } finally {
+    if (inheritedDescriptor) {
+      Object.defineProperty(Object.prototype, 'credit', inheritedDescriptor);
+    } else {
+      delete Object.prototype.credit;
     }
   }
 });

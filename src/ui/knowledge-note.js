@@ -1,6 +1,9 @@
 import { button, element, externalLink } from './dom.js';
 import { knowledgeVisualsById } from '../data/visuals/index.js';
-import { renderKnowledgeVisual } from './knowledge-visual.js';
+import {
+  renderKnowledgeVisual,
+  validateRenderableVisual,
+} from './knowledge-visual.js';
 
 const STABLE_VISUAL_ID = /^visual-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -70,8 +73,12 @@ function renderMisconceptions(misconceptions) {
 
 function ownDataValue(record, key) {
   if (!record || typeof record !== 'object') return undefined;
-  const descriptor = Object.getOwnPropertyDescriptor(record, key);
-  return descriptor && 'value' in descriptor ? descriptor.value : undefined;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(record, key);
+    return descriptor && 'value' in descriptor ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function visualFromRegistry(visualsById, visualId) {
@@ -81,17 +88,23 @@ function visualFromRegistry(visualsById, visualId) {
   ) {
     return undefined;
   }
-  if (visualsById instanceof Map) {
-    return visualsById.has(visualId) ? visualsById.get(visualId) : undefined;
-  }
-  if (
-    !visualsById
-    || typeof visualsById !== 'object'
-    || !Object.hasOwn(visualsById, visualId)
-  ) {
+  try {
+    if (visualsById instanceof Map) {
+      return Map.prototype.has.call(visualsById, visualId)
+        ? Map.prototype.get.call(visualsById, visualId)
+        : undefined;
+    }
+    if (
+      !visualsById
+      || typeof visualsById !== 'object'
+      || !Object.hasOwn(visualsById, visualId)
+    ) {
+      return undefined;
+    }
+    return ownDataValue(visualsById, visualId);
+  } catch {
     return undefined;
   }
-  return ownDataValue(visualsById, visualId);
 }
 
 function safeIdentifier(value, fallback) {
@@ -143,7 +156,7 @@ function resolveVisualNode({
   }
 
   const visual = visualFromRegistry(visualsById, visualId);
-  if (!visual || typeof visual !== 'object') {
+  if (visual === undefined) {
     return renderVisualDiagnostic({
       lessonId,
       sectionId,
@@ -151,7 +164,17 @@ function resolveVisualNode({
       reason: 'visualId 未在视觉注册表中解析',
     });
   }
-  return renderKnowledgeVisual(visual);
+
+  const validation = validateRenderableVisual(visual);
+  if (!validation.valid) {
+    return renderVisualDiagnostic({
+      lessonId,
+      sectionId,
+      visualId,
+      reason: '视觉记录未通过安全数据与完整契约验证',
+    });
+  }
+  return renderKnowledgeVisual(validation.visual);
 }
 
 function renderSectionContent(section, lessonId, visualsById) {
