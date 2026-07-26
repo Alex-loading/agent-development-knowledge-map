@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="learning-loop-title learning-loop-desc">
+  <title id="learning-loop-title">训练闭环与只读验证、推理旁路</title>
+  <desc id="learning-loop-desc">训练数据依次经过预测、损失、梯度与优化器，只有优化器更新才写入新参数。验证与标准推理使用当前参数，但不回写。闭环流程图只冻结结构、关系、边界与阅读顺序，不编码数值主张。</desc>
+  <defs>
+    <marker id="loop-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="read-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#64748b"/>
+    </marker>
+    <pattern id="update-hatch" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="14" height="14" fill="#fef3c7"/>
+      <path d="M-3 3 L3 -3 M0 14 L14 0 M11 17 L17 11" fill="none" stroke="#d97706" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="62" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">训练何时真正改变参数？</text>
+  <text x="48" y="102" font-family="system-ui, sans-serif" font-size="27" fill="#475569">实线是训练因果链 · 虚线是只读检查与使用</text>
+
+  <rect x="46" y="130" width="1108" height="300" rx="24" fill="#ffffff" stroke="#1d4ed8" stroke-width="4"/>
+  <text x="72" y="172" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">① 训练闭环</text>
+  <rect x="72" y="204" width="152" height="86" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="99" y="256" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#172554">数据批次</text>
+  <line x1="224" y1="247" x2="268" y2="247" stroke="#1d4ed8" stroke-width="5" marker-end="url(#loop-arrow)"/>
+  <rect x="282" y="204" width="146" height="86" rx="16" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="310" y="256" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#4c1d95">预测</text>
+  <line x1="428" y1="247" x2="472" y2="247" stroke="#1d4ed8" stroke-width="5" marker-end="url(#loop-arrow)"/>
+  <polygon points="486,247 548,197 610,247 548,297" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <text x="516" y="256" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#9a3412">损失</text>
+  <line x1="610" y1="247" x2="654" y2="247" stroke="#1d4ed8" stroke-width="5" marker-end="url(#loop-arrow)"/>
+  <rect x="668" y="204" width="146" height="86" rx="43" fill="#fce7f3" stroke="#be185d" stroke-width="3"/>
+  <text x="700" y="256" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#831843">梯度</text>
+  <line x1="814" y1="247" x2="858" y2="247" stroke="#1d4ed8" stroke-width="5" marker-end="url(#loop-arrow)"/>
+  <rect x="872" y="194" width="244" height="106" rx="18" fill="url(#update-hatch)" stroke="#a16207" stroke-width="5"/>
+  <text x="905" y="238" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">② 优化器更新</text>
+  <text x="919" y="277" font-family="system-ui, sans-serif" font-size="27" fill="#78350f">此处才改参数</text>
+  <path d="M994 300 L994 360 L360 360 L360 316" fill="none" stroke="#a16207" stroke-width="8" marker-end="url(#loop-arrow)"/>
+  <rect x="274" y="302" width="172" height="74" rx="16" fill="#ede9fe" stroke="#7c3aed" stroke-width="4"/>
+  <text x="298" y="348" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#4c1d95">新参数 θ′</text>
+  <text x="470" y="402" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#78350f">粗回箭头 → 下一批继续训练</text>
+
+  <rect x="46" y="456" width="540" height="168" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="3" stroke-dasharray="13 9"/>
+  <text x="72" y="500" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">③ 验证旁路 · 只读</text>
+  <text x="72" y="548" font-family="system-ui, sans-serif" font-size="27" fill="#334155">未参与训练的数据 → 指标</text>
+  <text x="72" y="590" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#334155">无 backward · 无 optimizer · 不回写</text>
+  <line x1="410" y1="527" x2="536" y2="527" stroke="#64748b" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#read-arrow)"/>
+
+  <rect x="614" y="456" width="540" height="168" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="3" stroke-dasharray="13 9"/>
+  <text x="640" y="500" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">④ 标准推理 · 只读</text>
+  <text x="640" y="548" font-family="system-ui, sans-serif" font-size="27" fill="#334155">输入 + 部署参数 → 输出</text>
+  <text x="640" y="590" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#334155">只做前向 · 不回写参数</text>
+  <line x1="978" y1="527" x2="1104" y2="527" stroke="#64748b" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#read-arrow)"/>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="auto-step3-title auto-step3-desc">
+  <title id="auto-step3-title">步骤三：追加 token 并停止</title>
+  <desc id="auto-step3-desc">累积保留编码和候选分布，ID 14 的天气以双边框追加到当前上下文，下一固定状态产生 EOS 并停止。参数保持只读。概率四位小数；ID 与步数为整数。</desc>
+  <defs>
+    <marker id="step3-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <pattern id="step3-hatch" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="12" height="12" fill="#fef3c7"/>
+      <path d="M0 12 L12 0" fill="none" stroke="#d97706" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="64" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">步骤 3 / 3 · 追加：新 token 成为上下文</text>
+  <rect x="842" y="28" width="310" height="62" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="875" y="68" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">🔒 已部署参数 · 只读</text>
+  <rect x="56" y="124" width="1088" height="116" rx="20" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+  <text x="84" y="168" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#1e3a8a">已有状态</text>
+  <text x="84" y="212" font-family="system-ui, sans-serif" font-size="27" fill="#172554">10 / 11 / 12 / 13　·　天气 0.7311 / 资料 0.2689　·　选择 ID 14</text>
+  <rect x="56" y="286" width="746" height="214" rx="22" fill="#ffffff" stroke="#a16207" stroke-width="4"/>
+  <text x="84" y="334" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">当前上下文</text>
+  <rect x="84" y="372" width="130" height="64" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="113" y="413" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">资料 10</text>
+  <rect x="226" y="372" width="130" height="64" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="255" y="413" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">助理 11</text>
+  <rect x="368" y="372" width="110" height="64" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="393" y="413" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">： 12</text>
+  <rect x="490" y="372" width="110" height="64" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="520" y="413" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">查 13</text>
+  <rect x="612" y="364" width="190" height="80" rx="20" fill="url(#step3-hatch)" stroke="#a16207" stroke-width="6"/>
+  <text x="636" y="413" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#78350f">新 · 天气 14</text>
+  <line x1="802" y1="394" x2="856" y2="394" stroke="#1d4ed8" stroke-width="6" marker-end="url(#step3-arrow)"/>
+  <rect x="872" y="306" width="272" height="174" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4" stroke-dasharray="13 9"/>
+  <text x="900" y="354" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">停止判断</text>
+  <text x="900" y="410" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#172554">下一步 EOS</text>
+  <text x="900" y="454" font-family="system-ui, sans-serif" font-size="27" fill="#334155">终止生成循环</text>
+  <text x="56" y="558" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#334155">循环依赖更新的是可见上下文，不是已部署参数。</text>
+  <text x="56" y="612" font-family="system-ui, sans-serif" font-size="26" fill="#475569">最长匹配编码 → stable softmax → greedy → 固定下一状态</text>
+  <text x="804" y="612" font-family="system-ui, sans-serif" font-size="26" fill="#475569">概率四位小数；ID 与步数为整数。</text>
+</svg>

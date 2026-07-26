@@ -4,13 +4,108 @@ import { access, readFile } from 'node:fs/promises';
 
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { validateVisualAsset } from '../src/data/visuals/visual-contract.js';
+import { validateRenderableVisual } from '../src/ui/knowledge-visual.js';
+import { llmFoundationVisualFixtures } from './fixtures/llm-foundation-visual-fixtures.js';
 import {
   assertSafeStaticSvg,
   parseStrictSvg,
 } from './helpers/static-svg.js';
+import { validateKnowledgeVisualOwnership } from './helpers/visual-registry.js';
 
 const FIELD_MAP_ID = 'visual-llm-01-field-map';
 const FIELD_MAP_PATH = 'assets/visuals/llm-foundation/llm-01-field-map.svg';
+const EXPECTED_VISUALS = Object.freeze({
+  'visual-llm-01-field-map': {
+    lessonId: 'llm-01',
+    sectionId: 'map-the-field',
+    kind: 'diagram',
+    role: 'overview',
+    tags: ['relationship', 'boundary'],
+    sourceIds: ['res-ms-ai', 'res-ms-genai', 'res-hf-llm'],
+  },
+  'visual-llm-01-learning-loop': {
+    lessonId: 'llm-01',
+    sectionId: 'minimal-learning-loop',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-ms-ai', 'res-hf-llm'],
+  },
+  'visual-llm-01-autoregressive-generation': {
+    lessonId: 'llm-01',
+    sectionId: 'from-generation-to-llm',
+    kind: 'step-diagram',
+    role: 'process',
+    tags: ['mechanism'],
+    sourceIds: ['res-ms-genai', 'res-hf-llm', 'res-ms-ai'],
+    fixtureId: 'fixture-llm-01-autoregressive-generation',
+  },
+  'visual-llm-01-training-inference-boundary': {
+    lessonId: 'llm-01',
+    sectionId: 'training-versus-inference',
+    kind: 'diagram',
+    role: 'comparison',
+    tags: ['boundary'],
+    sourceIds: ['res-ms-genai', 'res-hf-llm', 'res-ms-ai'],
+  },
+  'visual-llm-01-application-decision-stack': {
+    lessonId: 'llm-01',
+    sectionId: 'model-and-application-boundary',
+    kind: 'diagram',
+    role: 'decision',
+    tags: ['failure-mode'],
+    sourceIds: ['res-ms-genai', 'res-hf-llm', 'res-openai-agents'],
+  },
+  'visual-llm-02-training-cycle': {
+    lessonId: 'llm-02',
+    sectionId: 'training-loop-and-tensor-shapes',
+    kind: 'diagram',
+    role: 'overview',
+    tags: ['process'],
+    sourceIds: ['res-d2l-zh', 'res-karpathy', 'res-fastai'],
+    fixtureId: 'fixture-llm-02-training-cycle',
+  },
+  'visual-llm-02-neuron-forward': {
+    lessonId: 'llm-02',
+    sectionId: 'linear-layers-and-activation',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['comparison'],
+    sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-fastai'],
+    fixtureId: 'fixture-llm-02-neuron-forward',
+  },
+  'visual-llm-02-backprop-graph': {
+    lessonId: 'llm-02',
+    sectionId: 'computation-graph-chain-rule-backprop',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-d2l-zh', 'res-karpathy', 'res-3b1b-nn'],
+    fixtureId: 'fixture-llm-02-backprop-graph',
+  },
+  'visual-llm-02-learning-rate-trajectories': {
+    lessonId: 'llm-02',
+    sectionId: 'optimizer-learning-rate-and-zero-grad',
+    kind: 'diagram',
+    role: 'comparison',
+    tags: ['failure-mode'],
+    sourceIds: ['res-d2l-zh', 'res-google-ml', 'res-fastai', 'res-karpathy'],
+    fixtureId: 'fixture-llm-02-learning-rate-trajectories',
+  },
+  'visual-llm-02-generalization-curves': {
+    lessonId: 'llm-02',
+    sectionId: 'generalization-and-training-diagnosis',
+    kind: 'diagram',
+    role: 'boundary',
+    tags: ['decision'],
+    sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-karpathy'],
+    fixtureId: 'fixture-llm-02-generalization-curves',
+  },
+});
+const EXPECTED_VISUAL_IDS = Object.freeze(Object.keys(EXPECTED_VISUALS));
+const FIXTURES_BY_ID = new Map(
+  llmFoundationVisualFixtures.map((fixture) => [fixture.id, fixture]),
+);
 
 async function loadRegistry() {
   return import('../src/data/visuals/index.js');
@@ -252,4 +347,257 @@ test('field map preserves the frozen reading order, encodings and counterexample
   assert.match(svg, /实线嵌套：方法包含/);
   assert.match(svg, /虚线边界：生成能力/);
   assert.match(svg, /斜线阴影：两轴交叉/);
+});
+
+test('publishes exactly five frozen visual references per llm-01/02 lesson with all coverage groups', async () => {
+  const { llmFoundationVisuals } = await loadLlmRegistry();
+  assert.deepEqual(
+    llmFoundationVisuals.map(({ id }) => id).sort(),
+    [...EXPECTED_VISUAL_IDS].sort(),
+    '01–02 registry 必须精确使用冻结的十个 visual ID',
+  );
+  assert.equal(llmFoundationVisuals.length, 10);
+
+  for (const lessonId of ['llm-01', 'llm-02']) {
+    const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
+    const references = [
+      lesson.knowledgeNote.overviewVisualId,
+      ...lesson.knowledgeNote.sections.flatMap((section) =>
+        (section.visuals ?? []).map(({ visualId }) => visualId),
+      ),
+    ].filter(Boolean);
+    assert.equal(references.length, 5, `${lessonId} 必须恰好引用五张图`);
+    assert.equal(new Set(references).size, 5, `${lessonId} 的视觉引用必须唯一`);
+
+    const roles = references.map((id) => EXPECTED_VISUALS[id]?.role);
+    assert.ok(roles.includes('overview'), `${lessonId} 缺少 overview coverage`);
+    assert.ok(
+      roles.some((role) => ['mechanism', 'process'].includes(role)),
+      `${lessonId} 缺少 mechanism coverage`,
+    );
+    assert.ok(
+      roles.some((role) =>
+        ['boundary', 'comparison', 'decision'].includes(role),
+      ),
+      `${lessonId} 缺少 boundary coverage`,
+    );
+  }
+});
+
+test('places every published llm-01/02 visual once in its evidence-owning real section', async () => {
+  const { knowledgeVisuals } = await loadRegistry();
+  const result = await validateKnowledgeVisualOwnership({
+    courseRegistry: { 'llm-foundation': llmFoundation },
+    knowledgeVisuals,
+    assetExists: async (assetPath) => {
+      await access(assetPath);
+      return true;
+    },
+  });
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.placements.length, 10);
+
+  const placementsById = new Map(
+    result.placements.map((placement) => [placement.visualId, placement]),
+  );
+  for (const [visualId, expected] of Object.entries(EXPECTED_VISUALS)) {
+    const placement = placementsById.get(visualId);
+    assert.ok(placement, visualId);
+    assert.equal(placement.lessonId, expected.lessonId, visualId);
+    assert.equal(placement.sectionId, expected.sectionId, visualId);
+  }
+
+  const llm02 = llmFoundation.lessons.find(({ id }) => id === 'llm-02');
+  assert.equal(llm02.knowledgeNote.overviewVisualId, 'visual-llm-02-training-cycle');
+  assert.equal(
+    llm02.knowledgeNote.overviewVisualSectionId,
+    'training-loop-and-tensor-shapes',
+  );
+
+  for (const lesson of llmFoundation.lessons.filter(({ id }) =>
+    ['llm-01', 'llm-02'].includes(id),
+  )) {
+    for (const section of lesson.knowledgeNote.sections) {
+      for (const placement of section.visuals ?? []) {
+        assert.ok(Number.isInteger(placement.afterParagraph));
+        assert.ok(placement.afterParagraph >= 0);
+        assert.ok(placement.afterParagraph < section.paragraphs.length);
+      }
+    }
+  }
+});
+
+test('keeps all ten llm-01/02 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
+  const { llmFoundationVisuals } = await loadLlmRegistry();
+  assert.equal(llmFoundationVisuals.length, 10);
+  const countByLesson = new Map();
+
+  for (const visual of llmFoundationVisuals) {
+    const expected = EXPECTED_VISUALS[visual.id];
+    assert.ok(expected, `${visual.id} 不在冻结清单`);
+    countByLesson.set(
+      expected.lessonId,
+      (countByLesson.get(expected.lessonId) ?? 0) + 1,
+    );
+    assert.equal(visual.kind, expected.kind, visual.id);
+    assert.equal(visual.role, expected.role, visual.id);
+    assert.deepEqual(visual.tags, expected.tags, visual.id);
+    assert.deepEqual(visual.sourceIds, expected.sourceIds, visual.id);
+    assert.equal(visual.provenance, 'original-synthesis', visual.id);
+    assert.equal(visual.credit, 'Agent Learner 原创教学图解', visual.id);
+    assert.equal(visual.permission, null, visual.id);
+    assert.equal(visual.verifiedAt, '2026-07-26', visual.id);
+    assert.equal(visual.fixtureId, expected.fixtureId, visual.id);
+    if (expected.fixtureId) {
+      assert.equal(FIXTURES_BY_ID.get(expected.fixtureId)?.visualId, visual.id);
+    }
+  }
+  assert.deepEqual(Object.fromEntries(countByLesson), {
+    'llm-01': 5,
+    'llm-02': 5,
+  });
+});
+
+test('keeps the autoregressive generation main sequence and three cumulative steps renderable and ordered', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const visual = knowledgeVisualsById['visual-llm-01-autoregressive-generation'];
+  assert.equal(visual.kind, 'step-diagram');
+  assert.ok(visual.steps.length >= 3);
+  assert.equal(validateRenderableVisual(visual).valid, true);
+  assert.deepEqual(
+    visual.steps.map(({ id, title }) => ({ id, title })),
+    [
+      { id: 'tokenize', title: '编码：文本变成 token ID' },
+      { id: 'select', title: '选择：读取下一 token 分布' },
+      { id: 'append', title: '追加：新 token 成为下一步上下文' },
+    ],
+  );
+  assert.deepEqual(
+    visual.steps.map(({ assetPath }) => assetPath),
+    [
+      'assets/visuals/llm-foundation/llm-01-autoregressive-generation-step-1.svg',
+      'assets/visuals/llm-foundation/llm-01-autoregressive-generation-step-2.svg',
+      'assets/visuals/llm-foundation/llm-01-autoregressive-generation-step-3.svg',
+    ],
+  );
+});
+
+function fixtureForVisual(visualId) {
+  const expected = EXPECTED_VISUALS[visualId];
+  const fixture = FIXTURES_BY_ID.get(expected.fixtureId);
+  assert.ok(fixture, `${visualId} fixture 必须存在`);
+  return fixture;
+}
+
+function fixed(values, digits) {
+  return values.map((value) => Number(value).toFixed(digits)).join(' / ');
+}
+
+function assertSvgIncludes(svg, fragment) {
+  assert.ok(svg.includes(fragment), `SVG 必须包含 fixture 文本：${fragment}`);
+}
+
+test('encodes every llm-01/02 quantitative fixture input, result and rounding in SVG text', async () => {
+  const checks = {
+    'visual-llm-01-autoregressive-generation': (fixture, svg) => {
+      assertSvgIncludes(svg, fixture.data.rawPrompt);
+      assertSvgIncludes(svg, fixture.result.encodedIds.join(' / '));
+      fixture.result.probabilities.forEach((probability) =>
+        assertSvgIncludes(svg, probability.toFixed(4)),
+      );
+      assertSvgIncludes(svg, `ID ${fixture.result.selectedId}`);
+      assertSvgIncludes(svg, fixture.result.nextToken);
+    },
+    'visual-llm-02-training-cycle': (fixture, svg) => {
+      assertSvgIncludes(svg, `X ${JSON.stringify(fixture.data.X)}`);
+      assertSvgIncludes(svg, `Z ${JSON.stringify(fixture.result.Z)}`);
+      assertSvgIncludes(svg, `loss ${fixture.result.loss.toFixed(6)}`);
+      assertSvgIncludes(svg, `dW ${JSON.stringify(fixture.result.dW)}`);
+      assertSvgIncludes(svg, `new W ${JSON.stringify(fixture.result.newW)}`);
+      assertSvgIncludes(svg, `new loss ${fixture.result.newLoss.toFixed(6)}`);
+    },
+    'visual-llm-02-neuron-forward': (fixture, svg) => {
+      assertSvgIncludes(svg, `x ${fixture.data.x}`);
+      assertSvgIncludes(svg, `w ${fixture.data.w}`);
+      assertSvgIncludes(svg, `z ${fixture.result.z.toFixed(4)}`);
+      assertSvgIncludes(svg, `p ${fixture.result.probability.toFixed(4)}`);
+      assertSvgIncludes(svg, `loss ${fixture.result.loss.toFixed(4)}`);
+    },
+    'visual-llm-02-backprop-graph': (fixture, svg) => {
+      assertSvgIncludes(svg, `x ${fixture.data.x}`);
+      assertSvgIncludes(svg, `w ${fixture.data.w}`);
+      assertSvgIncludes(svg, `a ${fixture.result.forward.a}`);
+      assertSvgIncludes(svg, `L ${fixture.result.forward.loss}`);
+      assertSvgIncludes(
+        svg,
+        `${fixture.result.pathContributionsToX.viaA} + `
+        + `${fixture.result.pathContributionsToX.viaB} = `
+        + `${fixture.result.accumulated.dLossDx}`,
+      );
+      assertSvgIncludes(svg, `dL/dw ${fixture.result.accumulated.dLossDw}`);
+    },
+    'visual-llm-02-learning-rate-trajectories': (fixture, svg) => {
+      for (const trajectory of fixture.result.trajectories) {
+        assertSvgIncludes(svg, `η ${trajectory.learningRate}`);
+        assertSvgIncludes(
+          svg,
+          `权重为 ${trajectory.weights.map((value) => value.toFixed(3)).join('、')}`,
+        );
+        assertSvgIncludes(
+          svg,
+          `损失为 ${trajectory.losses.map((value) => value.toFixed(4)).join('、')}`,
+        );
+      }
+    },
+    'visual-llm-02-generalization-curves': (fixture, svg) => {
+      assertSvgIncludes(svg, `epoch ${fixture.data.epochs.join(' / ')}`);
+      for (const series of Object.values(fixture.data.series)) {
+        assertSvgIncludes(
+          svg,
+          `train 为 ${series.train.map((value) => value.toFixed(2)).join('、')}`,
+        );
+        assertSvgIncludes(
+          svg,
+          `validation 为 ${series.validation.map((value) => value.toFixed(2)).join('、')}`,
+        );
+      }
+      assertSvgIncludes(svg, `最佳 epoch ${fixture.result.overfit.bestEpoch}`);
+      assertSvgIncludes(
+        svg,
+        `分叉始于 epoch ${fixture.result.overfit.divergenceStartsAtEpoch}`,
+      );
+      assert.match(svg, /教学示例 · 非实测/);
+    },
+  };
+
+  const { knowledgeVisualsById } = await loadRegistry();
+  for (const [visualId, assertFixtureText] of Object.entries(checks)) {
+    const visual = knowledgeVisualsById[visualId];
+    const fixture = fixtureForVisual(visualId);
+    const svg = await readFile(visual.assetPath, 'utf8');
+    assertSvgIncludes(svg, fixture.fields.Rounding);
+    assertFixtureText(fixture, svg);
+  }
+});
+
+test('keeps every llm-01/02 SVG label at least 26px with a 32px viewBox safety margin', async () => {
+  const { llmFoundationVisuals } = await loadLlmRegistry();
+  for (const visual of llmFoundationVisuals) {
+    for (const assetPath of assetPathsFor(visual)) {
+      const svg = await readFile(assetPath, 'utf8');
+      const parsed = assertSafeStaticSvg(svg, visual, assetPath);
+      for (const textNode of parsed.elementsByName.get('text') ?? []) {
+        const fontSize = unsignedIntegerAttribute(
+          textNode,
+          'font-size',
+          `${assetPath}:${textNode.text}`,
+        );
+        const x = unsignedIntegerAttribute(textNode, 'x', `${assetPath}:${textNode.text}`);
+        const y = unsignedIntegerAttribute(textNode, 'y', `${assetPath}:${textNode.text}`);
+        assert.ok(fontSize >= 26n, `${assetPath}:${textNode.text} 字号小于 26`);
+        assert.ok(x >= 32n && x <= 1168n, `${assetPath}:${textNode.text} 横向越界`);
+        assert.ok(y >= 32n && y <= 643n, `${assetPath}:${textNode.text} 纵向越界`);
+      }
+    }
+  }
 });

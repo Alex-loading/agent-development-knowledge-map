@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="training-cycle-title training-cycle-desc">
+  <title id="training-cycle-title">一次带张量形状的训练迭代</title>
+  <desc id="training-cycle-desc">X [[1,0,2],[0,1,1]] 与 W、b 前向得到 Z [[3,2],[1,2]]，四元素 MSE loss 0.500000。反向得到 dZ、dW [[0.5,0],[0,0.5],[1,0.5]] 与 db，再以学习率 0.1 更新出 new W [[0.95,0],[0,0.95],[0.9,0.95]]，复算 new loss 0.314375。矩阵最多两位小数；loss 展示六位小数，计算使用未舍入值。</desc>
+  <defs>
+    <marker id="cycle-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <pattern id="tensor-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="16" height="16" fill="#dbeafe"/>
+      <path d="M0 8 L16 8 M8 0 L8 16" fill="none" stroke="#93c5fd" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="58" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">一次训练迭代：形状先行</text>
+  <text x="48" y="96" font-family="system-ui, sans-serif" font-size="26" fill="#475569">矩阵最多两位小数；loss 展示六位小数，计算使用未舍入值。</text>
+
+  <rect x="46" y="120" width="1108" height="154" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="70" y="158" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">① forward · 形状对齐</text>
+  <rect x="70" y="178" width="270" height="68" rx="14" fill="url(#tensor-grid)" stroke="#2563eb" stroke-width="3"/>
+  <text x="88" y="207" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#172554">X [[1,0,2],[0,1,1]]</text>
+  <text x="88" y="237" font-family="system-ui, sans-serif" font-size="26" fill="#172554">shape [B,F] = [2,3]</text>
+  <text x="360" y="218" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1d4ed8">× W [3,2] + b [2]</text>
+  <line x1="620" y1="212" x2="668" y2="212" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="682" y="178" width="250" height="68" rx="14" fill="url(#tensor-grid)" stroke="#2563eb" stroke-width="3"/>
+  <text x="700" y="207" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#172554">Z [[3,2],[1,2]]</text>
+  <text x="700" y="237" font-family="system-ui, sans-serif" font-size="26" fill="#172554">预测 [B,C] = [2,2]</text>
+  <text x="956" y="196" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#365314">Y [[2,2],[1,1]]</text>
+  <text x="956" y="232" font-family="system-ui, sans-serif" font-size="26" fill="#365314">同形状标签</text>
+
+  <rect x="46" y="298" width="350" height="234" rx="22" fill="#ffffff" stroke="#ea580c" stroke-width="4"/>
+  <text x="70" y="340" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#9a3412">② loss · 四元素 MSE</text>
+  <polygon points="218,376 292,430 218,484 144,430" fill="#fff7ed" stroke="#ea580c" stroke-width="4"/>
+  <text x="170" y="424" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#78350f">标量</text>
+  <text x="160" y="458" font-family="system-ui, sans-serif" font-size="27" fill="#78350f">0.500000</text>
+  <text x="70" y="512" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#9a3412">预测与标签逐项对齐</text>
+
+  <line x1="396" y1="416" x2="440" y2="416" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="454" y="298" width="350" height="234" rx="22" fill="#ffffff" stroke="#be185d" stroke-width="4"/>
+  <text x="478" y="340" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#831843">③ backward · 只算梯度</text>
+  <text x="478" y="388" font-family="system-ui, sans-serif" font-size="26" fill="#831843">dZ [[0.5,0],[0,0.5]]</text>
+  <text x="478" y="432" font-family="system-ui, sans-serif" font-size="26" fill="#831843">dW [[0.5,0],[0,0.5],[1,0.5]]</text>
+  <text x="478" y="476" font-family="system-ui, sans-serif" font-size="26" fill="#831843">db [0.5,0.5]</text>
+  <text x="478" y="514" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#831843">dW [F,C] · db [C]</text>
+
+  <line x1="804" y1="416" x2="848" y2="416" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="862" y="298" width="292" height="234" rx="22" fill="#fef3c7" stroke="#a16207" stroke-width="5"/>
+  <text x="886" y="340" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#78350f">④ SGD 更新</text>
+  <text x="886" y="382" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">学习率 η = 0.1</text>
+  <text x="886" y="424" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">new W [[0.95,0],</text>
+  <text x="886" y="458" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">[0,0.95],[0.9,0.95]]</text>
+  <text x="886" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">new b [-0.05,-0.05]</text>
+
+  <path d="M1008 532 L1008 590 L246 590 L246 550" fill="none" stroke="#a16207" stroke-width="7" marker-end="url(#cycle-arrow)"/>
+  <text x="424" y="568" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#78350f">⑤ new Z [[2.7,1.85],[0.85,1.85]]</text>
+  <text x="424" y="630" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#78350f">new loss 0.314375 → 下一批</text>
+  <rect x="46" y="608" width="370" height="44" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2" stroke-dasharray="10 7"/>
+  <text x="68" y="639" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#9a3412">广播风险：能跑不等于语义对</text>
+</svg>

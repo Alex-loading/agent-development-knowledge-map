@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="generalization-title generalization-desc">
+  <title id="generalization-title">训练与验证曲线的三种诊断组合</title>
+  <desc id="generalization-desc">教学示例，非实测。epoch 1、2、3、4、5。欠拟合 train 为 0.95、0.90、0.86、0.83、0.81，validation 为 1.00、0.96、0.92、0.90、0.89。同步改善 train 为 0.90、0.70、0.55、0.45、0.38，validation 为 0.95、0.75、0.60、0.50、0.44。过拟合 train 为 0.90、0.60、0.40、0.30、0.20，validation 为 1.00、0.70、0.50、0.52、0.65；最佳 epoch 3，分叉始于 epoch 4。loss 两位小数；epoch 为整数。</desc>
+  <defs>
+    <marker id="evidence-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="58" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">训练下降，验证在说什么？</text>
+  <rect x="850" y="24" width="302" height="60" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="3"/>
+  <text x="882" y="63" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">教学示例 · 非实测</text>
+  <text x="48" y="100" font-family="system-ui, sans-serif" font-size="26" fill="#475569">epoch 1 / 2 / 3 / 4 / 5　·　loss 两位小数；epoch 为整数。</text>
+
+  <rect x="46" y="126" width="350" height="386" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4"/>
+  <text x="70" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">① 欠拟合 · 两者仍高</text>
+  <line x1="84" y1="374" x2="360" y2="374" stroke="#64748b" stroke-width="3"/>
+  <line x1="84" y1="206" x2="84" y2="374" stroke="#64748b" stroke-width="3"/>
+  <polyline points="104,232 164,244 224,254 284,262 344,268" fill="none" stroke="#2563eb" stroke-width="5"/>
+  <circle cx="104" cy="232" r="7" fill="#2563eb"/><circle cx="164" cy="244" r="7" fill="#2563eb"/><circle cx="224" cy="254" r="7" fill="#2563eb"/><circle cx="284" cy="262" r="7" fill="#2563eb"/><circle cx="344" cy="268" r="7" fill="#2563eb"/>
+  <polyline points="104,216 164,228 224,240 284,246 344,250" fill="none" stroke="#a16207" stroke-width="5" stroke-dasharray="12 8"/>
+  <rect x="98" y="210" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="158" y="222" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="218" y="234" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="278" y="240" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="338" y="244" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/>
+  <text x="70" y="398" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">train 0.95 / 0.90</text>
+  <text x="70" y="430" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">0.86 / 0.83 / 0.81</text>
+  <text x="70" y="462" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">validation 1.00 / 0.96</text>
+  <text x="70" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">0.92 / 0.90 / 0.89</text>
+
+  <rect x="426" y="126" width="350" height="386" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="450" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">② 同步改善</text>
+  <line x1="464" y1="374" x2="740" y2="374" stroke="#64748b" stroke-width="3"/>
+  <line x1="464" y1="206" x2="464" y2="374" stroke="#64748b" stroke-width="3"/>
+  <polyline points="484,232 544,276 604,310 664,332 724,346" fill="none" stroke="#2563eb" stroke-width="5"/>
+  <circle cx="484" cy="232" r="7" fill="#2563eb"/><circle cx="544" cy="276" r="7" fill="#2563eb"/><circle cx="604" cy="310" r="7" fill="#2563eb"/><circle cx="664" cy="332" r="7" fill="#2563eb"/><circle cx="724" cy="346" r="7" fill="#2563eb"/>
+  <polyline points="484,218 544,266 604,298 664,322 724,336" fill="none" stroke="#a16207" stroke-width="5" stroke-dasharray="12 8"/>
+  <rect x="478" y="212" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="538" y="260" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="598" y="292" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="658" y="316" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="718" y="330" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/>
+  <text x="450" y="398" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">train 0.90 / 0.70</text>
+  <text x="450" y="430" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">0.55 / 0.45 / 0.38</text>
+  <text x="450" y="462" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">validation 0.95 / 0.75</text>
+  <text x="450" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">0.60 / 0.50 / 0.44</text>
+
+  <rect x="806" y="126" width="348" height="386" rx="22" fill="#ffffff" stroke="#a16207" stroke-width="5"/>
+  <text x="830" y="168" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">③ 过拟合 · 分叉</text>
+  <line x1="844" y1="374" x2="1120" y2="374" stroke="#64748b" stroke-width="3"/>
+  <line x1="844" y1="206" x2="844" y2="374" stroke="#64748b" stroke-width="3"/>
+  <polyline points="864,232 924,296 984,334 1044,352 1104,366" fill="none" stroke="#2563eb" stroke-width="5"/>
+  <circle cx="864" cy="232" r="7" fill="#2563eb"/><circle cx="924" cy="296" r="7" fill="#2563eb"/><circle cx="984" cy="334" r="7" fill="#2563eb"/><circle cx="1044" cy="352" r="7" fill="#2563eb"/><circle cx="1104" cy="366" r="7" fill="#2563eb"/>
+  <polyline points="864,216 924,276 984,316 1044,310 1104,282" fill="none" stroke="#a16207" stroke-width="5" stroke-dasharray="12 8"/>
+  <rect x="858" y="210" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="918" y="270" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="978" y="310" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="1038" y="304" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/><rect x="1098" y="276" width="12" height="12" fill="#fef3c7" stroke="#78350f" stroke-width="2"/>
+  <line x1="984" y1="190" x2="984" y2="374" stroke="#be185d" stroke-width="3" stroke-dasharray="9 7"/>
+  <text x="830" y="398" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">train 0.90 / 0.60</text>
+  <text x="830" y="430" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">0.40 / 0.30 / 0.20</text>
+  <text x="830" y="462" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">validation 1.00 / 0.70</text>
+  <text x="830" y="494" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">0.50 / 0.52 / 0.65</text>
+
+  <rect x="46" y="530" width="1108" height="112" rx="22" fill="#ffffff" stroke="#94a3b8" stroke-width="3"/>
+  <text x="70" y="568" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">过拟合：最佳 epoch 3 · 分叉始于 epoch 4</text>
+  <text x="70" y="614" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">④ 查泄漏 → ⑤ 业务切片 → ⑥ 部署监控</text>
+  <line x1="760" y1="600" x2="1110" y2="600" stroke="#1d4ed8" stroke-width="5" marker-end="url(#evidence-arrow)"/>
+  <text x="800" y="636" font-family="system-ui, sans-serif" font-size="26" fill="#475569">训练损失不是发布许可</text>
+</svg>

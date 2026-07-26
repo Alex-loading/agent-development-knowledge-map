@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="boundary-title boundary-desc">
+  <title id="boundary-title">训练与推理的参数边界</title>
+  <desc id="boundary-desc">训练泳道中预训练或微调经训练目标与优化器写入参数。推理泳道中 prompt 与 RAG 文档只汇入本次上下文，再执行 prefill 与 decode，不写回参数。泳道对比图只冻结结构、关系、边界与阅读顺序，不编码数值主张。</desc>
+  <defs>
+    <marker id="boundary-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="context-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="62" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">谁会改变模型参数？</text>
+  <text x="48" y="102" font-family="system-ui, sans-serif" font-size="27" fill="#475569">纵向比较：更新参数 / 使用参数</text>
+
+  <rect x="46" y="126" width="1108" height="204" rx="22" fill="#ffffff" stroke="#a16207" stroke-width="4"/>
+  <rect x="46" y="126" width="172" height="204" rx="22" fill="#fef3c7" stroke="#a16207" stroke-width="4"/>
+  <text x="76" y="184" font-family="system-ui, sans-serif" font-size="32" font-weight="800" fill="#78350f">① 训练</text>
+  <text x="76" y="232" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#78350f">更新参数</text>
+  <text x="76" y="278" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">齿轮路径</text>
+  <rect x="254" y="170" width="170" height="94" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <text x="282" y="210" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#9a3412">⚙ 预训练</text>
+  <text x="292" y="246" font-family="system-ui, sans-serif" font-size="26" fill="#9a3412">或微调</text>
+  <line x1="424" y1="217" x2="474" y2="217" stroke="#a16207" stroke-width="6" marker-end="url(#boundary-arrow)"/>
+  <rect x="488" y="170" width="170" height="94" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <text x="518" y="210" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#9a3412">训练目标</text>
+  <text x="528" y="246" font-family="system-ui, sans-serif" font-size="26" fill="#9a3412">+ backward</text>
+  <line x1="658" y1="217" x2="708" y2="217" stroke="#a16207" stroke-width="6" marker-end="url(#boundary-arrow)"/>
+  <rect x="722" y="170" width="170" height="94" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="5"/>
+  <text x="748" y="210" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#78350f">⚙ 优化器</text>
+  <text x="752" y="246" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#78350f">写参数</text>
+  <line x1="892" y1="217" x2="942" y2="217" stroke="#a16207" stroke-width="8" marker-end="url(#boundary-arrow)"/>
+  <rect x="956" y="160" width="170" height="114" rx="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="5"/>
+  <text x="980" y="204" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#4c1d95">参数 θ′</text>
+  <text x="980" y="246" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">部署工件</text>
+
+  <line x1="46" y1="356" x2="1154" y2="356" stroke="#172554" stroke-width="5" stroke-dasharray="18 10"/>
+  <text x="430" y="346" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#172554">② 参数边界 · 只有部署工件跨越</text>
+  <line x1="1040" y1="274" x2="1040" y2="398" stroke="#7c3aed" stroke-width="6" marker-end="url(#boundary-arrow)"/>
+
+  <rect x="46" y="384" width="1108" height="230" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4"/>
+  <rect x="46" y="384" width="172" height="230" rx="22" fill="#e2e8f0" stroke="#64748b" stroke-width="4"/>
+  <text x="76" y="442" font-family="system-ui, sans-serif" font-size="32" font-weight="800" fill="#334155">③ 推理</text>
+  <text x="76" y="490" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#334155">使用参数</text>
+  <text x="76" y="536" font-family="system-ui, sans-serif" font-size="26" fill="#334155">播放路径</text>
+
+  <rect x="250" y="420" width="160" height="70" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="286" y="464" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#1e3a8a">prompt</text>
+  <rect x="250" y="516" width="240" height="70" rx="18" fill="#ecfccb" stroke="#4d7c0f" stroke-width="3" stroke-dasharray="12 8"/>
+  <text x="278" y="560" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#365314">RAG 检索文档</text>
+  <line x1="410" y1="455" x2="542" y2="494" stroke="#64748b" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#context-arrow)"/>
+  <line x1="490" y1="551" x2="542" y2="520" stroke="#64748b" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#context-arrow)"/>
+  <rect x="558" y="454" width="190" height="96" rx="20" fill="#ffffff" stroke="#64748b" stroke-width="3"/>
+  <text x="588" y="494" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">本次上下文</text>
+  <text x="588" y="532" font-family="system-ui, sans-serif" font-size="26" fill="#334155">可见信息</text>
+  <line x1="748" y1="502" x2="790" y2="502" stroke="#64748b" stroke-width="4" marker-end="url(#context-arrow)"/>
+  <rect x="804" y="454" width="142" height="96" rx="48" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="828" y="494" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">▶ prefill</text>
+  <text x="838" y="532" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">只读</text>
+  <line x1="946" y1="502" x2="982" y2="502" stroke="#64748b" stroke-width="4" marker-end="url(#context-arrow)"/>
+  <rect x="996" y="454" width="132" height="96" rx="48" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="1014" y="494" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">▶ decode</text>
+  <text x="1016" y="532" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">逐 token</text>
+  <text x="540" y="598" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">prompt 与 RAG 不跨参数边界 · 无写回</text>
+</svg>

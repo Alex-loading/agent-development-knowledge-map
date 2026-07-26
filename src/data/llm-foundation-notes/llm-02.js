@@ -1,5 +1,7 @@
 export const llm02Note = {
   readingMinutes: 28,
+  overviewVisualId: 'visual-llm-02-training-cycle',
+  overviewVisualSectionId: 'training-loop-and-tensor-shapes',
   introduction: '上一课已经区分训练与推理：训练会改变模型参数，标准推理则使用已有参数处理输入。本课继续拆开“训练为何能改变参数”。神经网络的“学习”并不是模型突然理解了答案，而是一条可以逐步检查的数值链：带形状的张量进入带参数的层，前向计算产生预测，损失把预测与标签的差距变成训练信号，反向传播计算梯度，优化器才据此更新参数。本章沿一轮训练迭代拆开这条链，同时把表达能力、梯度传播、学习率、数据划分和上线判断放回各自的位置。学完后，你应能完整口述一次参数更新，解释梯度、学习率与激活函数各自解决什么问题，并知道训练损失下降为什么还不能充当发布证据。',
   sections: [
     {
@@ -33,6 +35,9 @@ export const llm02Note = {
         title: '表达能力与可训练性是两个问题',
         body: '非线性激活让网络能表达更复杂的函数，但不保证深层网络一定容易优化；看到梯度消失时，还要联合检查初始化、尺度与结构。',
       },
+      visuals: [
+        { visualId: 'visual-llm-02-neuron-forward', afterParagraph: 1 },
+      ],
       sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-fastai'],
     },
     {
@@ -61,6 +66,9 @@ export const llm02Note = {
         '链式法则把局部导数沿计算依赖组合，反向传播按依赖逆序高效计算梯度。',
         '反向传播的直接结果是梯度；参数是否以及如何改变由随后的优化步骤决定。',
       ],
+      visuals: [
+        { visualId: 'visual-llm-02-backprop-graph', afterParagraph: 1 },
+      ],
       sourceIds: ['res-d2l-zh', 'res-karpathy', 'res-3b1b-nn'],
     },
     {
@@ -75,6 +83,9 @@ export const llm02Note = {
         '单个偏导数的符号表示参数微增时损失的升降；完整梯度向量在欧氏度量下指向局部最陡上升。',
         '反向传播计算梯度，优化器应用更新；PyTorch 梯度累积与清零是框架行为。',
       ],
+      visuals: [
+        { visualId: 'visual-llm-02-learning-rate-trajectories', afterParagraph: 1 },
+      ],
       sourceIds: ['res-d2l-zh', 'res-google-ml', 'res-fastai', 'res-karpathy'],
     },
     {
@@ -88,6 +99,9 @@ export const llm02Note = {
       keyPoints: [
         '训练、验证和测试承担不同职责，数据泄漏会让泛化估计失真。',
         '训练诊断应联合损失曲线、数据切片、分层梯度、业务切片与部署监控。',
+      ],
+      visuals: [
+        { visualId: 'visual-llm-02-generalization-curves', afterParagraph: 1 },
       ],
       sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-karpathy'],
     },

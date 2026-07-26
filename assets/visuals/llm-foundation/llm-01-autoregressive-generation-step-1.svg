@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="auto-step1-title auto-step1-desc">
+  <title id="auto-step1-title">步骤一：文本编码为 token ID</title>
+  <desc id="auto-step1-desc">原始文本资料助理：查由教学 tokenizer v1 最长匹配为资料、助理、冒号、查，并编码为 10、11、12、13。参数保持只读。概率四位小数；ID 与步数为整数。</desc>
+  <defs>
+    <marker id="step1-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="64" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">1 / 3 · 编码：文本变成 token ID</text>
+  <rect x="842" y="28" width="310" height="62" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="875" y="68" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">🔒 已部署参数 · 只读</text>
+  <rect x="72" y="152" width="300" height="180" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="100" y="202" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">原始 prompt</text>
+  <text x="100" y="270" font-family="system-ui, sans-serif" font-size="36" font-weight="800" fill="#172554">资料助理：查</text>
+  <line x1="372" y1="242" x2="466" y2="242" stroke="#1d4ed8" stroke-width="6" marker-end="url(#step1-arrow)"/>
+  <rect x="482" y="132" width="646" height="220" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="510" y="182" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">教学 tokenizer v1 · 最长匹配</text>
+  <rect x="510" y="216" width="134" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="534" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">资料 · 10</text>
+  <rect x="658" y="216" width="134" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="682" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">助理 · 11</text>
+  <rect x="806" y="216" width="130" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="834" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">： · 12</text>
+  <rect x="950" y="216" width="150" height="62" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="978" y="256" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">查 · 13</text>
+  <text x="510" y="322" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">encoded IDs：10 / 11 / 12 / 13</text>
+  <rect x="72" y="406" width="1056" height="170" rx="22" fill="#ffffff" stroke="#94a3b8" stroke-width="3" stroke-dasharray="13 9"/>
+  <text x="100" y="458" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">累积状态</text>
+  <text x="100" y="510" font-family="system-ui, sans-serif" font-size="28" fill="#334155">模型现在可见 4 个 token ID；尚未选择新的 token。</text>
+  <text x="100" y="552" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#4c1d95">输出没有写回参数的边。</text>
+  <text x="48" y="628" font-family="system-ui, sans-serif" font-size="26" fill="#475569">概率四位小数；ID 与步数为整数。</text>
+</svg>

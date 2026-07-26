@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="autoregressive-title autoregressive-desc">
+  <title id="autoregressive-title">只读参数下的逐 token 自回归生成</title>
+  <desc id="autoregressive-desc">教学 tokenizer v1 将原始文本资料助理：查以最长匹配编码为 ID 10、11、12、13。固定候选概率为 0.7311 与 0.2689，greedy 选择 ID 14 的天气并追加，下一状态为 EOS。概率四位小数；ID 与步数为整数。</desc>
+  <defs>
+    <marker id="auto-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <pattern id="new-token-hatch" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="12" height="12" fill="#fef3c7"/>
+      <path d="M0 12 L12 0" fill="none" stroke="#d97706" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="62" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">一次只追加一个 token</text>
+  <rect x="842" y="28" width="310" height="62" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="875" y="68" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">🔒 已部署参数 · 只读</text>
+
+  <rect x="48" y="126" width="252" height="164" rx="20" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+  <text x="72" y="168" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">① 原始文本</text>
+  <text x="72" y="218" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#172554">资料助理：查</text>
+  <text x="72" y="262" font-family="system-ui, sans-serif" font-size="26" fill="#475569">教学 tokenizer v1</text>
+  <line x1="300" y1="208" x2="346" y2="208" stroke="#1d4ed8" stroke-width="5" marker-end="url(#auto-arrow)"/>
+
+  <rect x="360" y="126" width="792" height="164" rx="20" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+  <text x="384" y="168" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">② 最长匹配编码</text>
+  <rect x="384" y="194" width="156" height="58" rx="29" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="413" y="232" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">资料 · 10</text>
+  <rect x="554" y="194" width="156" height="58" rx="29" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="583" y="232" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">助理 · 11</text>
+  <rect x="724" y="194" width="130" height="58" rx="29" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="755" y="232" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">： · 12</text>
+  <rect x="868" y="194" width="156" height="58" rx="29" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="897" y="232" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#172554">查 · 13</text>
+  <text x="384" y="278" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">encoded IDs：10 / 11 / 12 / 13</text>
+
+  <rect x="48" y="322" width="672" height="208" rx="20" fill="#ffffff" stroke="#7c3aed" stroke-width="3"/>
+  <text x="72" y="364" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#4c1d95">③ 当前上下文 → 下一 token 分布</text>
+  <text x="72" y="412" font-family="system-ui, sans-serif" font-size="27" fill="#334155">候选 logits：天气 2 · 资料 1</text>
+  <rect x="72" y="438" width="430" height="38" rx="19" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="88" y="466" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#172554">天气 0.7311</text>
+  <rect x="72" y="486" width="158" height="30" rx="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="244" y="512" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">资料 0.2689</text>
+  <text x="520" y="466" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#9a3412">greedy → ID 14</text>
+
+  <line x1="720" y1="426" x2="766" y2="426" stroke="#1d4ed8" stroke-width="5" marker-end="url(#auto-arrow)"/>
+  <rect x="780" y="322" width="372" height="208" rx="20" fill="#ffffff" stroke="#a16207" stroke-width="4"/>
+  <text x="804" y="364" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#78350f">④ 追加并循环</text>
+  <rect x="804" y="392" width="170" height="64" rx="18" fill="url(#new-token-hatch)" stroke="#a16207" stroke-width="5"/>
+  <text x="832" y="433" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">新 · 天气</text>
+  <text x="990" y="433" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">ID 14</text>
+  <text x="804" y="498" font-family="system-ui, sans-serif" font-size="27" fill="#334155">下一状态 → EOS → 停止</text>
+
+  <path d="M966 530 L966 578 L378 578 L378 302" fill="none" stroke="#7c3aed" stroke-width="5" stroke-dasharray="13 9" marker-end="url(#auto-arrow)"/>
+  <text x="48" y="612" font-family="system-ui, sans-serif" font-size="27" font-weight="700" fill="#334155">最长匹配 → softmax → greedy → 下一状态</text>
+  <text x="650" y="612" font-family="system-ui, sans-serif" font-size="26" fill="#475569">概率四位小数；ID 与步数为整数。</text>
+</svg>
