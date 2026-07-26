@@ -60,3 +60,36 @@
 6. 同轮还删除了训练/推理边界、tokenization、训练阶段、logit/softmax、因果可见性、版本评测与 grounding 图中的过宽或非必要引用，避免用数量夸大 assessed coverage。
 
 复核后仍为 40 / 40 项各至少一个直接语义映射，许可决策与 blocked 数量不变。
+
+## 实施就绪复核
+
+- 清单内容标识：Inventory git blob SHA：`531b705fc6dc314af83dfdeb3d14466bab3a37a0`
+- 人工逐行复核日期：2026-07-26
+- 执行角色：implementation agent + independent spec reviewer
+- 人工复核结果：40 / 40 项通过；每项均复核 cognitive question、图形角色、assessed coverage、来源范围、许可决策和 storyboard 七要素。
+- 角色字段已改为确定性语法 `图形形式；primary=<role>；tags=<tag,...>`。primary allowlist 为 `overview`、`mechanism`、`process`、`comparison`、`boundary`、`decision`；secondary tags allowlist 为 `mechanism`、`process`、`comparison`、`boundary`、`decision`、`relationship`、`failure-mode`、`tradeoff`。每项只能有一个 primary，tags 不得重复 primary。
+- 逐项扫描确认 40 项中有 25 项包含定量计算、固定数值、坐标点、预算或阈值；这 25 项均冻结了 `Input`、`Rule/version`、逐步 `Expected` 与 `Rounding`，其余 15 项为定性结构或概念关系图。
+- Transformer 总览明确以 GPT-like decoder-only、Pre-Norm 为主例，同时标出 Post-Norm 对比，并保留原论文 encoder-decoder 与 cross-attention 的历史边界。
+- 发布 Pareto 图取消未定义的单一合并指标，改为质量–成本、质量–延迟两个小倍图和独立安全硬门表；固定 A–E 候选值、淘汰结果、dominance 关系和非支配集合。
+
+### 例外与修正记录
+
+1. 修正两处不匹配 quiz，并收紧只与课程主题相邻、但不能由图直接回答的 assessed coverage。
+2. 将视觉角色从自然语言混写改为单 primary 加 secondary tags，消除 overview 与其他角色的计数歧义。
+3. 补齐 25 项定量视觉的可执行示例 fixture，并把 tokenization 明确限定为教学规则、把延迟分位数明确到最近秩定义。
+4. 补齐 Transformer 的现代 decoder-only 主例、规范化位置对比和原论文架构边界。
+5. 删除 Pareto 图的未定义合并指标，拆分独立单位，并加入安全硬门与支配关系。
+6. 第三方媒体例外为 0；40 项继续采用 `original-synthesis`，没有新增许可推断。
+
+### 可复现校验
+
+以下命令均从项目根目录执行，预期结果已经固定：
+
+| 命令 | 预期结果 |
+| --- | --- |
+| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 5`、`pass 5`、`fail 0` |
+| `npm test` | `tests 324`、`pass 324`、`fail 0` |
+| `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[知]\|unk[n]own' docs/research/2026-07-26-llm-foundation-visual-inventory.md docs/content-audits/2026-07-26-llm-foundation-visuals.md` | 无匹配，退出码 1 |
+| `git diff --check` | 无输出，退出码 0 |
+
+项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、decision/status、storyboard 七要素、section/source/assessed 路径解析、25 项 fixture 字段、关键架构边界、Pareto 边界、清单内容 SHA 与未决标记扫描。机器校验不能证明语义正确；它不能判断认知问题是否教学上最佳、assessed coverage 是否真正足以支持学习判断、来源主张是否被正确解释，或图形在实际渲染后是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。
