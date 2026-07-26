@@ -63,13 +63,14 @@
 
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`d5550c97a446dfd3e977d8d6a9b68418a96b27a1`
+- 清单内容标识：Inventory git blob SHA：`5dac0b07f71b85ae461be693da9068161d187773`
+- 数值真源标识：Fixture git blob SHA：`5b440de71672bbed03d9e6a5837ec6ef7162bd97`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
 - 人工复核结果：40 / 40 项通过；每项均复核 cognitive question、图形角色、assessed coverage、来源范围、许可决策和 storyboard 七要素。
 - 角色字段已改为确定性语法 `图形形式；primary=<role>；tags=<tag,...>`。primary allowlist 为 `overview`、`mechanism`、`process`、`comparison`、`boundary`、`decision`；secondary tags allowlist 为 `mechanism`、`process`、`comparison`、`boundary`、`decision`、`relationship`、`failure-mode`、`tradeoff`。每项只能有一个 primary，tags 不得重复 primary。
 - 清单 40 行均显式声明 `fixture=quantitative` 或 `fixture=qualitative`；测试从文档自身派生出 25 项定量与 15 项定性 scope，再与冻结 ID 集合做双向比较。
-- 25 项定量输入的单一数值真源为 `tests/fixtures/llm-foundation-visual-fixtures.js`。清单只保存 `fixtureId` 引用，不复制数值；真源按固定顺序保存非空 `Input`、`Method`、`Expected`、`Rounding`、机器输入与预期结果。
+- 25 项定量输入的单一数值真源为 `tests/fixtures/llm-foundation-visual-fixtures.js`。清单只保存 `fixtureId` 引用；结构化 `data/result` 保存数值，模块构造器通过 `formatFixtureExpected(result)` 确定性生成 `Expected`，源文件中不再存在 25 份手写输出副本。测试同时比较独立格式化结果、导出 formatter 与字段值，非空但错误的 `Expected` 也会失败。
 - 第二轮逐项扫描了全部 25 个定量 fixture：重点补全 training-cycle 的 forward/MSE/backward/SGD/新参数与复算、backprop-graph 的真实分叉/局部梯度/共享变量累加、generalization-curves 的三组完整数组，以及 score-mask-softmax 的原始 QK/缩放/mask/softmax/V 聚合；其余 21 项也均由测试执行 storyboard 承诺的完整定量链。
 - Transformer 总览明确以 GPT-like decoder-only、Pre-Norm 为主例，同时标出 Post-Norm 对比，并保留原论文 encoder-decoder 与 cross-attention 的历史边界。
 - 发布 Pareto 图取消未定义的单一合并指标，改为质量–成本、质量–延迟两个小倍图和独立安全硬门表；固定 A–E 候选值、淘汰结果、dominance 关系和非支配集合。
@@ -83,6 +84,7 @@
 5. 删除 Pareto 图的未定义合并指标，拆分独立单位，并加入安全硬门与支配关系。
 6. 第三方媒体例外为 0；40 项继续采用 `original-synthesis`，没有新增许可推断。
 7. `version-eval-loop` 明确失败样本 3 属于安全切片，因此 v1 被安全 hard gate 阻断；`causal-visibility` 使用嵌套 0/1 数组冻结 4×4 可见矩阵。
+8. 自回归 fixture 改为从 raw prompt 和含重叠 token 的教学词表执行 longest-match；两项 top-p fixture 使用故意乱序的候选/logit，并先按概率降序构造最小前缀；P95 fixture 使用故意乱序的观测值，并在 nearest-rank 前内部排序。tokenization comparison 同步改为从原文和词表执行最长匹配。
 
 ### 可复现校验
 
@@ -90,9 +92,9 @@
 
 | 命令 | 预期结果 |
 | --- | --- |
-| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 8`、`pass 8`、`fail 0` |
-| `npm test` | `tests 327`、`pass 327`、`fail 0` |
+| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 9`、`pass 9`、`fail 0` |
+| `npm test` | `tests 328`、`pass 328`、`fail 0` |
 | `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[知]\|unk[n]own' docs/research/2026-07-26-llm-foundation-visual-inventory.md docs/content-audits/2026-07-26-llm-foundation-visuals.md tests/fixtures/llm-foundation-visual-fixtures.js` | 无匹配，退出码 1 |
 | `git diff --check` | 无输出，退出码 0 |
 
-项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、storyboard 七要素、section/source/assessed 路径解析、文档派生的 25/15 fixture 分类、单一真源字段与引用，并实际重算 softmax、BCE/MSE、SGD、上下文预算、KV 容量、nearest-rank P95、切片通过率、Pareto 支配关系和全部 25 条预期结果。冻结状态还精确要求 40 项 `decision=original-synthesis`、40 项 `status=verified`，并检查 candidate URL 与 permission evidence 一致；突变等价测试证明空 `Expected`、`blocked`、`licensed-reproduction` 和第三方候选 URL 均会失败。机器校验不能证明语义正确；它不能判断认知问题是否教学上最佳、assessed coverage 是否真正足以支持学习判断、来源主张是否被正确解释，或图形在实际渲染后是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。
+项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、storyboard 七要素、section/source/assessed 路径解析、文档派生的 25/15 fixture 分类、单一真源字段与引用，并实际重算 softmax、BCE/MSE、SGD、上下文预算、KV 容量、nearest-rank P95、切片通过率、Pareto 支配关系和全部 25 条预期结果。方法级证明包括从 raw prompt 真正执行最长匹配、对乱序候选先排序再构造 top-p 最小前缀、对乱序延迟样本先排序再取 nearest-rank；其余排序、过滤与聚合方法也从各自 `data` 执行，而非读取预整理结果。冻结状态还精确要求 40 项 `decision=original-synthesis`、40 项 `status=verified`，并检查 candidate URL 与 permission evidence 一致；突变等价测试证明空或伪造的 `Expected`、`blocked`、`licensed-reproduction` 和第三方候选 URL 均会失败。测试还按 Git blob 算法核对 inventory 与 fixture file 两个 SHA。机器校验不能证明语义正确；它能证明固定算法对固定原始输入产生冻结结果，但不能证明教学方法适用于真实模型、认知问题是否教学上最佳、assessed coverage 是否足以支持学习判断、来源主张是否被正确解释，或实际成图是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。

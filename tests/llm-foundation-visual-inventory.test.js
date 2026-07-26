@@ -5,7 +5,10 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { llmFoundation } from '../src/data/llm-foundation.js';
 import { llmFoundationNotes } from '../src/data/llm-foundation-notes.js';
-import { llmFoundationVisualFixtures } from './fixtures/llm-foundation-visual-fixtures.js';
+import {
+  formatFixtureExpected,
+  llmFoundationVisualFixtures,
+} from './fixtures/llm-foundation-visual-fixtures.js';
 
 const inventoryPath = new URL(
   '../docs/research/2026-07-26-llm-foundation-visual-inventory.md',
@@ -21,6 +24,7 @@ const fixtureDataPath = new URL(
 );
 const inventory = readFileSync(inventoryPath, 'utf8');
 const audit = readFileSync(auditPath, 'utf8');
+const fixtureDataSource = readFileSync(fixtureDataPath, 'utf8');
 
 const allowedDecisions = new Set([
   'original-synthesis',
@@ -159,6 +163,14 @@ function assertDeepClose(actual, expected, path = 'result') {
   assert.equal(actual, expected, path);
 }
 
+function formatExpectedFromResult(result) {
+  return `结构化 result：${JSON.stringify(result, (_key, value) => {
+    if (value === Infinity) return 'Infinity';
+    if (value === -Infinity) return '-Infinity';
+    return value;
+  })}`;
+}
+
 function sum(values) {
   return values.reduce((total, value) => total + value, 0);
 }
@@ -168,6 +180,25 @@ function softmax(values) {
   const exponentials = values.map((value) => Math.exp(value - maximum));
   const denominator = sum(exponentials);
   return exponentials.map((value) => value / denominator);
+}
+
+function longestMatchEncode(rawText, vocabulary) {
+  const vocabularyTokens = Object.keys(vocabulary).sort(
+    (left, right) => right.length - left.length || left.localeCompare(right),
+  );
+  const segments = [];
+  const tokenIds = [];
+  let offset = 0;
+  while (offset < rawText.length) {
+    const token = vocabularyTokens.find((candidate) =>
+      rawText.startsWith(candidate, offset),
+    );
+    assert.ok(token, `教学词表无法编码 offset=${offset} 的原始文本`);
+    segments.push(token);
+    tokenIds.push(vocabulary[token]);
+    offset += token.length;
+  }
+  return { segments, tokenIds };
 }
 
 function matrixMultiply(left, right) {
@@ -204,7 +235,13 @@ function weightedSum(weights, values) {
 function nucleusIndices(probabilities, threshold) {
   let cumulative = 0;
   const indices = [];
-  for (const [index, probability] of probabilities.entries()) {
+  const ranked = probabilities
+    .map((probability, index) => ({ probability, index }))
+    .sort(
+      (left, right) =>
+        right.probability - left.probability || left.index - right.index,
+    );
+  for (const { index, probability } of ranked) {
     indices.push(index);
     cumulative += probability;
     if (cumulative >= threshold) break;
@@ -220,10 +257,12 @@ function recomputeFixture(fixture) {
   const { data } = fixture;
   switch (fixture.visualId) {
     case 'visual-llm-01-autoregressive-generation': {
+      const encoding = longestMatchEncode(data.rawPrompt, data.vocabulary);
       const probabilities = softmax(data.logits);
       const selectedIndex = probabilities.indexOf(Math.max(...probabilities));
       return {
-        encodedIds: data.promptSegments.map((segment) => data.vocabulary[segment]),
+        segments: encoding.segments,
+        encodedIds: encoding.tokenIds,
         probabilities,
         selectedId: data.candidates[selectedIndex].id,
         nextToken: data.nextStateToken,
@@ -343,7 +382,10 @@ function recomputeFixture(fixture) {
     }
     case 'visual-llm-03-tokenization-comparison':
       return {
-        tokenizerACounts: data.tokenizerASegments.map((segments) => segments.length),
+        tokenizerACounts: data.texts.map(
+          (text) =>
+            longestMatchEncode(text, data.tokenizerAVocabulary).segments.length,
+        ),
         tokenizerBCounts: data.texts.map((text) => [...text].length),
       };
     case 'visual-llm-03-embedding-position-space':
@@ -491,13 +533,14 @@ function recomputeFixture(fixture) {
     }
     case 'visual-llm-06-latency-breakdown': {
       const ttftMs = data.queueMs + data.prefillMs + data.firstPacketMs;
-      const nearestRank = Math.ceil(data.percentile * data.samplesMs.length);
+      const sortedSamples = [...data.samplesMs].sort((left, right) => left - right);
+      const nearestRank = Math.ceil(data.percentile * sortedSamples.length);
       return {
         ttftMs,
         endToEndMs: ttftMs + sum(data.decodeIntervalsMs),
         nearestRank,
-        p95Ms: data.samplesMs[nearestRank - 1],
-        maxMs: Math.max(...data.samplesMs),
+        p95Ms: sortedSamples[nearestRank - 1],
+        maxMs: sortedSamples.at(-1),
       };
     }
     case 'visual-llm-07-retry-state-machine': {
@@ -613,6 +656,16 @@ function assertFixtureContracts(fixtures) {
       assert.equal(typeof value, 'string', `${fixtureItem.id}.${field} 必须是字符串`);
       assert.ok(value.trim(), `${fixtureItem.id}.${field} 不得为空`);
     }
+    assert.equal(
+      fixtureItem.fields.Expected,
+      formatExpectedFromResult(fixtureItem.result),
+      `${fixtureItem.id}.Expected 必须从结构化 result 确定性生成`,
+    );
+    assert.equal(
+      fixtureItem.fields.Expected,
+      formatFixtureExpected(fixtureItem.result),
+      `${fixtureItem.id}.Expected 必须使用模块 formatter`,
+    );
     assert.ok(fixtureItem.data && typeof fixtureItem.data === 'object');
     assert.ok(fixtureItem.result && typeof fixtureItem.result === 'object');
   }
@@ -640,6 +693,15 @@ test('quantitative inventory has a dependency-free single fixture source', () =>
   assert.ok(
     existsSync(fixtureDataPath),
     'tests/fixtures/llm-foundation-visual-fixtures.js 必须存在',
+  );
+  assert.equal(
+    fixtureDataSource.match(/^\s+Expected:/gm)?.length,
+    1,
+    'fixture 源码只能由构造器声明一次 Expected，不得逐项手写副本',
+  );
+  assert.match(
+    fixtureDataSource,
+    /Expected: formatFixtureExpected\(result\)/,
   );
   assertFixtureContracts(llmFoundationVisualFixtures);
 });
@@ -808,6 +870,43 @@ test('all 25 quantitative fixtures reproduce their complete expected chain', () 
   }
 });
 
+test('tokenizer, top-p and P95 execute from raw deliberately unordered inputs', () => {
+  const autoregressive = fixturesById.get(
+    'fixture-llm-01-autoregressive-generation',
+  );
+  assert.equal(autoregressive.data.rawPrompt, '资料助理：查');
+  assert.ok(
+    !Object.hasOwn(autoregressive.data, 'promptSegments'),
+    'tokenizer fixture 不得预先提供切分结果',
+  );
+
+  for (const fixtureId of [
+    'fixture-llm-06-generation-loop',
+    'fixture-llm-06-temperature-top-p',
+  ]) {
+    const sampling = fixturesById.get(fixtureId);
+    const inputOrder = sampling.data.candidates.map((candidate, index) => ({
+      candidate,
+      logit: sampling.data.logits[index],
+    }));
+    const descendingOrder = [...inputOrder].sort(
+      (left, right) => right.logit - left.logit,
+    );
+    assert.notDeepEqual(
+      inputOrder,
+      descendingOrder,
+      `${fixtureId} 必须故意使用未按概率排序的候选输入`,
+    );
+  }
+
+  const latency = fixturesById.get('fixture-llm-06-latency-breakdown');
+  assert.notDeepEqual(
+    latency.data.samplesMs,
+    [...latency.data.samplesMs].sort((left, right) => left - right),
+    'P95 fixture 必须故意使用未排序观测值',
+  );
+});
+
 test('frozen decisions and fixture contracts reject review mutations', () => {
   assert.doesNotThrow(() => assertFrozenRowDecisions(rows));
   assert.doesNotThrow(() =>
@@ -819,6 +918,13 @@ test('frozen decisions and fixture contracts reject review mutations', () => {
   assert.throws(
     () => assertFixtureContracts(emptyExpected),
     /Expected 不得为空/,
+  );
+
+  const wrongExpected = structuredClone(llmFoundationVisualFixtures);
+  wrongExpected[0].fields.Expected = '伪造的非空输出';
+  assert.throws(
+    () => assertFixtureContracts(wrongExpected),
+    /Expected 必须从结构化 result 确定性生成/,
   );
 
   const blocked = structuredClone(rows);
@@ -856,7 +962,7 @@ test('architecture and Pareto storyboards preserve their implementation boundari
   }
 });
 
-test('audit records reproducible commands, human review limits and inventory blob', () => {
+test('audit records reproducible commands, human review limits and both blobs', () => {
   const placeholderPattern = /TODO|TBD|placeholder|待补|未知|unknown/iu;
   assert.ok(!placeholderPattern.test(inventory), 'inventory 不得含占位符');
   assert.ok(!placeholderPattern.test(audit), 'audit 不得含占位符');
@@ -876,4 +982,12 @@ test('audit records reproducible commands, human review limits and inventory blo
   );
   const recordedBlob = audit.match(/Inventory git blob SHA：`([a-f0-9]{40})`/)?.[1];
   assert.equal(recordedBlob, gitBlobSha(inventory), 'audit blob 必须匹配 inventory');
+  const recordedFixtureBlob = audit.match(
+    /Fixture git blob SHA：`([a-f0-9]{40})`/,
+  )?.[1];
+  assert.equal(
+    recordedFixtureBlob,
+    gitBlobSha(fixtureDataSource),
+    'audit blob 必须匹配 fixture file',
+  );
 });

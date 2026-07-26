@@ -14,7 +14,7 @@
 - `permission evidence` 为“不适用”表示站内从零制作原创教学图；`sourceIds` 的页面、仓库许可证或论文发布状态均不被推断为图片再分发许可。
 - `verified` 表示 section、考核映射、来源 ID、原创决策和 storyboard 均已冻结；`blocked` 只用于证据或许可不足且无法安全进入制作的条目。
 - `visual form` 固定使用 `图形形式；primary=<role>；tags=<tag,...>`。`primary` 是未来 registry 单值 `role` 的唯一来源，允许 `overview`、`mechanism`、`process`、`comparison`、`boundary`、`decision`；`tags` 只表达次级覆盖，允许 `mechanism`、`process`、`comparison`、`boundary`、`decision`、`relationship`、`failure-mode`、`tradeoff`，不得与 primary 重复。
-- 每个 storyboard 必须包含固定 `Fixture` 行。`fixture=quantitative` 必须以 `fixtureId` 引用 `tests/fixtures/llm-foundation-visual-fixtures.js`，由该单一真源按固定顺序提供非空 `Input`、`Method`、`Expected`、`Rounding` 和机器数据；`fixture=qualitative` 必须写明不编码数值主张的具体 scope。测试从本清单自身派生分类，fixture 是可执行教学输入，不得冒充真实模型、生产 tokenizer、供应商延迟或通用发布阈值。
+- 每个 storyboard 必须包含固定 `Fixture` 行。`fixture=quantitative` 必须以 `fixtureId` 引用 `tests/fixtures/llm-foundation-visual-fixtures.js`：结构化 `data` 与 `result` 是唯一数值真源，`Expected` 只能由模块 formatter 从 `result` 确定性生成，不能手写数值副本；测试必须从原始输入执行 `Method`，不能依赖预切分、预排序或预过滤结果。`fixture=qualitative` 必须写明不编码数值主张的具体 scope。测试从本清单自身派生分类，fixture 是可执行教学输入，不得冒充真实模型、生产 tokenizer、供应商延迟或通用发布阈值。
 
 ## 冻结清单
 
