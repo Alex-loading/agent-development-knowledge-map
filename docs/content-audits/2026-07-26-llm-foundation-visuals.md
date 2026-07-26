@@ -77,7 +77,7 @@
 
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`6b9dc4fa804f8bf0d27cbe63892136f4a6dfb333`
+- 清单内容标识：Inventory git blob SHA：`9d855ae2e48c05a94895e2aa6c16f65f4b1ca52f`
 - 数值真源标识：Fixture git blob SHA：`9a81db876ed41d059ee135e3090b06a13c129450`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
@@ -112,9 +112,129 @@
 
 | 命令 | 预期结果 |
 | --- | --- |
-| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 12`、`pass 12`、`fail 0` |
-| `npm test` | `tests 331`、`pass 331`、`fail 0` |
+| `node --test tests/llm-foundation-visual-inventory.test.js` | `tests 15`、`pass 15`、`fail 0` |
+| `npm test` | `tests 474`、`pass 474`、`fail 0` |
 | `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[知]\|unk[n]own' docs/research/2026-07-26-llm-foundation-visual-inventory.md docs/content-audits/2026-07-26-llm-foundation-visuals.md tests/fixtures/llm-foundation-visual-fixtures.js` | 无匹配，退出码 1 |
 | `git diff --check` | 无输出，退出码 0 |
 
 项目测试会校验 40 个唯一 ID、每课 5 项分布、角色 allowlist、storyboard 七要素、section/source/assessed 路径解析、文档派生的 25/15 fixture 分类、单一真源字段与引用，并实际重算 softmax、BCE/MSE、SGD、上下文预算、KV 容量、nearest-rank P95、切片通过率、Pareto 支配关系和全部 25 条预期结果。方法级证明包括从 raw prompt 真正执行最长匹配、对乱序候选先排序再构造 top-p 最小前缀、对乱序延迟样本先排序再取 nearest-rank、按命名轴与示例证据执行三路 RAG/SFT 规则并验证属性顺序不变性，以及按 key/payload 事件实际执行幂等缓存和副作用计数。行为突变测试还证明 BCE 标签、完整训练曲线、逐行因果分数和 LoRA rank 能改变结果或触发契约拒绝；其余排序、过滤与聚合方法也从各自 `data` 执行，而非读取预整理结果。冻结状态还精确要求 40 项 `decision=original-synthesis`、40 项 `status=verified`，并检查 candidate URL 与 permission evidence 一致；突变等价测试证明空或伪造的 `Expected`、`blocked`、`licensed-reproduction` 和第三方候选 URL 均会失败。测试还按 Git blob 算法核对 inventory 与 fixture file 两个 SHA。机器校验不能证明语义正确；它能证明固定算法对固定原始输入产生冻结结果，但不能证明教学方法适用于真实模型、认知问题是否教学上最佳、assessed coverage 是否足以支持学习判断、来源主张是否被正确解释，或实际成图是否清晰。因此发布门仍保留 2026-07-26 的 40 / 40 人工逐行复核，后续成图还需浏览器与无障碍验收。
+
+## 最终本地发布审计（Task 13）
+
+审计日期：2026-07-27。当前候选包含 40 张主视觉和 12 张分步状态图，共 52 个本地 SVG；全部是 `original-synthesis`，没有下载、改编、热链或嵌入第三方媒体。每个 SVG 都是 `1200 × 675`，`viewBox="0 0 1200 675"`。52 个文件全部通过 XML 与静态安全检查，没有 `script`、`foreignObject`、事件处理器、远程资源、外部样式表或可执行链接。
+
+### 数量、角色与许可
+
+- 课程：`llm-01` 至 `llm-08` 各 5 张主视觉。
+- kind：`diagram` 37，`step-diagram` 3。
+- primary role：`overview` 8，`mechanism` 17，`process` 3，`comparison` 4，`decision` 4，`boundary` 4。
+- provenance：`original-synthesis` 40；其他 provenance 均为 0。
+- 许可：40 项 `permission: null`，来源与权限解析率 100%；第三方媒体条目 0，未产生需要猜测的许可结论。
+- ownership：40 / 40 均恰好有一个真实所属 section；每项 `sourceIds` 都包含于所属 section，并解析到 lesson evidence 与全局资源注册表。
+- assessed coverage：40 / 40 均至少覆盖一个经过语义复核的目标、quiz、面试判断、练习步骤或完成标准。
+
+### 视觉质量评分
+
+| 维度 | 分数 | 证据 |
+| --- | ---: | --- |
+| Accuracy | 9 / 10 | 25 项定量图由冻结 fixture 从原始输入复算；15 项定性图通过可见结构断言与人工审图。 |
+| Evidence boundaries | 10 / 10 | 40 项唯一 ownership、section source containment、registry/evidence/global resource 三层解析全部通过。 |
+| Teaching value | 9 / 10 | 每张图对应冻结 cognitive question 与 assessed outcome；三轮独立审查修正了注入防御、疑似欠拟合和 Pareto 坐标边界。 |
+| Accessibility | 9 / 10 | `alt`、`longDescription`、caption、SVG title/desc、非颜色编码和键盘分步控制完整。 |
+| Responsive rendering | 9 / 10 | CSS 保证页面不横溢，复杂媒体使用局部横向滚动，390px/320px 与 44px 控件契约有测试；真实浏览器矩阵仍在 Task 14 执行。 |
+| Fallback | 9 / 10 | 未解析 visual ID、加载失败、重复错误事件、step fallback、reduced motion 与 prose preservation 均有 UI 回归。 |
+| **总计** | **55 / 60** | 每项均 ≥8，超过 51 / 60 发布线；无视觉硬阻塞。 |
+
+### 每课负载
+
+| lesson | SVG 文件数 | 总字节 |
+| --- | ---: | ---: |
+| `llm-01` | 8 | 40,932 |
+| `llm-02` | 5 | 37,895 |
+| `llm-03` | 5 | 34,805 |
+| `llm-04` | 9 | 94,680 |
+| `llm-05` | 5 | 46,648 |
+| `llm-06` | 10 | 79,015 |
+| `llm-07` | 5 | 51,186 |
+| `llm-08` | 5 | 50,379 |
+| **全部** | **52** | **435,540** |
+
+最大单文件为 `llm-04-score-mask-softmax-step-4.svg`，15,491 B。没有超大 raster 派生物；当前 425.33 KiB 的全部视觉负载按 lesson 路由按需请求，不需要为了发布牺牲可读几何。
+
+### 逐视觉资产、来源与归属
+
+下表主文件与 step 文件覆盖全部 52 个资产；format 均为 SVG，dimensions/viewBox 均为 `1200 × 675 / 0 0 1200 675`。
+
+| visual ID | lesson / owning section | 主文件（字节） | step 文件（字节） | sourceIds | provenance / permission |
+| --- | --- | --- | --- | --- | --- |
+| `visual-llm-01-field-map` | `llm-01/map-the-field` | llm-01-field-map.svg (6519 B) | — | `res-ms-ai`, `res-ms-genai`, `res-hf-llm` | `original-synthesis`; permission=null |
+| `visual-llm-01-learning-loop` | `llm-01/minimal-learning-loop` | llm-01-learning-loop.svg (5785 B) | — | `res-ms-ai`, `res-hf-llm` | `original-synthesis`; permission=null |
+| `visual-llm-01-autoregressive-generation` | `llm-01/from-generation-to-llm` | llm-01-autoregressive-generation.svg (5100 B) | llm-01-autoregressive-generation-step-1.svg (3201 B)<br>llm-01-autoregressive-generation-step-2.svg (3665 B)<br>llm-01-autoregressive-generation-step-3.svg (4666 B) | `res-ms-genai`, `res-hf-llm`, `res-ms-ai` | `original-synthesis`; permission=null |
+| `visual-llm-01-training-inference-boundary` | `llm-01/training-versus-inference` | llm-01-training-inference-boundary.svg (6737 B) | — | `res-ms-genai`, `res-hf-llm`, `res-ms-ai` | `original-synthesis`; permission=null |
+| `visual-llm-01-application-decision-stack` | `llm-01/model-and-application-boundary` | llm-01-application-decision-stack.svg (5259 B) | — | `res-ms-genai`, `res-hf-llm`, `res-openai-agents` | `original-synthesis`; permission=null |
+| `visual-llm-02-training-cycle` | `llm-02/training-loop-and-tensor-shapes` | llm-02-training-cycle.svg (7569 B) | — | `res-d2l-zh`, `res-karpathy`, `res-fastai` | `original-synthesis`; permission=null |
+| `visual-llm-02-neuron-forward` | `llm-02/linear-layers-and-activation` | llm-02-neuron-forward.svg (6672 B) | — | `res-google-ml`, `res-d2l-zh`, `res-fastai` | `original-synthesis`; permission=null |
+| `visual-llm-02-backprop-graph` | `llm-02/computation-graph-chain-rule-backprop` | llm-02-backprop-graph.svg (5972 B) | — | `res-d2l-zh`, `res-karpathy`, `res-3b1b-nn` | `original-synthesis`; permission=null |
+| `visual-llm-02-learning-rate-trajectories` | `llm-02/optimizer-learning-rate-and-zero-grad` | llm-02-learning-rate-trajectories.svg (9254 B) | — | `res-d2l-zh`, `res-google-ml`, `res-fastai`, `res-karpathy` | `original-synthesis`; permission=null |
+| `visual-llm-02-generalization-curves` | `llm-02/generalization-and-training-diagnosis` | llm-02-generalization-curves.svg (8428 B) | — | `res-google-ml`, `res-d2l-zh`, `res-karpathy` | `original-synthesis`; permission=null |
+| `visual-llm-03-text-to-context` | `llm-03/token-and-tokenizer` | llm-03-text-to-context.svg (6767 B) | — | `res-tiktoken`, `res-hf-llm`, `res-rasbt`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-03-tokenization-comparison` | `llm-03/token-and-tokenizer` | llm-03-tokenization-comparison.svg (10329 B) | — | `res-tiktoken`, `res-hf-llm`, `res-rasbt`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-03-embedding-position-space` | `llm-03/ids-to-embeddings` | llm-03-embedding-position-space.svg (6555 B) | — | `res-hf-llm`, `res-rasbt`, `res-3b1b-transformer`, `res-ms-genai` | `original-synthesis`; permission=null |
+| `visual-llm-03-context-budget` | `llm-03/context-and-shared-budget` | llm-03-context-budget.svg (5064 B) | — | `res-openai-cookbook`, `res-hf-llm`, `res-ms-genai` | `original-synthesis`; permission=null |
+| `visual-llm-03-context-strategy-matrix` | `llm-03/context-strategy-tradeoffs` | llm-03-context-strategy-matrix.svg (6090 B) | — | `res-openai-cookbook`, `res-ms-genai`, `res-llm-universe`, `res-hf-llm` | `original-synthesis`; permission=null |
+| `visual-llm-04-decoder-block` | `llm-04/decoder-block-information-flow` | llm-04-decoder-block.svg (10658 B) | — | `res-attention-paper`, `res-rasbt`, `res-limu-transformer`, `res-happy-llm` | `original-synthesis`; permission=null |
+| `visual-llm-04-qkv-flow` | `llm-04/qkv-query-match-aggregate` | llm-04-qkv-flow.svg (5492 B) | — | `res-3b1b-attention`, `res-attention-paper`, `res-rasbt` | `original-synthesis`; permission=null |
+| `visual-llm-04-score-mask-softmax` | `llm-04/scaled-dot-softmax` | llm-04-score-mask-softmax.svg (13901 B) | llm-04-score-mask-softmax-step-1.svg (6053 B)<br>llm-04-score-mask-softmax-step-2.svg (8083 B)<br>llm-04-score-mask-softmax-step-3.svg (13465 B)<br>llm-04-score-mask-softmax-step-4.svg (15491 B) | `res-attention-paper`, `res-rasbt`, `res-3b1b-attention` | `original-synthesis`; permission=null |
+| `visual-llm-04-multi-head-merge` | `llm-04/multi-head-attention` | llm-04-multi-head-merge.svg (12007 B) | — | `res-attention-paper`, `res-rasbt`, `res-happy-llm` | `original-synthesis`; permission=null |
+| `visual-llm-04-causal-visibility` | `llm-04/causal-mask` | llm-04-causal-visibility.svg (9530 B) | — | `res-attention-paper`, `res-rasbt`, `res-happy-llm` | `original-synthesis`; permission=null |
+| `visual-llm-05-method-map` | `llm-05/objectives-before-methods` | llm-05-method-map.svg (7255 B) | — | `res-hf-llm`, `res-ms-genai`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-05-stage-objectives` | `llm-05/sft-and-behavior-shaping` | llm-05-stage-objectives.svg (5850 B) | — | `res-hf-llm`, `res-rasbt`, `res-stanford-cs336` | `original-synthesis`; permission=null |
+| `visual-llm-05-preference-boundary` | `llm-05/preference-optimization-boundaries` | llm-05-preference-boundary.svg (8401 B) | — | `res-hf-llm`, `res-rasbt`, `res-happy-llm` | `original-synthesis`; permission=null |
+| `visual-llm-05-lora-update` | `llm-05/lora-as-parameter-efficient-update` | llm-05-lora-update.svg (11596 B) | — | `res-rasbt`, `res-hf-llm`, `res-happy-llm` | `original-synthesis`; permission=null |
+| `visual-llm-05-rag-finetune-matrix` | `llm-05/rag-finetuning-decision-lab` | llm-05-rag-finetune-matrix.svg (13546 B) | — | `res-ms-genai`, `res-openai-cookbook`, `res-hf-llm`, `res-rasbt` | `original-synthesis`; permission=null |
+| `visual-llm-06-generation-loop` | `llm-06/sampling-experiment-and-serving-tradeoffs` | llm-06-generation-loop.svg (14067 B) | llm-06-generation-loop-step-1.svg (4070 B)<br>llm-06-generation-loop-step-2.svg (4693 B)<br>llm-06-generation-loop-step-3.svg (5918 B)<br>llm-06-generation-loop-step-4.svg (6932 B)<br>llm-06-generation-loop-step-5.svg (12886 B) | `res-rasbt`, `res-hf-llm`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-06-logit-softmax` | `llm-06/logits-softmax-next-token` | llm-06-logit-softmax.svg (4535 B) | — | `res-rasbt`, `res-hf-llm` | `original-synthesis`; permission=null |
+| `visual-llm-06-temperature-top-p` | `llm-06/top-p-and-combined-sampling` | llm-06-temperature-top-p.svg (7236 B) | — | `res-hf-llm`, `res-openai-cookbook`, `res-rasbt` | `original-synthesis`; permission=null |
+| `visual-llm-06-kv-cache` | `llm-06/kv-cache-reuse-memory-and-concurrency` | llm-06-kv-cache.svg (8528 B) | — | `res-hf-llm`, `res-rasbt`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-06-latency-breakdown` | `llm-06/prefill-decode-and-latency-metrics` | llm-06-latency-breakdown.svg (10150 B) | — | `res-hf-llm`, `res-openai-cookbook` | `original-synthesis`; permission=null |
+| `visual-llm-07-runtime-contract` | `llm-07/prompt-as-runtime-contract` | llm-07-runtime-contract.svg (6866 B) | — | `res-ms-genai`, `res-openai-cookbook`, `res-hf-agents` | `original-synthesis`; permission=null |
+| `visual-llm-07-instruction-boundary` | `llm-07/instruction-and-untrusted-data-boundaries` | llm-07-instruction-boundary.svg (8552 B) | — | `res-owasp-prompt-injection`, `res-ms-genai`, `res-hf-agents` | `original-synthesis`; permission=null |
+| `visual-llm-07-schema-pipeline` | `llm-07/schema-and-structured-output` | llm-07-schema-pipeline.svg (9085 B) | — | `res-openai-cookbook`, `res-ms-genai`, `res-hf-agents` | `original-synthesis`; permission=null |
+| `visual-llm-07-retry-state-machine` | `llm-07/validation-retry-and-side-effects` | llm-07-retry-state-machine.svg (14081 B) | — | `res-openai-cookbook`, `res-ms-genai`, `res-owasp-prompt-injection` | `original-synthesis`; permission=null |
+| `visual-llm-07-version-eval-loop` | `llm-07/observable-versioned-evaluation` | llm-07-version-eval-loop.svg (12602 B) | — | `res-openai-cookbook`, `res-llm-universe`, `res-ms-genai`, `res-owasp-prompt-injection` | `original-synthesis`; permission=null |
+| `visual-llm-08-failure-map` | `llm-08/failure-taxonomy-not-fluency` | llm-08-failure-map.svg (12057 B) | — | `res-ms-genai`, `res-openai-cookbook`, `res-hf-agents` | `original-synthesis`; permission=null |
+| `visual-llm-08-grounding-chain` | `llm-08/evidence-grounding-and-uncertainty` | llm-08-grounding-chain.svg (8380 B) | — | `res-openai-cookbook`, `res-ms-genai`, `res-llm-universe` | `original-synthesis`; permission=null |
+| `visual-llm-08-eval-funnel` | `llm-08/eval-dataset-and-slices` | llm-08-eval-funnel.svg (8552 B) | — | `res-openai-evals`, `res-openai-cookbook`, `res-ms-genai`, `res-hf-agents` | `original-synthesis`; permission=null |
+| `visual-llm-08-injection-defense` | `llm-08/prompt-injection-threat-model` | llm-08-injection-defense.svg (10456 B) | — | `res-owasp-prompt-injection` | `original-synthesis`; permission=null |
+| `visual-llm-08-release-pareto` | `llm-08/defense-in-depth-and-runtime-operations` | llm-08-release-pareto.svg (10934 B) | — | `res-owasp-prompt-injection`, `res-hf-agents`, `res-ms-genai`, `res-anthropic-agents` | `original-synthesis`; permission=null |
+
+### 最终命令与独立审查
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm test` | 474 / 474 通过 |
+| `node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/llm-foundation-visual-data.test.js tests/llm-foundation-visual-inventory.test.js tests/visual-registry-ownership.test.js` | 126 / 126 通过 |
+| `find src tests -name '*.js' -exec node --check {} \;` | 退出码 0，无语法错误 |
+| `find assets/visuals/llm-foundation -maxdepth 1 -type f -print` | 52 个文件 |
+| `xmllint --noout assets/visuals/llm-foundation/*.svg` | 退出码 0 |
+| `git diff --check` | 退出码 0 |
+| `git status --short --branch` | `feat/llm-foundation-visual-system`；9 个预期未提交文件（3 SVG、inventory、registry、3 tests、audit） |
+
+三项独立终审均已通过：
+
+1. specification / coverage：PASS；40 个 ID、placement、assessed coverage、25 个 fixture 与 15 个 qualitative scope 全部闭环。
+2. pedagogy / evidence / license：APPROVED；修正后没有纯装饰、证据越界、定量误导或许可风险。
+3. engineering / accessibility / security：APPROVED；52 个资产、renderer、keyboard、fallback、narrow-screen CSS、reduced motion、active-SVG 与共享模块回归均通过。
+
+终审返修记录：
+
+- `visual-llm-02-generalization-curves` 将“欠拟合”收窄为依赖任务基线/阈值的“疑似欠拟合”。
+- `visual-llm-08-injection-defense` 用路径上的实体屏障表示四项预防控制，并把日志改为影响后的检测、遏制与反馈回路。
+- `visual-llm-08-release-pareto` 显式标注坐标按通过安全门候选范围截断：质量 82–91、成本 1.0–3.4、P95 450–1100。
+
+### 当前浏览器与部署状态
+
+- 本地自动化与独立审查：完成。
+- Task 14 真实浏览器桌面、390px、320px、键盘、reduced motion、断图降级与 console 验收：**尚未执行**。
+- Vercel Preview / Production：**尚未部署**。
+- 当前文档不得把本地测试、PR、Preview URL 或部署开始描述为生产上线；只有真实浏览器矩阵、Production `READY`、canonical routes、exact `main` SHA 与 Pages-disabled 检查全部通过后才可更新为完成。

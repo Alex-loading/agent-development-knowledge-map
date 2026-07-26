@@ -274,20 +274,37 @@ test('eval funnel derives every visible slice and blocks despite the overall ave
   ]);
 });
 
-test('injection defense uses five independent model-external barriers', async () => {
+test('injection defense separates preventive barriers from post-impact response', async () => {
   const parsed = await parseVisual('visual-llm-08-injection-defense');
   assertVisibleNodes(parsed, 'injection-node', [
     'direct-input', 'indirect-input', 'model', 'tool-impact', 'data-impact',
-    'input-isolation', 'least-privilege', 'parameter-validation', 'human-confirmation', 'logging-response',
+    'input-isolation', 'least-privilege', 'parameter-validation', 'human-confirmation',
+    'logging-response', 'containment-feedback',
   ]);
+  const preventiveControls = [
+    'input-isolation', 'least-privilege', 'parameter-validation', 'human-confirmation',
+  ];
+  assertVisibleNodes(parsed, 'prevention-barrier', preventiveControls.map((control) => `${control}-barrier`));
+  assert.deepEqual(
+    nodes(parsed, 'prevention-barrier').map((barrier) => ({
+      control: barrier.attributes.get('data-token'),
+      kind: barrier.attributes.get('data-kind'),
+    })),
+    preventiveControls.map((control) => ({ control, kind: 'blocked' })),
+  );
   assertExactEdges(parsed, 'attack-path', [
     'direct-input→model', 'indirect-input→model', 'model→tool-impact', 'model→data-impact',
   ]);
-  assertExactEdges(parsed, 'control-edge', [
-    'input-isolation→direct-input', 'input-isolation→indirect-input',
-    'least-privilege→tool-impact', 'parameter-validation→tool-impact',
-    'human-confirmation→tool-impact', 'logging-response→tool-impact', 'logging-response→data-impact',
+  assert.equal(edges(parsed, 'control-edge').length, 0);
+  assertExactEdges(parsed, 'detection-edge', [
+    'tool-impact→logging-response', 'data-impact→logging-response',
   ]);
+  assertExactEdges(parsed, 'response-edge', [
+    'logging-response→containment-feedback', 'containment-feedback→input-isolation',
+  ]);
+  const textContent = visibleText(parsed);
+  assert.ok(textContent.includes('预防屏障'));
+  assert.ok(textContent.includes('影响后：检测 → 遏制 → 反馈'));
 });
 
 test('Pareto chart derives table values and two independent panel positions from one fixture', async () => {
@@ -304,16 +321,32 @@ test('Pareto chart derives table values and two independent panel positions from
   });
 
   const rejectedBySafety = new Set(fixture.result.rejectedBySafety);
-  const allowedIds = fixture.data.candidates
+  const allowedCandidates = fixture.data.candidates
     .filter((candidate) => candidate.safety >= fixture.data.safetyGate)
-    .filter((candidate) => !rejectedBySafety.has(candidate.id))
-    .map((candidate) => candidate.id);
+    .filter((candidate) => !rejectedBySafety.has(candidate.id));
+  const allowedIds = allowedCandidates.map((candidate) => candidate.id);
   assert.deepEqual(
     fixture.data.candidates
       .filter((candidate) => candidate.safety < fixture.data.safetyGate)
       .map((candidate) => candidate.id),
     fixture.result.rejectedBySafety,
   );
+  const axisDomain = nodes(parsed, 'pareto-axis-domain');
+  assert.equal(axisDomain.length, 1);
+  const quality = allowedCandidates.map((candidate) => candidate.quality);
+  const cost = allowedCandidates.map((candidate) => candidate.cost);
+  const latency = allowedCandidates.map((candidate) => candidate.latency);
+  assert.equal(
+    axisDomain[0].attributes.get('data-value'),
+    [
+      Math.min(...quality), Math.max(...quality),
+      Math.min(...cost), Math.max(...cost),
+      Math.min(...latency), Math.max(...latency),
+    ].join('|'),
+  );
+  const paretoText = visibleText(parsed);
+  assert.ok(paretoText.includes('按通过安全门候选范围截断'));
+  assert.ok(paretoText.includes('质量 82–91 · 成本 1.0–3.4 · P95 450–1100'));
 
   for (const stage of ['quality-cost', 'quality-latency']) {
     const points = nodes(parsed, 'pareto-point').filter((node) => node.attributes.get('data-stage') === stage);

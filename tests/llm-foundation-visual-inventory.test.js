@@ -980,6 +980,17 @@ test('all 25 quantitative fixtures reproduce their complete expected chain', () 
   }
 });
 
+test('generalization storyboard keeps suspected underfitting conditional on a task baseline or threshold', () => {
+  const row = rows.find(
+    ({ visualId }) => visualId === 'visual-llm-02-generalization-curves',
+  );
+
+  assert.ok(row, '必须存在泛化曲线 inventory 行');
+  assert.match(row.storyboard, /训练\/验证.*仍高.*疑似欠拟合/s);
+  assert.match(row.storyboard, /任务基线.*阈值|阈值.*任务基线/);
+  assert.doesNotMatch(row.storyboard, /三组训练与验证曲线分别表示欠拟合/);
+});
+
 test('tokenizer, top-p and P95 execute from raw deliberately unordered inputs', () => {
   const autoregressive = fixturesById.get(
     'fixture-llm-01-autoregressive-generation',

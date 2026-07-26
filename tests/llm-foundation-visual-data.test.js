@@ -449,6 +449,57 @@ test('registers the frozen field-map contract and two-panel boundary exactly onc
   assert.match(visual.caption, /不是一条同义嵌套链/);
 });
 
+test('treats high training and validation loss as suspected underfitting rather than a threshold-free verdict', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const visual =
+    knowledgeVisualsById['visual-llm-02-generalization-curves'];
+  const svg = await readFile(visual.assetPath, 'utf8');
+  const visibleText = visibleSvgText(svg, visual.assetPath);
+
+  assert.match(visibleText, /训练\/验证仍高.*疑似欠拟合/s);
+  assert.match(visibleText, /任务基线.*阈值|阈值.*任务基线/);
+  assert.doesNotMatch(visibleText, /①\s*欠拟合/);
+
+  for (const field of ['alt', 'longDescription', 'caption']) {
+    assert.match(visual[field], /训练\/验证.*仍高.*疑似欠拟合/s, field);
+    assert.match(visual[field], /任务基线.*阈值|阈值.*任务基线/, field);
+  }
+});
+
+test('keeps the suspected-underfitting qualifier clear of both visible curves', async () => {
+  const assetPath =
+    'assets/visuals/llm-foundation/llm-02-generalization-curves.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const qualifier = parsed.elements.find(
+    (node) =>
+      node.name === 'text'
+      && node.text.includes('绝对损失需任务基线'),
+  );
+  const firstPanelCurves = (parsed.elementsByName.get('polyline') ?? []).slice(
+    0,
+    2,
+  );
+
+  assert.ok(qualifier, '必须有可见的任务基线/阈值限定');
+  assert.equal(firstPanelCurves.length, 2, '第一面板必须有两条曲线');
+  const qualifierBottom =
+    Number(qualifier.attributes.get('y'))
+    + Number(qualifier.attributes.get('font-size'));
+  for (const curve of firstPanelCurves) {
+    const minimumY = Math.min(
+      ...curve.attributes
+        .get('points')
+        .trim()
+        .split(/\s+/)
+        .map((point) => Number(point.split(',')[1])),
+    );
+    assert.ok(
+      minimumY >= qualifierBottom,
+      `曲线 y=${minimumY} 不得遮挡限定文字底部 y=${qualifierBottom}`,
+    );
+  }
+});
+
 test('keeps LLM registry IDs and paths aligned with their lessons', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
 

@@ -28,6 +28,9 @@
   <text x="55" y="525" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="start">Input：A–E · safety gate 99.5%</text>
   <text x="55" y="562" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="start">Result：C 淘汰 · B dominates D</text>
   <text x="490" y="150" font-family="Avenir Next, PingFang SC, sans-serif" font-size="28" font-weight="800" fill="#0B766E" text-anchor="start">② 质量–成本</text>
+  <rect x="490" y="180" width="660" height="88" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="2" data-region="pareto-axis-domain" data-node="candidate-domain" data-value="82|91|1|3.4|450|1100"/>
+  <text x="510" y="215" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">坐标按通过安全门候选范围截断</text>
+  <text x="510" y="250" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">质量 82–91 · 成本 1.0–3.4 · P95 450–1100</text>
   <line x1="490" y1="575" x2="760" y2="575" stroke="#18312D" stroke-width="3"/>
   <line x1="490" y1="575" x2="490" y2="385" stroke="#18312D" stroke-width="3"/>
   <text x="625" y="615" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="middle">成本</text>
