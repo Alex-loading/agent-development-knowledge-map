@@ -140,7 +140,10 @@ test('renders an original knowledge figure with accessible local media metadata'
   assert.equal(figure.className, 'knowledge-visual');
   assert.equal(figure.dataset.kind, 'diagram');
   assert.equal(figure.dataset.provenance, 'original-synthesis');
-  assert.equal(figure.querySelector('h3').textContent, originalVisual.title);
+  const title = figure.querySelector('.knowledge-visual__title');
+  assert.equal(title.tagName, 'P');
+  assert.equal(title.textContent, originalVisual.title);
+  assert.equal(figure.querySelector('h3'), null);
 
   const media = figure.querySelector('.knowledge-visual__media');
   const image = media.querySelector('img');
@@ -165,6 +168,8 @@ test('renders an original knowledge figure with accessible local media metadata'
   const details = figure.querySelector('details');
   assert.equal(details.querySelector('summary').textContent, '查看长描述');
   assert.ok(details.textContent.includes(originalVisual.longDescription));
+  assert.equal(details.parentNode, caption);
+  assert.equal(figure.children.at(-1), caption);
 });
 
 test('reveals the status fallback once while preserving all non-image learning paths', (t) => {
@@ -302,14 +307,17 @@ test('places overview after introduction and preserves declaration order at para
   const note = renderKnowledgeNote({ resources: [] }, lesson, { visualsById });
 
   assert.equal(note.children[0].className, 'knowledge-note__introduction');
-  assert.equal(note.children[1].querySelector('h3').textContent, overview.title);
+  assert.equal(
+    note.children[1].querySelector('.knowledge-visual__title').textContent,
+    overview.title,
+  );
   assert.equal(note.children[2].className, 'knowledge-note__toc');
 
   const section = note.querySelector('.knowledge-note__section');
   assert.deepEqual(
     section.children.slice(0, 6).map((node) => (
       node.className === 'knowledge-visual'
-        ? `FIGURE:${node.querySelector('h3').textContent}`
+        ? `FIGURE:${node.querySelector('.knowledge-visual__title').textContent}`
         : `${node.tagName}:${node.textContent}`
     )),
     [
@@ -345,6 +353,26 @@ test('keeps the legacy section child order when no visuals are declared', (t) =>
   );
 });
 
+test('keeps synchronous source diagnostics out of live regions', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lesson = lessonWithNote({}, {
+    sourceIds: ['missing-source'],
+  });
+
+  const note = renderKnowledgeNote(
+    { resources: [] },
+    lesson,
+    { visualsById: new Map() },
+  );
+  const diagnostic = note.querySelector('.data-diagnostic');
+
+  assert.ok(diagnostic);
+  assert.equal(diagnostic.getAttribute('role'), null);
+  assert.equal(diagnostic.getAttribute('aria-live'), null);
+  assert.equal(note.querySelectorAll('[role="status"]').length, 0);
+});
+
 test('keeps prose and emits exactly one safe diagnostic for every invalid placement', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -377,7 +405,8 @@ test('keeps prose and emits exactly one safe diagnostic for every invalid placem
   assert.ok(note.textContent.includes('第二段'));
   assert.equal(diagnostics.length, 7);
   for (const diagnostic of diagnostics) {
-    assert.equal(diagnostic.getAttribute('role'), 'status');
+    assert.equal(diagnostic.getAttribute('role'), null);
+    assert.equal(diagnostic.getAttribute('aria-live'), null);
     assert.ok(diagnostic.textContent.includes(lesson.id));
     assert.ok(
       diagnostic.textContent.includes('section-a')
@@ -386,6 +415,7 @@ test('keeps prose and emits exactly one safe diagnostic for every invalid placem
     assert.ok(diagnostic.textContent.includes('原因'));
     assert.ok(!diagnostic.textContent.includes('[object Object]'));
   }
+  assert.equal(note.querySelectorAll('[role="status"]').length, 0);
   assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
   assert.ok(diagnostics.some((node) => node.textContent.includes('__proto__')));
 });
@@ -425,6 +455,35 @@ test('rejects malformed own object and Map registry keys before lookup', (t) => 
       } finally {
         restore();
       }
+    }
+  }
+});
+
+test('rejects registry key and validated visual ID mismatches in every registry shape', (t) => {
+  const requestedId = 'visual-test-requested-key';
+  const visual = {
+    ...originalVisual,
+    id: 'visual-test-different-record-id',
+  };
+
+  for (const registryKind of ['map', 'object', 'null-prototype']) {
+    const document = new FakeDocument();
+    const restore = installFakeDom(document);
+    try {
+      const { note } = noteForVisual(
+        requestedId,
+        registryWith(registryKind, requestedId, visual),
+      );
+
+      assert.ok(note.textContent.includes('第一段'));
+      assert.equal(note.querySelectorAll('.knowledge-visual').length, 0);
+      assert.equal(
+        note.querySelectorAll('[data-visual-diagnostic="true"]').length,
+        1,
+      );
+      assert.equal(note.querySelectorAll('[role="status"]').length, 0);
+    } finally {
+      restore();
     }
   }
 });
@@ -617,7 +676,8 @@ test('direct renderer safely diagnoses malformed, remote, cyclic and reflection-
     assert.doesNotThrow(() => {
       diagnostic = renderKnowledgeVisual(visual);
     });
-    assert.equal(diagnostic.getAttribute('role'), 'status');
+    assert.equal(diagnostic.getAttribute('role'), null);
+    assert.equal(diagnostic.getAttribute('aria-live'), null);
     assert.equal(
       diagnostic.getAttribute('data-visual-diagnostic'),
       'true',
@@ -702,8 +762,9 @@ test('uses the default prototype-safe registry for the real llm-01 overview', (t
   const overview = note.children[1];
 
   assert.equal(overview.className, 'knowledge-visual');
+  assert.equal(overview.querySelector('h3'), null);
   assert.equal(
-    overview.querySelector('h3').textContent,
+    overview.querySelector('.knowledge-visual__title').textContent,
     'AI、机器学习、深度学习、生成式 AI 与 LLM 的双轴关系',
   );
   assert.equal(

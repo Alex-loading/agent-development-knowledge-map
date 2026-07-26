@@ -91,10 +91,7 @@ function invalidVisualDiagnostic() {
   return element('p', {
     className: 'knowledge-visual-diagnostic data-diagnostic',
     text: '视觉资源无法安全渲染，正文内容仍可继续阅读。',
-    attrs: {
-      role: 'status',
-      'data-visual-diagnostic': 'true',
-    },
+    attrs: { 'data-visual-diagnostic': 'true' },
   });
 }
 
@@ -176,6 +173,13 @@ export function renderKnowledgeVisual(candidate) {
     events: { error: handleImageError },
   });
 
+  const longDescription = visual.longDescription
+    ? element('details', { className: 'knowledge-visual__long-description' }, [
+      element('summary', { text: '查看长描述' }),
+      element('p', { text: visual.longDescription }),
+    ])
+    : null;
+
   return element('figure', {
     className: 'knowledge-visual',
     dataset: {
@@ -187,7 +191,10 @@ export function renderKnowledgeVisual(candidate) {
       className: 'knowledge-visual__label',
       text: visualLabel(visual),
     }),
-    element('h3', { text: visual.title }),
+    element('p', {
+      className: 'knowledge-visual__title',
+      text: visual.title,
+    }),
     element('div', { className: 'knowledge-visual__media' }, [
       image,
       fallback,
@@ -196,12 +203,7 @@ export function renderKnowledgeVisual(candidate) {
       element('p', { text: visual.caption }),
       visualCredit(visual),
       localOriginalLink(visual),
+      longDescription,
     ]),
-    visual.longDescription
-      ? element('details', { className: 'knowledge-visual__long-description' }, [
-        element('summary', { text: '查看长描述' }),
-        element('p', { text: visual.longDescription }),
-      ])
-      : null,
   ]);
 }

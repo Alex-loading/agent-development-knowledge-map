@@ -125,10 +125,7 @@ function renderVisualDiagnostic({
       `visual=${safeIdentifier(visualId, '[缺失 visualId]')}`,
       `原因：${reason}`,
     ].join('；'),
-    attrs: {
-      role: 'status',
-      'data-visual-diagnostic': 'true',
-    },
+    attrs: { 'data-visual-diagnostic': 'true' },
   });
 }
 
@@ -172,6 +169,14 @@ function resolveVisualNode({
       sectionId,
       visualId,
       reason: '视觉记录未通过安全数据与完整契约验证',
+    });
+  }
+  if (validation.visual.id !== visualId) {
+    return renderVisualDiagnostic({
+      lessonId,
+      sectionId,
+      visualId,
+      reason: '视觉注册表 key 与记录 ID 不一致',
     });
   }
   return renderKnowledgeVisual(validation.visual);
@@ -304,7 +309,6 @@ export function renderKnowledgeNote(
     diagnostics.size
       ? element('aside', {
         className: 'data-diagnostic',
-        attrs: { role: 'status' },
       }, [
         element('strong', { text: '部分资料引用暂时无法解析，正文内容仍可继续阅读。' }),
         element('ul', {}, [...diagnostics].map((message) => element('li', { text: message }))),
