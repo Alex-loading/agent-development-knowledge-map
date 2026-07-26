@@ -50,8 +50,8 @@
   <text x="674" y="476" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">dL/dc 10 · dc/da 1 · dc/db 1</text>
   <path d="M584 356 C520 526 452 526 392 474" fill="none" stroke="#a16207" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#gradient-arrow)"/>
   <path d="M578 250 C520 108 454 108 402 130" fill="none" stroke="#a16207" stroke-width="4" stroke-dasharray="12 8" marker-end="url(#gradient-arrow)"/>
-  <text x="252" y="540" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">经 b：10 × 1 × 4 = 40</text>
-  <text x="252" y="118" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">经 a：10 × 1 × 3 = 30</text>
+  <text x="252" y="540" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">db/dx 4 · 经 b：10 × 1 × 4 = 40</text>
+  <text x="252" y="118" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">da/dx 3 · da/dw = x = 2</text>
 
   <rect x="56" y="560" width="600" height="82" rx="18" fill="url(#sum-hatch)" stroke="#a16207" stroke-width="4"/>
   <text x="82" y="610" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">③ x 汇合累加：30 + 40 = 70</text>

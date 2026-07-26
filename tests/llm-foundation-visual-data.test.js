@@ -563,7 +563,9 @@ test('encodes every llm-01/02 quantitative fixture input, method, result and rou
       assertSvgIncludes(text, `dW ${JSON.stringify(fixture.result.dW)}`);
       assertSvgIncludes(text, `new W ${JSON.stringify(fixture.result.newW)}`);
       assertSvgIncludes(text, `new loss ${fixture.result.newLoss.toFixed(6)}`);
-      assertSvgIncludes(text, '[B] ≠ [B,C]');
+      assertSvgIncludes(text, '不能直接逐元素对齐');
+      assertSvgIncludes(text, '可静默广播');
+      assertSvgIncludes(text, '需确认语义');
     },
     'visual-llm-02-neuron-forward': (fixture, text) => {
       assertSvgIncludes(text, `x ${fixture.data.x}`);
@@ -661,6 +663,90 @@ test('draws three upward-opening learning-rate landscapes with explicit axes', a
   }
 });
 
+test('maps every large learning-rate point to fixture w and loss on one coordinate scale', async () => {
+  const visualId = 'visual-llm-02-learning-rate-trajectories';
+  const assetPath = 'assets/visuals/llm-foundation/llm-02-learning-rate-trajectories.svg';
+  const fixture = fixtureForVisual(visualId);
+  const trajectory = fixture.result.trajectories.find(
+    ({ learningRate }) => learningRate === 1.1,
+  );
+  const targetW = fixture.data.targetW;
+  const states = [
+    {
+      w: fixture.data.initialW,
+      loss: (fixture.data.initialW - targetW) ** 2,
+    },
+    ...trajectory.weights.map((w, index) => ({
+      w,
+      loss: trajectory.losses[index],
+    })),
+  ];
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const centerX = 980;
+  const pixelsPerW = [];
+  const points = states.map((state, index) => {
+    const node = parsed.elements.find((candidate) =>
+      candidate.attributes.get('data-region') === `large-step-${index}`,
+    );
+    assert.equal(node?.name, 'circle', `large step ${index} 必须是结构化 circle`);
+    const cx = Number(node.attributes.get('cx'));
+    const cy = Number(node.attributes.get('cy'));
+    assert.ok(Number.isFinite(cx) && Number.isFinite(cy));
+    const signedOffset = cx - centerX;
+    assert.equal(
+      Math.sign(signedOffset),
+      Math.sign(state.w - targetW),
+      `large step ${index} 左右方向必须匹配 w-1 符号`,
+    );
+    pixelsPerW.push(Math.abs(signedOffset) / Math.abs(state.w - targetW));
+    return { ...state, cx, cy };
+  });
+
+  for (const scale of pixelsPerW) {
+    assert.ok(Math.abs(scale - pixelsPerW[0]) < 0.01, '全部大步点必须共享同一横轴比例');
+  }
+  const byDistance = [...points].sort(
+    (left, right) => Math.abs(left.w - targetW) - Math.abs(right.w - targetW),
+  );
+  const byLoss = [...points].sort((left, right) => left.loss - right.loss);
+  for (let index = 1; index < points.length; index += 1) {
+    assert.ok(
+      Math.abs(byDistance[index].cx - centerX)
+        > Math.abs(byDistance[index - 1].cx - centerX),
+      '|w-1| 越大，离低谷的横向距离必须越大',
+    );
+    assert.ok(
+      byLoss[index].cy < byLoss[index - 1].cy,
+      'loss 越大，点在 SVG 中必须越高',
+    );
+  }
+});
+
+test('shows every frozen backprop local gradient in visible text', async () => {
+  const visualId = 'visual-llm-02-backprop-graph';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = 'assets/visuals/llm-foundation/llm-02-backprop-graph.svg';
+  const visibleText = visibleSvgText(
+    await readFile(assetPath, 'utf8'),
+    assetPath,
+  );
+  const labels = {
+    dLossDc: (value) => `dL/dc ${value}`,
+    dCda: (value) => `dc/da ${value}`,
+    dCdb: (value) => `dc/db ${value}`,
+    dAdx: (value) => `da/dx ${value}`,
+    dAdw: (value) => `da/dw = x = ${value}`,
+    dBdx: (value) => `db/dx ${value}`,
+  };
+  for (const [gradient, value] of Object.entries(fixture.result.localGradients)) {
+    assertSvgIncludes(visibleText, labels[gradient](value));
+  }
+  assertSvgIncludes(
+    visibleText,
+    `dL/dw ${fixture.result.accumulated.dLossDw}`,
+  );
+});
+
 test('keeps frozen qualitative nodes visible in the learning and application diagrams', async () => {
   const { knowledgeVisualsById } = await loadRegistry();
   const expected = {
@@ -713,14 +799,41 @@ test('marks every constructed quantitative teaching visual as non-measured', asy
   }
 });
 
-test('draws a real blocked shape edge for the incompatible training label example', async () => {
+test('separates a fixture-derived incompatible elementwise edge from compatible broadcast risk', async () => {
+  const fixture = fixtureForVisual('visual-llm-02-training-cycle');
+  const B = fixture.data.X.length;
+  const F = fixture.data.X[0].length;
+  const C = fixture.data.W[0].length;
   const assetPath = 'assets/visuals/llm-foundation/llm-02-training-cycle.svg';
-  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const svg = await readFile(assetPath, 'utf8');
+  const parsed = parseStrictSvg(svg, assetPath);
+  const visibleText = visibleSvgText(svg, assetPath);
   const blockedEdge = parsed.elements.find((node) =>
     node.attributes.get('data-region') === 'shape-block-edge',
   );
   assert.equal(blockedEdge?.name, 'line');
   assert.equal(blockedEdge.attributes.get('stroke-dasharray'), '10 7');
+  assert.notEqual(F, C, 'fixture 的尾轴必须确实不兼容');
+  assertSvgIncludes(
+    visibleText,
+    `[B,F]=[${B},${F}] ✕ [B,C]=[${B},${C}]`,
+  );
+  assertSvgIncludes(visibleText, '不能直接逐元素对齐');
+
+  const broadcastEdge = parsed.elements.find((node) =>
+    node.attributes.get('data-region') === 'shape-broadcast-edge',
+  );
+  assert.equal(broadcastEdge?.name, 'line');
+  assert.equal(
+    fixture.data.b.length,
+    C,
+    'fixture 的 [C] 尾轴必须能广播到 [B,C]',
+  );
+  assertSvgIncludes(
+    visibleText,
+    `[C]=[${C}] → [B,C]=[${B},${C}]`,
+  );
+  assertSvgIncludes(visibleText, '可静默广播 · 需确认语义');
 });
 
 test('keeps every llm-01/02 SVG label at least 26px with a 32px viewBox safety margin', async () => {
