@@ -67,9 +67,13 @@
 
 2026-07-27 机制可复算更正：两头 fixture 进一步冻结每头 scores、Values、stable softmax weights 与 ΣV 输出；图与 inventory 均明确展示 `Q/K → weights → ΣV → Hn`，再进入 concat、输出投影和联合更新端点。此次更正改变 fixture 与 inventory 内容，因此下方两个 git blob SHA 均重新计算。
 
+### Logit 候选数量权威更正
+
+2026-07-27 审查更正：inventory 误写“五个 token”，但 quantitative fixture 与图面始终冻结 A/B/C 三个候选。采用 fixture 作为数值单一真源，将 storyboard 更正为“五个 token→三个候选 token”；fixture 内容未改变，Inventory git blob SHA 按修正文档重新计算。
+
 ## 实施就绪复核
 
-- 清单内容标识：Inventory git blob SHA：`1d624098a1d688c1b755d9243d62f341d22bef86`
+- 清单内容标识：Inventory git blob SHA：`6b9dc4fa804f8bf0d27cbe63892136f4a6dfb333`
 - 数值真源标识：Fixture git blob SHA：`19d4f6e6494aa6d6597b2b550628ed98097e4386`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer

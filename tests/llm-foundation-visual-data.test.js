@@ -11,6 +11,7 @@ import {
   parseStrictSvg,
 } from './helpers/static-svg.js';
 import { validateKnowledgeVisualOwnership } from './helpers/visual-registry.js';
+import { VISUALIZED_LESSON_IDS } from './helpers/visualized-lessons.js';
 
 const FIELD_MAP_ID = 'visual-llm-01-field-map';
 const FIELD_MAP_PATH = 'assets/visuals/llm-foundation/llm-01-field-map.svg';
@@ -543,7 +544,7 @@ test('publishes exactly five frozen visual references per llm-01–06 lesson wit
   );
   assert.equal(llmFoundationVisuals.length, 30);
 
-  for (const lessonId of ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06']) {
+  for (const lessonId of VISUALIZED_LESSON_IDS) {
     const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
     const references = [
       lesson.knowledgeNote.overviewVisualId,
@@ -618,7 +619,7 @@ test('places every published llm-01–06 visual once in its evidence-owning real
   );
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06'].includes(id),
+    VISUALIZED_LESSON_IDS.includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -656,7 +657,7 @@ test('anchors visuals after the earliest paragraph that completes their teaching
   };
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02', 'llm-03', 'llm-04', 'llm-05', 'llm-06'].includes(id),
+    VISUALIZED_LESSON_IDS.includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -908,7 +909,7 @@ function structuredElementSignature(node) {
   ];
   return JSON.stringify([
     node.name,
-    node.text.replace(/\s+/g, ' ').trim(),
+    node.text.replace(/\s+/g, ''),
     ...structuralAttributes.map((attribute) => node.attributes.get(attribute) ?? null),
   ]);
 }
@@ -1475,7 +1476,7 @@ test('encodes every llm-05–06 quantitative fixture input, method, result and r
   const expectations = {
     'visual-llm-05-lora-update': ['冻结 W 为 4×4', 'ΔW=BA', 'adapter 参数', '8 vs fullParameters 16', 'Rounding：整数原样'],
     'visual-llm-05-rag-finetune-matrix': ['高阈值 = 3', 'updateFrequency', 'citationNeed', 'stableBehavior', 'hasExamples', 'RAG', 'SFT/LoRA', 'insufficient evidence—do not fine-tune', 'Rounding：等级为整数'],
-    'visual-llm-06-generation-loop': ['logits 0/2/1', 'T=1', 'top-p=.8', 'u=.7', 'stable softmax', '最小 nucleus', '逆 CDF', '0.0900/0.6652/0.2447', '0.7311/0.2689', 'selected A', 'EOS', 'Rounding：概率四位小数'],
+    'visual-llm-06-generation-loop': ['logits 0/2/1', 'T=1', 'top-p=.8', 'u=.7', 'stable', 'softmax', '最小', 'nucleus', '逆 CDF', '0.0900', '0.6652', '0.2447', '0.7311/0.2689', 'selected A', 'EOS', 'Rounding：概率四位小数'],
     'visual-llm-06-logit-softmax': ['logits=[2,1,0]', 'stable softmax', '1.0000 / 0.3679 / 0.1353', '0.6652 / 0.2447 / 0.0900', 'sum = 1.0000', 'greedy = A', 'Rounding：指数与概率四位小数'],
     'visual-llm-06-temperature-top-p': ['logits 0 / 2 / 1', 'T = 0.5 / 1 / 2', 'top-p = 0.8', '0.0159', '0.8668', '0.5065', 'nucleus = A / B', 'Rounding：概率四位小数'],
     'visual-llm-06-kv-cache': ['layers=2', 'length=4', 'KV heads=1', 'head dim=2', '预算 576 bytes', '64 bytes/seq', '9 并发', '128 bytes/seq', '4 并发', 'Rounding：bytes 与序列数为整数'],
@@ -1525,6 +1526,161 @@ test('maps LoRA delta cells and inference distributions to fixture-derived geome
       assert.equal(Number(bar.attributes.get('width')), Math.round(expected[index] * (visualId.endsWith('logit-softmax') ? 260 : 100)));
     });
   }
+});
+
+test('models the complete service loop, LoRA paths, RAG axes, latency diagnosis and KV capacity as structure', async () => {
+  const parse = async (name) => {
+    const path = `assets/visuals/llm-foundation/${name}.svg`;
+    return parseStrictSvg(await readFile(path, 'utf8'), path);
+  };
+  const generation = await parse('llm-06-generation-loop');
+  const generationNodes = new Set(generation.elements.filter((n) => n.attributes.get('data-region') === 'service-node').map((n) => n.attributes.get('data-node')));
+  ['input', 'prefill', 'decode', 'logits', 'sampling', 'append-kv', 'eos', 'stop-sequence', 'max-tokens', 'business-complete'].forEach((id) => assert.ok(generationNodes.has(id), id));
+  const generationEdges = new Set(generation.elements.filter((n) => n.attributes.get('data-region') === 'service-edge').map((n) => n.attributes.get('data-edge')));
+  ['input-prefill', 'prefill-decode', 'decode-logits', 'logits-sampling', 'sampling-append', 'append-decode', 'sampling-eos', 'sampling-stop', 'sampling-max', 'sampling-business'].forEach((id) => assert.ok(generationEdges.has(id), id));
+  const phaseDirections = generation.elements.filter((n) => n.attributes.get('data-region') === 'phase-direction');
+  assert.deepEqual(
+    phaseDirections.map((n) => `${n.attributes.get('data-from')}->${n.attributes.get('data-to')}`),
+    ['raw->temperature', 'temperature->softmax', 'softmax->nucleus', 'nucleus->sample'],
+  );
+  const generationFixture = fixtureForVisual('visual-llm-06-generation-loop');
+  const generationValues = Object.fromEntries(generation.elements.filter((n) => n.attributes.get('data-region') === 'generation-value').map((n) => [n.attributes.get('data-kind'), n.attributes.get('data-value')]));
+  assert.equal(generationValues.candidates, generationFixture.data.candidates.join(','));
+  assert.equal(generationValues.logits, generationFixture.data.logits.join(','));
+  assert.equal(Number(generationValues.temperature), generationFixture.data.temperature);
+  assert.equal(Number(generationValues['top-p']), generationFixture.data.topP);
+  assert.equal(Number(generationValues['uniform-sample']), generationFixture.data.uniformSample);
+  assert.equal(generationValues.selected, generationFixture.result.selected);
+  assert.equal(generationValues['next-token'], generationFixture.result.nextToken);
+  const probabilityBars = generation.elements.filter((n) => n.attributes.get('data-region') === 'generation-probability');
+  generationFixture.data.candidates.forEach((token, index) => {
+    const bar = probabilityBars.find((node) => node.attributes.get('data-token') === token);
+    assert.ok(Math.abs(Number(bar.attributes.get('data-value')) - generationFixture.result.probabilities[index]) < 1e-12);
+    assert.ok(Math.abs(Number(bar.attributes.get('width')) - generationFixture.result.probabilities[index] * 160) < 0.0001);
+  });
+  const nucleusMembers = generation.elements.filter((n) => n.attributes.get('data-region') === 'nucleus-member');
+  generationFixture.result.nucleus.forEach((token, index) => {
+    const member = nucleusMembers[index];
+    assert.equal(member.attributes.get('data-token'), token);
+    assert.ok(Math.abs(Number(member.attributes.get('data-value')) - generationFixture.result.renormalized[index]) < 1e-12);
+    assert.ok(Math.abs(Number(member.attributes.get('width')) - generationFixture.result.renormalized[index] * 160) < 0.0001);
+    if (index) {
+      const previous = nucleusMembers[index - 1];
+      assert.ok(Math.abs(Number(member.attributes.get('x')) - (Number(previous.attributes.get('x')) + Number(previous.attributes.get('width')))) < 0.0001);
+    }
+  });
+  const cdfSample = generation.elements.find((n) => n.attributes.get('data-region') === 'cdf-sample');
+  assert.equal(Number(cdfSample.attributes.get('data-value')), generationFixture.data.uniformSample);
+  assert.equal(Number(cdfSample.attributes.get('x1')), 954 + generationFixture.data.uniformSample * 160);
+  assert.equal(cdfSample.attributes.get('x1'), cdfSample.attributes.get('x2'));
+
+  const lora = await parse('llm-05-lora-update');
+  const loraNodes = new Set(lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-node').map((n) => n.attributes.get('data-node')));
+  ['x', 'frozen-w', 'a', 'b', 'delta-w', 'plus', 'adapted-output', 'train-boundary', 'deploy-boundary'].forEach((id) => assert.ok(loraNodes.has(id), id));
+  const loraEdges = new Set(lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-edge').map((n) => n.attributes.get('data-edge')));
+  ['x-w', 'x-a', 'a-b', 'b-delta', 'w-plus', 'delta-plus', 'plus-output'].forEach((id) => assert.ok(loraEdges.has(id), id));
+  const expectedLoraEdges = {
+    'x-w': ['x', 'frozen-w'], 'x-a': ['x', 'a'], 'a-b': ['a', 'b'],
+    'b-delta': ['b', 'delta-w'], 'w-plus': ['frozen-w', 'plus'],
+    'delta-plus': ['delta-w', 'plus'], 'plus-output': ['plus', 'adapted-output'],
+  };
+  lora.elements.filter((n) => n.attributes.get('data-region') === 'lora-edge').forEach((edge) => {
+    assert.deepEqual(
+      [edge.attributes.get('data-from'), edge.attributes.get('data-to')],
+      expectedLoraEdges[edge.attributes.get('data-edge')],
+    );
+  });
+
+  const rag = await parse('llm-05-rag-finetune-matrix');
+  const ragFixture = fixtureForVisual('visual-llm-05-rag-finetune-matrix');
+  const ragCells = rag.elements.filter((n) => n.attributes.get('data-region') === 'rag-axis-cell');
+  assert.equal(ragCells.length, 24);
+  ragFixture.data.cases.forEach((item, row) => {
+    const expected = { ...item.axes, hasExamples: item.hasExamples };
+    Object.entries(expected).forEach(([column, value]) => {
+      const cell = ragCells.find((node) =>
+        node.attributes.get('data-row') === String(row)
+        && node.attributes.get('data-column') === column,
+      );
+      assert.ok(cell, `${row}/${column}`);
+      assert.equal(cell.attributes.get('data-value'), String(value));
+    });
+  });
+  const ragEvaluations = rag.elements.filter((n) => n.attributes.get('data-region') === 'rag-evaluation');
+  assert.equal(ragEvaluations.length, 4);
+  ragFixture.result.decisions.forEach((decision, row) => {
+    const evaluation = ragEvaluations.find((node) => node.attributes.get('data-row') === String(row));
+    assert.equal(evaluation.attributes.get('data-value'), [
+      decision.evaluationProfile.riskControl,
+      decision.evaluationProfile.costCheck,
+      decision.nextStep,
+    ].join('|'));
+  });
+  const latency = await parse('llm-06-latency-breakdown');
+  assert.equal(latency.elements.filter((n) => n.attributes.get('data-region') === 'latency-diagnostic-row').length, 4);
+  const latencyFixture = fixtureForVisual('visual-llm-06-latency-breakdown');
+  const latencySegments = latency.elements.filter((n) => n.attributes.get('data-region') === 'latency-segment');
+  const segmentValues = [
+    latencyFixture.data.queueMs,
+    latencyFixture.data.prefillMs,
+    latencyFixture.data.firstPacketMs,
+    latencyFixture.data.decodeIntervalsMs.reduce((sum, value) => sum + value, 0),
+  ];
+  latencySegments.forEach((segment, index) => {
+    assert.equal(Number(segment.attributes.get('data-value')), segmentValues[index]);
+    assert.equal(Number(segment.attributes.get('width')), segmentValues[index] * 4);
+    if (index) {
+      const previous = latencySegments[index - 1];
+      assert.equal(
+        Number(segment.attributes.get('x')),
+        Number(previous.attributes.get('x')) + Number(previous.attributes.get('width')),
+      );
+    }
+  });
+  const p95 = latency.elements.find((n) => n.attributes.get('data-region') === 'p95-marker');
+  assert.equal(Number(p95.attributes.get('data-index')), latencyFixture.result.nearestRank);
+  assert.equal(Number(p95.attributes.get('data-value')), latencyFixture.result.p95Ms);
+  const latencyText = visibleSvgText(await readFile('assets/visuals/llm-foundation/llm-06-latency-breakdown.svg', 'utf8'), 'latency');
+  assertSvgIncludes(latencyText, 'TPOT = 20 ms');
+  const kv = await parse('llm-06-kv-cache');
+  const kvFixture = fixtureForVisual('visual-llm-06-kv-cache');
+  const capacity = Object.fromEntries(kv.elements.filter((n) => n.attributes.get('data-region') === 'kv-capacity-block').map((n) => [n.attributes.get('data-kind'), Number(n.attributes.get('data-value'))]));
+  assert.deepEqual(capacity, {
+    'bytes-per-sequence': kvFixture.result.bytesPerSequence,
+    concurrency: kvFixture.result.maxSequences,
+    'doubled-bytes-per-sequence': kvFixture.result.doubledLengthBytesPerSequence,
+    'doubled-concurrency': kvFixture.result.doubledLengthMaxSequences,
+  });
+  assert.equal(kv.elements.filter((n) => n.attributes.get('data-region') === 'kv-cache-read').length, 3);
+  [2, 3, 4].forEach((count, index) => {
+    const step = String(index + 1);
+    const recomputed = kv.elements.filter((n) =>
+      n.attributes.get('data-region') === 'kv-recompute-block'
+      && n.attributes.get('data-step') === step,
+    );
+    assert.equal(recomputed.length, count);
+    recomputed.forEach((block, blockIndex) => {
+      assert.equal(Number(block.attributes.get('data-index')), blockIndex);
+      if (blockIndex) assert.ok(Number(block.attributes.get('x')) > Number(recomputed[blockIndex - 1].attributes.get('x')));
+    });
+    const history = kv.elements.find((n) =>
+      n.attributes.get('data-region') === 'kv-prefill-history'
+      && n.attributes.get('data-step') === step,
+    );
+    const append = kv.elements.find((n) =>
+      n.attributes.get('data-region') === 'kv-append-block'
+      && n.attributes.get('data-step') === step,
+    );
+    assert.equal(Number(history.attributes.get('data-count')), count);
+    assert.equal(Number(append.attributes.get('data-count')), 1);
+    assert.equal(Number(history.attributes.get('width')), count * 42);
+    assert.ok(Number(append.attributes.get('x')) > Number(history.attributes.get('x')));
+    const edge = kv.elements.find((n) => n.attributes.get('data-edge') === `read-append-${step}`);
+    assert.deepEqual(
+      [edge.attributes.get('data-from'), edge.attributes.get('data-to')],
+      [`history-${step}`, `append-${step}`],
+    );
+  });
 });
 
 test('draws three upward-opening learning-rate landscapes with explicit axes', async () => {

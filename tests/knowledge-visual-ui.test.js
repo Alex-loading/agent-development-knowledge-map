@@ -428,6 +428,33 @@ test('renders and advances the real four-step score-mask-softmax diagram in orde
   });
 });
 
+test('renders and advances the real five-step generation diagram from 1/5 to 5/5', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const visual = knowledgeVisualsById['visual-llm-06-generation-loop'];
+  const figure = renderKnowledgeVisual(visual);
+  const image = figure.querySelector('img');
+  const status = figure.querySelector('.knowledge-visual__step-status');
+  const next = findButton(figure, '下一步');
+  const expectedTitles = [
+    '原始 logits',
+    'Temperature 缩放',
+    'Stable softmax',
+    'Top-p 最小核',
+    '逆 CDF 抽样',
+  ];
+
+  expectedTitles.forEach((title, index) => {
+    assert.equal(status.textContent, `${index + 1} / 5 · ${title}`);
+    assert.equal(
+      image.getAttribute('src'),
+      `assets/visuals/llm-foundation/llm-06-generation-loop-step-${index + 1}.svg`,
+    );
+    assert.equal(next.disabled, index === expectedTitles.length - 1);
+    if (index < expectedTitles.length - 1) next.click();
+  });
+});
+
 test('re-arms image fallback for a new step while keeping the original link on the main asset', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));

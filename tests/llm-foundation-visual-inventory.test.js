@@ -1181,6 +1181,13 @@ test('multi-head inventory derives its head count from the frozen fixture author
   );
 });
 
+test('logit-softmax inventory follows the three-candidate fixture authority', () => {
+  const row = rowsById.get('visual-llm-06-logit-softmax');
+  assert.ok(row.storyboard.includes('三个候选 token'));
+  assert.ok(!row.storyboard.includes('五个 token'));
+  assert.ok(audit.includes('五个 token→三个候选 token'));
+});
+
 test('audit records reproducible commands, human review limits and both blobs', () => {
   const placeholderPattern = /TODO|TBD|placeholder|待补|未知|unknown/iu;
   assert.ok(!placeholderPattern.test(inventory), 'inventory 不得含占位符');
