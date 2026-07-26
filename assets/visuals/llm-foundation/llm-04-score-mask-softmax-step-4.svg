@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="sms4-title sms4-desc">
+  <title id="sms4-title">步骤四：合法权重聚合 Value</title>
+  <desc id="sms4-desc">第四步累计展示投影、原始分数、缩放掩码 softmax 和最终 Value 加权输出。</desc>
+  <defs>
+    <marker id="sms4-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="52" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">步骤 4 / 4 · weighted aggregate V / output</text>
+  <text x="930" y="52" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+  <g data-region="phase-project">
+    <rect x="48" y="94" width="246" height="460" rx="20" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+    <text x="68" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8A6510">步骤 1 · 投影</text>
+    <text x="68" y="184" font-family="Trebuchet MS" font-size="26" fill="#18212B">h → Q / K / V</text>
+    <text x="68" y="238" font-family="Trebuchet MS" font-size="26" fill="#18212B">V1 1.000 / 0.000</text>
+    <text x="68" y="278" font-family="Trebuchet MS" font-size="26" fill="#18212B">V2 0.000 / 3.000</text>
+    <text x="68" y="318" font-family="Trebuchet MS" font-size="26" fill="#18212B">V3 9.000 / 9.000</text>
+    <text x="68" y="392" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Q/K 匹配</text>
+    <text x="68" y="438" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">V 被汇总</text>
+  </g>
+  <line data-region="direction-1" x1="296" y1="326" x2="322" y2="326" stroke="#18212B" stroke-width="4" marker-end="url(#sms4-arrow)"/>
+  <g data-region="phase-compare">
+    <rect x="330" y="94" width="238" height="460" rx="20" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+    <text x="350" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">步骤 2 · raw</text>
+    <text x="350" y="198" font-family="Trebuchet MS" font-size="28" fill="#18212B">0.000</text>
+    <text x="350" y="244" font-family="Trebuchet MS" font-size="28" fill="#18212B">1.386</text>
+    <text x="350" y="290" font-family="Trebuchet MS" font-size="28" fill="#18212B">18.000</text>
+    <text x="350" y="360" font-family="Trebuchet MS" font-size="26" fill="#18212B">d_k 4</text>
+    <text x="350" y="414" font-family="Trebuchet MS" font-size="26" fill="#A33A24">索引 2 = 未来</text>
+  </g>
+  <line data-region="direction-2" x1="570" y1="326" x2="596" y2="326" stroke="#18212B" stroke-width="4" marker-end="url(#sms4-arrow)"/>
+  <g data-region="phase-normalize">
+    <rect x="604" y="94" width="300" height="460" rx="20" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+    <text x="624" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8B4A65">步骤 3 · normalize</text>
+    <text x="624" y="188" font-family="Trebuchet MS" font-size="26" fill="#18212B">scaled</text>
+    <text x="624" y="228" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.000 / 0.693 / 9.000</text>
+    <text x="624" y="288" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">softmax 前 mask</text>
+    <text x="624" y="328" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.000 / 0.693 / −∞</text>
+    <text x="624" y="392" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#1F5F5D">weights</text>
+    <text x="624" y="432" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.333 / 0.667 / 0.000</text>
+    <text x="624" y="486" font-family="Trebuchet MS" font-size="26" fill="#18212B">行和 = 1.000</text>
+  </g>
+  <line data-region="direction-3" x1="906" y1="326" x2="932" y2="326" stroke="#18212B" stroke-width="4" marker-end="url(#sms4-arrow)"/>
+  <g data-region="phase-aggregate">
+    <rect x="940" y="94" width="212" height="460" rx="20" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="960" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">步骤 4 · ΣV</text>
+    <text x="960" y="196" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.333 × V1</text>
+    <text x="960" y="240" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.667 × V2</text>
+    <text x="960" y="284" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.000 × V3</text>
+    <line x1="966" y1="322" x2="1124" y2="322" stroke="#18212B" stroke-width="3"/>
+    <text x="960" y="372" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">output</text>
+    <text x="960" y="408" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">0.333</text>
+    <text x="960" y="448" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">/ 2.000</text>
+    <text x="960" y="500" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">未来 V3 零贡献</text>
+  </g>
+  <rect x="48" y="582" width="1104" height="62" rx="14" fill="#18212B"/>
+  <text x="70" y="622" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">Rounding：权重与输出三位小数；-Infinity 原样。最终输出 0.333 / 2.000。</text>
+</svg>

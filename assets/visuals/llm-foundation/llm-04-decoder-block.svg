@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="db-title db-desc">
+  <title id="db-title">GPT-like Pre-Norm decoder block 与架构边界</title>
+  <desc id="db-desc">主路径展示 decoder-only Pre-Norm，旁边对照 Post-Norm，并说明原始 Transformer 的 encoder-decoder 和 cross-attention。</desc>
+  <defs>
+    <marker id="db-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">Decoder block：架构边界与信息流</text>
+  <text x="714" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">不是所有 Transformer 的标准图</text>
+
+  <rect x="48" y="80" width="650" height="532" rx="22" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+  <text x="70" y="122" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#315C9B">GPT-like decoder-only / Pre-Norm 示例</text>
+  <rect x="244" y="146" width="258" height="54" rx="14" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+  <text x="282" y="182" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">输入表示 h</text>
+  <line x1="374" y1="202" x2="374" y2="224" stroke="#18212B" stroke-width="4" marker-end="url(#db-arrow)"/>
+  <rect x="244" y="230" width="258" height="54" rx="14" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <text x="272" y="266" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">① LN 在子层前</text>
+  <line x1="374" y1="286" x2="374" y2="308" stroke="#18212B" stroke-width="4" marker-end="url(#db-arrow)"/>
+  <rect x="174" y="314" width="398" height="60" rx="14" fill="#DCE5F2" stroke="#315C9B" stroke-width="3"/>
+  <text x="202" y="352" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">② masked multi-head self-attention</text>
+  <path d="M244 172 C94 172 94 404 244 404" fill="none" stroke="#F26B38" stroke-width="5" stroke-dasharray="12 7" marker-end="url(#db-arrow)"/>
+  <line x1="374" y1="376" x2="374" y2="398" stroke="#18212B" stroke-width="4" marker-end="url(#db-arrow)"/>
+  <circle cx="374" cy="420" r="20" fill="#FFFFFF" stroke="#F26B38" stroke-width="4"/>
+  <text x="364" y="430" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">+</text>
+  <text x="406" y="430" font-family="Trebuchet MS" font-size="26" fill="#A33A24">残差 1</text>
+  <line x1="374" y1="442" x2="374" y2="464" stroke="#18212B" stroke-width="4" marker-end="url(#db-arrow)"/>
+  <rect x="244" y="470" width="258" height="54" rx="14" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <text x="272" y="506" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">③ LN 在 FFN 前</text>
+  <line x1="374" y1="526" x2="374" y2="548" stroke="#18212B" stroke-width="4" marker-end="url(#db-arrow)"/>
+  <rect x="244" y="554" width="258" height="54" rx="14" fill="#F4E8EB" stroke="#8B4A65" stroke-width="3"/>
+  <text x="302" y="590" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">④ 逐位置 FFN</text>
+  <path d="M520 430 C642 430 642 584 508 584" fill="none" stroke="#F26B38" stroke-width="5" stroke-dasharray="12 7" marker-end="url(#db-arrow)"/>
+  <text x="520" y="470" font-family="Trebuchet MS" font-size="26" fill="#A33A24">残差 2 → 输出</text>
+
+  <rect x="726" y="80" width="426" height="220" rx="22" fill="#FFF3D5" stroke="#C58A10" stroke-width="4" stroke-dasharray="12 7"/>
+  <text x="750" y="122" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8A6510">Post-Norm 对照</text>
+  <rect x="750" y="146" width="110" height="54" rx="12" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/>
+  <rect x="882" y="146" width="110" height="54" rx="12" fill="#FFFFFF" stroke="#F26B38" stroke-width="3"/>
+  <rect x="1014" y="146" width="110" height="54" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+  <text x="770" y="182" font-family="Trebuchet MS" font-size="26" fill="#18212B">子层</text>
+  <text x="900" y="182" font-family="Trebuchet MS" font-size="26" fill="#18212B">残差 +</text>
+  <text x="1048" y="182" font-family="Trebuchet MS" font-size="26" fill="#18212B">LN</text>
+  <line x1="862" y1="173" x2="876" y2="173" stroke="#18212B" stroke-width="3" marker-end="url(#db-arrow)"/>
+  <line x1="994" y1="173" x2="1008" y2="173" stroke="#18212B" stroke-width="3" marker-end="url(#db-arrow)"/>
+  <text x="750" y="244" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">顺序：子层 → 相加 → LN</text>
+  <text x="750" y="282" font-family="Trebuchet MS" font-size="26" fill="#18212B">Pre-Norm 则先 LN 再进子层</text>
+
+  <rect x="726" y="324" width="426" height="288" rx="22" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <text x="750" y="366" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">2017 原论文语境</text>
+  <text x="750" y="408" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">encoder-decoder / Post-Norm</text>
+  <rect x="750" y="434" width="164" height="70" rx="14" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+  <text x="768" y="464" font-family="Trebuchet MS" font-size="26" fill="#18212B">Encoder</text>
+  <text x="768" y="496" font-family="Trebuchet MS" font-size="26" fill="#18212B">全可见 self</text>
+  <rect x="956" y="434" width="172" height="70" rx="14" fill="#FFFFFF" stroke="#8B4A65" stroke-width="3"/>
+  <text x="974" y="464" font-family="Trebuchet MS" font-size="26" fill="#18212B">Decoder</text>
+  <text x="974" y="496" font-family="Trebuchet MS" font-size="26" fill="#18212B">因果 self</text>
+  <line x1="916" y1="469" x2="950" y2="469" stroke="#18212B" stroke-width="5" marker-end="url(#db-arrow)"/>
+  <circle cx="938" cy="532" r="28" fill="#F4C95D" stroke="#18212B" stroke-width="4"/>
+  <text x="832" y="540" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">K,V</text>
+  <text x="908" y="540" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">cross</text>
+  <text x="1018" y="540" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Q</text>
+  <text x="750" y="578" font-family="Trebuchet MS" font-size="26" fill="#18212B">原版：双输入 cross-attention</text>
+  <text x="750" y="606" font-family="Trebuchet MS" font-size="26" fill="#18212B">GPT-like decoder-only：无此层</text>
+  <text x="48" y="642" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">边界：具体模型必须查架构资料；归一化位置与 cross-attention 不能混写。</text>
+</svg>

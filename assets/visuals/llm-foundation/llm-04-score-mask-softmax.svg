@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="sms-title sms-desc">
+  <title id="sms-title">缩放、因果掩码、softmax 与 Value 输出</title>
+  <desc id="sms-desc">完整静态流程展示原始 QK 分数、缩放、未来屏蔽、softmax 权重和 Value 加权输出。</desc>
+  <defs>
+    <marker id="sms-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="sms-mask" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#A33A24" stroke-width="4"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="48" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">QK → scale → causal mask → row softmax → ΣV</text>
+  <text x="916" y="48" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <g data-region="phase-project">
+    <rect x="48" y="78" width="236" height="230" rx="20" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+    <text x="68" y="116" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8A6510">步骤 1 · 投影</text>
+    <text x="68" y="158" font-family="Trebuchet MS" font-size="26" fill="#18212B">表示 → Q / K / V</text>
+    <text x="68" y="202" font-family="Trebuchet MS" font-size="26" fill="#18212B">V1 1.000 / 0.000</text>
+    <text x="68" y="240" font-family="Trebuchet MS" font-size="26" fill="#18212B">V2 0.000 / 3.000</text>
+    <text x="68" y="278" font-family="Trebuchet MS" font-size="26" fill="#18212B">V3 9.000 / 9.000</text>
+  </g>
+  <line x1="286" y1="190" x2="316" y2="190" stroke="#18212B" stroke-width="4" marker-end="url(#sms-arrow)"/>
+  <g data-region="phase-compare">
+    <rect x="324" y="78" width="260" height="230" rx="20" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+    <text x="344" y="116" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">步骤 2 · raw QK</text>
+    <rect data-region="raw-score-cell" data-row="0" data-column="0" data-value="0" x="344" y="150" width="64" height="64" fill="#E9F2EE" stroke="#18212B" stroke-width="3"/>
+    <rect data-region="raw-score-cell" data-row="0" data-column="1" data-value="1.3862943611198906" x="408" y="150" width="64" height="64" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/>
+    <rect data-region="raw-score-cell" data-row="0" data-column="2" data-value="18" x="472" y="150" width="64" height="64" fill="#F4E8EB" stroke="#A33A24" stroke-width="3"/>
+    <text x="356" y="192" font-family="Trebuchet MS" font-size="26" fill="#18212B">0</text>
+    <text x="416" y="192" font-family="Trebuchet MS" font-size="26" fill="#18212B">1.4</text>
+    <text x="484" y="192" font-family="Trebuchet MS" font-size="26" fill="#18212B">18</text>
+    <text x="344" y="254" font-family="Trebuchet MS" font-size="26" fill="#18212B">raw 0 / 1.386 / 18</text>
+    <text x="344" y="292" font-family="Trebuchet MS" font-size="26" fill="#18212B">d_k 4</text>
+  </g>
+  <line x1="586" y1="190" x2="616" y2="190" stroke="#18212B" stroke-width="4" marker-end="url(#sms-arrow)"/>
+  <g data-region="phase-normalize">
+    <rect x="624" y="78" width="310" height="230" rx="20" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+    <text x="644" y="116" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8B4A65">步骤 3 · scale + mask</text>
+    <text x="644" y="158" font-family="Trebuchet MS" font-size="26" fill="#18212B">除以 sqrt(d_k)</text>
+    <text x="644" y="196" font-family="Trebuchet MS" font-size="26" fill="#18212B">scaled</text>
+    <text x="644" y="226" font-family="Trebuchet MS" font-size="26" fill="#18212B">0 / 0.693 / 9</text>
+    <rect x="644" y="238" width="250" height="42" fill="url(#sms-mask)" stroke="#A33A24" stroke-width="3"/>
+    <text x="656" y="270" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">未来 2 → −∞</text>
+    <text x="644" y="300" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">softmax 前 mask</text>
+  </g>
+  <line x1="936" y1="190" x2="966" y2="190" stroke="#18212B" stroke-width="4" marker-end="url(#sms-arrow)"/>
+  <g data-region="phase-aggregate">
+    <rect x="974" y="78" width="178" height="230" rx="20" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="992" y="116" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">步骤 4 · ΣV</text>
+    <text x="992" y="158" font-family="Trebuchet MS" font-size="26" fill="#18212B">weights</text>
+    <text x="992" y="194" font-family="Trebuchet MS" font-size="26" fill="#18212B">w1 0.333</text>
+    <text x="992" y="228" font-family="Trebuchet MS" font-size="26" fill="#18212B">w2 0.667</text>
+    <text x="992" y="262" font-family="Trebuchet MS" font-size="26" fill="#18212B">w3 0.000</text>
+    <text x="992" y="298" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">ΣV 0.333 / 2</text>
+  </g>
+
+  <rect x="48" y="336" width="1104" height="270" rx="22" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/>
+  <text x="72" y="374" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">一行可重算检查</text>
+  <text x="72" y="414" font-family="Trebuchet MS" font-size="26" fill="#18212B">Input：raw QK 0.000 / 1.386 / 18.000 (= 0 / 2ln2 / 18)；d_k 4；未来索引 2</text>
+  <text x="72" y="452" font-family="Trebuchet MS" font-size="26" fill="#18212B">Method：除以 sqrt(d_k) → 未来置 −Infinity → stable softmax → 乘 V</text>
+  <text x="72" y="490" font-family="Trebuchet MS" font-size="26" fill="#18212B">mask 后 0.000 / 0.693 / −∞　weights 0.333 / 0.667 / 0.000</text>
+  <text x="72" y="528" font-family="Trebuchet MS" font-size="26" fill="#18212B">scaled 0.000 / 0.693 / 9.000　output 0.333 / 2.000</text>
+  <text x="72" y="564" font-family="Trebuchet MS" font-size="26" fill="#18212B">V1 1.000 / 0.000　V2 0.000 / 3.000　V3 9.000 / 9.000</text>
+  <text x="72" y="598" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">Rounding：权重与输出三位小数；-Infinity 原样。</text>
+  <text x="48" y="642" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">结论：未来位置先退出竞争；其余可见分数才重新归一，随后权重聚合 Value。</text>
+</svg>

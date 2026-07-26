@@ -1,5 +1,7 @@
 export const llm04Note = {
   readingMinutes: 36,
+  overviewVisualId: 'visual-llm-04-decoder-block',
+  overviewVisualSectionId: 'decoder-block-information-flow',
   introduction: '上一课已经把文本拆成 token ID、初始 embedding 与位置相关信息，也说明了有限上下文决定一次请求中哪些 token 可见。但把一串带位置的向量交给网络，并不会自动让每个位置取得自己需要的上下文。Attention 要解决的是“当前位置应该从哪些可见位置读取多少信息”，Transformer 则把这种按内容读取与逐位置非线性变换反复堆叠，逐层形成上下文化表示。本章从 Query、Key、Value 的查询—匹配—聚合直觉出发，推到缩放点积、softmax、多头和因果掩码，再比较原始 encoder-decoder Transformer 的 Post-Norm 与 GPT-like decoder-only 的 Pre-Norm 数据流。学完后，你应能不用死背公式准确解释一次 self-attention，画出 decoder-only 块的信息与梯度通路，并在站内实验中区分教学权重和真实 Attention 计算。',
   sections: [
     {
@@ -29,6 +31,12 @@ export const llm04Note = {
         '计算先让当前位置 i 的 Query 与候选位置 j 的 Key 做匹配，得到 i 对 j 的分数；这些分数经缩放、掩码和 softmax 变成权重后，再对各位置的 Value 做加权求和。因而第一道测验的答案是 Value：Q 与 K 决定“读多少”，V 承担“读什么”。如果提高某个候选的匹配分数并使其他条件不变，softmax 后它通常获得更大相对权重，它的 Value 也会对输出产生更大贡献。',
         '用矩阵形状可检查这条链而无需绑定某个模型尺寸。若输入 X 有 n 个位置，投影后 Q 与 K 可写成 n×d_k，V 写成 n×d_v；QKᵀ 产生 n×n 的位置匹配表，权重矩阵再乘 V，得到 n×d_v 的聚合结果。Q、K、V 的具体语义由训练和当前上下文共同形成，不能预先规定“这一列只找主语”或“某个向量永远存事实”。',
       ],
+      visuals: [
+        {
+          visualId: 'visual-llm-04-qkv-flow',
+          afterParagraph: 1,
+        },
+      ],
       keyPoints: [
         'Query 表达当前检索需求，Key 提供匹配索引，Value 提供最终被加权聚合的内容。',
         'QKᵀ 形成位置间匹配表，归一化权重乘 V 才产生当前位置读取到的信息。',
@@ -47,6 +55,12 @@ export const llm04Note = {
         '问题：点积分数为什么不能直接拿来加权 Value？缩放点积注意力先计算 QKᵀ，再除以 Key 向量维度 d_k 的平方根。原始论文给出的动机是：维度较大时，点积量级可能增大，把 softmax 推入梯度很小的饱和区域；除以 √d_k 用于控制这种量级。它不是对所有数值问题、梯度问题或训练不稳定的通用修复，也不能保证不同输入产生均匀权重。',
         '缩放后的每一行分数经过 softmax，转成在允许位置上非负且总和为一的相对权重。若使用掩码，应在 softmax 前把不允许的位置加上足够大的负值，理想化公式常写成“softmax(QKᵀ/√d_k + mask)”；这样被屏蔽位置的概率趋近于零，其余位置重新归一化。softmax 比较的是同一查询下候选之间的相对分数，所以某项权重变化也会连带改变其他候选的份额。',
         '做一个明确构造的二维 Value 算例：假设缩放并掩码后的两个可见分数为 0 与 ln2，则 softmax 权重恰为 1/3 与 2/3；若对应 Value 分别为 [1,0] 与 [0,3]，聚合输出就是 [1/3,2]。这个数字只用于核对“分数—归一化—加权和”的因果链，不是某个真实模型的参数或测量结果。改变第二个分数时，要先重新计算全部 softmax 权重，再重新聚合 Value，不能只局部修改一个百分比。',
+      ],
+      visuals: [
+        {
+          visualId: 'visual-llm-04-score-mask-softmax',
+          afterParagraph: 2,
+        },
       ],
       keyPoints: [
         '缩放点积用 1/√d_k 控制点积量级和 softmax 饱和风险，不承诺解决所有优化问题。',
@@ -67,6 +81,12 @@ export const llm04Note = {
         '多组投影给模型表达不同位置关系与特征组合的机会，但不能在训练前宣布某一头永久负责语法、另一头永久负责指代。训练后有些头可能呈现可描述模式，也可能功能混合或彼此冗余；观察一张注意力图只能提出分析线索。面试回答“多头比单头多什么”时，应回答多组独立投影、并行权重计算、结果拼接与输出投影，而不是背诵一组固定头职责。',
         '头数也不是能力的线性旋钮。在总表示宽度固定的常见设计里，改变头数会改变每个头的维度和计算组织；在其他配置里还可能同时改变参数量、内存访问与吞吐。多个头学到相似模式时，不代表输出必然错误，却可能反映冗余或可压缩空间。工程判断必须依赖具体架构、训练结果和任务评测，不能由“头更多”直接推出“能力按比例更强”。',
       ],
+      visuals: [
+        {
+          visualId: 'visual-llm-04-multi-head-merge',
+          afterParagraph: 1,
+        },
+      ],
       keyPoints: [
         '每个头使用独立学习投影完成一次注意力，随后拼接并经输出投影形成联合更新。',
         '头的功能不是开发者预先分配的固定语义，增加头数也不保证能力线性增长。',
@@ -80,6 +100,12 @@ export const llm04Note = {
         '问题：训练时整段文本同时存在，decoder-only 模型怎样保持下一 token 预测的因果顺序？对查询位置 i，因果掩码只允许它关注自身及更早的位置，屏蔽右侧未来 token。这样训练每个位置时可见的信息与逐 token 生成时的前缀约束一致，不会通过注意力直接读取要预测的后续答案。这正是第二道测验的核心，而不是为了缩小词表或让多个头共享参数。',
         '实现概念上，先生成所有位置匹配分数，再在 softmax 前把 j>i 的项设为不可选；于是权重表呈下三角可见结构。掩码后的权重仍会在每行允许位置内重新归一化。padding mask、权限过滤或应用层资料隔离解决的是别的问题，不能与因果掩码混为一谈；因果可见性也不会自动防止提示注入、事实错误或越权工具调用。',
         '并非所有 Attention 都使用因果掩码。原始 Transformer 的 encoder self-attention 可以读取整个源序列；其 decoder self-attention 使用未来屏蔽，decoder 到 encoder 输出的 cross-attention 则按源序列可见性读取编码结果。GPT-like decoder-only 架构没有原始 encoder 和 cross-attention，只重复因果 self-attention 块。面试追问两类架构差异时，要沿“有哪些序列、每个查询允许看到什么”回答，而不是说 encoder 与 decoder 只是名称不同。',
+      ],
+      visuals: [
+        {
+          visualId: 'visual-llm-04-causal-visibility',
+          afterParagraph: 1,
+        },
       ],
       keyPoints: [
         '因果掩码令当前位置只能读取自身及更早 token，使训练可见性符合自回归生成。',

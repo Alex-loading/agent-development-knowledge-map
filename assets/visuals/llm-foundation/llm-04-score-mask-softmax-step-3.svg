@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="sms3-title sms3-desc">
+  <title id="sms3-title">步骤三：缩放、因果掩码与 softmax</title>
+  <desc id="sms3-desc">第三步累计保留投影和原始分数，加入除以平方根 d_k、softmax 前未来屏蔽与归一化权重。</desc>
+  <defs>
+    <marker id="sms3-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="sms3-mask" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#A33A24" stroke-width="4"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="52" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">步骤 3 / 4 · scale + causal mask + row softmax</text>
+  <text x="930" y="52" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+  <g data-region="phase-project">
+    <rect x="48" y="94" width="280" height="470" rx="20" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+    <text x="68" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8A6510">步骤 1 · 投影</text>
+    <text x="68" y="184" font-family="Trebuchet MS" font-size="28" fill="#18212B">h → Q / K / V</text>
+    <text x="68" y="242" font-family="Trebuchet MS" font-size="26" fill="#18212B">V1 1.000 / 0.000</text>
+    <text x="68" y="282" font-family="Trebuchet MS" font-size="26" fill="#18212B">V2 0.000 / 3.000</text>
+    <text x="68" y="322" font-family="Trebuchet MS" font-size="26" fill="#18212B">V3 9.000 / 9.000</text>
+    <text x="68" y="394" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Q/K → 权重</text>
+    <text x="68" y="440" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">V → 被汇总</text>
+  </g>
+  <line data-region="direction-1" x1="330" y1="328" x2="366" y2="328" stroke="#18212B" stroke-width="4" marker-end="url(#sms3-arrow)"/>
+  <g data-region="phase-compare">
+    <rect x="374" y="94" width="300" height="470" rx="20" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+    <text x="394" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">步骤 2 · raw QK</text>
+    <text x="394" y="192" font-family="Trebuchet MS" font-size="28" fill="#18212B">0.000</text>
+    <text x="394" y="236" font-family="Trebuchet MS" font-size="28" fill="#18212B">1.386</text>
+    <text x="394" y="280" font-family="Trebuchet MS" font-size="28" fill="#18212B">18.000</text>
+    <text x="394" y="344" font-family="Trebuchet MS" font-size="26" fill="#18212B">未来索引 2 仍存在</text>
+    <text x="394" y="394" font-family="Trebuchet MS" font-size="26" fill="#18212B">d_k 4</text>
+    <text x="394" y="444" font-family="Trebuchet MS" font-size="26" fill="#18212B">raw 先不归一</text>
+  </g>
+  <line data-region="direction-2" x1="676" y1="328" x2="712" y2="328" stroke="#18212B" stroke-width="4" marker-end="url(#sms3-arrow)"/>
+  <g data-region="phase-normalize">
+    <rect x="720" y="94" width="432" height="470" rx="20" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+    <text x="744" y="136" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#8B4A65">步骤 3 · scale / mask / softmax</text>
+    <text x="744" y="184" font-family="Trebuchet MS" font-size="26" fill="#18212B">除以 sqrt(d_k)；sqrt(4)=2</text>
+    <text x="744" y="228" font-family="Trebuchet MS" font-size="26" fill="#18212B">scaled 0.000 / 0.693 / 9.000</text>
+    <rect x="744" y="252" width="360" height="58" fill="url(#sms3-mask)" stroke="#A33A24" stroke-width="4"/>
+    <text x="766" y="290" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">softmax 前 mask：索引 2 → −∞</text>
+    <text x="744" y="354" font-family="Trebuchet MS" font-size="26" fill="#18212B">masked 0.000 / 0.693 / −∞</text>
+    <text x="744" y="402" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">weights 0.333 / 0.667 / 0.000</text>
+    <text x="744" y="454" font-family="Trebuchet MS" font-size="26" fill="#18212B">可见位置重新归一，行和为 1</text>
+    <text x="744" y="506" font-family="Trebuchet MS" font-size="26" fill="#18212B">未来高分被合法性边界排除</text>
+  </g>
+  <rect x="48" y="590" width="1104" height="54" rx="14" fill="#18212B"/>
+  <text x="70" y="626" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">本步结论：mask 必须先于 softmax；未来位置退出竞争，其余份额才重新归一。</text>
+</svg>

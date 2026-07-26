@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="qkv-title qkv-desc">
+  <title id="qkv-title">Q 与 K 产生权重，Value 被汇总</title>
+  <desc id="qkv-desc">固定分数经 softmax 产生三分之一和三分之二权重，再加权汇总两个 Value。</desc>
+  <defs>
+    <marker id="qkv-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">Query—匹配—聚合：谁决定权重，谁被汇总？</text>
+  <text x="920" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <rect x="48" y="88" width="244" height="478" rx="22" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+  <text x="72" y="132" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8A6510">① 投影角色</text>
+  <circle cx="170" cy="220" r="58" fill="#FFFFFF" stroke="#F26B38" stroke-width="5"/>
+  <text x="147" y="232" font-family="Trebuchet MS" font-size="34" font-weight="700" fill="#18212B">Q ?</text>
+  <text x="72" y="306" font-family="Trebuchet MS" font-size="26" fill="#18212B">当前位置想匹配什么</text>
+  <rect x="78" y="350" width="184" height="70" rx="14" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+  <text x="102" y="392" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">K1 / K2</text>
+  <rect x="78" y="446" width="184" height="84" rx="14" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+  <text x="102" y="482" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">V1 / V2</text>
+  <text x="102" y="518" font-family="Trebuchet MS" font-size="26" fill="#18212B">实际信息卡</text>
+
+  <line x1="294" y1="250" x2="342" y2="250" stroke="#18212B" stroke-width="4" marker-end="url(#qkv-arrow)"/>
+  <rect x="330" y="88" width="400" height="478" rx="22" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+  <text x="374" y="132" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#315C9B">② Q × K 产生读取权重</text>
+  <text x="374" y="184" font-family="Trebuchet MS" font-size="28" fill="#18212B">scores 0.000 / 0.693</text>
+  <text x="374" y="226" font-family="Trebuchet MS" font-size="26" fill="#18212B">stable softmax</text>
+  <rect x="374" y="256" width="270" height="68" rx="14" fill="#DCE5F2" stroke="#315C9B" stroke-width="3"/>
+  <text x="394" y="299" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">weights 0.333 / 0.667</text>
+  <text x="374" y="390" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：三位小数</text>
+  <text x="374" y="424" font-family="Trebuchet MS" font-size="26" fill="#18212B">断言保留分数精度</text>
+  <text x="374" y="470" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">Q/K 不被加权写入输出</text>
+  <text x="374" y="520" font-family="Trebuchet MS" font-size="26" fill="#18212B">它们只决定“读多少”</text>
+
+  <line x1="732" y1="250" x2="742" y2="250" stroke="#18212B" stroke-width="4" marker-end="url(#qkv-arrow)"/>
+  <rect x="750" y="88" width="402" height="478" rx="22" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <text x="774" y="132" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">③ 按权重汇总 Value</text>
+  <rect x="774" y="170" width="220" height="72" rx="14" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+  <rect x="774" y="286" width="220" height="72" rx="14" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3" stroke-dasharray="10 6"/>
+  <text x="792" y="214" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">V1 1.000 / 0.000</text>
+  <text x="792" y="330" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">V2 0.000 / 3.000</text>
+  <line data-region="value-weight-edge" data-index="0" data-weight="0.3333333333333333" x1="996" y1="206" x2="1060" y2="258" stroke="#F26B38" stroke-width="6" marker-end="url(#qkv-arrow)"/>
+  <line data-region="value-weight-edge" data-index="1" data-weight="0.6666666666666666" x1="996" y1="322" x2="1060" y2="278" stroke="#315C9B" stroke-width="10" marker-end="url(#qkv-arrow)"/>
+  <rect x="1028" y="246" width="100" height="124" rx="18" fill="#FFFFFF" stroke="#18212B" stroke-width="4"/>
+  <text x="1046" y="282" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Σ V</text>
+  <text x="774" y="416" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#1F5F5D">output 0.333 / 2.000</text>
+  <text x="774" y="478" font-family="Trebuchet MS" font-size="26" fill="#18212B">0.333 × V1 + 0.667 × V2</text>
+  <text x="774" y="526" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">真正被汇总的是 Value</text>
+
+  <text x="48" y="594" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：图中三位小数；断言保留分数精度。</text>
+  <rect x="48" y="610" width="1104" height="40" rx="12" fill="#18212B"/>
+  <text x="70" y="640" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">结论：Q 与 K 决定读取权重；权重跨到对应 V，Value 加权和才成为当前位置的新信息。</text>
+</svg>

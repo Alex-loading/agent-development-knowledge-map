@@ -101,6 +101,94 @@ const EXPECTED_VISUALS = Object.freeze({
     sourceIds: ['res-google-ml', 'res-d2l-zh', 'res-karpathy'],
     fixtureId: 'fixture-llm-02-generalization-curves',
   },
+  'visual-llm-03-text-to-context': {
+    lessonId: 'llm-03',
+    sectionId: 'token-and-tokenizer',
+    kind: 'diagram',
+    role: 'overview',
+    tags: ['process'],
+    sourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-openai-cookbook'],
+    fixtureId: 'fixture-llm-03-text-to-context',
+  },
+  'visual-llm-03-tokenization-comparison': {
+    lessonId: 'llm-03',
+    sectionId: 'token-and-tokenizer',
+    kind: 'diagram',
+    role: 'comparison',
+    tags: ['boundary'],
+    sourceIds: ['res-tiktoken', 'res-hf-llm', 'res-rasbt', 'res-openai-cookbook'],
+    fixtureId: 'fixture-llm-03-tokenization-comparison',
+  },
+  'visual-llm-03-embedding-position-space': {
+    lessonId: 'llm-03',
+    sectionId: 'ids-to-embeddings',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['relationship'],
+    sourceIds: ['res-hf-llm', 'res-rasbt', 'res-3b1b-transformer', 'res-ms-genai'],
+    fixtureId: 'fixture-llm-03-embedding-position-space',
+  },
+  'visual-llm-03-context-budget': {
+    lessonId: 'llm-03',
+    sectionId: 'context-and-shared-budget',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['boundary'],
+    sourceIds: ['res-openai-cookbook', 'res-hf-llm', 'res-ms-genai'],
+    fixtureId: 'fixture-llm-03-context-budget',
+  },
+  'visual-llm-03-context-strategy-matrix': {
+    lessonId: 'llm-03',
+    sectionId: 'context-strategy-tradeoffs',
+    kind: 'diagram',
+    role: 'decision',
+    tags: ['failure-mode', 'tradeoff'],
+    sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-llm-universe', 'res-hf-llm'],
+  },
+  'visual-llm-04-decoder-block': {
+    lessonId: 'llm-04',
+    sectionId: 'decoder-block-information-flow',
+    kind: 'diagram',
+    role: 'overview',
+    tags: ['process', 'boundary'],
+    sourceIds: ['res-attention-paper', 'res-rasbt', 'res-limu-transformer', 'res-happy-llm'],
+  },
+  'visual-llm-04-qkv-flow': {
+    lessonId: 'llm-04',
+    sectionId: 'qkv-query-match-aggregate',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-3b1b-attention', 'res-attention-paper', 'res-rasbt'],
+    fixtureId: 'fixture-llm-04-qkv-flow',
+  },
+  'visual-llm-04-score-mask-softmax': {
+    lessonId: 'llm-04',
+    sectionId: 'scaled-dot-softmax',
+    kind: 'step-diagram',
+    role: 'mechanism',
+    tags: ['process'],
+    sourceIds: ['res-attention-paper', 'res-rasbt', 'res-3b1b-attention'],
+    fixtureId: 'fixture-llm-04-score-mask-softmax',
+  },
+  'visual-llm-04-multi-head-merge': {
+    lessonId: 'llm-04',
+    sectionId: 'multi-head-attention',
+    kind: 'diagram',
+    role: 'mechanism',
+    tags: ['relationship'],
+    sourceIds: ['res-attention-paper', 'res-rasbt', 'res-happy-llm'],
+    fixtureId: 'fixture-llm-04-multi-head-merge',
+  },
+  'visual-llm-04-causal-visibility': {
+    lessonId: 'llm-04',
+    sectionId: 'causal-mask',
+    kind: 'diagram',
+    role: 'boundary',
+    tags: ['failure-mode'],
+    sourceIds: ['res-attention-paper', 'res-rasbt', 'res-happy-llm'],
+    fixtureId: 'fixture-llm-04-causal-visibility',
+  },
 });
 const EXPECTED_VISUAL_IDS = Object.freeze(Object.keys(EXPECTED_VISUALS));
 const FIXTURES_BY_ID = new Map(
@@ -144,6 +232,12 @@ function unsignedIntegerAttribute(node, attribute, label) {
   const value = node.attributes.get(attribute);
   assert.match(value ?? '', /^[0-9]+$/, `${label}.${attribute} 必须是无单位非负整数`);
   return BigInt(value);
+}
+
+function finiteNumberAttribute(node, attribute, label) {
+  const value = Number(node?.attributes.get(attribute));
+  assert.ok(Number.isFinite(value), `${label}.${attribute} 必须是有限数`);
+  return value;
 }
 
 test('publishes the frozen llm-01 overview visual and explicit owner section', () => {
@@ -353,16 +447,16 @@ test('field map preserves the frozen reading order, encodings and counterexample
   assert.match(svg, /斜线阴影：两轴交叉/);
 });
 
-test('publishes exactly five frozen visual references per llm-01/02 lesson with all coverage groups', async () => {
+test('publishes exactly five frozen visual references per llm-01–04 lesson with all coverage groups', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   assert.deepEqual(
     llmFoundationVisuals.map(({ id }) => id).sort(),
     [...EXPECTED_VISUAL_IDS].sort(),
-    '01–02 registry 必须精确使用冻结的十个 visual ID',
+    '01–04 registry 必须精确使用冻结的二十个 visual ID',
   );
-  assert.equal(llmFoundationVisuals.length, 10);
+  assert.equal(llmFoundationVisuals.length, 20);
 
-  for (const lessonId of ['llm-01', 'llm-02']) {
+  for (const lessonId of ['llm-01', 'llm-02', 'llm-03', 'llm-04']) {
     const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
     const references = [
       lesson.knowledgeNote.overviewVisualId,
@@ -388,7 +482,7 @@ test('publishes exactly five frozen visual references per llm-01/02 lesson with 
   }
 });
 
-test('places every published llm-01/02 visual once in its evidence-owning real section', async () => {
+test('places every published llm-01–04 visual once in its evidence-owning real section', async () => {
   const { knowledgeVisuals } = await loadRegistry();
   const result = await validateKnowledgeVisualOwnership({
     courseRegistry: { 'llm-foundation': llmFoundation },
@@ -399,7 +493,7 @@ test('places every published llm-01/02 visual once in its evidence-owning real s
     },
   });
   assert.deepEqual(result.errors, []);
-  assert.equal(result.placements.length, 10);
+  assert.equal(result.placements.length, 20);
 
   const placementsById = new Map(
     result.placements.map((placement) => [placement.visualId, placement]),
@@ -417,9 +511,18 @@ test('places every published llm-01/02 visual once in its evidence-owning real s
     llm02.knowledgeNote.overviewVisualSectionId,
     'training-loop-and-tensor-shapes',
   );
+  const llm03 = llmFoundation.lessons.find(({ id }) => id === 'llm-03');
+  assert.equal(llm03.knowledgeNote.overviewVisualId, 'visual-llm-03-text-to-context');
+  assert.equal(llm03.knowledgeNote.overviewVisualSectionId, 'token-and-tokenizer');
+  const llm04 = llmFoundation.lessons.find(({ id }) => id === 'llm-04');
+  assert.equal(llm04.knowledgeNote.overviewVisualId, 'visual-llm-04-decoder-block');
+  assert.equal(
+    llm04.knowledgeNote.overviewVisualSectionId,
+    'decoder-block-information-flow',
+  );
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02'].includes(id),
+    ['llm-01', 'llm-02', 'llm-03', 'llm-04'].includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -438,10 +541,18 @@ test('anchors visuals after the earliest paragraph that completes their teaching
     'visual-llm-01-application-decision-stack': 2,
     'visual-llm-02-learning-rate-trajectories': 2,
     'visual-llm-02-generalization-curves': 2,
+    'visual-llm-03-tokenization-comparison': 1,
+    'visual-llm-03-embedding-position-space': 1,
+    'visual-llm-03-context-budget': 2,
+    'visual-llm-03-context-strategy-matrix': 3,
+    'visual-llm-04-qkv-flow': 1,
+    'visual-llm-04-score-mask-softmax': 2,
+    'visual-llm-04-multi-head-merge': 1,
+    'visual-llm-04-causal-visibility': 1,
   };
 
   for (const lesson of llmFoundation.lessons.filter(({ id }) =>
-    ['llm-01', 'llm-02'].includes(id),
+    ['llm-01', 'llm-02', 'llm-03', 'llm-04'].includes(id),
   )) {
     for (const section of lesson.knowledgeNote.sections) {
       for (const placement of section.visuals ?? []) {
@@ -457,9 +568,9 @@ test('anchors visuals after the earliest paragraph that completes their teaching
   }
 });
 
-test('keeps all ten llm-01/02 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
+test('keeps all twenty llm-01–04 registry records aligned with frozen roles, tags, sources and fixtures', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
-  assert.equal(llmFoundationVisuals.length, 10);
+  assert.equal(llmFoundationVisuals.length, 20);
   const countByLesson = new Map();
 
   for (const visual of llmFoundationVisuals) {
@@ -485,6 +596,8 @@ test('keeps all ten llm-01/02 registry records aligned with frozen roles, tags, 
   assert.deepEqual(Object.fromEntries(countByLesson), {
     'llm-01': 5,
     'llm-02': 5,
+    'llm-03': 5,
+    'llm-04': 5,
   });
 });
 
@@ -512,6 +625,68 @@ test('keeps the autoregressive generation main sequence and three cumulative ste
   );
 });
 
+test('keeps score-mask-softmax as four ordered, cumulative and renderable teaching steps', async () => {
+  const { knowledgeVisualsById } = await loadRegistry();
+  const visual = knowledgeVisualsById['visual-llm-04-score-mask-softmax'];
+  assert.equal(visual.kind, 'step-diagram');
+  assert.equal(validateRenderableVisual(visual).valid, true);
+  assert.deepEqual(
+    visual.steps.map(({ id, title }) => ({ id, title })),
+    [
+      { id: 'project-qkv', title: '投影：表示变成 Q、K、V' },
+      { id: 'compare-keys', title: '匹配：Q 比较允许的 K' },
+      { id: 'mask-and-normalize', title: '归一：缩放、因果掩码与 softmax' },
+      { id: 'aggregate-values', title: '汇总：按权重聚合 V' },
+    ],
+  );
+  assert.deepEqual(
+    visual.steps.map(({ assetPath }) => assetPath),
+    [1, 2, 3, 4].map(
+      (step) =>
+        `assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-${step}.svg`,
+    ),
+  );
+  for (const step of visual.steps) {
+    assert.match(step.description, /[\u3400-\u9fff]/, `${step.id} description 必须是中文`);
+    assert.match(step.alt, /[\u3400-\u9fff]/, `${step.id} alt 必须是中文`);
+  }
+
+  const cumulativeRegions = [
+    ['phase-project'],
+    ['phase-project', 'phase-compare'],
+    ['phase-project', 'phase-compare', 'phase-normalize'],
+    ['phase-project', 'phase-compare', 'phase-normalize', 'phase-aggregate'],
+  ];
+  for (let index = 0; index < visual.steps.length; index += 1) {
+    const step = visual.steps[index];
+    const parsed = parseStrictSvg(
+      await readFile(step.assetPath, 'utf8'),
+      step.assetPath,
+    );
+    for (const region of cumulativeRegions[index]) {
+      assert.ok(
+        parsed.elements.some((node) => node.attributes.get('data-region') === region),
+        `${step.id} 必须累积保留 ${region}`,
+      );
+    }
+    const visibleText = (parsed.elementsByName.get('text') ?? [])
+      .map(({ text }) => text.trim())
+      .join('\n');
+    for (let stepNumber = 1; stepNumber <= index + 1; stepNumber += 1) {
+      assertSvgIncludes(visibleText, `步骤 ${stepNumber}`);
+    }
+    if (index > 0) {
+      assert.ok(
+        parsed.elements.some(
+          (node) =>
+            node.attributes.get('data-region') === `direction-${index}`,
+        ),
+        `${step.id} 必须有进入当前阶段的方向标记`,
+      );
+    }
+  }
+});
+
 function fixtureForVisual(visualId) {
   const expected = EXPECTED_VISUALS[visualId];
   const fixture = FIXTURES_BY_ID.get(expected.fixtureId);
@@ -521,6 +696,21 @@ function fixtureForVisual(visualId) {
 
 function fixed(values, digits) {
   return values.map((value) => Number(value).toFixed(digits)).join(' / ');
+}
+
+function longestMatchEncode(rawText, vocabulary) {
+  const tokens = Object.keys(vocabulary).sort(
+    (left, right) => right.length - left.length || left.localeCompare(right),
+  );
+  const segments = [];
+  let offset = 0;
+  while (offset < rawText.length) {
+    const token = tokens.find((candidate) => rawText.startsWith(candidate, offset));
+    assert.ok(token, `教学词表无法编码 offset=${offset} 的原始文本`);
+    segments.push(token);
+    offset += token.length;
+  }
+  return { segments };
 }
 
 function assertSvgIncludes(svg, fragment) {
@@ -535,7 +725,7 @@ function visibleSvgText(svg, label) {
     .join('\n');
 }
 
-test('encodes every llm-01/02 quantitative fixture input, method, result and rounding in visible SVG text', async () => {
+test('encodes every llm-01–04 quantitative fixture input, method, result and rounding in visible SVG text', async () => {
   const checks = {
     'visual-llm-01-autoregressive-generation': (fixture, text) => {
       assertSvgIncludes(text, fixture.data.rawPrompt);
@@ -632,6 +822,135 @@ test('encodes every llm-01/02 quantitative fixture input, method, result and rou
         `分叉始于 epoch ${fixture.result.overfit.divergenceStartsAtEpoch}`,
       );
       assert.match(text, /教学示例 · 非实测/);
+    },
+    'visual-llm-03-text-to-context': (fixture, text) => {
+      assertSvgIncludes(text, '教学 tokenizer');
+      assertSvgIncludes(text, '猫坐');
+      assertSvgIncludes(text, `token ID ${fixture.data.tokenIds.join(' / ')}`);
+      for (const [id, vector] of Object.entries(fixture.data.embeddings)) {
+        assertSvgIncludes(text, `E${id} ${fixed(vector, 1)}`);
+      }
+      fixture.data.positions.forEach((vector, index) =>
+        assertSvgIncludes(text, `P${index} ${fixed(vector, 1)}`),
+      );
+      assertSvgIncludes(text, '固定查表');
+      assertSvgIncludes(text, '逐位置相加');
+      assertSvgIncludes(text, '交换 token，位置向量不移动');
+      fixture.result.ordered.forEach((vector) =>
+        assertSvgIncludes(text, fixed(vector, 1)),
+      );
+      fixture.result.swapped.forEach((vector) =>
+        assertSvgIncludes(text, fixed(vector, 1)),
+      );
+      assertSvgIncludes(text, 'ID 数值无距离语义');
+      assertSvgIncludes(text, '上下文化表示会继续更新');
+      assertSvgIncludes(text, '教学示例 · 非实测');
+    },
+    'visual-llm-03-tokenization-comparison': (fixture, text) => {
+      assertSvgIncludes(text, '教学 tokenizer A');
+      assertSvgIncludes(text, '教学 tokenizer B');
+      assertSvgIncludes(text, '不是生产模型测量');
+      assertSvgIncludes(text, 'longest-match');
+      assertSvgIncludes(text, 'Unicode code point');
+      for (const [token, id] of Object.entries(fixture.data.tokenizerAVocabulary)) {
+        assertSvgIncludes(text, `${token} ${id}`);
+      }
+      fixture.data.texts.forEach((rawText, index) => {
+        const segmentsA = longestMatchEncode(
+          rawText,
+          fixture.data.tokenizerAVocabulary,
+        ).segments;
+        assertSvgIncludes(text, `原文 ${rawText}`);
+        assertSvgIncludes(text, `A ${segmentsA.join(' / ')}`);
+        assertSvgIncludes(text, `B ${[...rawText].join(' / ')}`);
+        assertSvgIncludes(text, `计数 ${fixture.result.tokenizerACounts[index]} / ${fixture.result.tokenizerBCounts[index]}`);
+      });
+    },
+    'visual-llm-03-embedding-position-space': (fixture, text) => {
+      assertSvgIncludes(text, '教学投影');
+      assertSvgIncludes(text, '不是字典释义');
+      for (const [id, vector] of Object.entries(fixture.data.embeddings)) {
+        assertSvgIncludes(text, `E${id} ${fixed(vector, 1)}`);
+      }
+      fixture.data.positions.forEach((vector, index) =>
+        assertSvgIncludes(text, `P${index} ${fixed(vector, 1)}`),
+      );
+      fixture.data.orders.forEach((order, index) => {
+        assertSvgIncludes(text, `顺序 ${order.join(' / ')}`);
+        fixture.result.representations[index].forEach((vector) =>
+          assertSvgIncludes(text, fixed(vector, 1)),
+        );
+      });
+      assertSvgIncludes(text, 'Hᵢ = E_id + Pᵢ');
+      assertSvgIncludes(text, '上下文层继续更新 H');
+      assertSvgIncludes(text, '教学示例 · 非实测');
+    },
+    'visual-llm-03-context-budget': (fixture, text) => {
+      assertSvgIncludes(text, `窗口 ${fixture.data.window}`);
+      for (const [name, value] of Object.entries(fixture.data.allocations)) {
+        assertSvgIncludes(text, `${name} ${value}`);
+      }
+      assertSvgIncludes(text, '先预留 output / margin');
+      assertSvgIncludes(text, `baseline ${fixture.result.baselineTotal}`);
+      assertSvgIncludes(text, `retrieval +${fixture.data.retrievalIncrease}`);
+      assertSvgIncludes(text, `expanded ${fixture.result.expandedTotal}`);
+      assertSvgIncludes(text, `overflow ${fixture.result.overflow}`);
+      assertSvgIncludes(text, `trim ${fixture.data.trimFirst}`);
+      assertSvgIncludes(text, `history ${fixture.result.trimmedHistory}`);
+      assertSvgIncludes(text, `final ${fixture.result.finalTotal}`);
+      assertSvgIncludes(text, '教学预算 · 非实测');
+    },
+    'visual-llm-04-qkv-flow': (fixture, text) => {
+      assertSvgIncludes(text, `scores ${fixed(fixture.data.scaledScores, 3)}`);
+      fixture.data.values.forEach((vector, index) =>
+        assertSvgIncludes(text, `V${index + 1} ${fixed(vector, 3)}`),
+      );
+      assertSvgIncludes(text, 'stable softmax');
+      assertSvgIncludes(text, `weights ${fixed(fixture.result.weights, 3)}`);
+      assertSvgIncludes(text, `output ${fixed(fixture.result.output, 3)}`);
+      assertSvgIncludes(text, 'Q × K 产生读取权重');
+      assertSvgIncludes(text, '按权重汇总 Value');
+      assertSvgIncludes(text, '教学示例 · 非实测');
+    },
+    'visual-llm-04-score-mask-softmax': (fixture, text) => {
+      assertSvgIncludes(text, `raw QK ${fixed(fixture.data.rawQKScores, 3)}`);
+      assertSvgIncludes(text, `d_k ${fixture.data.dK}`);
+      assertSvgIncludes(text, '除以 sqrt(d_k)');
+      assertSvgIncludes(text, `scaled ${fixed(fixture.result.scaledScores, 3)}`);
+      assertSvgIncludes(text, `未来索引 ${fixture.data.maskedIndices.join(' / ')}`);
+      assertSvgIncludes(text, 'softmax 前 mask');
+      assertSvgIncludes(text, '−∞');
+      assertSvgIncludes(text, `weights ${fixed(fixture.result.weights, 3)}`);
+      fixture.data.values.forEach((vector, index) =>
+        assertSvgIncludes(text, `V${index + 1} ${fixed(vector, 3)}`),
+      );
+      assertSvgIncludes(text, `output ${fixed(fixture.result.output, 3)}`);
+      assertSvgIncludes(text, '教学示例 · 非实测');
+    },
+    'visual-llm-04-multi-head-merge': (fixture, text) => {
+      fixture.data.heads.forEach((head, index) =>
+        assertSvgIncludes(text, `H${index + 1} ${head.join(' / ')}`),
+      );
+      assertSvgIncludes(text, `W_O ${JSON.stringify(fixture.data.outputProjection)}`);
+      assertSvgIncludes(text, '沿特征维 concat');
+      assertSvgIncludes(text, `concat ${fixture.result.concatenated.join(' / ')}`);
+      assertSvgIncludes(text, `output ${fixture.result.output.join(' / ')}`);
+      assertSvgIncludes(text, '独立 Q/K/V 参数');
+      assertSvgIncludes(text, '不预设语法职责');
+      assertSvgIncludes(text, '教学示例 · 非实测');
+    },
+    'visual-llm-04-causal-visibility': (fixture, text) => {
+      assertSvgIncludes(text, `n ${fixture.data.allowedScores.length}`);
+      assertSvgIncludes(text, '0-based 规则 j≤i');
+      fixture.result.visibility.forEach((row, index) =>
+        assertSvgIncludes(text, `M${index} ${row.join(' ')}`),
+      );
+      fixture.result.rowWeights.forEach((row, index) =>
+        assertSvgIncludes(text, `W${index} ${fixed(row, 4)}`),
+      );
+      assertSvgIncludes(text, '逐行仅对可见位置 softmax');
+      assertSvgIncludes(text, '错误全可见 = 未来答案泄漏');
+      assertSvgIncludes(text, '教学示例 · 非实测');
     },
   };
 
@@ -863,7 +1182,196 @@ test('separates a fixture-derived incompatible elementwise edge from compatible 
   assertSvgIncludes(visibleText, '可静默广播 · 需确认语义');
 });
 
-test('keeps every llm-01/02 SVG label at least 26px with a 32px viewBox safety margin', async () => {
+test('maps tokenizer fixture segments to proportional structured blocks', async () => {
+  const visualId = 'visual-llm-03-tokenization-comparison';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = `assets/visuals/llm-foundation/llm-03-tokenization-comparison.svg`;
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+
+  fixture.data.texts.forEach((rawText, textIndex) => {
+    const segmentsByTokenizer = {
+      A: longestMatchEncode(rawText, fixture.data.tokenizerAVocabulary).segments,
+      B: [...rawText],
+    };
+    for (const [tokenizer, segments] of Object.entries(segmentsByTokenizer)) {
+      const row = parsed.elements.find(
+        (node) =>
+          node.name === 'g'
+          && node.attributes.get('data-region') === 'token-row'
+          && node.attributes.get('data-text-index') === String(textIndex)
+          && node.attributes.get('data-tokenizer') === tokenizer,
+      );
+      assert.ok(row, `text ${textIndex} tokenizer ${tokenizer} 缺少结构化行`);
+      const originX = finiteNumberAttribute(row, 'data-origin-x', 'token-row');
+      const scale = finiteNumberAttribute(row, 'data-scale', 'token-row');
+      const blocks = parsed.elements.filter(
+        (node) =>
+          node.name === 'rect'
+          && node.attributes.get('data-region') === 'token-segment'
+          && node.attributes.get('data-text-index') === String(textIndex)
+          && node.attributes.get('data-tokenizer') === tokenizer,
+      );
+      assert.equal(blocks.length, segments.length);
+      let codePointOffset = 0;
+      blocks.forEach((block, index) => {
+        const codePointCount = [...segments[index]].length;
+        assert.equal(block.attributes.get('data-index'), String(index));
+        assert.equal(block.attributes.get('data-count'), String(codePointCount));
+        assert.equal(finiteNumberAttribute(block, 'x', 'token-segment'), originX + codePointOffset * scale);
+        assert.equal(finiteNumberAttribute(block, 'width', 'token-segment'), codePointCount * scale);
+        codePointOffset += codePointCount;
+      });
+    }
+  });
+});
+
+test('maps embedding fixture vectors to declared teaching-projection coordinates', async () => {
+  const visualId = 'visual-llm-03-embedding-position-space';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = `assets/visuals/llm-foundation/llm-03-embedding-position-space.svg`;
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+
+  fixture.result.representations.forEach((vectors, orderIndex) => {
+    const plot = parsed.elements.find(
+      (node) =>
+        node.name === 'g'
+        && node.attributes.get('data-region') === 'embedding-plot'
+        && node.attributes.get('data-row') === String(orderIndex),
+    );
+    assert.ok(plot, `order ${orderIndex} 缺少教学投影坐标声明`);
+    const originX = finiteNumberAttribute(plot, 'data-origin-x', 'embedding-plot');
+    const originY = finiteNumberAttribute(plot, 'data-origin-y', 'embedding-plot');
+    const scale = finiteNumberAttribute(plot, 'data-scale', 'embedding-plot');
+    vectors.forEach(([vectorX, vectorY], positionIndex) => {
+      const point = parsed.elements.find(
+        (node) =>
+          node.name === 'circle'
+          && node.attributes.get('data-region') === 'embedding-point'
+          && node.attributes.get('data-row') === String(orderIndex)
+          && node.attributes.get('data-column') === String(positionIndex),
+      );
+      assert.ok(point, `order ${orderIndex} position ${positionIndex} 缺少点`);
+      assert.equal(finiteNumberAttribute(point, 'data-vector-x', 'embedding-point'), vectorX);
+      assert.equal(finiteNumberAttribute(point, 'data-vector-y', 'embedding-point'), vectorY);
+      assert.equal(finiteNumberAttribute(point, 'cx', 'embedding-point'), originX + vectorX * scale);
+      assert.equal(finiteNumberAttribute(point, 'cy', 'embedding-point'), originY - vectorY * scale);
+    });
+  });
+});
+
+test('derives context-budget block positions and overflow width from the fixture', async () => {
+  const visualId = 'visual-llm-03-context-budget';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = `assets/visuals/llm-foundation/llm-03-context-budget.svg`;
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const windowBar = parsed.elements.find(
+    (node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'budget-window',
+  );
+  assert.ok(windowBar);
+  const originX = finiteNumberAttribute(windowBar, 'x', 'budget-window');
+  const width = finiteNumberAttribute(windowBar, 'width', 'budget-window');
+  const scale = width / fixture.data.window;
+  const displayOrder = ['output', 'margin', 'system', 'user', 'history', 'retrieval'];
+  let start = 0;
+  for (const allocation of displayOrder) {
+    const block = parsed.elements.find(
+      (node) =>
+        node.name === 'rect'
+        && node.attributes.get('data-region') === `budget-block-${allocation}`,
+    );
+    const value = fixture.data.allocations[allocation];
+    assert.ok(block, allocation);
+    assert.equal(finiteNumberAttribute(block, 'data-value', allocation), value);
+    assert.equal(finiteNumberAttribute(block, 'data-start', allocation), start);
+    assert.equal(finiteNumberAttribute(block, 'x', allocation), originX + start * scale);
+    assert.equal(finiteNumberAttribute(block, 'width', allocation), value * scale);
+    start += value;
+  }
+  assert.equal(start, fixture.result.baselineTotal);
+  const overflow = parsed.elements.find(
+    (node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'budget-overflow',
+  );
+  assert.equal(finiteNumberAttribute(overflow, 'data-value', 'budget-overflow'), fixture.result.overflow);
+  assert.equal(finiteNumberAttribute(overflow, 'width', 'budget-overflow'), fixture.result.overflow * scale);
+});
+
+test('maps QKV weights to edge widths and keeps Value vectors as the aggregation source', async () => {
+  const visualId = 'visual-llm-04-qkv-flow';
+  const fixture = fixtureForVisual(visualId);
+  const assetPath = `assets/visuals/llm-foundation/llm-04-qkv-flow.svg`;
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  fixture.result.weights.forEach((weight, index) => {
+    const edge = parsed.elements.find(
+      (node) =>
+        node.name === 'line'
+        && node.attributes.get('data-region') === 'value-weight-edge'
+        && node.attributes.get('data-index') === String(index),
+    );
+    assert.ok(edge, `weight ${index} 缺少 Value 聚合边`);
+    assert.ok(
+      Math.abs(finiteNumberAttribute(edge, 'data-weight', 'value-weight-edge') - weight) < 1e-12,
+    );
+    assert.ok(
+      Math.abs(finiteNumberAttribute(edge, 'stroke-width', 'value-weight-edge') - (2 + 12 * weight)) < 1e-6,
+    );
+  });
+});
+
+test('lays out raw attention scores and causal visibility as fixture-derived matrix grids', async () => {
+  const scoreFixture = fixtureForVisual('visual-llm-04-score-mask-softmax');
+  const scorePath = `assets/visuals/llm-foundation/llm-04-score-mask-softmax.svg`;
+  const scoreParsed = parseStrictSvg(await readFile(scorePath, 'utf8'), scorePath);
+  const scoreCells = scoreParsed.elements.filter(
+    (node) => node.name === 'rect' && node.attributes.get('data-region') === 'raw-score-cell',
+  );
+  assert.equal(scoreCells.length, scoreFixture.data.rawQKScores.length);
+  const scoreStartX = Math.min(...scoreCells.map((cell) => finiteNumberAttribute(cell, 'x', 'raw-score-cell')));
+  const scoreY = finiteNumberAttribute(scoreCells[0], 'y', 'raw-score-cell');
+  const scoreCellSize = finiteNumberAttribute(scoreCells[0], 'width', 'raw-score-cell');
+  scoreCells.forEach((cell, column) => {
+    assert.equal(cell.attributes.get('data-column'), String(column));
+    assert.ok(
+      Math.abs(finiteNumberAttribute(cell, 'data-value', 'raw-score-cell') - scoreFixture.data.rawQKScores[column]) < 1e-12,
+    );
+    assert.equal(finiteNumberAttribute(cell, 'x', 'raw-score-cell'), scoreStartX + column * scoreCellSize);
+    assert.equal(finiteNumberAttribute(cell, 'y', 'raw-score-cell'), scoreY);
+    assert.equal(finiteNumberAttribute(cell, 'height', 'raw-score-cell'), scoreCellSize);
+  });
+
+  const causalFixture = fixtureForVisual('visual-llm-04-causal-visibility');
+  const causalPath = `assets/visuals/llm-foundation/llm-04-causal-visibility.svg`;
+  const causalParsed = parseStrictSvg(await readFile(causalPath, 'utf8'), causalPath);
+  const grid = causalParsed.elements.find(
+    (node) => node.name === 'g' && node.attributes.get('data-region') === 'causal-grid',
+  );
+  assert.ok(grid);
+  const originX = finiteNumberAttribute(grid, 'data-origin-x', 'causal-grid');
+  const originY = finiteNumberAttribute(grid, 'data-origin-y', 'causal-grid');
+  const cellSize = finiteNumberAttribute(grid, 'data-cell-size', 'causal-grid');
+  causalFixture.result.visibility.forEach((row, rowIndex) => {
+    row.forEach((value, columnIndex) => {
+      const cell = causalParsed.elements.find(
+        (node) =>
+          node.name === 'rect'
+          && node.attributes.get('data-region') === 'visibility-cell'
+          && node.attributes.get('data-row') === String(rowIndex)
+          && node.attributes.get('data-column') === String(columnIndex),
+      );
+      assert.ok(cell, `M[${rowIndex}][${columnIndex}]`);
+      assert.equal(finiteNumberAttribute(cell, 'data-value', 'visibility-cell'), value);
+      assert.equal(finiteNumberAttribute(cell, 'x', 'visibility-cell'), originX + columnIndex * cellSize);
+      assert.equal(finiteNumberAttribute(cell, 'y', 'visibility-cell'), originY + rowIndex * cellSize);
+      assert.equal(finiteNumberAttribute(cell, 'width', 'visibility-cell'), cellSize);
+      assert.equal(finiteNumberAttribute(cell, 'height', 'visibility-cell'), cellSize);
+    });
+  });
+});
+
+test('keeps every llm-01–04 SVG label at least 26px with a 32px viewBox safety margin', async () => {
   const { llmFoundationVisuals } = await loadLlmRegistry();
   for (const visual of llmFoundationVisuals) {
     for (const assetPath of assetPathsFor(visual)) {

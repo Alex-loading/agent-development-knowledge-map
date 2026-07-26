@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="sms1-title sms1-desc">
+  <title id="sms1-title">步骤一：表示投影为 Q、K、V</title>
+  <desc id="sms1-desc">第一步只展开投影角色，显示 Q 和三组 K、V，为后续匹配与聚合准备。</desc>
+  <defs>
+    <marker id="sms1-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="52" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">步骤 1 / 4 · Project representations into Q/K/V</text>
+  <text x="930" y="52" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+  <g data-region="phase-project">
+    <rect x="48" y="92" width="1104" height="480" rx="24" fill="#FFFFFF" stroke="#C58A10" stroke-width="4"/>
+    <rect x="84" y="250" width="220" height="120" rx="20" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+    <text x="116" y="300" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">输入表示 h</text>
+    <text x="116" y="344" font-family="Trebuchet MS" font-size="26" fill="#18212B">同一序列状态</text>
+    <line x1="306" y1="310" x2="390" y2="310" stroke="#18212B" stroke-width="5" marker-end="url(#sms1-arrow)"/>
+    <circle cx="470" cy="190" r="62" fill="#F4E8EB" stroke="#F26B38" stroke-width="5"/>
+    <text x="442" y="202" font-family="Trebuchet MS" font-size="36" font-weight="700" fill="#18212B">Q ?</text>
+    <rect x="408" y="278" width="140" height="64" rx="14" fill="#DCE5F2" stroke="#315C9B" stroke-width="4"/>
+    <text x="442" y="320" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">K1–K3</text>
+    <rect x="408" y="386" width="140" height="64" rx="14" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="442" y="428" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">V1–V3</text>
+    <line x1="548" y1="310" x2="618" y2="310" stroke="#18212B" stroke-width="5" marker-end="url(#sms1-arrow)"/>
+    <rect x="630" y="130" width="478" height="360" rx="20" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="658" y="174" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">角色边界</text>
+    <text x="658" y="222" font-family="Trebuchet MS" font-size="28" fill="#18212B">Q/K：后续产生匹配分数</text>
+    <text x="658" y="270" font-family="Trebuchet MS" font-size="28" fill="#18212B">V：后续按合法权重被汇总</text>
+    <text x="658" y="326" font-family="Trebuchet MS" font-size="26" fill="#18212B">V1 1.000 / 0.000</text>
+    <text x="658" y="366" font-family="Trebuchet MS" font-size="26" fill="#18212B">V2 0.000 / 3.000</text>
+    <text x="658" y="406" font-family="Trebuchet MS" font-size="26" fill="#18212B">V3 9.000 / 9.000</text>
+    <text x="658" y="454" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">未来 V3 此时尚未被屏蔽</text>
+  </g>
+  <rect x="48" y="596" width="1104" height="48" rx="14" fill="#18212B"/>
+  <text x="70" y="630" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">本步结论：先分清计算角色；Q/K 用于匹配，最终聚合对象是 Value。</text>
+</svg>

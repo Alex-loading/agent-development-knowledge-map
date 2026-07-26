@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="mhm-title mhm-desc">
+  <title id="mhm-title">多头并行、拼接与输出投影</title>
+  <desc id="mhm-desc">同一输入进入两个独立参数头，输出沿特征维拼接后乘输出矩阵，得到联合更新。</desc>
+  <defs>
+    <marker id="mhm-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="mhm-stripe" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#315C9B" stroke-width="4"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">多头注意力：独立投影、并行读取、特征维合并</text>
+  <text x="920" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <rect x="48" y="244" width="190" height="116" rx="20" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+  <text x="76" y="292" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">同一输入 X</text>
+  <text x="76" y="334" font-family="Trebuchet MS" font-size="26" fill="#18212B">并行分叉</text>
+  <line x1="240" y1="280" x2="306" y2="196" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <line x1="240" y1="326" x2="306" y2="410" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+
+  <rect x="316" y="104" width="292" height="196" rx="22" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <text x="340" y="146" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">Head 1</text>
+  <text x="340" y="188" font-family="Trebuchet MS" font-size="26" fill="#18212B">独立 Q/K/V 参数</text>
+  <rect data-region="head-output" data-head="1" data-value="2" x="340" y="214" width="238" height="60" rx="14" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+  <text x="370" y="254" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">H1 2</text>
+
+  <rect x="316" y="326" width="292" height="196" rx="22" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="4"/>
+  <text x="340" y="368" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#315C9B">Head 2</text>
+  <text x="340" y="410" font-family="Trebuchet MS" font-size="26" fill="#18212B">独立 Q/K/V 参数</text>
+  <rect data-region="head-output" data-head="2" data-value="3" x="340" y="436" width="238" height="60" rx="14" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+  <text x="370" y="476" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">H2 3</text>
+  <text x="316" y="570" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">不预设语法职责</text>
+
+  <line x1="610" y1="244" x2="682" y2="282" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <line x1="610" y1="466" x2="682" y2="322" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <rect x="692" y="194" width="210" height="216" rx="22" fill="#FFFFFF" stroke="#18212B" stroke-width="4"/>
+  <text x="716" y="238" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">沿特征维 concat</text>
+  <rect x="722" y="272" width="72" height="72" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <rect x="794" y="272" width="72" height="72" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="4"/>
+  <text x="748" y="318" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">2</text>
+  <text x="820" y="318" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">3</text>
+  <text x="716" y="388" font-family="Trebuchet MS" font-size="28" fill="#18212B">concat 2 / 3</text>
+
+  <line x1="904" y1="302" x2="948" y2="302" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <rect x="958" y="116" width="194" height="372" rx="22" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+  <text x="980" y="160" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8B4A65">输出投影</text>
+  <text x="980" y="210" font-family="Trebuchet MS" font-size="26" fill="#18212B">W_O</text>
+  <text x="980" y="258" font-family="Trebuchet MS" font-size="26" fill="#18212B">2×2 输出矩阵</text>
+  <rect x="980" y="290" width="150" height="90" rx="14" fill="#FFFFFF" stroke="#8B4A65" stroke-width="3"/>
+  <text x="988" y="350" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">output 5 / -1</text>
+  <text x="700" y="558" font-family="Trebuchet MS" font-size="26" fill="#18212B">W_O [[1,1],[1,-1]]</text>
+  <text x="700" y="590" font-family="Trebuchet MS" font-size="26" fill="#18212B">output 5 / -1　整数算例不舍入。</text>
+
+  <rect x="48" y="598" width="1104" height="46" rx="14" fill="#18212B"/>
+  <text x="70" y="630" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">Method：沿特征维 concat，再做行向量乘输出投影；多头不是人工分工，也不是顺序投票。</text>
+</svg>

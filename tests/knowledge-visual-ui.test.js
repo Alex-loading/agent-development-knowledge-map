@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { llmFoundation } from '../src/data/llm-foundation.js';
+import { knowledgeVisualsById } from '../src/data/visuals/index.js';
 import { renderKnowledgeNote } from '../src/ui/knowledge-note.js';
 import { renderKnowledgeVisual } from '../src/ui/knowledge-visual.js';
 import {
@@ -396,6 +397,35 @@ test('advances a three-step diagram one step at a time without parsing descripti
   assert.ok(figure.querySelector('details').textContent.includes(
     threeStepVisual.longDescription,
   ));
+});
+
+test('renders and advances the real four-step score-mask-softmax diagram in order', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const visual = knowledgeVisualsById['visual-llm-04-score-mask-softmax'];
+  const figure = renderKnowledgeVisual(visual);
+  const image = figure.querySelector('img');
+  const status = figure.querySelector('.knowledge-visual__step-status');
+  const description = figure.querySelector('.knowledge-visual__step-description');
+  const next = findButton(figure, '下一步');
+  const expectedTitles = [
+    '投影：表示变成 Q、K、V',
+    '匹配：Q 比较允许的 K',
+    '归一：缩放、因果掩码与 softmax',
+    '汇总：按权重聚合 V',
+  ];
+
+  expectedTitles.forEach((title, index) => {
+    assert.equal(status.textContent, `${index + 1} / 4 · ${title}`);
+    assert.equal(
+      image.getAttribute('src'),
+      `assets/visuals/llm-foundation/llm-04-score-mask-softmax-step-${index + 1}.svg`,
+    );
+    assert.match(image.getAttribute('alt'), /[\u3400-\u9fff]/);
+    assert.match(description.textContent, /[\u3400-\u9fff]/);
+    assert.equal(next.disabled, index === expectedTitles.length - 1);
+    if (index < expectedTitles.length - 1) next.click();
+  });
 });
 
 test('re-arms image fallback for a new step while keeping the original link on the main asset', (t) => {
