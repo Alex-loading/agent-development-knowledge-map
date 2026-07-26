@@ -15,10 +15,8 @@ export const VISUAL_ROLES = Object.freeze([
   'overview',
   'mechanism',
   'process',
-  'relationship',
   'comparison',
   'boundary',
-  'failure',
   'decision',
 ]);
 
@@ -38,11 +36,15 @@ const PERMISSION_BASES = Object.freeze([
   'public-domain',
   'official-media-policy',
 ]);
+const LICENSE_PERMISSION_BASES = Object.freeze([
+  'license',
+  'public-domain',
+]);
 
 const VISUAL_ID = /^visual-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STEP_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ASSET_SEGMENT = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
-const ASSET_EXTENSION = /\.(svg|webp|png|jpeg)$/;
+const ASSET_EXTENSION = /\.(svg|webp|png|jpe?g)$/;
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object') return false;
@@ -149,11 +151,26 @@ function assetExtension(assetPath) {
 function duplicateValues(values) {
   const seen = new Set();
   const duplicates = new Set();
-  for (const value of values) {
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index];
     if (seen.has(value)) duplicates.add(value);
     seen.add(value);
   }
   return duplicates;
+}
+
+function hasSparseSlots(values) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (!Object.hasOwn(values, index)) return true;
+  }
+  return false;
+}
+
+function hasInvalidArrayValue(values, isInvalid) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (!Object.hasOwn(values, index) || isInvalid(values[index])) return true;
+  }
+  return false;
 }
 
 function freezePlainValue(value, seen) {
@@ -213,6 +230,26 @@ export function validateVisualAsset(asset) {
   if (!VISUAL_PROVENANCE.includes(record.provenance)) {
     errors.push('provenance is not allowed');
   }
+  const knownProvenance = VISUAL_PROVENANCE.includes(record.provenance);
+  const sourcedProvenance = (
+    knownProvenance
+    && record.provenance !== 'original-synthesis'
+  );
+  if (
+    ['diagram', 'step-diagram'].includes(record.kind)
+    && knownProvenance
+    && record.provenance !== 'original-synthesis'
+  ) {
+    errors.push(`${record.kind} must use original-synthesis provenance`);
+  }
+  if (
+    record.kind === 'source-figure'
+    && record.provenance === 'original-synthesis'
+  ) {
+    errors.push(
+      'source-figure kind requires licensed-reproduction, licensed-adaptation, or official-media provenance',
+    );
+  }
   if (!isSafeLocalAssetPath(record.assetPath)) {
     errors.push(
       'assetPath must be a safe local visual asset under assets/visuals/',
@@ -222,28 +259,39 @@ export function validateVisualAsset(asset) {
     errors.push('verifiedAt must be a valid YYYY-MM-DD calendar date');
   }
 
-  if (
-    !Array.isArray(record.sourceIds)
-    || record.sourceIds.length === 0
-    || record.sourceIds.some((sourceId) => !isText(sourceId))
-  ) {
+  if (!Array.isArray(record.sourceIds) || record.sourceIds.length === 0) {
     errors.push('sourceIds must be a non-empty array of non-empty strings');
-  } else if (duplicateValues(record.sourceIds).size > 0) {
-    errors.push('sourceIds must contain unique values');
+  } else {
+    const sparseSourceIds = hasSparseSlots(record.sourceIds);
+    if (sparseSourceIds) {
+      errors.push('sourceIds must not contain sparse slots');
+    }
+    if (hasInvalidArrayValue(record.sourceIds, (sourceId) => !isText(sourceId))) {
+      errors.push('sourceIds must be a non-empty array of non-empty strings');
+    }
+    if (!sparseSourceIds && duplicateValues(record.sourceIds).size > 0) {
+      errors.push('sourceIds must contain unique values');
+    }
   }
 
   if (record.tags !== undefined) {
     if (!Array.isArray(record.tags)) {
       errors.push('tags must be an array');
     } else {
-      if (record.tags.some((tag) => !VISUAL_TAGS.includes(tag))) {
+      const sparseTags = hasSparseSlots(record.tags);
+      if (sparseTags) {
+        errors.push('tags must not contain sparse slots');
+      }
+      if (hasInvalidArrayValue(
+        record.tags,
+        (tag) => !VISUAL_TAGS.includes(tag),
+      )) {
         errors.push('every tag must be allowed');
       }
-      if (duplicateValues(record.tags).size > 0) {
+      if (!sparseTags && duplicateValues(record.tags).size > 0) {
         errors.push('tags must contain unique values');
       }
-      const primaryTag = record.role === 'failure' ? 'failure-mode' : record.role;
-      if (record.tags.includes(primaryTag)) {
+      if (record.tags.includes(record.role)) {
         errors.push('a tag must not repeat the primary role');
       }
     }
@@ -258,10 +306,6 @@ export function validateVisualAsset(asset) {
     }
   }
 
-  const sourcedProvenance = (
-    VISUAL_PROVENANCE.includes(record.provenance)
-    && record.provenance !== 'original-synthesis'
-  );
   if (sourcedProvenance) {
     if (record.kind !== 'source-figure') {
       errors.push('sourced provenance requires source-figure kind');
@@ -309,11 +353,36 @@ export function validateVisualAsset(asset) {
         'official-media requires an official-media-policy permission basis',
       );
     }
+    if (
+      permission.basis === 'official-media-policy'
+      && record.provenance !== 'official-media'
+    ) {
+      errors.push(
+        'official-media-policy permission basis requires official-media provenance',
+      );
+    }
+    if (
+      ['licensed-reproduction', 'licensed-adaptation'].includes(
+        record.provenance,
+      )
+      && !LICENSE_PERMISSION_BASES.includes(permission.basis)
+    ) {
+      errors.push(
+        'licensed provenance requires a license or public-domain permission basis',
+      );
+    }
 
     if (!Array.isArray(record.modifications)) {
       errors.push('modifications must be recorded as an array');
     } else {
-      if (record.modifications.some((modification) => !isText(modification))) {
+      const sparseModifications = hasSparseSlots(record.modifications);
+      if (sparseModifications) {
+        errors.push('modifications must not contain sparse slots');
+      }
+      if (hasInvalidArrayValue(
+        record.modifications,
+        (modification) => !isText(modification),
+      )) {
         errors.push('every modification must be a non-empty string');
       }
       if (
@@ -323,8 +392,19 @@ export function validateVisualAsset(asset) {
         errors.push('explicit modification permission is required');
       }
       if (
+        record.provenance === 'licensed-reproduction'
+        && record.modifications.length > 0
+      ) {
+        errors.push(
+          'licensed-reproduction requires modifications to be empty; use licensed-adaptation for modified media',
+        );
+      }
+      if (
         record.provenance === 'licensed-adaptation'
-        && record.modifications.length === 0
+        && (
+          record.modifications.length === 0
+          || sparseModifications
+        )
       ) {
         errors.push(
           'licensed-adaptation requires at least one recorded modification',
@@ -334,17 +414,19 @@ export function validateVisualAsset(asset) {
   }
 
   if (record.kind === 'step-diagram') {
-    if (record.provenance !== 'original-synthesis') {
-      errors.push('step-diagram must use original-synthesis provenance');
-    }
     if (!Array.isArray(record.steps) || record.steps.length < 2) {
       errors.push('step-diagram requires at least two steps');
     }
 
     if (Array.isArray(record.steps)) {
+      if (hasSparseSlots(record.steps)) {
+        errors.push('steps must not contain sparse slots');
+      }
       const stepIds = [];
       const stepAssetPaths = [];
-      for (const [index, stepValue] of record.steps.entries()) {
+      for (let index = 0; index < record.steps.length; index += 1) {
+        if (!Object.hasOwn(record.steps, index)) continue;
+        const stepValue = record.steps[index];
         const step = isPlainObject(stepValue) ? stepValue : {};
         if (!isPlainObject(stepValue)) {
           errors.push(`steps[${index}] must be a plain object`);

@@ -33,7 +33,7 @@ const licensedReproduction = {
   ...original,
   id: 'visual-llm-01-source-figure',
   kind: 'source-figure',
-  role: 'relationship',
+  role: 'mechanism',
   tags: ['comparison'],
   provenance: 'licensed-reproduction',
   credit: 'Example Author，CC BY 4.0',
@@ -67,10 +67,8 @@ test('exports frozen visual kind, provenance, primary role and secondary tag all
     'overview',
     'mechanism',
     'process',
-    'relationship',
     'comparison',
     'boundary',
-    'failure',
     'decision',
   ]);
   assert.deepEqual(VISUAL_TAGS, [
@@ -95,13 +93,16 @@ test('accepts a complete original teaching diagram', () => {
   assert.deepEqual(validateVisualAsset(original), []);
 });
 
-test('accepts every frozen primary role plus relationship and failure', () => {
+test('accepts only the frozen primary role vocabulary', () => {
   for (const role of VISUAL_ROLES) {
     assert.deepEqual(
       errorsFor({ role, tags: [] }),
       [],
       `${role} should be an allowed primary role`,
     );
+  }
+  for (const role of ['relationship', 'failure', 'failure-mode', 'tradeoff']) {
+    assert.match(errorsFor({ role, tags: [] }).join(' '), /role.*allowed/i, role);
   }
 });
 
@@ -146,6 +147,7 @@ test('requires non-empty unique source IDs', () => {
     errorsFor({ sourceIds: ['res-ms-ai', 'res-ms-ai'] }).join(' '),
     /sourceIds.*unique/i,
   );
+  assert.match(errorsFor({ sourceIds: Array(1) }).join(' '), /sourceIds.*sparse/i);
 });
 
 test('requires a stable kebab-case visual ID', () => {
@@ -236,6 +238,7 @@ test('rejects remote, embedded and ambiguous local asset paths', () => {
     'assets/visuals/llm-foundation/figure.svg',
     'assets/visuals/llm-foundation/figure.webp',
     'assets/visuals/llm-foundation/figure.png',
+    'assets/visuals/llm-foundation/figure.jpg',
     'assets/visuals/llm-foundation/figure.jpeg',
   ]) {
     assert.deepEqual(errorsFor({ assetPath }), [], assetPath);
@@ -293,6 +296,7 @@ test('returns field errors for malformed URL, date and path value types', () => 
 
 test('validates secondary tags against the frozen tag vocabulary', () => {
   assert.deepEqual(errorsFor({ tags: undefined }), []);
+  assert.deepEqual(errorsFor({ tags: ['relationship', 'failure-mode'] }), []);
   assert.deepEqual(errorsFor({ tags: ['failure-mode', 'tradeoff'] }), []);
   assert.match(errorsFor({ tags: 'boundary' }).join(' '), /tags.*array/i);
   assert.match(errorsFor({ tags: ['unknown'] }).join(' '), /tag.*allowed/i);
@@ -301,13 +305,10 @@ test('validates secondary tags against the frozen tag vocabulary', () => {
     /tag.*primary role/i,
   );
   assert.match(
-    errorsFor({ role: 'failure', tags: ['failure-mode'] }).join(' '),
-    /tag.*primary role/i,
-  );
-  assert.match(
     errorsFor({ tags: ['relationship', 'relationship'] }).join(' '),
     /tags.*unique/i,
   );
+  assert.match(errorsFor({ tags: Array(1) }).join(' '), /tags.*sparse/i);
 });
 
 test('rejects permission claims on original synthesis assets', () => {
@@ -326,6 +327,43 @@ test('rejects permission claims on original synthesis assets', () => {
 
 test('accepts a fully attributed licensed reproduction', () => {
   assert.deepEqual(validateVisualAsset(licensedReproduction), []);
+  assert.deepEqual(
+    validateVisualAsset({
+      ...licensedReproduction,
+      permission: {
+        ...licensedReproduction.permission,
+        basis: 'public-domain',
+        name: 'Public domain dedication',
+        url: 'https://example.com/public-domain',
+      },
+    }),
+    [],
+  );
+});
+
+test('enforces the kind and provenance matrix in both directions', () => {
+  assert.match(
+    validateVisualAsset({
+      ...original,
+      kind: 'source-figure',
+    }).join(' '),
+    /source-figure.*licensed|source-figure.*official/i,
+  );
+  assert.match(
+    validateVisualAsset({
+      ...licensedReproduction,
+      kind: 'diagram',
+    }).join(' '),
+    /diagram.*original-synthesis|sourced provenance.*source-figure/i,
+  );
+  assert.match(
+    validateVisualAsset({
+      ...licensedReproduction,
+      kind: 'step-diagram',
+      steps: [{}, {}],
+    }).join(' '),
+    /step-diagram.*original-synthesis/i,
+  );
 });
 
 test('requires source-figure kind and complete third-party attribution', () => {
@@ -427,6 +465,32 @@ test('requires modification permission whenever modifications are recorded', () 
   );
 });
 
+test('licensed reproduction forbids modifications and official media policy', () => {
+  assert.match(
+    validateVisualAsset({
+      ...licensedReproduction,
+      permission: {
+        ...licensedReproduction.permission,
+        allowsModification: true,
+      },
+      modifications: ['translated labels'],
+    }).join(' '),
+    /licensed-reproduction.*modifications.*empty|use licensed-adaptation/i,
+  );
+  assert.match(
+    validateVisualAsset({
+      ...licensedReproduction,
+      permission: {
+        ...licensedReproduction.permission,
+        basis: 'official-media-policy',
+        name: 'Example media policy',
+        url: 'https://example.com/media-policy',
+      },
+    }).join(' '),
+    /official-media-policy.*official-media/i,
+  );
+});
+
 test('requires a licensed adaptation to record at least one modification', () => {
   assert.match(
     validateVisualAsset({
@@ -439,6 +503,55 @@ test('requires a licensed adaptation to record at least one modification', () =>
       modifications: [],
     }).join(' '),
     /licensed-adaptation.*modification/i,
+  );
+  assert.match(
+    validateVisualAsset({
+      ...licensedReproduction,
+      provenance: 'licensed-adaptation',
+      permission: {
+        ...licensedReproduction.permission,
+        allowsModification: true,
+      },
+      modifications: Array(1),
+    }).join(' '),
+    /modifications.*sparse/i,
+  );
+});
+
+test('licensed adaptation accepts only modifiable license or public domain basis', () => {
+  const adaptation = {
+    ...licensedReproduction,
+    provenance: 'licensed-adaptation',
+    permission: {
+      ...licensedReproduction.permission,
+      allowsModification: true,
+    },
+    modifications: ['translated labels'],
+  };
+  assert.deepEqual(validateVisualAsset(adaptation), []);
+  assert.deepEqual(
+    validateVisualAsset({
+      ...adaptation,
+      permission: {
+        ...adaptation.permission,
+        basis: 'public-domain',
+        name: 'Public domain dedication',
+        url: 'https://example.com/public-domain',
+      },
+    }),
+    [],
+  );
+  assert.match(
+    validateVisualAsset({
+      ...adaptation,
+      permission: {
+        ...adaptation.permission,
+        basis: 'official-media-policy',
+        name: 'Example media policy',
+        url: 'https://example.com/media-policy',
+      },
+    }).join(' '),
+    /official-media-policy.*official-media/i,
   );
 });
 
@@ -467,6 +580,24 @@ test('requires official media to cite a redistributable official media policy', 
       permission: { ...official.permission, allowsRedistribution: false },
     }).join(' '),
     /redistribution permission/i,
+  );
+  assert.deepEqual(
+    validateVisualAsset({
+      ...official,
+      permission: {
+        ...official.permission,
+        allowsModification: true,
+      },
+      modifications: ['cropped whitespace'],
+    }),
+    [],
+  );
+  assert.match(
+    validateVisualAsset({
+      ...official,
+      modifications: ['cropped whitespace'],
+    }).join(' '),
+    /modification permission/i,
   );
 });
 
@@ -510,6 +641,18 @@ test('requires original provenance and at least two complete steps', () => {
       steps: [{}, {}],
     }).join(' '),
     /step-diagram.*original-synthesis/i,
+  );
+  const sparseSteps = Array(2);
+  sparseSteps[1] = {
+    id: 'second',
+    title: '第二步',
+    description: '展示第二步发生的机制。',
+    alt: '第二步机制图',
+    assetPath: 'assets/visuals/llm-foundation/second.svg',
+  };
+  assert.match(
+    errorsFor({ kind: 'step-diagram', steps: sparseSteps }).join(' '),
+    /steps.*sparse/i,
   );
   for (const field of ['id', 'title', 'description', 'alt', 'assetPath']) {
     const step = {
