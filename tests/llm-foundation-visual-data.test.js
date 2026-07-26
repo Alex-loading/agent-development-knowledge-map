@@ -38,7 +38,6 @@ const SAFE_SVG_ELEMENTS = new Set([
 const SAFE_SVG_ATTRIBUTES = new Set([
   'id',
   'xmlns',
-  'xmlns:xlink',
   'width',
   'height',
   'viewBox',
@@ -100,9 +99,18 @@ const SAFE_SVG_ATTRIBUTES = new Set([
   'marker-mid',
   'marker-end',
   'href',
-  'xlink:href',
-  'xml:space',
 ]);
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const LOCAL_FRAGMENT_ATTRIBUTES = new Set([
+  'fill',
+  'stroke',
+  'clip-path',
+  'mask',
+  'marker-start',
+  'marker-mid',
+  'marker-end',
+]);
+const LOCAL_HREF_ELEMENTS = new Set(['use', 'textPath']);
 
 async function loadRegistry() {
   return import('../src/data/visuals/index.js');
@@ -145,117 +153,211 @@ function attributeValue(tag, attribute) {
   return match?.[2];
 }
 
-function assertAllowedSvgMarkup(svg, label) {
-  assert.doesNotMatch(svg, /<!--|<!\[CDATA\[|<\?(?!xml\b)/i, `${label}: 禁止注释、CDATA 与处理指令`);
-  const tagPattern = /<\s*(\/?)\s*([A-Za-z_][\w:.-]*)([\s\S]*?)>/g;
-
-  for (const match of svg.matchAll(tagPattern)) {
-    const [, closing, elementName, rawAttributes] = match;
-    assert.ok(SAFE_SVG_ELEMENTS.has(elementName), `${label}: 禁止 SVG 元素 ${elementName}`);
-    if (closing) {
-      assert.equal(rawAttributes.trim(), '', `${label}: 闭合标签不得携带内容`);
+function findTagEnd(svg, start, label) {
+  let quote = null;
+  for (let index = start + 1; index < svg.length; index += 1) {
+    const character = svg[index];
+    if (quote !== null) {
+      assert.notEqual(character, '<', `${label}: 属性值不得包含标签起始符`);
+      if (character === quote) quote = null;
       continue;
     }
+    if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '>') {
+      return index;
+    } else {
+      assert.notEqual(character, '<', `${label}: 标签不得嵌套`);
+    }
+  }
+  assert.fail(`${label}: 标签或属性值必须闭合`);
+}
 
-    let attributes = rawAttributes.trim();
-    if (attributes.endsWith('/')) attributes = attributes.slice(0, -1).trim();
-    const seenAttributes = new Set();
-    while (attributes.length > 0) {
-      const nameMatch = /^([A-Za-z_][\w:.-]*)/.exec(attributes);
-      assert.ok(nameMatch, `${label}:${elementName}: 属性语法无效`);
-      const attributeName = nameMatch[1];
-      attributes = attributes.slice(nameMatch[0].length).trimStart();
-      assert.equal(attributes[0], '=', `${label}:${elementName}.${attributeName}: 属性必须赋值`);
-      attributes = attributes.slice(1).trimStart();
-      assert.ok(['"', "'"].includes(attributes[0]), `${label}:${elementName}.${attributeName}: 属性值必须加引号`);
-      const quote = attributes[0];
-      const closingQuote = attributes.indexOf(quote, 1);
-      assert.ok(closingQuote > 0, `${label}:${elementName}.${attributeName}: 属性值必须闭合`);
-      const value = attributes.slice(1, closingQuote);
-      attributes = attributes.slice(closingQuote + 1).trimStart();
+function parseSvgAttributes(rawAttributes, elementName, isRoot, label) {
+  const attributes = new Map();
+  let cursor = 0;
 
-      assert.ok(
-        SAFE_SVG_ATTRIBUTES.has(attributeName),
-        `${label}:${elementName}: 禁止 SVG 属性 ${attributeName}`,
-      );
-      assert.ok(!seenAttributes.has(attributeName), `${label}:${elementName}.${attributeName}: 属性不得重复`);
-      seenAttributes.add(attributeName);
+  while (cursor < rawAttributes.length) {
+    const whitespace = /^[\t\n\r ]+/.exec(rawAttributes.slice(cursor));
+    assert.ok(whitespace, `${label}:${elementName}: 属性之间必须用 XML 空白分隔`);
+    cursor += whitespace[0].length;
+    if (cursor === rawAttributes.length) break;
 
-      if (!attributeName.startsWith('xmlns')) {
-        assert.doesNotMatch(
+    const nameMatch = /^[A-Za-z_][A-Za-z0-9_.-]*/.exec(rawAttributes.slice(cursor));
+    assert.ok(nameMatch, `${label}:${elementName}: 属性语法无效或包含命名空间前缀`);
+    const attributeName = nameMatch[0];
+    cursor += attributeName.length;
+    const beforeEquals = /^[\t\n\r ]*/.exec(rawAttributes.slice(cursor))[0];
+    cursor += beforeEquals.length;
+    assert.equal(
+      rawAttributes[cursor],
+      '=',
+      `${label}:${elementName}.${attributeName}: 属性必须赋值且不得带命名空间前缀`,
+    );
+    cursor += 1;
+    const afterEquals = /^[\t\n\r ]*/.exec(rawAttributes.slice(cursor))[0];
+    cursor += afterEquals.length;
+    const quote = rawAttributes[cursor];
+    assert.ok(
+      quote === '"' || quote === "'",
+      `${label}:${elementName}.${attributeName}: 属性值必须加引号`,
+    );
+    const closingQuote = rawAttributes.indexOf(quote, cursor + 1);
+    assert.ok(closingQuote > cursor, `${label}:${elementName}.${attributeName}: 属性值必须闭合`);
+    const value = rawAttributes.slice(cursor + 1, closingQuote);
+    cursor = closingQuote + 1;
+
+    assert.doesNotMatch(value, /[<>]/, `${label}:${elementName}.${attributeName}: 属性值含非法标记`);
+    assert.ok(
+      SAFE_SVG_ATTRIBUTES.has(attributeName),
+      `${label}:${elementName}: 禁止 SVG 属性 ${attributeName}`,
+    );
+    assert.ok(!attributes.has(attributeName), `${label}:${elementName}.${attributeName}: 属性不得重复`);
+
+    if (attributeName === 'xmlns') {
+      assert.ok(isRoot, `${label}: xmlns 只允许出现在根 svg`);
+      assert.equal(value, SVG_NAMESPACE, `${label}: 根 svg 必须使用固定 SVG namespace`);
+    } else {
+      if (attributeName === 'href' || LOCAL_FRAGMENT_ATTRIBUTES.has(attributeName)) {
+        assert.match(
           value,
-          /(?:https?|ftp|file)\s*:|\/\/|(?:data|javascript)\s*:/i,
-          `${label}:${elementName}.${attributeName}: 禁止外部或嵌入引用`,
+          /^[\x20-\x7e]*$/,
+          `${label}:${elementName}.${attributeName}: 引用属性只允许可见 ASCII，禁止 Unicode 编码混淆`,
+        );
+      }
+      assert.doesNotMatch(value, /@import\b/i, `${label}:${elementName}.${attributeName}: 禁止 CSS @import`);
+      assert.doesNotMatch(
+        value,
+        /(?:https?|ftp|file)\s*:|\/\/|(?:data|javascript)\s*:/i,
+        `${label}:${elementName}.${attributeName}: 禁止外部或嵌入引用`,
+      );
+      if (attributeName === 'href') {
+        assert.ok(
+          LOCAL_HREF_ELEMENTS.has(elementName),
+          `${label}:${elementName}.href: 仅 use/textPath 可引用本地片段`,
+        );
+        assert.match(value, /^#[A-Za-z_][\w.-]*$/, `${label}:${elementName}.href: 只能引用本地片段`);
+      }
+      if (/url\s*\(/i.test(value)) {
+        assert.ok(
+          LOCAL_FRAGMENT_ATTRIBUTES.has(attributeName),
+          `${label}:${elementName}.${attributeName}: 此属性禁止 url()`,
+        );
+        assert.match(
+          value,
+          /^url\(#[A-Za-z_][\w.-]*\)$/,
+          `${label}:${elementName}.${attributeName}: url() 只能精确引用本地片段`,
         );
       }
     }
+
+    attributes.set(attributeName, value);
   }
+
+  return attributes;
+}
+
+function parseStrictSvg(svg, label) {
+  assert.equal(svg, svg.normalize('NFC'), `${label}: 必须使用 NFC Unicode`);
+  assert.doesNotMatch(svg, /\uFFFD/, `${label}: 必须是有效 UTF-8`);
+  assert.doesNotMatch(svg, /\\/, `${label}: 禁止 CSS 转义与反斜线`);
+  assert.doesNotMatch(svg, /&/, `${label}: 禁止 XML/HTML entity 与字符引用`);
+  assert.doesNotMatch(svg, /%/, `${label}: 禁止百分号编码混淆`);
+  assert.doesNotMatch(svg, /<\?/, `${label}: 禁止所有 XML 处理指令`);
+  assert.doesNotMatch(svg, /<!/, `${label}: 禁止注释、CDATA、DOCTYPE 与 ENTITY`);
+  assert.doesNotMatch(
+    svg,
+    /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/,
+    `${label}: 禁止控制符与不可见方向符编码混淆`,
+  );
+
+  const stack = [];
+  const ids = new Set();
+  const localReferences = [];
+  let cursor = 0;
+  let rootSeen = false;
+  let rootClosed = false;
+  let rootTag = '';
+
+  while (cursor < svg.length) {
+    if (svg[cursor] !== '<') {
+      const nextTag = svg.indexOf('<', cursor);
+      const end = nextTag === -1 ? svg.length : nextTag;
+      if (stack.length === 0) {
+        assert.match(svg.slice(cursor, end), /^[\t\n\r ]*$/, `${label}: 根节点外禁止文本`);
+      }
+      cursor = end;
+      continue;
+    }
+
+    const tagEnd = findTagEnd(svg, cursor, label);
+    const tag = svg.slice(cursor, tagEnd + 1);
+    if (tag.startsWith('</')) {
+      const closing = /^<\/([A-Za-z_][A-Za-z0-9_.-]*)[\t\n\r ]*>$/.exec(tag);
+      assert.ok(closing, `${label}: 闭合标签语法无效或包含命名空间前缀`);
+      assert.ok(stack.length > 0, `${label}: 出现无对应开始标签的 ${closing[1]}`);
+      assert.equal(stack.at(-1), closing[1], `${label}: ${closing[1]} 闭合顺序错误`);
+      stack.pop();
+      if (stack.length === 0) rootClosed = true;
+    } else {
+      const content = tag.slice(1, -1);
+      const selfClosing = content.endsWith('/');
+      const opening = (selfClosing ? content.slice(0, -1) : content).trimEnd();
+      const nameMatch = /^[A-Za-z_][A-Za-z0-9_.-]*/.exec(opening);
+      assert.ok(nameMatch, `${label}: 开始标签语法无效或包含命名空间前缀`);
+      const elementName = nameMatch[0];
+      assert.ok(SAFE_SVG_ELEMENTS.has(elementName), `${label}: 禁止 SVG 元素 ${elementName}`);
+      assert.ok(!rootClosed, `${label}: 根 svg 闭合后不得再有元素`);
+
+      const isRoot = stack.length === 0;
+      if (isRoot) {
+        assert.ok(!rootSeen, `${label}: 只能有一个根 svg`);
+        assert.equal(elementName, 'svg', `${label}: 根节点必须是 svg`);
+        assert.ok(!selfClosing, `${label}: 根 svg 必须有完整闭合标签`);
+        rootSeen = true;
+        rootTag = tag;
+      } else {
+        assert.notEqual(elementName, 'svg', `${label}: 禁止嵌套 svg 根元素`);
+      }
+
+      const attributes = parseSvgAttributes(
+        opening.slice(elementName.length),
+        elementName,
+        isRoot,
+        label,
+      );
+      if (isRoot) {
+        assert.equal(attributes.get('xmlns'), SVG_NAMESPACE, `${label}: 根 svg 缺少固定 xmlns`);
+      }
+      const id = attributes.get('id');
+      if (id !== undefined) {
+        assert.match(id, /^[A-Za-z_][\w.-]*$/, `${label}:${elementName}.id: id 语法无效`);
+        assert.ok(!ids.has(id), `${label}: id ${id} 不得重复`);
+        ids.add(id);
+      }
+      const href = attributes.get('href');
+      if (href !== undefined) localReferences.push(href.slice(1));
+      for (const attributeName of LOCAL_FRAGMENT_ATTRIBUTES) {
+        const match = /^url\(#([A-Za-z_][\w.-]*)\)$/.exec(attributes.get(attributeName) ?? '');
+        if (match) localReferences.push(match[1]);
+      }
+      if (!selfClosing) stack.push(elementName);
+    }
+    cursor = tagEnd + 1;
+  }
+
+  assert.ok(rootSeen, `${label}: 缺少根 svg`);
+  assert.equal(stack.length, 0, `${label}: 存在未闭合元素 ${stack.at(-1) ?? ''}`);
+  assert.ok(rootClosed, `${label}: 根 svg 必须完整闭合`);
+  for (const reference of localReferences) {
+    assert.ok(ids.has(reference), `${label}: 本地片段 #${reference} 必须引用真实 id`);
+  }
+  return { rootTag };
 }
 
 function assertSafeSvg(svg, visual, assetPath) {
   const label = `${visual.id}:${assetPath}`;
-  assert.doesNotMatch(svg, /\uFFFD/, `${label}: 必须是有效 UTF-8`);
-  assert.doesNotMatch(
-    svg,
-    /<\s*(?:script|foreignObject)\b/i,
-    `${label}: 禁止主动内容容器`,
-  );
-  assert.doesNotMatch(
-    svg,
-    /\s+on[a-z][\w:.-]*\s*=/i,
-    `${label}: 禁止任何 on* 事件属性`,
-  );
-  assert.doesNotMatch(
-    svg,
-    /<!\s*(?:DOCTYPE|ENTITY)\b/i,
-    `${label}: 禁止 DOCTYPE 与 XML entity 声明`,
-  );
-  assert.doesNotMatch(svg, /(?:data|javascript)\s*:/i, `${label}: 禁止嵌入或脚本 URL`);
-  assert.doesNotMatch(svg, /@import\b/i, `${label}: 禁止 CSS @import`);
-  assertAllowedSvgMarkup(svg, label);
-
-  const externalStyleReference = /(?:https?|ftp|file)\s*:|\/\/|(?:data|javascript)\s*:/i;
-  for (const styleElement of svg.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
-    assert.doesNotMatch(
-      styleElement[1],
-      externalStyleReference,
-      `${label}: style 元素禁止外部引用`,
-    );
-  }
-  for (const styleAttribute of svg.matchAll(
-    /\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi,
-  )) {
-    assert.doesNotMatch(
-      styleAttribute[1] ?? styleAttribute[2],
-      externalStyleReference,
-      `${label}: style 属性禁止外部引用`,
-    );
-  }
-
-  for (const match of svg.matchAll(
-    /\b(?:href|xlink:href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
-  )) {
-    const target = match[1] ?? match[2] ?? match[3];
-    assert.match(target, /^#[A-Za-z_][\w:.-]*$/, `${label}: href 只能引用本地片段`);
-  }
-  for (const match of svg.matchAll(
-    /\burl\s*\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]+))\s*\)/gi,
-  )) {
-    const target = match[1] ?? match[2] ?? match[3];
-    assert.match(target, /^#[A-Za-z_][\w:.-]*$/, `${label}: url() 只能引用本地片段`);
-  }
-  assert.doesNotMatch(
-    svg,
-    /\burl\s*\([^)]*(?:https?:|\/\/|data\s*:|javascript\s*:)/i,
-    `${label}: 禁止远程或嵌入 url()`,
-  );
-
-  const normalized = svg.replace(/^\uFEFF?\s*<\?xml[^?]*\?>\s*/i, '').trim();
-  assert.match(normalized, /^<svg\b[\s\S]*<\/svg>$/i, `${label}: 根节点必须是 svg`);
-  assert.equal((normalized.match(/<svg\b/gi) ?? []).length, 1, `${label}: 只能有一个根 svg`);
-  assert.equal((normalized.match(/<\/svg\s*>/gi) ?? []).length, 1, `${label}: svg 必须完整闭合`);
-
-  const rootTag = /^<svg\b[^>]*>/i.exec(normalized)?.[0] ?? '';
+  const { rootTag } = parseStrictSvg(svg, label);
   const titleMatches = [...svg.matchAll(/<title\b([^>]*)>/gi)];
   const descMatches = [...svg.matchAll(/<desc\b([^>]*)>/gi)];
   assert.equal(titleMatches.length, 1, `${label}: 必须有一个 title`);
@@ -439,7 +541,7 @@ test('keeps every SVG structurally accessible and free from active or remote con
 test('SVG safety checks reject whitespace-obscured active content and external references', () => {
   const visual = { id: 'visual-test', width: 1200, height: 675 };
   const safeShell = (content, rootAttributes = '') => (
-    `<svg width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="t d" ${rootAttributes}>`
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="t d" ${rootAttributes}>`
     + `<title id="t">标题</title><desc id="d">描述</desc>${content}</svg>`
   );
   const unsafeCases = [
@@ -467,6 +569,61 @@ test('SVG safety checks reject whitespace-obscured active content and external r
 
   for (const svg of unsafeCases) {
     assert.throws(() => assertSafeSvg(svg, visual, 'unsafe.svg'), assert.AssertionError);
+  }
+});
+
+test('strict SVG subset rejects encoded URLs, processing instructions and malformed element stacks', () => {
+  const visual = { id: 'visual-test', width: 1200, height: 675 };
+  const safeShell = (content) => (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+    + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+    + `<title id="t">标题</title><desc id="d">描述</desc>${content}</svg>`
+  );
+  const fullyCssEscapedUrl = safeShell(
+    '<rect fill="\\75\\72\\6c\\28\\68\\74\\74\\70\\73\\3a\\2f\\2f'
+    + '\\65\\78\\61\\6d\\70\\6c\\65\\2e\\63\\6f\\6d\\2f\\61\\2e'
+    + '\\73\\76\\67\\29"/>',
+  );
+  const numericEntityUrl = safeShell(
+    '<rect fill="u&#114;l(&#104;&#116;&#116;&#112;&#115;&#58;&#47;&#47;'
+    + 'example.com/a.svg)"/>',
+  );
+  const unsafeCases = new Map([
+    ['fully CSS-escaped URL', fullyCssEscapedUrl],
+    ['numeric entity URL', numericEntityUrl],
+    ['percent-encoded URL', safeShell('<rect fill="url%28https%3A%2F%2Fexample.com/a.svg%29"/>')],
+    ['Unicode-confused URL', safeShell('<rect fill="ｕｒｌ（ｈｔｔｐｓ：／／example.com/a.svg）"/>')],
+    ['XML declaration PI', `<?xml version="1.0"?>${safeShell('')}`],
+    ['local xml-stylesheet PI', `<?xml-stylesheet href="#local-css"?>${safeShell('')}`],
+    ['comment', safeShell('<!-- hidden -->')],
+    ['CDATA', safeShell('<text><![CDATA[hidden]]></text>')],
+    ['namespace-prefixed attribute', safeShell('<use xlink:href="#shape"/>')],
+    ['unclosed element', safeShell('<g><rect/>')],
+    ['misordered closing tags', safeShell('<g><rect></g></rect>')],
+    ['two root elements', `${safeShell('')}${safeShell('')}`],
+    ['text before root', `unexpected${safeShell('')}`],
+    ['text after root', `${safeShell('')}unexpected`],
+    ['whitespace after opening bracket', safeShell('< g/>')],
+  ]);
+
+  const withoutSvgNamespace = (svg) => svg.replace('http://www.w3.org/2000/svg', '');
+  assert.doesNotMatch(
+    withoutSvgNamespace(fullyCssEscapedUrl),
+    /:\/\//,
+    'CSS escape negative must hide :// outside the fixed SVG namespace',
+  );
+  assert.doesNotMatch(
+    withoutSvgNamespace(numericEntityUrl),
+    /:\/\//,
+    'entity negative must hide :// outside the fixed SVG namespace',
+  );
+  assert.doesNotThrow(() => assertSafeSvg(safeShell('<g><rect/></g>'), visual, 'safe.svg'));
+  for (const [name, svg] of unsafeCases) {
+    assert.throws(
+      () => assertSafeSvg(svg, visual, `${name}.svg`),
+      assert.AssertionError,
+      name,
+    );
   }
 });
 
