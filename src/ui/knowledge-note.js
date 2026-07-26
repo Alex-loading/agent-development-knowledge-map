@@ -1,4 +1,8 @@
 import { button, element, externalLink } from './dom.js';
+import { knowledgeVisualsById } from '../data/visuals/index.js';
+import { renderKnowledgeVisual } from './knowledge-visual.js';
+
+const STABLE_VISUAL_ID = /^visual-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function isHttpsResource(resource) {
   try {
@@ -64,7 +68,163 @@ function renderMisconceptions(misconceptions) {
   ]);
 }
 
-export function renderKnowledgeNote(course, lesson) {
+function ownDataValue(record, key) {
+  if (!record || typeof record !== 'object') return undefined;
+  const descriptor = Object.getOwnPropertyDescriptor(record, key);
+  return descriptor && 'value' in descriptor ? descriptor.value : undefined;
+}
+
+function visualFromRegistry(visualsById, visualId) {
+  if (
+    typeof visualId !== 'string'
+    || !STABLE_VISUAL_ID.test(visualId)
+  ) {
+    return undefined;
+  }
+  if (visualsById instanceof Map) {
+    return visualsById.has(visualId) ? visualsById.get(visualId) : undefined;
+  }
+  if (
+    !visualsById
+    || typeof visualsById !== 'object'
+    || !Object.hasOwn(visualsById, visualId)
+  ) {
+    return undefined;
+  }
+  return ownDataValue(visualsById, visualId);
+}
+
+function safeIdentifier(value, fallback) {
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function renderVisualDiagnostic({
+  lessonId,
+  sectionId,
+  visualId,
+  reason,
+}) {
+  return element('p', {
+    className: 'knowledge-visual-diagnostic data-diagnostic',
+    text: [
+      `视觉引用诊断：lesson=${safeIdentifier(lessonId, '[unknown lesson]')}`,
+      `section=${safeIdentifier(sectionId, '[unknown section]')}`,
+      `visual=${safeIdentifier(visualId, '[缺失 visualId]')}`,
+      `原因：${reason}`,
+    ].join('；'),
+    attrs: {
+      role: 'status',
+      'data-visual-diagnostic': 'true',
+    },
+  });
+}
+
+function resolveVisualNode({
+  visualsById,
+  lessonId,
+  sectionId,
+  visualId,
+}) {
+  if (typeof visualId !== 'string' || visualId.length === 0) {
+    return renderVisualDiagnostic({
+      lessonId,
+      sectionId,
+      visualId,
+      reason: '缺少有效 visualId',
+    });
+  }
+  if (!STABLE_VISUAL_ID.test(visualId)) {
+    return renderVisualDiagnostic({
+      lessonId,
+      sectionId,
+      visualId,
+      reason: 'visualId 不符合稳定 ID 格式',
+    });
+  }
+
+  const visual = visualFromRegistry(visualsById, visualId);
+  if (!visual || typeof visual !== 'object') {
+    return renderVisualDiagnostic({
+      lessonId,
+      sectionId,
+      visualId,
+      reason: 'visualId 未在视觉注册表中解析',
+    });
+  }
+  return renderKnowledgeVisual(visual);
+}
+
+function renderSectionContent(section, lessonId, visualsById) {
+  const paragraphs = section.paragraphs ?? [];
+  if (!Array.isArray(section.visuals)) {
+    return paragraphs.map((paragraph) => element('p', { text: paragraph }));
+  }
+
+  const nodesAfterParagraph = paragraphs.map(() => []);
+  const trailingDiagnostics = [];
+
+  for (let index = 0; index < section.visuals.length; index += 1) {
+    const reference = Object.hasOwn(section.visuals, index)
+      ? section.visuals[index]
+      : null;
+    const visualId = ownDataValue(reference, 'visualId');
+    const afterParagraph = ownDataValue(reference, 'afterParagraph');
+
+    if (typeof visualId !== 'string' || visualId.length === 0) {
+      const diagnostic = renderVisualDiagnostic({
+        lessonId,
+        sectionId: section.id,
+        visualId,
+        reason: '缺少有效 visualId',
+      });
+      if (
+        Number.isInteger(afterParagraph)
+        && afterParagraph >= 0
+        && afterParagraph < paragraphs.length
+      ) {
+        nodesAfterParagraph[afterParagraph].push(diagnostic);
+      } else {
+        trailingDiagnostics.push(diagnostic);
+      }
+      continue;
+    }
+
+    if (
+      !Number.isInteger(afterParagraph)
+      || afterParagraph < 0
+      || afterParagraph >= paragraphs.length
+    ) {
+      trailingDiagnostics.push(renderVisualDiagnostic({
+        lessonId,
+        sectionId: section.id,
+        visualId,
+        reason: 'afterParagraph 必须是正文范围内的非负整数',
+      }));
+      continue;
+    }
+
+    nodesAfterParagraph[afterParagraph].push(resolveVisualNode({
+      visualsById,
+      lessonId,
+      sectionId: section.id,
+      visualId,
+    }));
+  }
+
+  return [
+    ...paragraphs.flatMap((paragraph, index) => [
+      element('p', { text: paragraph }),
+      ...nodesAfterParagraph[index],
+    ]),
+    ...trailingDiagnostics,
+  ];
+}
+
+export function renderKnowledgeNote(
+  course,
+  lesson,
+  { visualsById = knowledgeVisualsById } = {},
+) {
   const note = lesson.knowledgeNote;
   const diagnostics = new Set();
   const resourcesById = new Map((course.resources ?? []).map((resource) => [resource.id, resource]));
@@ -78,7 +238,7 @@ export function renderKnowledgeNote(course, lesson) {
 
     return element('section', { className: 'knowledge-note__section' }, [
       heading,
-      ...(section.paragraphs ?? []).map((paragraph) => element('p', { text: paragraph })),
+      ...renderSectionContent(section, lesson.id, visualsById),
       bulletList(section.keyPoints, 'key-point-list'),
       renderCallout(section.callout),
       renderSources(section, resourcesById, diagnostics),
@@ -101,10 +261,21 @@ export function renderKnowledgeNote(course, lesson) {
       : element('p', { className: 'empty-note', text: '本章目录正在整理。' }),
   ]);
 
+  const overviewVisualId = ownDataValue(note, 'overviewVisualId');
+  const overview = Object.hasOwn(note, 'overviewVisualId')
+    ? resolveVisualNode({
+      visualsById,
+      lessonId: lesson.id,
+      sectionId: 'overview',
+      visualId: overviewVisualId,
+    })
+    : null;
+
   return element('div', { className: 'knowledge-note' }, [
     element('section', { className: 'knowledge-note__introduction' }, [
       element('p', { text: note.introduction }),
     ]),
+    overview,
     toc,
     ...sections,
     diagnostics.size
