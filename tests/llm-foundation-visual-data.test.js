@@ -1652,29 +1652,35 @@ test('models the complete service loop, LoRA paths, RAG axes, latency diagnosis 
     'doubled-concurrency': kvFixture.result.doubledLengthMaxSequences,
   });
   assert.equal(kv.elements.filter((n) => n.attributes.get('data-region') === 'kv-cache-read').length, 3);
-  [2, 3, 4].forEach((count, index) => {
-    const step = String(index + 1);
-    const recomputed = kv.elements.filter((n) =>
-      n.attributes.get('data-region') === 'kv-recompute-block'
+  kvFixture.data.decodeSteps.forEach(({ step: fixtureStep, history, current }) => {
+    const step = String(fixtureStep);
+    const recomputedHistory = kv.elements.filter((n) =>
+      n.attributes.get('data-region') === 'kv-recompute-history'
       && n.attributes.get('data-step') === step,
     );
-    assert.equal(recomputed.length, count);
-    recomputed.forEach((block, blockIndex) => {
+    const recomputedCurrent = kv.elements.filter((n) =>
+      n.attributes.get('data-region') === 'kv-recompute-current'
+      && n.attributes.get('data-step') === step,
+    );
+    assert.equal(recomputedHistory.length, history);
+    assert.equal(recomputedCurrent.length, current);
+    recomputedHistory.forEach((block, blockIndex) => {
       assert.equal(Number(block.attributes.get('data-index')), blockIndex);
-      if (blockIndex) assert.ok(Number(block.attributes.get('x')) > Number(recomputed[blockIndex - 1].attributes.get('x')));
+      if (blockIndex) assert.ok(Number(block.attributes.get('x')) > Number(recomputedHistory[blockIndex - 1].attributes.get('x')));
     });
-    const history = kv.elements.find((n) =>
-      n.attributes.get('data-region') === 'kv-prefill-history'
+    const cachedHistory = kv.elements.filter((n) =>
+      n.attributes.get('data-region') === 'kv-cache-history'
       && n.attributes.get('data-step') === step,
     );
-    const append = kv.elements.find((n) =>
-      n.attributes.get('data-region') === 'kv-append-block'
+    const cachedCurrent = kv.elements.filter((n) =>
+      n.attributes.get('data-region') === 'kv-cache-current'
       && n.attributes.get('data-step') === step,
     );
-    assert.equal(Number(history.attributes.get('data-count')), count);
-    assert.equal(Number(append.attributes.get('data-count')), 1);
-    assert.equal(Number(history.attributes.get('width')), count * 42);
-    assert.ok(Number(append.attributes.get('x')) > Number(history.attributes.get('x')));
+    assert.equal(cachedHistory.length, history);
+    assert.equal(cachedCurrent.length, current);
+    assert.equal(recomputedHistory.length + recomputedCurrent.length, history + current);
+    assert.equal(cachedHistory.length + cachedCurrent.length, history + current);
+    assert.ok(Number(cachedCurrent[0].attributes.get('x')) > Number(cachedHistory.at(-1).attributes.get('x')));
     const edge = kv.elements.find((n) => n.attributes.get('data-edge') === `read-append-${step}`);
     assert.deepEqual(
       [edge.attributes.get('data-from'), edge.attributes.get('data-to')],
@@ -2229,8 +2235,8 @@ test('contains every KV history and append block inside its visible decode card'
       const cardRight = cardLeft + finiteNumberAttribute(card, 'width', `${mode}-${step}`);
       const cardBottom = cardTop + finiteNumberAttribute(card, 'height', `${mode}-${step}`);
       const blockRegions = mode === 'recompute'
-        ? ['kv-recompute-block']
-        : ['kv-prefill-history', 'kv-append-block'];
+        ? ['kv-recompute-history', 'kv-recompute-current']
+        : ['kv-cache-history', 'kv-cache-current'];
       const blocks = parsed.elements.filter(
         (node) =>
           node.name === 'rect'
@@ -2248,4 +2254,80 @@ test('contains every KV history and append block inside its visible decode card'
       }
     }
   }
+});
+
+test('derives equal recompute and cached decode totals from fixture history plus current positions', async () => {
+  const fixture = fixtureForVisual('visual-llm-06-kv-cache');
+  assert.equal(fixture.data.decodeSteps.length, 3);
+  const assetPath = 'assets/visuals/llm-foundation/llm-06-kv-cache.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  fixture.data.decodeSteps.forEach(({ step, history, current }) => {
+    const stepKey = String(step);
+    const recomputeHistory = parsed.elements.filter((node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'kv-recompute-history'
+      && node.attributes.get('data-step') === stepKey,
+    );
+    const recomputeCurrent = parsed.elements.filter((node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'kv-recompute-current'
+      && node.attributes.get('data-step') === stepKey,
+    );
+    const cachedHistory = parsed.elements.filter((node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'kv-cache-history'
+      && node.attributes.get('data-step') === stepKey,
+    );
+    const cachedCurrent = parsed.elements.filter((node) =>
+      node.name === 'rect'
+      && node.attributes.get('data-region') === 'kv-cache-current'
+      && node.attributes.get('data-step') === stepKey,
+    );
+    assert.equal(recomputeHistory.length, history, `recompute step ${step} history`);
+    assert.equal(recomputeCurrent.length, current, `recompute step ${step} current`);
+    assert.equal(cachedHistory.length, history, `cached step ${step} history`);
+    assert.equal(cachedCurrent.length, current, `cached step ${step} current`);
+    assert.equal(recomputeHistory.length + recomputeCurrent.length, history + current);
+    assert.equal(cachedHistory.length + cachedCurrent.length, history + current);
+    [...recomputeHistory, ...recomputeCurrent, ...cachedHistory, ...cachedCurrent]
+      .forEach((block) => {
+        assert.ok(finiteNumberAttribute(block, 'width', `kv-step-${step}`) > 0);
+        assert.ok(finiteNumberAttribute(block, 'height', `kv-step-${step}`) > 0);
+      });
+  });
+});
+
+test('keeps LoRA deployment copy inside its box with baseline safety margins', async () => {
+  const assetPath = 'assets/visuals/llm-foundation/llm-05-lora-update.svg';
+  const parsed = parseStrictSvg(await readFile(assetPath, 'utf8'), assetPath);
+  const boundary = parsed.elements.find((node) =>
+    node.name === 'rect'
+    && node.attributes.get('data-region') === 'lora-node'
+    && node.attributes.get('data-node') === 'deploy-boundary',
+  );
+  assert.ok(boundary);
+  const left = finiteNumberAttribute(boundary, 'x', 'deploy-boundary');
+  const top = finiteNumberAttribute(boundary, 'y', 'deploy-boundary');
+  const right = left + finiteNumberAttribute(boundary, 'width', 'deploy-boundary');
+  const bottom = top + finiteNumberAttribute(boundary, 'height', 'deploy-boundary');
+  const labels = parsed.elements.filter((node) =>
+    node.name === 'text' && node.attributes.get('data-region') === 'lora-deploy-text',
+  );
+  assert.equal(labels.length, 3);
+  const baselines = labels.map((label) => finiteNumberAttribute(label, 'y', 'deploy-text'));
+  labels.forEach((label) => {
+    const x = finiteNumberAttribute(label, 'x', 'deploy-text');
+    const fontSize = finiteNumberAttribute(label, 'font-size', 'deploy-text');
+    const estimatedWidth = [...label.text].reduce((width, character) => {
+      if (/\s/u.test(character)) return width + fontSize * 0.32;
+      if (/[\p{Script=Han}：，。；、]/u.test(character)) return width + fontSize;
+      return width + fontSize * 0.58;
+    }, 0);
+    assert.ok(x >= left + 20);
+    assert.ok(x + estimatedWidth <= right - 14, `${label.text} 必须保留右侧安全边距`);
+  });
+  assert.ok(baselines[0] >= top + 30);
+  assert.ok(baselines[1] - baselines[0] >= 28);
+  assert.ok(baselines[2] - baselines[1] >= 28);
+  assert.ok(baselines.at(-1) <= bottom - 14);
 });

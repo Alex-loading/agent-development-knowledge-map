@@ -23,9 +23,9 @@
   <text x="494" y="176" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#A33A24" data-region="rag-axis-cell" data-row="0" data-column="risk" data-value="3">3</text>
   <text x="550" y="176" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-axis-cell" data-row="0" data-column="hasExamples" data-value="false">false</text>
   <text x="610" y="151" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#1F7A78" data-region="rag-route" data-row="0" data-value="RAG">RAG</text>
-  <text x="1105" y="183" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="0" data-value="high-risk slices + rollback|low-compute baseline required|evaluate retrieval, citations and permissions">评测</text>
-  <text x="610" y="183" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="0" data-kind="riskControl" data-value="high-risk slices + rollback">风险：高危切片+回滚</text>
-  <text x="875" y="183" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="0" data-kind="costCheck" data-value="low-compute baseline required">成本：低算力基线</text>
+  <text x="1144" y="183" text-anchor="end" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="0" data-value="high-risk slices + rollback|low-compute baseline required|evaluate retrieval, citations and permissions">评测</text>
+  <text x="590" y="183" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="0" data-kind="riskControl" data-value="high-risk slices + rollback">风险：高危切片+回滚</text>
+  <text x="855" y="183" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="0" data-kind="costCheck" data-value="low-compute baseline required">成本：低算力基线</text>
   <text x="610" y="212" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="0" data-kind="nextStep" data-value="evaluate retrieval, citations and permissions">下一步：评测检索、引用与权限</text>
 
   <rect x="48" y="226" width="1104" height="96" rx="14" fill="#E9F2EE" stroke="#1F7A78" stroke-width="2" data-region="decision-row" data-row="1"/>
@@ -37,9 +37,9 @@
   <text x="494" y="276" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-axis-cell" data-row="1" data-column="risk" data-value="2">2</text>
   <text x="550" y="276" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#1F7A78" data-region="rag-axis-cell" data-row="1" data-column="hasExamples" data-value="true">true</text>
   <text x="610" y="251" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#1F7A78" data-region="rag-route" data-row="1" data-value="SFT/LoRA">SFT/LoRA</text>
-  <text x="1105" y="283" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="1" data-value="standard slices + rollback|compare training and serving cost|compare against the Prompt/tool baseline before training">评测</text>
-  <text x="610" y="283" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="1" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
-  <text x="875" y="283" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="1" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
+  <text x="1144" y="283" text-anchor="end" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="1" data-value="standard slices + rollback|compare training and serving cost|compare against the Prompt/tool baseline before training">评测</text>
+  <text x="590" y="283" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="1" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
+  <text x="855" y="283" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="1" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
   <text x="610" y="312" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="1" data-kind="nextStep" data-value="compare against the Prompt/tool baseline before training">下一步：训练前对比 Prompt / 工具基线</text>
 
   <rect x="48" y="326" width="1104" height="96" rx="14" fill="#F4E8EB" stroke="#A33A24" stroke-width="2" data-region="decision-row" data-row="2"/>
@@ -51,9 +51,9 @@
   <text x="494" y="376" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-axis-cell" data-row="2" data-column="risk" data-value="2">2</text>
   <text x="550" y="376" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#1F7A78" data-region="rag-axis-cell" data-row="2" data-column="hasExamples" data-value="true">true</text>
   <text x="610" y="351" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24" data-region="rag-route" data-row="2" data-value="insufficient evidence—do not fine-tune">insufficient evidence—do not fine-tune</text>
-  <text x="1105" y="383" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="2" data-value="standard slices + rollback|compare training and serving cost|establish Prompt/tool baseline and clarify the target">评测</text>
-  <text x="610" y="383" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="2" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
-  <text x="875" y="383" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="2" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
+  <text x="1144" y="383" text-anchor="end" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="2" data-value="standard slices + rollback|compare training and serving cost|establish Prompt/tool baseline and clarify the target">评测</text>
+  <text x="590" y="383" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="2" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
+  <text x="855" y="383" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="2" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
   <text x="610" y="412" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="2" data-kind="nextStep" data-value="establish Prompt/tool baseline and clarify the target">下一步：建立基线并澄清目标</text>
 
   <rect x="48" y="426" width="1104" height="96" rx="14" fill="#F4E8EB" stroke="#A33A24" stroke-width="2" data-region="decision-row" data-row="3"/>
@@ -65,9 +65,9 @@
   <text x="494" y="476" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-axis-cell" data-row="3" data-column="risk" data-value="2">2</text>
   <text x="550" y="476" text-anchor="middle" font-family="Trebuchet MS" font-size="26" fill="#A33A24" data-region="rag-axis-cell" data-row="3" data-column="hasExamples" data-value="false">false</text>
   <text x="610" y="451" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24" data-region="rag-route" data-row="3" data-value="insufficient evidence—do not fine-tune">insufficient evidence—do not fine-tune</text>
-  <text x="1105" y="483" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="3" data-value="standard slices + rollback|compare training and serving cost|establish Prompt/tool baseline and continue collecting data">评测</text>
-  <text x="610" y="483" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="3" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
-  <text x="875" y="483" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="3" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
+  <text x="1144" y="483" text-anchor="end" font-family="Trebuchet MS" font-size="26" fill="#315C9B" data-region="rag-evaluation" data-row="3" data-value="standard slices + rollback|compare training and serving cost|establish Prompt/tool baseline and continue collecting data">评测</text>
+  <text x="590" y="483" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="3" data-kind="riskControl" data-value="standard slices + rollback">风险：标准切片+回滚</text>
+  <text x="855" y="483" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="3" data-kind="costCheck" data-value="compare training and serving cost">成本：训推对比</text>
   <text x="610" y="512" font-family="Trebuchet MS" font-size="26" fill="#18212B" data-region="rag-evaluation-detail" data-row="3" data-kind="nextStep" data-value="establish Prompt/tool baseline and continue collecting data">下一步：建立基线并继续收集数据</text>
 
   <text x="48" y="552" font-family="Trebuchet MS" font-size="26" fill="#18212B">Method：updateFrequency / citationNeed 达 3 → RAG。</text>

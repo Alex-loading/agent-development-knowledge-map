@@ -590,6 +590,12 @@ function recomputeFixture(fixture) {
       const bytesPerSequence = bytesForLength(data.length);
       const doubledLengthBytesPerSequence = bytesForLength(data.length * 2);
       return {
+        decodeSteps: data.decodeSteps.map(({ step, history, current }) => ({
+          step,
+          history,
+          current,
+          total: history + current,
+        })),
         bytesPerSequence,
         maxSequences: Math.floor(data.budgetBytes / bytesPerSequence),
         doubledLengthBytesPerSequence,

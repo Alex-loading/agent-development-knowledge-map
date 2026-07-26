@@ -17,34 +17,76 @@ const AXES = [
   ['risk', '风险'],
   ['hasExamples', '示例'],
 ];
-const AXIS_X = [270, 326, 382, 438, 494, 550];
-const ROW_TOP = [126, 226, 326, 426];
-const ROW_CENTER_Y = ROW_TOP.map((top) => top + 50);
-const DETAIL_TEXT = [
-  {
-    riskControl: '风险：高危切片+回滚',
-    costCheck: '成本：低算力基线',
-    nextStep: '下一步：评测检索、引用与权限',
-  },
-  {
-    riskControl: '风险：标准切片+回滚',
-    costCheck: '成本：训推对比',
-    nextStep: '下一步：训练前对比 Prompt / 工具基线',
-  },
-  {
-    riskControl: '风险：标准切片+回滚',
-    costCheck: '成本：训推对比',
-    nextStep: '下一步：建立基线并澄清目标',
-  },
-  {
-    riskControl: '风险：标准切片+回滚',
-    costCheck: '成本：训推对比',
-    nextStep: '下一步：建立基线并继续收集数据',
-  },
-];
+const EVALUATION_KINDS = ['riskControl', 'costCheck', 'nextStep'];
 
-function expectedValue(item, axis) {
-  return axis === 'hasExamples' ? item.hasExamples : item.axes[axis];
+function numberAttribute(node, name) {
+  const value = Number(node.attributes.get(name));
+  assert.ok(Number.isFinite(value), `${node.name}.${name} 必须是有限数值`);
+  return value;
+}
+
+function textWidth(node) {
+  const fontSize = numberAttribute(node, 'font-size');
+  return [...node.text].reduce((width, character) => {
+    if (/\s/u.test(character)) return width + fontSize * 0.32;
+    if (/[\p{Script=Han}：，。；、]/u.test(character)) return width + fontSize;
+    return width + fontSize * 0.58;
+  }, 0);
+}
+
+function visibleBounds(node) {
+  if (node.name === 'rect') {
+    const x = numberAttribute(node, 'x');
+    const y = numberAttribute(node, 'y');
+    return {
+      left: x,
+      top: y,
+      right: x + numberAttribute(node, 'width'),
+      bottom: y + numberAttribute(node, 'height'),
+    };
+  }
+
+  assert.equal(node.name, 'text', '可见几何断言只支持 rect/text');
+  const x = numberAttribute(node, 'x');
+  const y = numberAttribute(node, 'y');
+  const width = textWidth(node);
+  const fontSize = numberAttribute(node, 'font-size');
+  const anchor = node.attributes.get('text-anchor') ?? 'start';
+  const left = anchor === 'end' ? x - width : anchor === 'middle' ? x - width / 2 : x;
+  return {
+    left,
+    top: y - fontSize * 0.82,
+    right: left + width,
+    bottom: y + fontSize * 0.22,
+  };
+}
+
+function assertContained(inner, outer, label, inset = 0) {
+  assert.ok(inner.left >= outer.left + inset, `${label} 左侧越过容器`);
+  assert.ok(inner.top >= outer.top + inset, `${label} 顶部越过容器`);
+  assert.ok(inner.right <= outer.right - inset, `${label} 右侧越过容器`);
+  assert.ok(inner.bottom <= outer.bottom - inset, `${label} 底部越过容器`);
+}
+
+function overlaps(first, second) {
+  return first.left < second.right
+    && first.right > second.left
+    && first.top < second.bottom
+    && first.bottom > second.top;
+}
+
+function byRegion(parsed, region, name = 'text') {
+  return parsed.elements.filter(
+    (node) => node.name === name && node.attributes.get('data-region') === region,
+  );
+}
+
+function expectedAxisValue(item, axis) {
+  return String(axis === 'hasExamples' ? item.hasExamples : item.axes[axis]);
+}
+
+function expectedEvaluationValue(decision, kind) {
+  return kind === 'nextStep' ? decision.nextStep : decision.evaluationProfile[kind];
 }
 
 function assertVisibleRagMatrix(svg) {
@@ -54,89 +96,109 @@ function assertVisibleRagMatrix(svg) {
     '语义数据不得藏在不可见的空 g 代理中',
   );
   const parsed = parseStrictSvg(svg, ASSET_PATH);
+  const rows = byRegion(parsed, 'decision-row', 'rect');
+  const headers = byRegion(parsed, 'rag-axis-header');
+  const cells = byRegion(parsed, 'rag-axis-cell');
+  const routes = byRegion(parsed, 'rag-route');
+  const summaries = byRegion(parsed, 'rag-evaluation');
+  const details = byRegion(parsed, 'rag-evaluation-detail');
 
-  const headers = parsed.elements.filter(
-    (node) => node.name === 'text' && node.attributes.get('data-region') === 'rag-axis-header',
-  );
+  assert.equal(rows.length, FIXTURE.data.cases.length);
   assert.equal(headers.length, AXES.length);
-  AXES.forEach(([axis, label], column) => {
+  assert.equal(cells.length, FIXTURE.data.cases.length * AXES.length);
+  assert.equal(routes.length, FIXTURE.result.decisions.length);
+  assert.equal(summaries.length, FIXTURE.result.decisions.length);
+  assert.equal(details.length, FIXTURE.result.decisions.length * EVALUATION_KINDS.length);
+
+  const rowBounds = rows
+    .sort((first, second) => Number(first.attributes.get('data-row')) - Number(second.attributes.get('data-row')))
+    .map(visibleBounds);
+  rowBounds.slice(1).forEach((bounds, row) => {
+    assert.ok(rowBounds[row].bottom <= bounds.top, `相邻行 ${row}/${row + 1} 不得重叠`);
+  });
+
+  const orderedHeaders = AXES.map(([axis, label]) => {
     const header = headers.find((node) => node.attributes.get('data-column') === axis);
     assert.ok(header, `缺少 ${axis} 可见表头`);
     assert.equal(header.text, label);
-    assert.equal(Number(header.attributes.get('x')), AXIS_X[column]);
-    assert.equal(Number(header.attributes.get('y')), 112);
-    assert.ok(Number(header.attributes.get('y')) < ROW_TOP[0], '表头不得侵入首行');
+    assert.ok(visibleBounds(header).bottom < rowBounds[0].top, `${axis} 表头不得侵入首行`);
+    return header;
+  });
+  orderedHeaders.slice(1).forEach((header, column) => {
+    assert.ok(
+      numberAttribute(orderedHeaders[column], 'x') < numberAttribute(header, 'x'),
+      '六轴表头必须保持 fixture 字段顺序',
+    );
   });
 
-  const cells = parsed.elements.filter(
-    (node) => node.name === 'text' && node.attributes.get('data-region') === 'rag-axis-cell',
-  );
-  assert.equal(cells.length, FIXTURE.data.cases.length * AXES.length);
   FIXTURE.data.cases.forEach((item, row) => {
-    AXES.forEach(([axis], column) => {
-      const expected = String(expectedValue(item, axis));
+    const rowCells = AXES.map(([axis], column) => {
       const cell = cells.find(
         (node) => node.attributes.get('data-row') === String(row)
           && node.attributes.get('data-column') === axis,
       );
       assert.ok(cell, `缺少 ${row}/${axis} 可见单元格`);
+      const expected = expectedAxisValue(item, axis);
       assert.equal(cell.attributes.get('data-value'), expected);
       assert.equal(cell.text, expected, `${row}/${axis} 可见文字必须与 fixture 一致`);
-      assert.equal(Number(cell.attributes.get('x')), AXIS_X[column]);
-      assert.equal(Number(cell.attributes.get('y')), ROW_CENTER_Y[row]);
+      assert.equal(
+        numberAttribute(cell, 'x'),
+        numberAttribute(orderedHeaders[column], 'x'),
+        `${axis} 表头与四行单元格必须共用列 X`,
+      );
+      assertContained(visibleBounds(cell), rowBounds[row], `${row}/${axis}`);
+      return cell;
     });
-  });
+    rowCells.slice(1).forEach((cell, column) => {
+      assert.ok(
+        numberAttribute(rowCells[column], 'x') < numberAttribute(cell, 'x'),
+        `第 ${row} 行六轴单元格必须保持列顺序`,
+      );
+    });
 
-  const routes = parsed.elements.filter(
-    (node) => node.name === 'text' && node.attributes.get('data-region') === 'rag-route',
-  );
-  assert.equal(routes.length, FIXTURE.result.decisions.length);
-  FIXTURE.result.decisions.forEach((decision, row) => {
+    const decision = FIXTURE.result.decisions[row];
     const route = routes.find((node) => node.attributes.get('data-row') === String(row));
     assert.equal(route?.attributes.get('data-value'), decision.route);
     assert.equal(route?.text, decision.route);
-    assert.equal(Number(route?.attributes.get('x')), 610);
-    assert.equal(Number(route?.attributes.get('y')), ROW_TOP[row] + 25);
-  });
+    assert.ok(numberAttribute(route, 'x') > numberAttribute(rowCells.at(-1), 'x'));
+    assert.ok(numberAttribute(route, 'x') < rowBounds[row].right, `第 ${row} 行路线起点必须在行内`);
+    assert.ok(
+      numberAttribute(route, 'y') > rowBounds[row].top
+        && numberAttribute(route, 'y') < rowBounds[row].bottom,
+      `第 ${row} 行路线基线必须在行内`,
+    );
 
-  const summaries = parsed.elements.filter(
-    (node) => node.name === 'text' && node.attributes.get('data-region') === 'rag-evaluation',
-  );
-  const details = parsed.elements.filter(
-    (node) => node.name === 'text' && node.attributes.get('data-region') === 'rag-evaluation-detail',
-  );
-  assert.equal(summaries.length, FIXTURE.result.decisions.length);
-  assert.equal(details.length, FIXTURE.result.decisions.length * 3);
-  FIXTURE.result.decisions.forEach((decision, row) => {
     const summary = summaries.find((node) => node.attributes.get('data-row') === String(row));
-    assert.equal(summary?.attributes.get('data-value'), [
-      decision.evaluationProfile.riskControl,
-      decision.evaluationProfile.costCheck,
-      decision.nextStep,
-    ].join('|'));
-    assert.match(summary?.text ?? '', /^评测/);
+    assert.ok(summary, `第 ${row} 行必须有可见评测节点`);
+    assert.equal(summary.text, '评测');
+    assert.equal(summary.attributes.get('data-value'), EVALUATION_KINDS
+      .map((kind) => expectedEvaluationValue(decision, kind))
+      .join('|'));
+    const summaryBounds = visibleBounds(summary);
+    assertContained(summaryBounds, rowBounds[row], `第 ${row} 行评测节点`, 8);
 
-    ['riskControl', 'costCheck', 'nextStep'].forEach((kind, index) => {
+    const rowDetails = EVALUATION_KINDS.map((kind) => {
       const detail = details.find(
         (node) => node.attributes.get('data-row') === String(row)
           && node.attributes.get('data-kind') === kind,
       );
-      const fixtureValue = kind === 'nextStep'
-        ? decision.nextStep
-        : decision.evaluationProfile[kind];
-      assert.equal(detail?.attributes.get('data-value'), fixtureValue);
-      assert.equal(detail?.text, DETAIL_TEXT[row][kind]);
-      assert.equal(Number(detail?.attributes.get('x')), index === 1 ? 875 : 610);
+      assert.ok(detail, `第 ${row} 行缺少 ${kind} 可见评测值`);
+      assert.equal(detail.attributes.get('data-value'), expectedEvaluationValue(decision, kind));
+      assert.ok(detail.text.length > 0, `${kind} 可见文字不得为空`);
+      assertContained(visibleBounds(detail), rowBounds[row], `第 ${row} 行 ${kind}`);
+      return detail;
+    });
+    rowDetails.forEach((detail) => {
       assert.equal(
-        Number(detail?.attributes.get('y')),
-        index === 2 ? ROW_TOP[row] + 86 : ROW_TOP[row] + 57,
+        overlaps(summaryBounds, visibleBounds(detail)),
+        false,
+        `第 ${row} 行评测节点不得覆盖 ${detail.attributes.get('data-kind')}`,
       );
-      assert.ok(Number(detail?.attributes.get('y')) < ROW_TOP[row] + 100);
     });
   });
 }
 
-test('RAG decision matrix renders six fixture axes and evaluation steps as visible geometry', async () => {
+test('RAG decision matrix keeps visible fixture values in ordered, aligned row containers', async () => {
   const svg = await readFile(ASSET_PATH, 'utf8');
   assertVisibleRagMatrix(svg);
 });

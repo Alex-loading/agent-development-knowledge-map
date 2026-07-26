@@ -619,12 +619,29 @@ export const llmFoundationVisualFixtures = deepFreeze([
   fixture(
     'visual-llm-06-kv-cache',
     {
-      Input: 'layers=2、length=4、KV heads=1、head dim=2、bytes=2、预算 576 bytes。',
+      Input: 'decode history/current=1+1、2+1、3+1；layers=2、length=4、KV heads=1、head dim=2、bytes=2、预算 576 bytes。',
       Method: '2×layers×sequences×length×heads×dim×bytes；容量向下取整。',
       Rounding: 'bytes 与序列数为整数。',
     },
-    { layers: 2, length: 4, kvHeads: 1, headDimension: 2, bytesPerElement: 2, budgetBytes: 576 },
     {
+      decodeSteps: [
+        { step: 1, history: 1, current: 1 },
+        { step: 2, history: 2, current: 1 },
+        { step: 3, history: 3, current: 1 },
+      ],
+      layers: 2,
+      length: 4,
+      kvHeads: 1,
+      headDimension: 2,
+      bytesPerElement: 2,
+      budgetBytes: 576,
+    },
+    {
+      decodeSteps: [
+        { step: 1, history: 1, current: 1, total: 2 },
+        { step: 2, history: 2, current: 1, total: 3 },
+        { step: 3, history: 3, current: 1, total: 4 },
+      ],
       bytesPerSequence: 64,
       maxSequences: 9,
       doubledLengthBytesPerSequence: 128,

@@ -71,10 +71,14 @@
 
 2026-07-27 审查更正：inventory 误写“五个 token”，但 quantitative fixture 与图面始终冻结 A/B/C 三个候选。采用 fixture 作为数值单一真源，将 storyboard 更正为“五个 token→三个候选 token”；fixture 内容未改变，Inventory git blob SHA 按修正文档重新计算。
 
+### KV Cache 解码对照基数更正
+
+2026-07-27 审查更正：KV Cache 对照图此前把下排缓存历史块误画成 2/3/4 个位置，再额外追加 1 个当前位置，导致它与上排重算路径的 2/3/4 个总位置不是同一比较基数。fixture 现显式冻结三个 decode step 的 `history/current` 为 `1+1`、`2+1`、`3+1`，两条路径每步总位置均为 2/3/4；区别只在上排对历史做 recompute、下排对历史做 cache read，而当前位置分别为 compute 与 append。此次更正改变 fixture 内容，因此 Fixture git blob SHA 重新计算。
+
 ## 实施就绪复核
 
 - 清单内容标识：Inventory git blob SHA：`6b9dc4fa804f8bf0d27cbe63892136f4a6dfb333`
-- 数值真源标识：Fixture git blob SHA：`19d4f6e6494aa6d6597b2b550628ed98097e4386`
+- 数值真源标识：Fixture git blob SHA：`9a81db876ed41d059ee135e3090b06a13c129450`
 - 人工逐行复核日期：2026-07-26
 - 执行角色：implementation agent + independent spec reviewer
 - 人工复核结果：40 / 40 项通过；每项均复核 cognitive question、图形角色、assessed coverage、来源范围、许可决策和 storyboard 七要素。
