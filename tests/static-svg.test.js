@@ -188,4 +188,3 @@ test('rejects aria-hidden accessibility nodes and invalid XML 1.0 CharData', () 
   );
   assert.equal(parsed.ids.get('emoji').text, '安全中文 😀');
 });
-
