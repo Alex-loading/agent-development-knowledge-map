@@ -36,23 +36,37 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   }
 }
 
-test('module catalog starts with four active modules and exposes planned dependencies', () => {
+test('module catalog starts with five active modules and exposes planned dependencies', () => {
   const moduleIds = new Set(modules.map((module) => module.id));
   assert.deepEqual(
-    modules.slice(0, 4).map(({ id, status }) => ({ id, status })),
+    modules.slice(0, 5).map(({ id, status }) => ({ id, status })),
     [
       { id: 'llm-foundation', status: 'active' },
       { id: 'agent-mechanism', status: 'active' },
       { id: 'agent-harness', status: 'active' },
       { id: 'context-rag-memory', status: 'active' },
+      { id: 'backend-engineering', status: 'active' },
     ],
   );
   assert.deepEqual(
     modules.find(({ id }) => id === 'context-rag-memory').prerequisites,
     ['llm-foundation', 'agent-mechanism'],
   );
-  assert.equal(modules.slice(4).length, 4);
-  assert.ok(modules.slice(4).every((module) => module.status === 'planned'));
+  const backendModule = modules.find(({ id }) => id === 'backend-engineering');
+  assert.deepEqual(
+    {
+      summary: backendModule.summary,
+      prerequisites: backendModule.prerequisites,
+      estimatedHours: backendModule.estimatedHours,
+    },
+    {
+      summary: '把原型升级为具备并发、流式输出、缓存、队列和容错能力的服务。',
+      prerequisites: ['agent-harness'],
+      estimatedHours: 18,
+    },
+  );
+  assert.equal(modules.slice(5).length, 3);
+  assert.ok(modules.slice(5).every((module) => module.status === 'planned'));
   assert.ok(modules.every((module) => Array.isArray(module.prerequisites)));
   assert.ok(
     modules.every((module) => module.prerequisites.every((id) => moduleIds.has(id))),
@@ -206,7 +220,7 @@ test('all 28 LLM resources provide complete evidence cards', () => {
   }
 });
 
-test('all four active modules publish long-form notes while Context retains explanations as fallback', async () => {
+test('Harness and Context publish long-form notes while Context retains explanations as fallback', async () => {
   const { contextRagMemoryNotes } = await import('../src/data/context-rag-memory-notes.js');
 
   assert.ok(agentHarness.lessons.every((lesson) => lesson.knowledgeNote),

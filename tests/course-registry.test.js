@@ -6,6 +6,7 @@ import { resolveRoute } from '../src/app.js';
 import { courseRegistry, getCourse } from '../src/data/courses.js';
 import { agentHarness } from '../src/data/agent-harness.js';
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { backendEngineering } from '../src/data/backend-engineering.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 
@@ -25,12 +26,13 @@ function assertRegistryIdsAreUnique(selectIds, label) {
   }
 }
 
-test('production course registry is immutable and resolves exactly four active courses', () => {
+test('production course registry is immutable and resolves exactly five active courses', () => {
   const expectedCourses = [
     llmFoundation,
     agentMechanism,
     agentHarness,
     contextRagMemory,
+    backendEngineering,
   ];
   assert.deepEqual(Object.keys(courseRegistry), expectedCourses.map(({ id }) => id));
   assert.equal(Object.isFrozen(courseRegistry), true);
@@ -58,6 +60,18 @@ test('route resolver opens registered dashboards and lessons from the production
       lessonId: firstLesson.id,
     });
   }
+
+  assert.deepEqual(resolveRoute('#backend-engineering/dashboard'), {
+    hash: '#backend-engineering/dashboard',
+    moduleId: 'backend-engineering',
+    view: 'dashboard',
+  });
+  assert.deepEqual(resolveRoute('#backend-engineering/lesson/backend-01'), {
+    hash: '#backend-engineering/lesson/backend-01',
+    moduleId: 'backend-engineering',
+    view: 'lesson',
+    lessonId: 'backend-01',
+  });
 });
 
 test('route resolver keeps a canonical fallback for invalid Agent lessons', () => {

@@ -14,6 +14,7 @@ import {
   setInterviewStatus,
   toggleReviewQueue,
 } from '../src/core/progress.js';
+import { backendEngineering } from '../src/data/backend-engineering.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
@@ -215,7 +216,7 @@ test('application restores focus after resource filtering and falls back after r
   assert.equal(document.activeElement.id, 'resource-results-summary');
 });
 
-test('application preserves independent resource filters across all four active modules', (t) => {
+test('application preserves independent resource filters across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#context-rag-memory/resources');
@@ -391,7 +392,7 @@ test('application persists interview mastery exactly once and updates shell summ
   assert.equal(store.saves.length, 2);
 });
 
-test('application preserves independent interview filters and revealed answers across all four active modules', (t) => {
+test('application preserves independent interview filters and revealed answers across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#context-rag-memory/interviews');
@@ -518,7 +519,7 @@ test('interview summaries ignore duplicate and stale mastered/review IDs', (t) =
   assert.ok(root.textContent.includes('复习队列 1 题'));
 });
 
-test('application progress scopes lesson, interview and quiz state across all four active modules', (t) => {
+test('application progress scopes lesson, interview and quiz state across all five active modules', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const registeredCourses = Object.values(courseRegistry);
@@ -1472,6 +1473,223 @@ test('memory lifecycle experiment applies preset events and keeps recall subject
   assert.equal(document.activeElement, observe);
 });
 
+test('stream lifecycle lab renders typed events, propagation state and a focused reset', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('stream-lifecycle');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-stream-result');
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  assert.ok(lab.querySelector(`#${lab.getAttribute('aria-labelledby')}`));
+  for (const controlId of [
+    'backend-stream-mode',
+    'backend-stream-delta-count',
+    'backend-stream-disconnect-after',
+    'backend-stream-cancel-after',
+    'backend-stream-fail-after',
+    'backend-stream-upstream-cancellable',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  assert.deepEqual(
+    lab.querySelectorAll('.backend-event').map((event) => event.dataset.eventType),
+    ['created', 'delta', 'delta', 'delta', 'completed'],
+  );
+  assert.match(result.textContent, /客户端状态.*completed/);
+  assert.match(result.textContent, /上游状态.*completed/);
+  assert.ok(result.textContent.includes('release-request-resources'));
+  assert.ok(lab.querySelector('.experiment-caveat').textContent.includes('确定性教学模拟'));
+
+  const disconnect = lab.querySelector('#backend-stream-disconnect-after');
+  const upstreamCancellable = lab.querySelector('#backend-stream-upstream-cancellable');
+  upstreamCancellable.checked = false;
+  upstreamCancellable.dispatchEvent(new FakeEvent('change'));
+  disconnect.value = '1';
+  disconnect.dispatchEvent(new FakeEvent('input'));
+  assert.deepEqual(
+    lab.querySelectorAll('.backend-event').map((event) => event.dataset.eventType),
+    ['created', 'delta', 'disconnected'],
+  );
+  assert.match(result.textContent, /客户端状态.*disconnected/);
+  assert.match(result.textContent, /上游状态.*continuing/);
+  assert.ok(result.textContent.includes('observe-upstream-until-terminal'));
+
+  lab.querySelector('#backend-stream-reset').click();
+  assert.equal(disconnect.value, '');
+  assert.equal(upstreamCancellable.checked, true);
+  assert.match(result.textContent, /客户端状态.*completed/);
+  assert.equal(document.activeElement, lab.querySelector('#backend-stream-mode'));
+});
+
+test('service admission lab exposes its window math, all outcomes and mean-model boundary', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('service-admission');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-admission-result');
+  assert.equal(result.getAttribute('aria-live'), 'polite');
+  assert.equal(result.getAttribute('aria-atomic'), 'true');
+  for (const controlId of [
+    'backend-admission-arrival-rate',
+    'backend-admission-service-time',
+    'backend-admission-slots',
+    'backend-admission-queue-limit',
+    'backend-admission-deadline',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  for (const field of ['window', 'capacity', 'immediate', 'queued', 'rejected', 'timedOut']) {
+    assert.ok(result.textContent.includes(field), field);
+  }
+  assert.match(result.textContent, /not a p95 or p99 prediction/);
+  assert.ok(lab.textContent.includes('均值模型'));
+
+  const deadline = lab.querySelector('#backend-admission-deadline');
+  deadline.value = '400';
+  deadline.dispatchEvent(new FakeEvent('input'));
+  assert.match(result.textContent, /timedOut.*11/);
+  assert.match(result.textContent, /rejected.*1/);
+
+  lab.querySelector('#backend-admission-reset').click();
+  assert.equal(deadline.value, '1000');
+  assert.match(result.textContent, /timedOut.*0/);
+  assert.equal(document.activeElement, lab.querySelector('#backend-admission-arrival-rate'));
+});
+
+test('job delivery lab drives every event and exposes delivery, idempotency and reconciliation history', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('job-delivery-ledger');
+  document.body.append(lab);
+
+  const summary = lab.querySelector('#backend-delivery-summary');
+  const result = lab.querySelector('#backend-delivery-result');
+  assert.equal(summary.getAttribute('aria-live'), 'polite');
+  assert.equal(summary.getAttribute('aria-atomic'), 'true');
+  assert.equal(result.getAttribute('aria-live'), null);
+  assert.equal(result.getAttribute('aria-atomic'), null);
+  assert.equal(lab.querySelector('.backend-delivery-history').getAttribute('aria-live'), null);
+  for (const type of [
+    'submit',
+    'enqueue',
+    'lease',
+    'start',
+    'commit',
+    'ack',
+    'crash',
+    'redeliver',
+    'cancel',
+    'reconcile',
+  ]) {
+    assert.notEqual(lab.querySelector(`#backend-delivery-event-${type}`), null, type);
+  }
+  for (const controlId of [
+    'backend-delivery-job-id',
+    'backend-delivery-idempotency-key',
+    'backend-delivery-worker-id',
+    'backend-delivery-result-ref',
+    'backend-delivery-reconcile-outcome',
+  ]) {
+    assert.notEqual(lab.querySelector(`label[for="${controlId}"]`), null, controlId);
+  }
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.match(result.textContent, /idempotency status.*none/);
+  for (const boundary of [
+    'client state',
+    'message state',
+    'effect ledger',
+    'idempotency ledger',
+  ]) {
+    assert.match(result.textContent, new RegExp(boundary), boundary);
+  }
+
+  for (const type of ['submit', 'enqueue', 'lease', 'start', 'commit', 'crash']) {
+    lab.querySelector(`#backend-delivery-event-${type}`).click();
+  }
+  assert.match(result.textContent, /delivery status.*unknown/);
+  assert.match(result.textContent, /idempotency status.*unknown/);
+  assert.match(result.textContent, /unknownReason.*result-commit/);
+  assert.ok(result.textContent.includes('confirm-result-commit'));
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 6);
+
+  lab.querySelector('#backend-delivery-event-redeliver').click();
+  assert.ok(result.textContent.includes('reconcile-required'));
+  lab.querySelector('#backend-delivery-event-reconcile').click();
+  assert.match(result.textContent, /delivery status.*committed/);
+  lab.querySelector('#backend-delivery-event-ack').click();
+  assert.match(result.textContent, /delivery status.*acknowledged/);
+  assert.ok(result.textContent.includes('result://report-001'));
+
+  lab.querySelector('#backend-delivery-reset').click();
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(document.activeElement, lab.querySelector('#backend-delivery-event-submit'));
+
+  for (const type of ['submit', 'enqueue', 'lease', 'start', 'cancel']) {
+    lab.querySelector(`#backend-delivery-event-${type}`).click();
+  }
+  assert.match(result.textContent, /delivery status.*unknown/);
+  assert.match(result.textContent, /unknownReason.*cancellation-outcome/);
+  assert.ok(result.textContent.includes('confirm-cancellation-outcome'));
+  dispatchChange(lab.querySelector('#backend-delivery-reconcile-outcome'), 'not-committed');
+  lab.querySelector('#backend-delivery-event-reconcile').click();
+  assert.match(result.textContent, /delivery status.*cancelled/);
+});
+
+test('job delivery lab keeps rejected and invalid UI attempts visible without mutating core state', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const lab = renderExperiment('job-delivery-ledger');
+  document.body.append(lab);
+
+  const result = lab.querySelector('#backend-delivery-result');
+  const summary = lab.querySelector('#backend-delivery-summary');
+  const jobId = lab.querySelector('#backend-delivery-job-id');
+  const submit = lab.querySelector('#backend-delivery-event-submit');
+  const ack = lab.querySelector('#backend-delivery-event-ack');
+
+  ack.click();
+  assert.match(summary.textContent, /ui-01-ack.*rejected/);
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 1);
+  assert.match(
+    lab.querySelector('.backend-delivery-attempt').textContent,
+    /ui-01-ack.*illegal ack transition from empty/,
+  );
+
+  jobId.value = '   ';
+  submit.click();
+  assert.match(summary.textContent, /ui-02-submit.*invalid-input/);
+  assert.match(result.textContent, /delivery status.*empty/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 0);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 2);
+  assert.match(
+    lab.querySelectorAll('.backend-delivery-attempt').at(-1).textContent,
+    /ui-02-submit.*event\.jobId must not be empty/,
+  );
+
+  jobId.value = 'job-report-001';
+  submit.click();
+  assert.match(summary.textContent, /ui-03-submit.*applied/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 1);
+  assert.match(lab.querySelector('.backend-delivery-entry').textContent, /ui-03-submit/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 3);
+
+  for (let attempt = 0; attempt < 30; attempt += 1) ack.click();
+  assert.equal(lab.querySelectorAll('.backend-delivery-attempt').length, 24);
+  assert.doesNotMatch(result.textContent, /ui-01-ack/);
+  assert.match(
+    lab.querySelectorAll('.backend-delivery-attempt').at(-1).textContent,
+    /ui-33-ack.*rejected/,
+  );
+  assert.match(result.textContent, /delivery status.*submitted/);
+  assert.equal(lab.querySelectorAll('.backend-delivery-entry').length, 1);
+});
+
 test('unknown experiment degrades to an accessible note and lesson rerender creates one lab', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
@@ -1537,26 +1755,27 @@ test('every configured experiment has a resolvable accessible heading and is int
   }
 });
 
-test('real application activates context RAG memory, switches all modules and renders six views plus labs', (t) => {
+test('real application activates AI backend engineering, switches all modules and renders six views, quiz and labs', (t) => {
   const document = createAppDocument();
   t.after(installFakeDom(document));
   const windowRef = createFakeWindow('#agent-mechanism/dashboard');
+  const store = createStore(createDefaultProgress('llm-foundation'));
   const app = startApp({
     documentRef: document,
     windowRef,
-    progressStore: createStore(createDefaultProgress('llm-foundation')),
+    progressStore: store,
   });
   t.after(app.teardown);
 
-  dispatchChange(document.querySelector('#module-select'), 'context-rag-memory');
+  dispatchChange(document.querySelector('#module-select'), backendEngineering.id);
   windowRef.dispatchEvent(new FakeEvent('hashchange'));
-  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
-  assert.equal(document.querySelector('#current-module-title').textContent, contextRagMemory.title);
+  assert.equal(windowRef.location.hash, '#backend-engineering/dashboard');
+  assert.equal(document.querySelector('#current-module-title').textContent, backendEngineering.title);
   assert.ok(document.querySelector('#progress-summary').textContent.includes('课程 0 / 8'));
   assert.ok(document.querySelector('#progress-summary').textContent.includes('面试 0 / 24'));
 
   const priorCourses = Object.values(courseRegistry)
-    .filter(({ id }) => id !== contextRagMemory.id);
+    .filter(({ id }) => id !== backendEngineering.id);
   for (const course of priorCourses) {
     document.querySelector('#module-select').focus();
     dispatchChange(document.querySelector('#module-select'), course.id);
@@ -1566,32 +1785,47 @@ test('real application activates context RAG memory, switches all modules and re
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, course.id);
     assert.equal(document.activeElement.id, 'app-main', course.id);
   }
-  dispatchChange(document.querySelector('#module-select'), contextRagMemory.id);
+  dispatchChange(document.querySelector('#module-select'), backendEngineering.id);
   windowRef.dispatchEvent(new FakeEvent('hashchange'));
-  assert.equal(windowRef.location.hash, '#context-rag-memory/dashboard');
+  assert.equal(windowRef.location.hash, '#backend-engineering/dashboard');
 
   for (const view of ['dashboard', 'curriculum', 'map', 'resources', 'interviews', 'progress']) {
     document.querySelector('#module-select').focus();
-    navigateTo(app, windowRef, `#context-rag-memory/${view}`);
+    navigateTo(app, windowRef, `#backend-engineering/${view}`);
     const viewRoot = document.querySelector('#view-root');
-    assert.ok(viewRoot.textContent.includes(contextRagMemory.title), `${view} should render context course content`);
+    assert.ok(viewRoot.textContent.includes(backendEngineering.title), `${view} should render backend course content`);
     assert.equal(document.querySelector('#view-root').querySelectorAll('h1').length, 1, `${view} should render one h1`);
     assert.equal(document.activeElement.id, 'app-main', `${view} navigation should focus main`);
-    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, contextRagMemory.resources.length);
-    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, contextRagMemory.interviewQuestions.length);
+    if (view === 'curriculum') assert.equal(viewRoot.querySelectorAll('.lesson-ledger__item').length, 8);
+    if (view === 'resources') assert.equal(viewRoot.querySelectorAll('.resource-row').length, backendEngineering.resources.length);
+    if (view === 'interviews') assert.equal(viewRoot.querySelectorAll('.interview-card').length, 24);
     if (view === 'progress') {
-      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.lessons.length}`));
-      assert.ok(viewRoot.textContent.includes(`0 / ${contextRagMemory.interviewQuestions.length}`));
+      assert.ok(viewRoot.textContent.includes(`0 / ${backendEngineering.lessons.length}`));
+      assert.ok(viewRoot.textContent.includes(`0 / ${backendEngineering.interviewQuestions.length}`));
     }
   }
 
-  for (const lessonId of ['context-02', 'context-05', 'context-07']) {
-    navigateTo(app, windowRef, `#context-rag-memory/lesson/${lessonId}`);
+  navigateTo(app, windowRef, '#backend-engineering/lesson/backend-01');
+  const quizForm = document.querySelector('.quiz-form');
+  assert.equal(quizForm.querySelectorAll('.quiz-question').length, 2);
+  for (const question of backendEngineering.lessons[0].quiz) {
+    quizForm.querySelector(
+      `input[name="${question.id}"][value="${question.answerIndex}"]`,
+    ).checked = true;
+  }
+  const savesBeforeQuiz = store.saves.length;
+  quizForm.dispatchEvent(new FakeEvent('submit'));
+  assert.equal(app.getState().quizResults['backend-01'].percent, 100);
+  assert.ok(document.querySelector('.quiz-results').textContent.includes('得分 2 / 2（100%）'));
+  assert.equal(store.saves.length, savesBeforeQuiz + 1);
+
+  for (const lessonId of ['backend-02', 'backend-03', 'backend-06']) {
+    navigateTo(app, windowRef, `#backend-engineering/lesson/${lessonId}`);
     const viewRoot = document.querySelector('#view-root');
     assert.equal(viewRoot.querySelectorAll('h1').length, 1, lessonId);
     assert.equal(viewRoot.querySelectorAll('.experiment-lab').length, 1, lessonId);
     assert.ok(viewRoot.textContent.includes(
-      contextRagMemory.lessons.find(({ id }) => id === lessonId).title,
+      backendEngineering.lessons.find(({ id }) => id === lessonId).title,
     ));
     assert.equal(document.activeElement.id, 'app-main', lessonId);
   }

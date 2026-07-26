@@ -4,6 +4,7 @@ import {
   sampleDistribution,
 } from '../core/experiments.js';
 import { agentExperimentRenderers } from './agent-experiments.js';
+import { backendExperimentRenderers } from './backend-experiments.js';
 import { contextExperimentRenderers } from './context-experiments.js';
 import { harnessExperimentRenderers } from './harness-experiments.js';
 import { button, element } from './dom.js';
@@ -59,6 +60,7 @@ const experimentRenderers = Object.freeze({
   ...agentExperimentRenderers,
   ...harnessExperimentRenderers,
   ...contextExperimentRenderers,
+  ...backendExperimentRenderers,
 });
 
 let unavailableExperimentSequence = 0;

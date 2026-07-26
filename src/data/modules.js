@@ -41,7 +41,7 @@ export const modules = [
   {
     id: 'backend-engineering',
     title: 'AI 后端工程',
-    status: 'planned',
+    status: 'active',
     summary: '把原型升级为具备并发、流式输出、缓存、队列和容错能力的服务。',
     prerequisites: ['agent-harness'],
     estimatedHours: 18,

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { normalizeRoute } from '../src/app.js';
+import { backendEngineering } from '../src/data/backend-engineering.js';
 import { courseRegistry } from '../src/data/courses.js';
 import { modules } from '../src/data/modules.js';
 import { externalLink } from '../src/ui/dom.js';
@@ -415,6 +416,58 @@ test('Agent experiment renderers are isolated, safely registered and responsivel
   assert.match(styles, /@media\s*\(max-width\s*:\s*22rem\)[\s\S]*\.agent-decision-ledger/s);
 });
 
+test('backend experiment renderers safely register core simulations with mobile lab styles', async () => {
+  const [experiments, backendExperiments, styles] = await Promise.all([
+    read('src/ui/experiments.js'),
+    read('src/ui/backend-experiments.js'),
+    read('styles/app.css'),
+  ]);
+
+  for (const coreFunction of [
+    'simulateStreamLifecycle',
+    'evaluateServiceAdmission',
+    'advanceJobDelivery',
+  ]) {
+    assert.match(backendExperiments, new RegExp(`\\b${coreFunction}\\s*\\(`));
+  }
+  for (const renderer of [
+    'renderStreamLifecycleExperiment',
+    'renderServiceAdmissionExperiment',
+    'renderJobDeliveryLedgerExperiment',
+  ]) {
+    assert.match(backendExperiments, new RegExp(`export function ${renderer}\\b`));
+  }
+  assert.match(backendExperiments, /export const backendExperimentRenderers\s*=\s*Object\.freeze\s*\(\s*\{/);
+  for (const id of ['stream-lifecycle', 'service-admission', 'job-delivery-ledger']) {
+    assert.match(backendExperiments, new RegExp(`['"]${id}['"]\\s*:`));
+  }
+  assert.match(
+    experiments,
+    /import\s*\{\s*backendExperimentRenderers\s*\}\s*from ['"]\.\/backend-experiments\.js['"]/,
+  );
+  assert.match(
+    experiments,
+    /Object\.freeze\s*\(\s*\{[\s\S]*\.\.\.backendExperimentRenderers[\s\S]*\}\s*\)/,
+  );
+  assert.deepEqual(findUnsafeDomPatterns(backendExperiments), []);
+
+  for (const selector of [
+    '.backend-event-trace',
+    '.backend-capacity-grid',
+    '.backend-delivery-summary',
+    '.backend-delivery-ledger',
+    '.backend-delivery-attempts',
+    '.backend-delivery-boundaries',
+    '.backend-long-id',
+  ]) {
+    assert.ok(styles.includes(selector), `missing backend lab style ${selector}`);
+  }
+  assert.match(styles, /\.backend-long-id\s*\{[^}]*overflow-wrap:\s*anywhere[^}]*word-break:\s*break-word/s);
+  assert.match(styles, /\.backend-action\s*\{[^}]*min-height:\s*(?:2\.75rem|44px)/s);
+  assert.match(styles, /@media\s*\(max-width\s*:\s*40rem\)[\s\S]*\.backend-lab-grid\s*\{[^}]*grid-template-columns:\s*(?:minmax\(\s*0\s*,\s*1fr\s*\)|1fr)/s);
+  assert.match(styles, /prefers-reduced-motion\s*:\s*reduce/i);
+});
+
 test('release guide documents operation, architecture, privacy and the extension contract', async () => {
   const readme = await read('README.md');
 
@@ -455,13 +508,13 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide records all four active modules as knowledge-note textbooks', async () => {
+test('release guide records all five active modules as knowledge-note textbooks', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
   const architecture = markdownSection(readme, '架构与数据流');
   const primaryTextbookStatement = markdownParagraphContaining(status, '主教材');
 
-  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness', '上下文、RAG 与记忆']) {
+  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程']) {
     assert.match(
       primaryTextbookStatement,
       new RegExp(`${escapeRegExp(title)}[^\\n]{0,50}(?:八|8)课[^\\n]{0,50}(?:站内)?知识笔记[^\\n]{0,40}主教材`),
@@ -485,6 +538,8 @@ test('release guide records all four active modules as knowledge-note textbooks'
   assert.match(architecture, /`src\/data\/agent-harness-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
   assert.ok(architecture.includes('`src/data/context-rag-memory-notes/`'));
   assert.match(architecture, /`src\/data\/context-rag-memory-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
+  assert.ok(architecture.includes('`src/data/backend-engineering-notes/`'));
+  assert.match(architecture, /`src\/data\/backend-engineering-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
 });
 
 test('release guide publishes every active registered course with data-derived counts and canonical routes', async () => {
@@ -599,6 +654,38 @@ test('release guide maps every Context RAG and Memory lesson, lab and responsibi
   for (const boundary of ['context projection', 'retrieval corpus', 'long-term memory', 'checkpoint', 'Harness']) {
     assert.match(map, new RegExp(escapeRegExp(boundary), 'i'), `README should distinguish ${boundary}`);
   }
+});
+
+test('release guide maps every AI backend lesson, lab and deterministic boundary', async () => {
+  const readme = await read('README.md');
+  const map = markdownSection(readme, 'AI 后端工程课程地图');
+
+  for (const lesson of backendEngineering.lessons) {
+    assert.ok(map.includes(`\`${lesson.id}\``), `README should list ${lesson.id}`);
+    assert.ok(map.includes(lesson.title), `README should name ${lesson.title}`);
+  }
+  for (const [lessonId, experimentId] of [
+    ['backend-02', 'stream-lifecycle'],
+    ['backend-03', 'service-admission'],
+    ['backend-06', 'job-delivery-ledger'],
+  ]) {
+    const mappingLine = map.split('\n').find((line) => (
+      line.includes(`\`${lessonId}\``) && line.includes(`\`${experimentId}\``)
+    ));
+    assert.ok(mappingLine, `README should map ${experimentId} to ${lessonId}`);
+  }
+  for (const file of [
+    'src/data/backend-engineering.js',
+    'src/data/backend-engineering-notes.js',
+    'src/core/backend-engineering.js',
+    'src/ui/backend-experiments.js',
+  ]) {
+    assert.ok(readme.includes(file), `README should document ${file}`);
+  }
+  assert.match(
+    map,
+    /确定性(?:教学)?模拟[^\n]{0,220}(?:真实服务|真实网络|真实队列)[^\n]{0,220}(?:生产吞吐|p95|p99|exactly-once)/i,
+  );
 });
 
 test('release guide records multi-module state isolation and evidence labels as completed facts', async () => {
