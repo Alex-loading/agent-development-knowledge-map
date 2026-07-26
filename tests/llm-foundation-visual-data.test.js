@@ -145,14 +145,6 @@ function assertUniqueAssetPaths(visuals) {
   );
 }
 
-function attributeValue(tag, attribute) {
-  const match = new RegExp(
-    `\\b${attribute}\\s*=\\s*(["'])([\\s\\S]*?)\\1`,
-    'i',
-  ).exec(tag);
-  return match?.[2];
-}
-
 function findTagEnd(svg, start, label) {
   let quote = null;
   for (let index = start + 1; index < svg.length; index += 1) {
@@ -258,6 +250,21 @@ function parseSvgAttributes(rawAttributes, elementName, isRoot, label) {
 }
 
 function parseStrictSvg(svg, label) {
+  for (const character of svg) {
+    const codePoint = character.codePointAt(0);
+    const isXml10Character = (
+      codePoint === 0x9
+      || codePoint === 0xA
+      || codePoint === 0xD
+      || (codePoint >= 0x20 && codePoint <= 0xD7FF)
+      || (codePoint >= 0xE000 && codePoint <= 0xFFFD)
+      || (codePoint >= 0x10000 && codePoint <= 0x10FFFF)
+    );
+    assert.ok(
+      isXml10Character,
+      `${label}: U+${codePoint.toString(16).toUpperCase()} 不是 XML 1.0 合法字符`,
+    );
+  }
   assert.equal(svg, svg.normalize('NFC'), `${label}: 必须使用 NFC Unicode`);
   assert.doesNotMatch(svg, /\uFFFD/, `${label}: 必须是有效 UTF-8`);
   assert.doesNotMatch(svg, /\\/, `${label}: 禁止 CSS 转义与反斜线`);
@@ -272,19 +279,25 @@ function parseStrictSvg(svg, label) {
   );
 
   const stack = [];
-  const ids = new Set();
+  const elements = [];
+  const elementsByName = new Map();
+  const ids = new Map();
   const localReferences = [];
   let cursor = 0;
   let rootSeen = false;
   let rootClosed = false;
-  let rootTag = '';
+  let root = null;
 
   while (cursor < svg.length) {
     if (svg[cursor] !== '<') {
       const nextTag = svg.indexOf('<', cursor);
       const end = nextTag === -1 ? svg.length : nextTag;
+      const characterData = svg.slice(cursor, end);
       if (stack.length === 0) {
-        assert.match(svg.slice(cursor, end), /^[\t\n\r ]*$/, `${label}: 根节点外禁止文本`);
+        assert.match(characterData, /^[\t\n\r ]*$/, `${label}: 根节点外禁止文本`);
+      } else {
+        assert.doesNotMatch(characterData, /\]\]>/, `${label}: 正文禁止 CDATA 终止序列 ]]>`);
+        for (const node of stack) node.text += characterData;
       }
       cursor = end;
       continue;
@@ -296,7 +309,7 @@ function parseStrictSvg(svg, label) {
       const closing = /^<\/([A-Za-z_][A-Za-z0-9_.-]*)[\t\n\r ]*>$/.exec(tag);
       assert.ok(closing, `${label}: 闭合标签语法无效或包含命名空间前缀`);
       assert.ok(stack.length > 0, `${label}: 出现无对应开始标签的 ${closing[1]}`);
-      assert.equal(stack.at(-1), closing[1], `${label}: ${closing[1]} 闭合顺序错误`);
+      assert.equal(stack.at(-1).name, closing[1], `${label}: ${closing[1]} 闭合顺序错误`);
       stack.pop();
       if (stack.length === 0) rootClosed = true;
     } else {
@@ -315,7 +328,6 @@ function parseStrictSvg(svg, label) {
         assert.equal(elementName, 'svg', `${label}: 根节点必须是 svg`);
         assert.ok(!selfClosing, `${label}: 根 svg 必须有完整闭合标签`);
         rootSeen = true;
-        rootTag = tag;
       } else {
         assert.notEqual(elementName, 'svg', `${label}: 禁止嵌套 svg 根元素`);
       }
@@ -329,19 +341,45 @@ function parseStrictSvg(svg, label) {
       if (isRoot) {
         assert.equal(attributes.get('xmlns'), SVG_NAMESPACE, `${label}: 根 svg 缺少固定 xmlns`);
       }
+      const node = {
+        name: elementName,
+        attributes,
+        children: [],
+        text: '',
+      };
+      elements.push(node);
+      if (!elementsByName.has(elementName)) elementsByName.set(elementName, []);
+      elementsByName.get(elementName).push(node);
+      if (isRoot) {
+        root = node;
+      } else {
+        stack.at(-1).children.push(node);
+      }
       const id = attributes.get('id');
       if (id !== undefined) {
         assert.match(id, /^[A-Za-z_][\w.-]*$/, `${label}:${elementName}.id: id 语法无效`);
         assert.ok(!ids.has(id), `${label}: id ${id} 不得重复`);
-        ids.add(id);
+        ids.set(id, node);
       }
       const href = attributes.get('href');
-      if (href !== undefined) localReferences.push(href.slice(1));
+      if (href !== undefined) {
+        localReferences.push({
+          node,
+          attribute: 'href',
+          targetId: href.slice(1),
+        });
+      }
       for (const attributeName of LOCAL_FRAGMENT_ATTRIBUTES) {
         const match = /^url\(#([A-Za-z_][\w.-]*)\)$/.exec(attributes.get(attributeName) ?? '');
-        if (match) localReferences.push(match[1]);
+        if (match) {
+          localReferences.push({
+            node,
+            attribute: attributeName,
+            targetId: match[1],
+          });
+        }
       }
-      if (!selfClosing) stack.push(elementName);
+      if (!selfClosing) stack.push(node);
     }
     cursor = tagEnd + 1;
   }
@@ -350,32 +388,49 @@ function parseStrictSvg(svg, label) {
   assert.equal(stack.length, 0, `${label}: 存在未闭合元素 ${stack.at(-1) ?? ''}`);
   assert.ok(rootClosed, `${label}: 根 svg 必须完整闭合`);
   for (const reference of localReferences) {
-    assert.ok(ids.has(reference), `${label}: 本地片段 #${reference} 必须引用真实 id`);
+    assert.ok(
+      ids.has(reference.targetId),
+      `${label}:${reference.node.name}.${reference.attribute}: `
+      + `本地片段 #${reference.targetId} 必须引用真实 id`,
+    );
   }
-  return { rootTag };
+  return {
+    root,
+    elements,
+    elementsByName,
+    ids,
+    localReferences,
+  };
 }
 
 function assertSafeSvg(svg, visual, assetPath) {
   const label = `${visual.id}:${assetPath}`;
-  const { rootTag } = parseStrictSvg(svg, label);
-  const titleMatches = [...svg.matchAll(/<title\b([^>]*)>/gi)];
-  const descMatches = [...svg.matchAll(/<desc\b([^>]*)>/gi)];
-  assert.equal(titleMatches.length, 1, `${label}: 必须有一个 title`);
-  assert.equal(descMatches.length, 1, `${label}: 必须有一个 desc`);
-  assert.equal(attributeValue(rootTag, 'role'), 'img', `${label}: role 必须为 img`);
+  const parsed = parseStrictSvg(svg, label);
+  const titleNodes = parsed.elementsByName.get('title') ?? [];
+  const descNodes = parsed.elementsByName.get('desc') ?? [];
+  assert.equal(titleNodes.length, 1, `${label}: 必须有一个 title`);
+  assert.equal(descNodes.length, 1, `${label}: 必须有一个 desc`);
+  const [titleNode] = titleNodes;
+  const [descNode] = descNodes;
+  assert.equal(parsed.root.attributes.get('role'), 'img', `${label}: role 必须为 img`);
 
-  const titleId = attributeValue(titleMatches[0]?.[0] ?? '', 'id');
-  const descId = attributeValue(descMatches[0]?.[0] ?? '', 'id');
+  const titleId = titleNode.attributes.get('id');
+  const descId = descNode.attributes.get('id');
   assert.ok(titleId, `${label}: title 必须有 id`);
   assert.ok(descId, `${label}: desc 必须有 id`);
   assert.notEqual(titleId, descId, `${label}: title 与 desc id 必须不同`);
+  assert.ok(titleNode.text.trim(), `${label}: title 必须有正文`);
+  assert.ok(descNode.text.trim(), `${label}: desc 必须有正文`);
+  const labelledBy = parsed.root.attributes.get('aria-labelledby')?.trim().split(/\s+/);
   assert.deepEqual(
-    attributeValue(rootTag, 'aria-labelledby')?.trim().split(/\s+/),
+    labelledBy,
     [titleId, descId],
     `${label}: aria-labelledby 必须依次引用真实 title 与 desc`,
   );
+  assert.equal(parsed.ids.get(labelledBy?.[0]), titleNode, `${label}: aria 首项必须指向真实 title`);
+  assert.equal(parsed.ids.get(labelledBy?.[1]), descNode, `${label}: aria 次项必须指向真实 desc`);
 
-  const viewBox = attributeValue(rootTag, 'viewBox')
+  const viewBox = parsed.root.attributes.get('viewBox')
     ?.trim()
     .split(/[\s,]+/)
     .map(Number);
@@ -384,15 +439,8 @@ function assertSafeSvg(svg, visual, assetPath) {
     [0, 0, visual.width, visual.height],
     `${label}: viewBox 必须与 registry 尺寸一致`,
   );
-  assert.equal(Number(attributeValue(rootTag, 'width')), visual.width, `${label}: width 必须固定`);
-  assert.equal(Number(attributeValue(rootTag, 'height')), visual.height, `${label}: height 必须固定`);
-
-  for (const element of svg.matchAll(/<(?:use|textPath)\b[^>]*>/gi)) {
-    const href = attributeValue(element[0], '(?:href|xlink:href)');
-    if (href !== undefined) {
-      assert.match(href, /^#[A-Za-z_][\w:.-]*$/, `${label}: use/textPath 禁止外链`);
-    }
-  }
+  assert.equal(Number(parsed.root.attributes.get('width')), visual.width, `${label}: width 必须固定`);
+  assert.equal(Number(parsed.root.attributes.get('height')), visual.height, `${label}: height 必须固定`);
 }
 
 test('publishes the frozen llm-01 overview visual reference', () => {
@@ -619,6 +667,126 @@ test('strict SVG subset rejects encoded URLs, processing instructions and malfor
   );
   assert.doesNotThrow(() => assertSafeSvg(safeShell('<g><rect/></g>'), visual, 'safe.svg'));
   for (const [name, svg] of unsafeCases) {
+    assert.throws(
+      () => assertSafeSvg(svg, visual, `${name}.svg`),
+      assert.AssertionError,
+      name,
+    );
+  }
+});
+
+test('parsed SVG semantics cannot be spoofed by attribute-value text', () => {
+  const visual = { id: 'visual-test', width: 1200, height: 675 };
+  const body = '<title id="t">标题</title><desc id="d">描述</desc>';
+  const safeAttributeText = (
+    '<svg xmlns="http://www.w3.org/2000/svg" '
+    + 'data-region=\'role="presentation" aria-labelledby="fake fake"\' '
+    + 'width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+    + '<title id="t" aria-label="id=\'fake-title\'">标题</title>'
+    + '<desc id="d" aria-label=\'id="fake-desc"\'>描述</desc></svg>'
+  );
+  const spoofedRequiredAttributes = (
+    '<svg xmlns="http://www.w3.org/2000/svg" '
+    + 'data-region=\'role="img" aria-labelledby="t d" width="1200" height="675" '
+    + `viewBox="0 0 1200 675"'>${body}</svg>`
+  );
+  const spoofedCorrectValuesBeforeWrongRealValues = (
+    '<svg xmlns="http://www.w3.org/2000/svg" '
+    + 'data-region=\'role="img" aria-labelledby="t d" width="1200" height="675" '
+    + 'viewBox="0 0 1200 675"\' role="presentation" aria-labelledby="d t" '
+    + `width="1" height="2" viewBox="0 0 1 2">${body}</svg>`
+  );
+  const spoofedTitleAndDescIds = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+    + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+    + '<title aria-label=\'id="t"\'>标题</title>'
+    + '<desc aria-label=\'id="d"\'>描述</desc></svg>'
+  );
+  const malformedSemantics = new Map([
+    ['missing real root attributes', spoofedRequiredAttributes],
+    ['wrong real root attributes', spoofedCorrectValuesBeforeWrongRealValues],
+    ['missing real title/desc ids', spoofedTitleAndDescIds],
+    [
+      'missing title',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+      + '<desc id="d">描述</desc></svg>',
+    ],
+    [
+      'duplicate title',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+      + '<title id="t">标题</title><title id="t2">另一标题</title><desc id="d">描述</desc></svg>',
+    ],
+    [
+      'missing desc',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+      + '<title id="t">标题</title></svg>',
+    ],
+    [
+      'duplicate desc',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+      + '<title id="t">标题</title><desc id="d">描述</desc><desc id="d2">另一描述</desc></svg>',
+    ],
+    [
+      'duplicate element id',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="same same">'
+      + '<title id="same">标题</title><desc id="same">描述</desc></svg>',
+    ],
+    [
+      'aria tokens reversed',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="d t">'
+      + `${body}</svg>`,
+    ],
+    [
+      'aria token references nonexistent id',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+      + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t missing">'
+      + `${body}</svg>`,
+    ],
+  ]);
+
+  const parsed = parseStrictSvg(safeAttributeText, 'safe-attribute-text.svg');
+  assert.equal(parsed.root.attributes.get('role'), 'img');
+  assert.equal(
+    parsed.root.attributes.get('data-region'),
+    'role="presentation" aria-labelledby="fake fake"',
+  );
+  assert.equal(parsed.elementsByName.get('title')[0].attributes.get('id'), 't');
+  assert.equal(parsed.elementsByName.get('desc')[0].attributes.get('id'), 'd');
+  assert.doesNotThrow(() => assertSafeSvg(safeAttributeText, visual, 'safe-attribute-text.svg'));
+  for (const [name, svg] of malformedSemantics) {
+    assert.throws(
+      () => assertSafeSvg(svg, visual, `${name}.svg`),
+      assert.AssertionError,
+      name,
+    );
+  }
+});
+
+test('strict SVG parser enforces XML 1.0 CharData code points', () => {
+  const visual = { id: 'visual-test', width: 1200, height: 675 };
+  const safeShell = (content) => (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" '
+    + 'viewBox="0 0 1200 675" role="img" aria-labelledby="t d">'
+    + `<title id="t">安全中文 😀</title><desc id="d">描述</desc>${content}</svg>`
+  );
+  const invalidCharacters = new Map([
+    ['U+FFFE', safeShell('<text>\uFFFE</text>')],
+    ['U+FFFF', safeShell('<text>\uFFFF</text>')],
+    ['isolated high surrogate', safeShell('<text>\uD800</text>')],
+    ['isolated low surrogate', safeShell('<text>\uDC00</text>')],
+    ['forbidden CharData terminator', safeShell('<text>]]></text>')],
+  ]);
+
+  assert.doesNotThrow(
+    () => assertSafeSvg(safeShell('<text id="emoji">合法 supplementary 😀</text>'), visual, 'safe-emoji.svg'),
+  );
+  for (const [name, svg] of invalidCharacters) {
     assert.throws(
       () => assertSafeSvg(svg, visual, `${name}.svg`),
       assert.AssertionError,
