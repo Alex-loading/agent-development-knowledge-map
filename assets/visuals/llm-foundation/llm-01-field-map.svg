@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="field-map-title field-map-desc" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <title id="field-map-title">AI、机器学习、深度学习、生成式 AI 与 LLM 的双轴关系</title>
+  <desc id="field-map-desc">阅读顺序从人工智能总目标开始，沿方法轴查看人工智能包含机器学习、机器学习包含深度学习，再沿横向生成能力轴找到语言生成与深度学习的交叉处 LLM。搜索和规划是非学习人工智能的反例，视觉和语音是非语言深度学习或生成模型的反例，因此这些概念不能压成一条同义嵌套链。</desc>
+  <defs>
+    <pattern id="cross-hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <rect width="12" height="12" fill="#f4ead3"/>
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#9f762e" stroke-width="4"/>
+    </pattern>
+    <marker id="axis-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#743b28"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="675" fill="#f7f2e8"/>
+  <rect x="24" y="22" width="1152" height="631" rx="28" fill="#fffdf8" stroke="#d4cbb8" stroke-width="2"/>
+
+  <g data-region="ai-goal">
+    <text x="58" y="62" fill="#183d32" font-size="25" font-weight="750">① 总目标：人工智能 AI</text>
+    <rect x="48" y="84" width="704" height="478" rx="30" fill="#edf4f0" stroke="#315449" stroke-width="5"/>
+    <text x="76" y="118" fill="#183d32" font-size="18" font-weight="650">能力目标的宽泛集合</text>
+  </g>
+
+  <g data-region="method-axis">
+    <text x="78" y="158" fill="#315449" font-size="22" font-weight="750">② 方法包含链</text>
+    <text x="275" y="158" fill="#315449" font-size="16">实线嵌套表示“属于一种实现方法”</text>
+    <rect x="250" y="178" width="430" height="326" rx="26" fill="#fff8f3" stroke="#9b4b31" stroke-width="5"/>
+    <text x="278" y="214" fill="#743b28" font-size="23" font-weight="750">机器学习 ML</text>
+    <text x="278" y="238" fill="#743b28" font-size="16">从数据中学习规律的方法</text>
+    <rect x="360" y="257" width="292" height="198" rx="24" fill="#f6f3fb" stroke="#746690" stroke-width="5"/>
+    <text x="386" y="292" fill="#50456a" font-size="23" font-weight="750">深度学习 DL</text>
+    <text x="386" y="316" fill="#50456a" font-size="16">以多层神经网络为主</text>
+  </g>
+
+  <g data-region="capability-axis">
+    <text x="786" y="158" fill="#743b28" font-size="22" font-weight="750">③ 生成能力轴</text>
+    <line x1="434" y1="354" x2="1122" y2="354" stroke="#743b28" stroke-width="4" stroke-dasharray="12 9" marker-end="url(#axis-arrow)"/>
+    <rect x="448" y="184" width="686" height="292" rx="30" fill="none" stroke="#9b4b31" stroke-width="4" stroke-dasharray="12 9"/>
+    <text x="792" y="218" fill="#743b28" font-size="23" font-weight="750">生成式 AI</text>
+    <text x="792" y="244" fill="#743b28" font-size="16">按“产出新内容”分类，而不是另一层方法</text>
+    <rect x="918" y="270" width="184" height="62" rx="18" fill="#fff8f3" stroke="#9b4b31" stroke-width="2" stroke-dasharray="7 6"/>
+    <text x="1010" y="297" text-anchor="middle" fill="#743b28" font-size="18" font-weight="700">图像 / 音频生成</text>
+    <text x="1010" y="319" text-anchor="middle" fill="#743b28" font-size="14">生成不只等于语言</text>
+  </g>
+
+  <g data-region="llm-intersection">
+    <text x="786" y="394" fill="#5f522f" font-size="22" font-weight="750">④ 交叉处：LLM</text>
+    <rect x="474" y="332" width="166" height="92" rx="24" fill="url(#cross-hatch)" stroke="#715d25" stroke-width="5"/>
+    <text x="557" y="369" text-anchor="middle" fill="#3d351f" font-size="27" font-weight="800">LLM</text>
+    <text x="557" y="398" text-anchor="middle" fill="#3d351f" font-size="15" font-weight="650">深度学习 × 语言生成</text>
+  </g>
+
+  <g data-region="counterexamples">
+    <text x="786" y="444" fill="#9b4b31" font-size="22" font-weight="750">⑤ 两个反例</text>
+    <rect x="76" y="408" width="150" height="106" rx="20" fill="#fffdf8" stroke="#315449" stroke-width="3"/>
+    <text x="151" y="443" text-anchor="middle" fill="#183d32" font-size="19" font-weight="750">搜索 / 规划</text>
+    <text x="151" y="469" text-anchor="middle" fill="#183d32" font-size="15">非学习 AI</text>
+    <text x="151" y="492" text-anchor="middle" fill="#183d32" font-size="14">在 AI 内、ML 外</text>
+    <g aria-label="视觉 / 语音：非语言深度学习或生成模型">
+      <rect x="376" y="344" width="66" height="82" rx="18" fill="#fffdf8" stroke="#746690" stroke-width="3"/>
+      <text x="409" y="375" text-anchor="middle" fill="#50456a" font-size="17" font-weight="750">视觉</text>
+      <text x="409" y="402" text-anchor="middle" fill="#50456a" font-size="17" font-weight="750">语音</text>
+    </g>
+    <line x1="770" y1="458" x2="1134" y2="458" stroke="#d8c5bb" stroke-width="2"/>
+    <text x="786" y="486" fill="#5f4338" font-size="17">反例 A：AI 还有不依赖机器学习的搜索与规划。</text>
+    <text x="786" y="516" fill="#5f4338" font-size="17">反例 B：深度学习与生成模型也覆盖视觉、语音等非语言任务。</text>
+  </g>
+
+  <g data-region="legend">
+    <rect x="48" y="582" width="1086" height="48" rx="16" fill="#f2ede2"/>
+    <line x1="78" y1="606" x2="126" y2="606" stroke="#315449" stroke-width="5"/>
+    <text x="138" y="612" fill="#403b32" font-size="16">实线嵌套：方法包含</text>
+    <line x1="372" y1="606" x2="426" y2="606" stroke="#9b4b31" stroke-width="4" stroke-dasharray="10 7"/>
+    <text x="438" y="612" fill="#403b32" font-size="16">虚线边界：生成能力</text>
+    <rect x="690" y="592" width="46" height="28" rx="7" fill="url(#cross-hatch)" stroke="#715d25" stroke-width="2"/>
+    <text x="748" y="612" fill="#403b32" font-size="16">斜线阴影：两轴交叉</text>
+  </g>
+</svg>

@@ -140,6 +140,7 @@ const misconceptions = Object.freeze([
 
 export const llm01Note = Object.freeze({
   readingMinutes: 25,
+  overviewVisualId: 'visual-llm-01-field-map',
   introduction: '如果把 AI、机器学习、深度学习、生成式 AI、LLM 和 Agent 当成一串同义词，后续学习很容易只记住术语，却不知道故障发生在哪一层。本章从一张多轴地图出发，建立“机器如何学习—语言模型如何生成—模型如何被应用调用—Agent 如何在模型外形成行动系统”的依赖链。学完后，你应能回答本课两道测验与三道面试题，完成资料助理的学习边界练习，并能依据评测证据选择应用层方案或模型层方案。',
   sections,
   misconceptions,
