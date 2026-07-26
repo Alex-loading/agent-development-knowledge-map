@@ -72,15 +72,18 @@ src/data/visuals/
 {
   id: 'visual-llm-04-qkv-flow',
   kind: 'diagram',
+  role: 'mechanism',
   title: 'Q、K、V 的职责与信息流',
   alt: '三个投影分别表达查询、匹配键和值，并通过注意力权重汇总 Value',
   longDescription: '按阅读顺序描述节点、连接、方向、颜色含义和最终结论。',
   caption: '相似度只产生权重，真正被汇总的是 Value。',
   assetPath: './assets/visuals/llm-foundation/llm-04-qkv-flow.svg',
+  width: 1200,
+  height: 675,
   provenance: 'original-synthesis',
   sourceIds: ['res-attention-paper', 'res-3b1b-attention'],
   credit: 'Agent Learner 原创整理',
-  license: null,
+  permission: null,
   verifiedAt: '2026-07-26',
 }
 ```
@@ -90,6 +93,8 @@ src/data/visuals/
 - `diagram`：原创静态 SVG 教学图解；
 - `source-figure`：经许可保存的第三方原图或截图；
 - `step-diagram`：由站内白名单组件渲染的分步机制图。
+
+`role` 使用允许列表：`overview`、`mechanism`、`process`、`comparison`、`boundary`、`decision`。
 
 `provenance` 使用允许列表：
 
@@ -219,6 +224,7 @@ figure
 ### 5.4 可访问性与降级
 
 - 每张图必须有简洁 `alt`；复杂图必须有长描述；
+- 每张图必须记录原始 `width` 和 `height`，避免加载时布局跳动并保持正确比例；
 - `alt` 说明图的学习结论，不机械列出所有装饰元素；
 - SVG 必须包含可读标题和描述，不依赖鼠标悬停；
 - 分步图支持键盘、44px 控件、可见焦点、状态说明、重置和 `prefers-reduced-motion`；
@@ -267,7 +273,7 @@ src/data/visuals/llm-foundation-visuals.js
 src/ui/knowledge-visual.js
 tests/knowledge-visual-data.test.js
 tests/knowledge-visual-ui.test.js
-docs/content-audits/<date>-llm-foundation-visuals.md
+docs/content-audits/2026-07-26-llm-foundation-visuals.md
 ```
 
 现有 `renderKnowledgeNote` 负责解析插入位置，新组件负责视觉资产验证、`figure` 语义、长描述和分步组件分发。现有课程在没有 `visuals` 时继续按原样渲染，保证模块 2–5 在回补前不受影响。
