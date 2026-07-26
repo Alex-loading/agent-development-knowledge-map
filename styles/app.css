@@ -1184,6 +1184,284 @@ button:disabled {
   line-height: 1.72;
 }
 
+.knowledge-visual {
+  --knowledge-visual-accent: var(--color-vermilion);
+
+  min-width: 0;
+  max-width: 100%;
+  margin-block: var(--space-7);
+  border: 1px solid var(--color-border);
+  border-top: 0.4rem solid var(--knowledge-visual-accent);
+  padding: var(--space-4);
+  background: var(--color-paper-raised);
+  box-shadow: var(--shadow-paper);
+}
+
+.knowledge-visual__label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+  color: var(--knowledge-visual-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.knowledge-visual__title {
+  margin: var(--space-2) 0 var(--space-4);
+  color: var(--color-forest);
+  font-family: var(--font-heading);
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.25;
+}
+
+.knowledge-visual__media {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  border-block: 1px solid var(--color-border-soft);
+  background:
+    repeating-linear-gradient(0deg, var(--color-paper) 0 1.72rem, rgb(28 40 34 / 0.045) 1.72rem 1.78rem);
+  scrollbar-color: var(--color-border) var(--color-paper-deep);
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.knowledge-visual__media::-webkit-scrollbar {
+  min-height: 0.75rem;
+}
+
+.knowledge-visual__media::-webkit-scrollbar-thumb {
+  border: 2px solid var(--color-paper-deep);
+  background: var(--color-border);
+}
+
+.knowledge-visual__image {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  background: var(--color-paper-raised);
+  transition: opacity var(--motion-fast) var(--ease-out);
+}
+
+.knowledge-visual figcaption {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-top: var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.knowledge-visual figcaption > p {
+  margin: 0;
+}
+
+.knowledge-visual__credit {
+  min-width: 0;
+  border-top: 1px dashed var(--color-border-soft);
+  padding-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.knowledge-visual__description {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.knowledge-visual__long-description {
+  min-width: 0;
+  border-left: 2px solid var(--color-ochre);
+  padding-left: var(--space-3);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.knowledge-visual__long-description summary {
+  width: fit-content;
+  color: var(--color-forest);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.knowledge-visual__long-description summary:hover {
+  color: var(--color-vermilion);
+}
+
+.knowledge-visual__long-description p {
+  margin: var(--space-2) 0 0;
+}
+
+.knowledge-visual__fallback {
+  margin: var(--space-4);
+  border: 2px dashed var(--color-vermilion);
+  padding: var(--space-4);
+  color: var(--color-ink);
+  background: var(--color-vermilion-soft);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.knowledge-visual__fallback::before {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  min-height: 1.5rem;
+  margin-right: var(--space-2);
+  border: 1px solid currentColor;
+  content: '!';
+  font-family: var(--font-mono);
+}
+
+.knowledge-visual__original-link {
+  width: fit-content;
+  max-width: 100%;
+  border-bottom: 1px solid currentColor;
+  color: var(--color-forest);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.knowledge-visual__original-link:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0.2rem;
+}
+
+.knowledge-visual__controls {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.3fr) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--color-forest);
+  border-bottom: 1px solid var(--color-border-soft);
+  padding: var(--space-4);
+  background: var(--color-forest-soft);
+  transition: background-color var(--motion-fast) var(--ease-out);
+}
+
+.knowledge-visual__step-status {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-forest);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.knowledge-visual__step-status:focus {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0.2rem;
+}
+
+.knowledge-visual__step-description {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.knowledge-visual__step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+}
+
+.knowledge-visual__step-actions button {
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  transition:
+    transform var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out);
+}
+
+.knowledge-visual__step-reset {
+  color: var(--color-forest);
+  background: var(--color-paper-raised);
+}
+
+.knowledge-visual__step-actions button:disabled {
+  border-style: dashed;
+  color: var(--color-disabled);
+  background: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.knowledge-visual__step-actions button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0.2rem;
+}
+
+.knowledge-visual[data-provenance="original-synthesis"] {
+  border-top-style: solid;
+}
+
+.knowledge-visual[data-provenance="original-synthesis"] .knowledge-visual__label::before {
+  content: '原创 ·';
+}
+
+.knowledge-visual[data-provenance="licensed-reproduction"] {
+  --knowledge-visual-accent: var(--color-ochre);
+
+  border-top-style: dashed;
+}
+
+.knowledge-visual[data-provenance="licensed-reproduction"] .knowledge-visual__label::before {
+  content: '许可复刻 ·';
+}
+
+.knowledge-visual[data-provenance="licensed-adaptation"] {
+  --knowledge-visual-accent: var(--color-ochre);
+
+  border-top-style: double;
+}
+
+.knowledge-visual[data-provenance="licensed-adaptation"] .knowledge-visual__label::before {
+  content: '许可改编 ·';
+}
+
+.knowledge-visual[data-provenance="official-media"] {
+  --knowledge-visual-accent: var(--color-forest);
+
+  border-inline-style: double;
+}
+
+.knowledge-visual[data-provenance="official-media"] .knowledge-visual__label::before {
+  content: '官方媒体 ·';
+}
+
+.knowledge-visual[data-kind="step-diagram"] {
+  border-bottom-width: 2px;
+}
+
+.knowledge-visual-diagnostic {
+  margin-block: var(--space-5);
+  border: 2px dashed var(--color-vermilion);
+  padding: var(--space-4);
+  color: var(--color-ink);
+  background: var(--color-vermilion-soft);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .resource-evidence {
   max-width: 72ch;
   margin-top: var(--space-2);
@@ -2646,6 +2924,13 @@ button:disabled {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .knowledge-visual__step-actions button:hover:not(:disabled) {
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-1px);
+  }
+}
+
 @media (max-width: 62rem) {
   body {
     background-image: repeating-linear-gradient(0deg, rgb(28 40 34 / 0.018) 0 1px, transparent 1px 1.75rem);
@@ -2843,6 +3128,34 @@ button:disabled {
     word-break: break-word;
   }
 
+  .knowledge-visual {
+    margin-block: var(--space-6);
+    padding: var(--space-3);
+  }
+
+  .knowledge-visual__controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .knowledge-visual__step-status,
+  .knowledge-visual__step-description,
+  .knowledge-visual__step-actions {
+    grid-column: 1;
+  }
+
+  .knowledge-visual__step-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .knowledge-visual__step-actions button {
+    min-height: 2.75rem;
+  }
+
+  .knowledge-visual__step-reset {
+    grid-column: 1 / -1;
+  }
+
   .knowledge-node {
     grid-template-columns: 3rem minmax(0, 1fr);
   }
@@ -2974,6 +3287,41 @@ button:disabled {
   }
 }
 
+@media (max-width: 24.375rem) {
+  .knowledge-visual {
+    min-width: 0;
+    max-width: 100%;
+    padding-inline: var(--space-2);
+  }
+
+  .knowledge-visual__media {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .knowledge-visual__media::before {
+    position: sticky;
+    left: 0;
+    display: block;
+    width: fit-content;
+    padding: var(--space-1) var(--space-2);
+    color: var(--color-ink);
+    background: var(--color-ochre-soft);
+    content: '↔ 横向滚动查看完整图';
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .knowledge-visual__image {
+    width: 45rem;
+    min-width: 45rem;
+    max-width: none;
+    height: auto;
+  }
+}
+
 @media (max-width: 22rem) {
   .app-header,
   .app-layout {
@@ -3056,6 +3404,18 @@ button:disabled {
     width: 100%;
   }
 
+  .knowledge-visual__step-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .knowledge-visual__step-actions button {
+    width: 100%;
+  }
+
+  .knowledge-visual__step-reset {
+    grid-column: 1;
+  }
+
   .retrieval-trace__row {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3065,7 +3425,74 @@ button:disabled {
   }
 }
 
+@media (forced-colors: active) {
+  .knowledge-visual {
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    forced-color-adjust: auto;
+  }
+
+  .knowledge-visual__media,
+  .knowledge-visual__controls,
+  .knowledge-visual__fallback,
+  .knowledge-visual-diagnostic {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+
+  .knowledge-visual__label,
+  .knowledge-visual__title,
+  .knowledge-visual__step-status,
+  .knowledge-visual__original-link {
+    color: LinkText;
+  }
+}
+
+@media print {
+  .knowledge-visual {
+    break-inside: avoid;
+    border-color: currentColor;
+    box-shadow: none;
+  }
+
+  .knowledge-visual__media {
+    overflow: visible;
+    border-color: currentColor;
+  }
+
+  .knowledge-visual__image {
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .knowledge-visual__controls {
+    display: none;
+  }
+
+  .knowledge-visual__long-description > p {
+    display: block;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .knowledge-visual__image {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .knowledge-visual__controls {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .knowledge-visual__step-actions button {
+    animation: none !important;
+    transition: none !important;
+  }
+
   *,
   *::before,
   *::after {
