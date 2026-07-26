@@ -144,6 +144,20 @@ test('retry diagram binds every attempt and event to fixture-derived visible geo
     assert.equal(Number(node.attributes.get('data-index')), index + 1);
     assert.equal(node.attributes.get('data-value'), fixture.data.attempts[index].priority);
   });
+  const guards = nodes(parsed, 'retry-guard');
+  assert.equal(guards.length, fixture.data.maxAttempts);
+  guards.forEach((guard, index) => {
+    const attemptNumber = index + 1;
+    assert.equal(Number(guard.attributes.get('data-index')), attemptNumber);
+    assert.equal(
+      guard.attributes.get('data-value'),
+      `attempt ${attemptNumber} ＜ ${fixture.data.maxAttempts}?`,
+    );
+  });
+  assertVisibleNodes(parsed, 'retry-terminal', ['degrade', 'manual-termination']);
+  assertVisibleNodes(parsed, 'retry-state', [
+    'schema-failed', 'schema-failed-2', 'validated', 'exhausted',
+  ]);
   const events = nodes(parsed, 'idempotency-event');
   assert.equal(events.length, fixture.data.events.length);
   events.forEach((node, index) => {
@@ -154,10 +168,25 @@ test('retry diagram binds every attempt and event to fixture-derived visible geo
     assert.equal(node.attributes.get('data-count'), String(fixture.data.events[index].payload.ticketId));
   });
   assertExactEdges(parsed, 'retry-edge', [
-    'attempt-1→schema-failed', 'schema-failed→attempt-2', 'attempt-2→validated',
+    'attempt-1→schema-failed', 'schema-failed→guard-1', 'guard-1→attempt-2',
+    'attempt-2→validated', 'attempt-2→schema-failed-2', 'schema-failed-2→guard-2',
+    'guard-2→exhausted', 'exhausted→degrade', 'exhausted→manual-termination',
     'validated→event-1', 'event-1→effect-1', 'event-2→effect-1',
     'event-3→effect-2', 'event-4→rejected', 'event-5→rejected',
   ]);
+  assert.deepEqual(
+    edges(parsed, 'retry-edge')
+      .filter((edge) => ['true', 'false'].includes(edge.attributes.get('data-kind')))
+      .map((edge) => ({
+        from: edge.attributes.get('data-from'),
+        to: edge.attributes.get('data-to'),
+        decision: edge.attributes.get('data-kind'),
+      })),
+    [
+      { from: 'guard-1', to: 'attempt-2', decision: 'true' },
+      { from: 'guard-2', to: 'exhausted', decision: 'false' },
+    ],
+  );
   const summary = nodes(parsed, 'retry-summary');
   assert.deepEqual(
     Object.fromEntries(summary.map((node) => [node.attributes.get('data-node'), node.attributes.get('data-value')])),
@@ -266,7 +295,7 @@ test('Pareto chart derives table values and two independent panel positions from
   const parsed = await parseVisual(visualId);
   const fixture = fixtures.get(visualId);
   const tableRows = nodes(parsed, 'pareto-table-row');
-  assert.equal(tableRows.length, 5);
+  assert.equal(tableRows.length, fixture.data.candidates.length);
   fixture.data.candidates.forEach((candidate, index) => {
     const row = tableRows.find((node) => node.attributes.get('data-node') === candidate.id);
     assert.equal(Number(row.attributes.get('data-index')), index);
@@ -274,21 +303,39 @@ test('Pareto chart derives table values and two independent panel positions from
     assert.equal(row.attributes.get('data-kind'), candidate.safety < fixture.data.safetyGate ? 'rejected' : 'eligible');
   });
 
+  const rejectedBySafety = new Set(fixture.result.rejectedBySafety);
+  const allowedIds = fixture.data.candidates
+    .filter((candidate) => candidate.safety >= fixture.data.safetyGate)
+    .filter((candidate) => !rejectedBySafety.has(candidate.id))
+    .map((candidate) => candidate.id);
+  assert.deepEqual(
+    fixture.data.candidates
+      .filter((candidate) => candidate.safety < fixture.data.safetyGate)
+      .map((candidate) => candidate.id),
+    fixture.result.rejectedBySafety,
+  );
+
   for (const stage of ['quality-cost', 'quality-latency']) {
     const points = nodes(parsed, 'pareto-point').filter((node) => node.attributes.get('data-stage') === stage);
-    assert.equal(points.length, 5);
-    fixture.data.candidates.forEach((candidate) => {
-      const point = points.find((node) => node.attributes.get('data-node') === candidate.id);
-      const horizontal = stage === 'quality-cost' ? candidate.cost : candidate.latency;
-      assert.equal(Number(point.attributes.get('data-value')), horizontal);
-      assert.equal(Number(point.attributes.get('data-count')), candidate.quality);
-      const expectedX = stage === 'quality-cost'
-        ? 490 + ((horizontal - 1) / (3.4 - 1)) * 270
-        : 840 + ((horizontal - 450) / (1100 - 450)) * 270;
-      const expectedY = 575 - ((candidate.quality - 82) / (91 - 82)) * 190;
-      assert.ok(Math.abs(Number(point.attributes.get('data-origin-x')) - expectedX) < 0.01);
-      assert.ok(Math.abs(Number(point.attributes.get('data-origin-y')) - expectedY) < 0.01);
-    });
+    assert.deepEqual(points.map((point) => point.attributes.get('data-node')), allowedIds);
+    fixture.data.candidates
+      .filter((candidate) => allowedIds.includes(candidate.id))
+      .forEach((candidate) => {
+        const point = points.find((node) => node.attributes.get('data-node') === candidate.id);
+        const horizontal = stage === 'quality-cost' ? candidate.cost : candidate.latency;
+        assert.equal(Number(point.attributes.get('data-value')), horizontal);
+        assert.equal(Number(point.attributes.get('data-count')), candidate.quality);
+        assert.equal(
+          point.attributes.get('data-kind'),
+          fixture.result.nonDominated.includes(candidate.id) ? 'non-dominated' : 'dominated',
+        );
+        const expectedX = stage === 'quality-cost'
+          ? 490 + ((horizontal - 1) / (3.4 - 1)) * 270
+          : 840 + ((horizontal - 450) / (1100 - 450)) * 270;
+        const expectedY = 575 - ((candidate.quality - 82) / (91 - 82)) * 190;
+        assert.ok(Math.abs(Number(point.attributes.get('data-origin-x')) - expectedX) < 0.01);
+        assert.ok(Math.abs(Number(point.attributes.get('data-origin-y')) - expectedY) < 0.01);
+      });
   }
   assertExactEdges(parsed, 'dominance-edge', ['B→D']);
 });
