@@ -201,6 +201,7 @@ test('knowledge figures use a raised paper hierarchy with readable metadata and 
   assert.match(figure, /min-width:\s*0/);
   assert.match(figure, /max-width:\s*100%/);
   assert.match(figure, /margin(?:-block)?:\s*var\(--space-[567]\)/);
+  assert.match(figure, /margin-inline:\s*0/);
   assert.match(figure, /border:\s*1px solid var\(--color-border\)/);
   assert.match(figure, /background:\s*var\(--color-paper-raised\)/);
   assert.match(figure, /box-shadow:\s*var\(--shadow-paper\)/);
