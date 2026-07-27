@@ -13,6 +13,21 @@ A complete active module provides, for every lesson:
 
 The module also provides a dependency-ordered curriculum, resource library, interview bank, progress isolation, and experiments only when justified.
 
+## Visual completion declaration
+
+Visual publication is optional for an unmigrated legacy module. The specification must say whether the module remains legacy-text-only, pilots selected visuals without declaring completion, or declares visual completion. Once visual completion is declared, the complete child-Skill visual contract is mandatory for every lesson and cannot be waived as compatibility work.
+
+A visually complete module provides:
+
+- a cognitive visual inventory created before storyboards, with one learner question and assessed outcome for every figure;
+- note-owned placements using `overviewVisualId` plus `overviewVisualSectionId`, or `sections[*].visuals[*].visualId` plus `afterParagraph`;
+- a single deeply frozen visual registry whose records own `kind`, `role`, `provenance`, `alt`, `longDescription`, `caption`, `sourceIds`, `permission`, and `modifications` as applicable;
+- exactly one real evidence-owning section per published visual, with visual source IDs contained in that section and resolved through lesson evidence and the project resource registry;
+- only safe local assets under `assets/visuals/`, with deterministic fixtures where visible quantities or states need a single source of truth;
+- semantic figures, useful text fallback, keyboard-safe step controls, reduced motion, readable narrow-screen behavior, and no page-level horizontal overflow.
+
+Third-party media enters the registry only with explicit redistribution permission and explicit modification permission for adaptations. If permission is unclear, do not download: record `link-only-original-replacement`, retain the ordinary original-source link, and create an original visual from independently supported facts. Search-image bulk ingestion and remote hotlinking are prohibited.
+
 ## Knowledge-note baseline
 
 The completed first two modules established this practical center:
@@ -39,6 +54,7 @@ The child skill's current contract and rubric are authoritative when details dif
 8. Extend generic registries and views. Do not branch shared UI on a specific module or lesson ID.
 9. Keep resource/interview/revealed UI state module-scoped and preserve old progress behavior.
 10. Add the course to the registry and mark the catalog entry active last.
+11. Keep lesson placements separate from registry metadata and renderer code. Unknown visual IDs preserve prose and expose a diagnostic; active SVG content (`script`, `foreignObject`, event handlers, remote references, external stylesheets, or executable links) blocks publication.
 
 ## Experiment decision
 
@@ -60,9 +76,10 @@ Use parallel agents only for independent work:
 - a specification reviewer checks against the approved design and coverage matrix;
 - a separate quality reviewer checks evidence, teaching progression, correctness, maintainability, and test strength;
 - defects return to the original author, then receive the same review again.
+- visual assets/records are partitioned by lesson; one integration owner changes the visual registry, renderer, shared CSS, and visual contract tests.
 
 Subagent reports never replace reading the actual files, diff, tests, or browser state.
 
 ## Activation gate
 
-Do not activate when any lesson is missing, blocked, below the note threshold, or has broken references; when prerequisites are unmet; when shared regressions fail; or when the public release cannot be tied to the intended commit.
+Do not activate when any lesson is missing, blocked, below the note threshold, or has broken references; when prerequisites are unmet; when shared regressions fail; or when the public release cannot be tied to the intended commit. For declared visual completion, also block on any missing visual, broken ownership/reference, unresolved permission, unsafe asset, inaccessible complex diagram, failed responsive/fallback/interaction check, or failed visual score.

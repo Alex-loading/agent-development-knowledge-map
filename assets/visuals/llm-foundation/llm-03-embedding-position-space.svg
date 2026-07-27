@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="eps-title eps-desc">
+  <title id="eps-title">Embedding、位置与上下文化表示</title>
+  <desc id="eps-desc">固定二维教学向量展示 ID 查表、两种顺序的位置相加与后续上下文化更新。</desc>
+  <defs>
+    <marker id="eps-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="eps-dots" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="2" fill="#315C9B"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">ID 查表 → 位置相加 → 上下文层继续更新</text>
+  <text x="914" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <rect x="48" y="80" width="314" height="250" rx="20" fill="#FFFDF7" stroke="#18212B" stroke-width="3"/>
+  <text x="70" y="120" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">① 离散 ID 查表</text>
+  <rect x="72" y="146" width="70" height="54" rx="27" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+  <rect x="72" y="224" width="70" height="54" rx="27" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+  <text x="93" y="183" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">4</text>
+  <text x="93" y="261" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">7</text>
+  <line x1="146" y1="173" x2="174" y2="173" stroke="#18212B" stroke-width="4" marker-end="url(#eps-arrow)"/>
+  <line x1="146" y1="251" x2="174" y2="251" stroke="#18212B" stroke-width="4" marker-end="url(#eps-arrow)"/>
+  <rect x="184" y="140" width="154" height="144" rx="14" fill="url(#eps-dots)" stroke="#315C9B" stroke-width="3"/>
+  <text x="202" y="180" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">E4 1.0 / 0.0</text>
+  <text x="202" y="230" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">E7 0.0 / 1.0</text>
+  <text x="70" y="316" font-family="Trebuchet MS" font-size="26" fill="#A33A24">ID 距离 ≠ 语义距离</text>
+
+  <rect x="390" y="80" width="480" height="530" rx="20" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+  <text x="414" y="120" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">② 教学投影 · 不是字典释义</text>
+  <text x="414" y="158" font-family="Trebuchet MS" font-size="26" fill="#18212B">Hᵢ = E_id + Pᵢ　向量一位小数</text>
+  <text x="414" y="196" font-family="Trebuchet MS" font-size="26" fill="#18212B">P0 0.1 / 0.0　P1 0.0 / 0.1</text>
+
+  <g data-region="embedding-plot" data-row="0" data-origin-x="480" data-origin-y="374" data-scale="100">
+    <line x1="440" y1="374" x2="642" y2="374" stroke="#18212B" stroke-width="3"/>
+    <line x1="480" y1="398" x2="480" y2="236" stroke="#18212B" stroke-width="3"/>
+    <circle data-region="embedding-point" data-row="0" data-column="0" data-vector-x="1.1" data-vector-y="0" cx="590" cy="374" r="14" fill="#F26B38" stroke="#18212B" stroke-width="3"/>
+    <circle data-region="embedding-point" data-row="0" data-column="1" data-vector-x="0" data-vector-y="1.1" cx="480" cy="264" r="14" fill="#FFFFFF" stroke="#1F7A78" stroke-width="5"/>
+  </g>
+  <text x="414" y="424" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">顺序 4 / 7</text>
+  <text x="414" y="458" font-family="Trebuchet MS" font-size="26" fill="#18212B">H0 1.1 / 0.0</text>
+  <text x="414" y="490" font-family="Trebuchet MS" font-size="26" fill="#18212B">H1 0.0 / 1.1</text>
+
+  <g data-region="embedding-plot" data-row="1" data-origin-x="692" data-origin-y="374" data-scale="100">
+    <line x1="652" y1="374" x2="844" y2="374" stroke="#18212B" stroke-width="3"/>
+    <line x1="692" y1="398" x2="692" y2="236" stroke="#18212B" stroke-width="3"/>
+    <circle data-region="embedding-point" data-row="1" data-column="0" data-vector-x="0.1" data-vector-y="1" cx="702" cy="274" r="14" fill="#F26B38" stroke="#18212B" stroke-width="3"/>
+    <rect x="778" y="350" width="28" height="28" fill="#FFFFFF" stroke="#1F7A78" stroke-width="5"/>
+    <circle data-region="embedding-point" data-row="1" data-column="1" data-vector-x="1" data-vector-y="0.1" cx="792" cy="364" r="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+  </g>
+  <text x="652" y="424" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">顺序 7 / 4</text>
+  <text x="652" y="458" font-family="Trebuchet MS" font-size="26" fill="#18212B">H0 0.1 / 1.0</text>
+  <text x="652" y="490" font-family="Trebuchet MS" font-size="26" fill="#18212B">H1 1.0 / 0.1</text>
+  <rect x="414" y="506" width="432" height="78" rx="14" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <text x="434" y="540" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Method：两种顺序分别逐元素相加</text>
+  <text x="434" y="574" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：向量一位小数。</text>
+
+  <line x1="874" y1="342" x2="904" y2="342" stroke="#18212B" stroke-width="4" marker-end="url(#eps-arrow)"/>
+  <rect x="912" y="80" width="240" height="530" rx="20" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <text x="934" y="120" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">③ contextual</text>
+  <text x="920" y="182" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">上下文层继续更新 H</text>
+  <text x="934" y="222" font-family="Trebuchet MS" font-size="26" fill="#18212B">依赖当前序列</text>
+  <path d="M948 280 C1108 218 1084 398 948 448" fill="none" stroke="#1F7A78" stroke-width="7" stroke-dasharray="14 8" marker-end="url(#eps-arrow)"/>
+  <text x="934" y="504" font-family="Trebuchet MS" font-size="26" fill="#18212B">初始向量 ≠</text>
+  <text x="934" y="542" font-family="Trebuchet MS" font-size="26" fill="#18212B">最终固定语义</text>
+  <text x="934" y="584" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">训练形成可用关系</text>
+  <text x="48" y="640" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">结论：查表给出起点；位置改变顺序信息；后续层再结合当前上下文更新。</text>
+</svg>

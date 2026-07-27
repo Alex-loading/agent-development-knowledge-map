@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="training-cycle-title training-cycle-desc">
+  <title id="training-cycle-title">一次带张量形状的训练迭代</title>
+  <desc id="training-cycle-desc">冻结教学批次完整展示 X、W、b、Y，经 Z 等于 XW 加 b、四元素 MSE、backward 与学习率 0.1 的 SGD，得到新参数并复算新损失。形状旁支分别展示尾轴 3 与 2 不兼容的逐元素阻断，以及长度 C 的偏置可广播到 B 乘 C、但仍需确认语义的风险。所有数字是教学示例而非生产测量。</desc>
+  <defs>
+    <marker id="cycle-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+    <pattern id="tensor-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="16" height="16" fill="#dbeafe"/>
+      <path d="M0 8 L16 8 M8 0 L8 16" fill="none" stroke="#93c5fd" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="58" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">一次训练迭代：输入、梯度与新参数</text>
+  <text x="48" y="100" font-family="system-ui, sans-serif" font-size="26" fill="#475569">矩阵最多两位小数；loss 展示六位小数，计算使用未舍入值。</text>
+  <rect x="876" y="24" width="276" height="58" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="3"/>
+  <text x="902" y="62" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">教学示例 · 非实测</text>
+
+  <rect x="46" y="126" width="1108" height="182" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="70" y="164" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">① forward · Z=XW+b · 形状对齐</text>
+  <rect x="70" y="182" width="254" height="96" rx="14" fill="url(#tensor-grid)" stroke="#2563eb" stroke-width="3"/>
+  <text x="86" y="216" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#172554">X [[1,0,2],[0,1,1]]</text>
+  <text x="86" y="254" font-family="system-ui, sans-serif" font-size="26" fill="#172554">[B,F] = [2,3]</text>
+  <line x1="324" y1="230" x2="350" y2="230" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="364" y="176" width="356" height="110" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="380" y="210" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#4c1d95">W [[1,0],[0,1],[1,1]]</text>
+  <text x="380" y="246" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">b [0,0] · W [F,C] · b [C]</text>
+  <line x1="720" y1="230" x2="746" y2="230" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="760" y="182" width="190" height="96" rx="14" fill="url(#tensor-grid)" stroke="#2563eb" stroke-width="3"/>
+  <text x="776" y="216" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#172554">Z [[3,2],[1,2]]</text>
+  <text x="776" y="254" font-family="system-ui, sans-serif" font-size="26" fill="#172554">[B,C] = [2,2]</text>
+  <text x="972" y="212" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#365314">Y [[2,2],[1,1]]</text>
+  <text x="972" y="252" font-family="system-ui, sans-serif" font-size="26" fill="#365314">同形状标签</text>
+
+  <rect x="46" y="322" width="294" height="186" rx="22" fill="#ffffff" stroke="#ea580c" stroke-width="4"/>
+  <text x="70" y="360" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#9a3412">② 四元素 MSE</text>
+  <polygon points="194,378 254,422 194,466 134,422" fill="#fff7ed" stroke="#ea580c" stroke-width="4"/>
+  <text x="158" y="416" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">标量</text>
+  <text x="146" y="450" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">loss 0.500000</text>
+  <text x="70" y="494" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#9a3412">Z 与 Y 逐项比较</text>
+
+  <line x1="340" y1="414" x2="366" y2="414" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="380" y="322" width="364" height="186" rx="22" fill="#ffffff" stroke="#be185d" stroke-width="4"/>
+  <text x="404" y="360" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#831843">③ backward · 只算梯度</text>
+  <text x="404" y="398" font-family="system-ui, sans-serif" font-size="26" fill="#831843">dZ [[0.5,0],[0,0.5]]</text>
+  <text x="404" y="436" font-family="system-ui, sans-serif" font-size="26" fill="#831843">dW [[0.5,0],[0,0.5],[1,0.5]]</text>
+  <text x="404" y="474" font-family="system-ui, sans-serif" font-size="26" fill="#831843">db [0.5,0.5]</text>
+  <text x="404" y="502" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#831843">dW [F,C] · db [C]</text>
+
+  <line x1="744" y1="414" x2="770" y2="414" stroke="#1d4ed8" stroke-width="5" marker-end="url(#cycle-arrow)"/>
+  <rect x="784" y="322" width="370" height="186" rx="22" fill="#fef3c7" stroke="#a16207" stroke-width="5"/>
+  <text x="808" y="360" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#78350f">④ SGD · 学习率 η = 0.1</text>
+  <text x="808" y="402" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">W ← W - η·dW</text>
+  <text x="808" y="446" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">new b [-0.05,-0.05]</text>
+  <text x="808" y="490" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#78350f">优化器此处才改参数</text>
+
+  <rect x="46" y="518" width="530" height="64" rx="16" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <text x="68" y="546" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#9a3412">[B,F]=[2,3] ✕ [B,C]=[2,2]</text>
+  <line data-region="shape-block-edge" x1="68" y1="568" x2="184" y2="568" stroke="#ea580c" stroke-width="4" stroke-dasharray="10 7"/>
+  <line x1="116" y1="554" x2="136" y2="580" stroke="#be185d" stroke-width="5"/>
+  <line x1="136" y1="554" x2="116" y2="580" stroke="#be185d" stroke-width="5"/>
+  <text x="202" y="576" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#9a3412">不能直接逐元素对齐</text>
+
+  <rect x="594" y="518" width="560" height="64" rx="16" fill="#ffffff" stroke="#64748b" stroke-width="3" stroke-dasharray="10 7"/>
+  <text x="616" y="546" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">[C]=[2] → [B,C]=[2,2]</text>
+  <line data-region="shape-broadcast-edge" x1="616" y1="568" x2="714" y2="568" stroke="#64748b" stroke-width="4" marker-end="url(#cycle-arrow)"/>
+  <text x="738" y="576" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#334155">可静默广播 · 需确认语义</text>
+
+  <rect x="46" y="592" width="1108" height="60" rx="16" fill="#ffffff" stroke="#a16207" stroke-width="4"/>
+  <text x="68" y="616" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">new W [[0.95,0],[0,0.95],[0.9,0.95]]</text>
+  <text x="500" y="642" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">⑤ new Z [[2.7,1.85],[0.85,1.85]] · new loss 0.314375</text>
+</svg>

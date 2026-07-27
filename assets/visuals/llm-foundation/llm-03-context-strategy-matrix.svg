@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="csm-title csm-desc">
+  <title id="csm-title">四类上下文策略的决策矩阵与评测闭环</title>
+  <desc id="csm-desc">截断、分块、摘要、检索按任务连续性和材料规模更新性排列，并连接各自失败模式与统一评测闭环。</desc>
+  <defs>
+    <marker id="csm-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="csm-hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#8B4A65" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">上下文策略：选择的是取舍，不是万能解</text>
+  <text x="890" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">定性矩阵 · 不做伪精确评分</text>
+
+  <text x="96" y="106" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#315C9B">材料长且频繁更新</text>
+  <line x1="80" y1="500" x2="80" y2="120" stroke="#18212B" stroke-width="4" marker-end="url(#csm-arrow)"/>
+  <line x1="108" y1="520" x2="838" y2="520" stroke="#18212B" stroke-width="4" marker-end="url(#csm-arrow)"/>
+  <text x="108" y="558" font-family="Trebuchet MS" font-size="26" fill="#18212B">局部查询</text>
+  <text x="690" y="558" font-family="Trebuchet MS" font-size="26" fill="#18212B">需要全局连续</text>
+  <text x="96" y="586" font-family="Trebuchet MS" font-size="26" fill="#18212B">材料短且稳定</text>
+
+  <rect x="108" y="120" width="340" height="180" rx="18" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+  <text x="132" y="160" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8B4A65">④ 检索</text>
+  <text x="132" y="202" font-family="Trebuchet MS" font-size="26" fill="#18212B">按当前问题选择证据</text>
+  <text x="132" y="244" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">失败：漏召回 / 错排 / 噪声</text>
+  <text x="132" y="280" font-family="Trebuchet MS" font-size="26" fill="#18212B">风险 4 · 候选不等于事实</text>
+
+  <rect x="470" y="120" width="340" height="180" rx="18" fill="url(#csm-hatch)" stroke="#8B4A65" stroke-width="4"/>
+  <text x="494" y="160" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8B4A65">③ 摘要</text>
+  <text x="494" y="202" font-family="Trebuchet MS" font-size="26" fill="#18212B">压缩阶段结果与低风险历史</text>
+  <text x="494" y="244" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">失败：限定 / 否定 / 出处遗漏</text>
+  <text x="494" y="280" font-family="Trebuchet MS" font-size="26" fill="#18212B">风险 3 · 有损转换需追踪</text>
+
+  <rect x="108" y="320" width="340" height="180" rx="18" fill="#FFF3D5" stroke="#C58A10" stroke-width="4" stroke-dasharray="12 7"/>
+  <text x="132" y="360" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#8A6510">① 截断</text>
+  <text x="132" y="402" font-family="Trebuchet MS" font-size="26" fill="#18212B">按明确优先级保留局部内容</text>
+  <text x="132" y="444" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">失败：关键约束被完全删除</text>
+  <text x="132" y="480" font-family="Trebuchet MS" font-size="26" fill="#18212B">风险 1 · 旧不等于无用</text>
+
+  <rect x="470" y="320" width="340" height="180" rx="18" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+  <text x="494" y="360" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#1F5F5D">② 分块</text>
+  <text x="494" y="402" font-family="Trebuchet MS" font-size="26" fill="#18212B">逐块处理后再合并</text>
+  <text x="494" y="444" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">失败：跨块关系被切断</text>
+  <text x="494" y="480" font-family="Trebuchet MS" font-size="26" fill="#18212B">风险 2 · 合并也需验证</text>
+
+  <line x1="824" y1="210" x2="870" y2="210" stroke="#18212B" stroke-width="4" marker-end="url(#csm-arrow)"/>
+  <line x1="824" y1="410" x2="870" y2="410" stroke="#18212B" stroke-width="4" marker-end="url(#csm-arrow)"/>
+  <rect x="882" y="104" width="270" height="426" rx="22" fill="#FFFFFF" stroke="#315C9B" stroke-width="4"/>
+  <text x="906" y="148" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#315C9B">评测闭环</text>
+  <text x="906" y="196" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">固定问题集</text>
+  <text x="906" y="238" font-family="Trebuchet MS" font-size="26" fill="#18212B">基线 / 截断 / 摘要</text>
+  <text x="906" y="276" font-family="Trebuchet MS" font-size="26" fill="#18212B">分块 / 检索</text>
+  <text x="906" y="326" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">核验三件事</text>
+  <text x="906" y="366" font-family="Trebuchet MS" font-size="26" fill="#18212B">关键事实保留</text>
+  <text x="906" y="404" font-family="Trebuchet MS" font-size="26" fill="#18212B">证据引用忠实</text>
+  <text x="906" y="442" font-family="Trebuchet MS" font-size="26" fill="#18212B">错误类型与拒答</text>
+  <path d="M1120 474 C1160 590 860 600 824 476" fill="none" stroke="#315C9B" stroke-width="4" stroke-dasharray="12 7" marker-end="url(#csm-arrow)"/>
+  <text x="882" y="574" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#315C9B">结果反馈策略选择</text>
+
+  <rect x="48" y="604" width="1104" height="44" rx="15" fill="#18212B"/>
+  <text x="70" y="634" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">结论：保真、可追溯、成本、延迟与更新性要一起评测；策略可组合，但失败模式不会自动消失。</text>
+</svg>

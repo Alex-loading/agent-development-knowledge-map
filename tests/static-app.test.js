@@ -153,6 +153,179 @@ test('paper-lab styles include responsive, focus, motion and design tokens', asy
   assert.match(styles, /\.notice/i);
 });
 
+test('knowledge figures use a raised paper hierarchy with readable metadata and step controls', async () => {
+  const styles = await read('styles/app.css');
+
+  for (const selector of [
+    '.knowledge-visual',
+    '.knowledge-visual__label',
+    '.knowledge-visual__title',
+    '.knowledge-visual__media',
+    '.knowledge-visual__image',
+    '.knowledge-visual figcaption',
+    '.knowledge-visual__credit',
+    '.knowledge-visual__description',
+    '.knowledge-visual__fallback',
+    '.knowledge-visual__original-link',
+    '.knowledge-visual__controls',
+    '.knowledge-visual__step-status',
+    '.knowledge-visual__step-description',
+    '.knowledge-visual__step-actions',
+    '.knowledge-visual__step-actions button',
+    '.knowledge-visual[data-kind="step-diagram"]',
+    '.knowledge-visual-diagnostic',
+  ]) {
+    assert.ok(
+      cssRulesForSelector(styles, selector).some((rule) => rule.trim()),
+      `missing substantive knowledge figure rule for ${selector}`,
+    );
+  }
+
+  const figure = cssRule(styles, '.knowledge-visual');
+  const label = cssRule(styles, '.knowledge-visual__label');
+  const title = cssRule(styles, '.knowledge-visual__title');
+  const media = cssRule(styles, '.knowledge-visual__media');
+  const image = cssRule(styles, '.knowledge-visual__image');
+  const caption = cssRule(styles, '.knowledge-visual figcaption');
+  const credit = cssRule(styles, '.knowledge-visual__credit');
+  const description = cssRule(styles, '.knowledge-visual__description');
+  const fallback = cssRule(styles, '.knowledge-visual__fallback');
+  const originalLink = cssRule(styles, '.knowledge-visual__original-link');
+  const controls = cssRule(styles, '.knowledge-visual__controls');
+  const status = cssRule(styles, '.knowledge-visual__step-status');
+  const stepDescription = cssRule(styles, '.knowledge-visual__step-description');
+  const actions = cssRule(styles, '.knowledge-visual__step-actions');
+  const actionButton = cssRule(styles, '.knowledge-visual__step-actions button');
+  const diagnostic = cssRule(styles, '.knowledge-visual-diagnostic');
+
+  assert.match(figure, /min-width:\s*0/);
+  assert.match(figure, /max-width:\s*100%/);
+  assert.match(figure, /margin(?:-block)?:\s*var\(--space-[567]\)/);
+  assert.match(figure, /margin-inline:\s*0/);
+  assert.match(figure, /border:\s*1px solid var\(--color-border\)/);
+  assert.match(figure, /background:\s*var\(--color-paper-raised\)/);
+  assert.match(figure, /box-shadow:\s*var\(--shadow-paper\)/);
+  assert.match(label, /font-family:\s*var\(--font-mono\)/);
+  assert.match(label, /text-transform:\s*uppercase/);
+  assert.match(title, /font-family:\s*var\(--font-heading\)/);
+  assert.match(title, /color:\s*var\(--color-forest\)/);
+  assert.match(media, /max-width:\s*100%/);
+  assert.match(media, /overflow-x:\s*auto/);
+  assert.match(media, /overscroll-behavior-inline:\s*contain/);
+  assert.match(image, /height:\s*auto/);
+  assert.match(image, /max-width:\s*100%/);
+
+  for (const wrappingRule of [caption, credit, description, originalLink]) {
+    assert.match(wrappingRule, /overflow-wrap:\s*anywhere/);
+    assert.match(wrappingRule, /word-break:\s*break-word/);
+  }
+  assert.match(fallback, /border[^;]*dashed/);
+  assert.match(fallback, /font-weight:\s*700/);
+  assert.doesNotMatch(fallback, /height:\s*\d/);
+  assert.match(controls, /border-top:/);
+  assert.match(status, /font-family:\s*var\(--font-mono\)/);
+  assert.match(stepDescription, /min-width:\s*0/);
+  assert.match(actions, /flex-wrap:\s*wrap/);
+  assert.match(actionButton, /min-height:\s*(?:2\.75rem|44px)/);
+  assert.match(actionButton, /padding:/);
+  assert.match(diagnostic, /border[^;]*dashed/);
+  assert.match(diagnostic, /background:\s*var\(--color-vermilion-soft\)/);
+});
+
+test('knowledge figure provenance is encoded with explicit labels and distinct border patterns', async () => {
+  const styles = await read('styles/app.css');
+  const provenanceStyles = [
+    ['original-synthesis', 'solid', /原创/],
+    ['licensed-reproduction', 'dashed', /许可复刻/],
+    ['licensed-adaptation', 'double', /许可改编/],
+    ['official-media', 'double', /官方媒体/],
+  ];
+
+  for (const [provenance, borderStyle, textLabel] of provenanceStyles) {
+    const figure = cssRule(styles, `.knowledge-visual[data-provenance="${provenance}"]`);
+    const label = cssRule(
+      styles,
+      `.knowledge-visual[data-provenance="${provenance}"] .knowledge-visual__label::before`,
+    );
+
+    assert.match(figure, new RegExp(`border-(?:top|inline)-style:\\s*${borderStyle}`));
+    assert.match(label, /content:\s*['"][^'"]+['"]/);
+    assert.match(label, textLabel);
+  }
+
+  const stepDiagram = cssRule(styles, '.knowledge-visual[data-kind="step-diagram"]');
+  assert.match(stepDiagram, /border-bottom-width:\s*2px/);
+});
+
+test('knowledge figures keep complex diagrams locally scrollable and controls touch-sized at 390px and 320px', async () => {
+  const styles = await read('styles/app.css');
+  const mobile = cssBlock(styles, '@media (max-width: 40rem) {');
+  const narrowDiagram = cssBlock(styles, '@media (max-width: 24.375rem) {');
+  const tiny = cssBlock(styles, '@media (max-width: 22rem) {');
+  const mobileActions = cssRulesForSelector(mobile, '.knowledge-visual__step-actions')
+    .find((rule) => /grid-template-columns:/.test(rule));
+  const mobileButton = cssRule(mobile, '.knowledge-visual__step-actions button');
+  const narrowFigure = cssRule(narrowDiagram, '.knowledge-visual');
+  const narrowMedia = cssRule(narrowDiagram, '.knowledge-visual__media');
+  const narrowImage = cssRule(narrowDiagram, '.knowledge-visual__image');
+  const tinyActions = cssRule(tiny, '.knowledge-visual__step-actions');
+  const tinyButton = cssRule(tiny, '.knowledge-visual__step-actions button');
+
+  assert.ok(mobileActions, 'mobile step actions should define a responsive grid');
+  assert.match(mobileActions, /grid-template-columns:\s*repeat\(\s*2\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/);
+  assert.match(mobileButton, /min-height:\s*(?:2\.75rem|44px)/);
+  assert.match(narrowFigure, /min-width:\s*0/);
+  assert.match(narrowFigure, /max-width:\s*100%/);
+  assert.match(narrowMedia, /max-width:\s*100%/);
+  assert.match(narrowMedia, /overflow-x:\s*auto/);
+  assert.match(narrowMedia, /overscroll-behavior-inline:\s*contain/);
+  assert.match(narrowImage, /min-width:\s*45rem/);
+  assert.match(narrowImage, /max-width:\s*none/);
+  assert.match(narrowImage, /height:\s*auto/);
+  assert.match(tinyActions, /grid-template-columns:\s*minmax\(\s*0\s*,\s*1fr\s*\)/);
+  assert.match(tinyButton, /width:\s*100%/);
+  // Task 14 browser acceptance verifies local media scrolling and no page-level
+  // horizontal overflow at 390px and 320px; these rules are its static contract.
+});
+
+test('knowledge figure interaction states respect keyboard, reduced-motion, forced-color and print users', async () => {
+  const styles = await read('styles/app.css');
+  const focusButton = cssRule(styles, '.knowledge-visual__step-actions button:focus-visible');
+  const focusLink = cssRule(styles, '.knowledge-visual__original-link:focus-visible');
+  const disabledButton = cssRule(styles, '.knowledge-visual__step-actions button:disabled');
+  const hover = cssBlock(styles, '@media (hover: hover) and (pointer: fine) {');
+  const hoverButton = cssRule(hover, '.knowledge-visual__step-actions button:hover:not(:disabled)');
+  const reduced = cssBlock(styles, '@media (prefers-reduced-motion: reduce) {');
+  const reducedImage = cssRule(reduced, '.knowledge-visual__image');
+  const reducedControls = cssRule(reduced, '.knowledge-visual__controls');
+  const reducedButtons = cssRule(reduced, '.knowledge-visual__step-actions button');
+  const forcedColors = cssBlock(styles, '@media (forced-colors: active) {');
+  const forcedFigure = cssRule(forcedColors, '.knowledge-visual');
+  const print = cssBlock(styles, '@media print {');
+  const printMedia = cssRule(print, '.knowledge-visual__media');
+  const printImage = cssRule(print, '.knowledge-visual__image');
+  const printControls = cssRule(print, '.knowledge-visual__controls');
+
+  for (const focusRule of [focusButton, focusLink]) {
+    assert.match(focusRule, /outline:\s*3px solid var\(--color-focus\)/);
+    assert.match(focusRule, /outline-offset:/);
+  }
+  assert.match(disabledButton, /border-style:\s*dashed/);
+  assert.match(disabledButton, /cursor:\s*not-allowed/);
+  assert.match(hoverButton, /transform:\s*translateY\(-1px\)/);
+  for (const reducedRule of [reducedImage, reducedControls, reducedButtons]) {
+    assert.match(reducedRule, /animation:\s*none\s*!important/);
+    assert.match(reducedRule, /transition:\s*none\s*!important/);
+  }
+  assert.match(forcedFigure, /forced-color-adjust:\s*auto/);
+  assert.match(forcedFigure, /border-color:\s*CanvasText/);
+  assert.match(printMedia, /overflow:\s*visible/);
+  assert.match(printImage, /min-width:\s*0/);
+  assert.match(printImage, /max-width:\s*100%/);
+  assert.match(printImage, /height:\s*auto/);
+  assert.match(printControls, /display:\s*none/);
+});
+
 test('long-form knowledge notes enforce readable measure, responsive flow and visible content', async () => {
   const styles = await read('styles/app.css');
   const note = cssRule(styles, '.knowledge-note');

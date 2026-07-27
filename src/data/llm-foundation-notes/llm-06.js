@@ -1,5 +1,7 @@
 export const llm06Note = {
   readingMinutes: 36,
+  overviewVisualId: 'visual-llm-06-generation-loop',
+  overviewVisualSectionId: 'sampling-experiment-and-serving-tradeoffs',
   introduction: '上一课讨论了预训练、SFT、偏好优化与 LoRA 如何改变模型参数；本课从“训练已经完成、参数保持不变”这一刻继续追踪一次生成。Transformer 输出头先为整个词表产生 logits，解码规则把这些分数变成下一个 token，停止条件决定何时结束；推理服务同时把输入处理拆成 prefill、把逐 token 生成拆成 decode，并以 KV Cache 换取更少的重复计算。理解这条链不是为了背一组万能参数，而是为了把质量、复现性、输出长度、首 token 延迟、生成速度、显存与并发放进同一份可测量决策。本章还会严格区分请求内 KV Cache、跨请求前缀缓存与最终结果缓存，并对照站内 sampling 实验的真实代码边界。学完后，你应能从 logits 讲到采样与终止，诊断 P95 延迟，解释 KV Cache 为什么提速又为何挤压并发，并提交至少六次真实输出的受控对比表。',
   sections: [
     {
@@ -19,6 +21,7 @@ export const llm06Note = {
         title: '局部最可能不是全局正确',
         body: '解码器只能在模型当前给出的分布上选择；如果证据、能力或分布本身有问题，贪心和采样都不会自动完成事实核验。',
       },
+      visuals: [{ visualId: 'visual-llm-06-logit-softmax', afterParagraph: 2 }],
       sourceIds: ['res-rasbt', 'res-hf-llm'],
     },
     {
@@ -52,6 +55,7 @@ export const llm06Note = {
         title: '一道会随分布伸缩的门',
         body: 'Top-p 像按总概率质量开门：尖分布只需少数候选，平分布可能放入更多；类比不表示阈值直接等于候选数量。',
       },
+      visuals: [{ visualId: 'visual-llm-06-temperature-top-p', afterParagraph: 2 }],
       sourceIds: ['res-hf-llm', 'res-openai-cookbook', 'res-rasbt'],
     },
     {
@@ -86,6 +90,7 @@ export const llm06Note = {
         'Prefill 处理整段输入并建立初始各层 K/V，decode 逐 token 追加并读取历史状态。',
         'TTFT 含网络、排队、路由等服务时间；P95 应按长度、并发和缓存命中等维度分桶诊断。',
       ],
+      visuals: [{ visualId: 'visual-llm-06-latency-breakdown', afterParagraph: 3 }],
       sourceIds: ['res-hf-llm', 'res-openai-cookbook'],
     },
     {
@@ -107,6 +112,7 @@ export const llm06Note = {
         title: '公式是容量尺，不是显存账单',
         body: '缩放关系适合比较长度、并发和 KV 头变化；精确容量规划仍要读取架构与服务实现，并在真实并发、分页和分片配置下测量。',
       },
+      visuals: [{ visualId: 'visual-llm-06-kv-cache', afterParagraph: 2 }],
       sourceIds: ['res-hf-llm', 'res-rasbt', 'res-openai-cookbook'],
     },
     {

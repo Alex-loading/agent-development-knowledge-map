@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="neuron-title neuron-desc">
+  <title id="neuron-title">单神经元前向计算与无激活折叠边界</title>
+  <desc id="neuron-desc">输入 x 2、权重 w 0.2、偏置 b 0，先得 z 0.4000，经 sigmoid 得 p 0.5987，标签 y 1 的二元交叉熵 loss 0.5130。右侧比较无激活两层仍可折叠为仿射映射，以及加入激活后的非线性关系。展示四位小数；断言使用未舍入值。</desc>
+  <defs>
+    <marker id="neuron-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="60" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">一个神经元怎样把输入变成输出？</text>
+  <rect x="850" y="24" width="302" height="60" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="3"/>
+  <text x="882" y="63" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">教学示例 · 非实测</text>
+  <text x="48" y="98" font-family="system-ui, sans-serif" font-size="26" fill="#475569">展示四位小数；断言使用未舍入值。</text>
+
+  <rect x="46" y="126" width="1108" height="228" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="72" y="168" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#1e3a8a">① z = wx + b → sigmoid(z) → loss = -ln(p)（y=1）</text>
+  <rect x="72" y="204" width="148" height="92" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="104" y="242" font-family="system-ui, sans-serif" font-size="29" font-weight="800" fill="#172554">x 2</text>
+  <text x="94" y="280" font-family="system-ui, sans-serif" font-size="26" fill="#172554">输入特征</text>
+  <line x1="220" y1="250" x2="268" y2="250" stroke="#1d4ed8" stroke-width="5" marker-end="url(#neuron-arrow)"/>
+  <text x="230" y="226" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#4c1d95">w 0.2</text>
+  <circle cx="330" cy="250" r="60" fill="#ede9fe" stroke="#7c3aed" stroke-width="4"/>
+  <text x="294" y="242" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">wx + b</text>
+  <text x="300" y="278" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">b 0</text>
+  <line x1="390" y1="250" x2="438" y2="250" stroke="#1d4ed8" stroke-width="5" marker-end="url(#neuron-arrow)"/>
+  <rect x="452" y="204" width="154" height="92" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <text x="478" y="260" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#9a3412">z 0.4000</text>
+  <line x1="606" y1="250" x2="654" y2="250" stroke="#1d4ed8" stroke-width="5" marker-end="url(#neuron-arrow)"/>
+  <circle cx="722" cy="250" r="60" fill="#ecfccb" stroke="#4d7c0f" stroke-width="4"/>
+  <text x="678" y="244" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#365314">sigmoid</text>
+  <text x="682" y="280" font-family="system-ui, sans-serif" font-size="26" fill="#365314">激活</text>
+  <line x1="782" y1="250" x2="830" y2="250" stroke="#1d4ed8" stroke-width="5" marker-end="url(#neuron-arrow)"/>
+  <rect x="844" y="204" width="154" height="92" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="866" y="260" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#172554">p 0.5987</text>
+  <line x1="998" y1="250" x2="1030" y2="250" stroke="#1d4ed8" stroke-width="5" marker-end="url(#neuron-arrow)"/>
+  <polygon points="1090,196 1144,250 1090,304 1036,250" fill="#fce7f3" stroke="#be185d" stroke-width="4"/>
+  <text x="1066" y="244" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#831843">y 1</text>
+  <text x="1002" y="332" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#831843">loss 0.5130</text>
+
+  <rect x="46" y="382" width="532" height="240" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4"/>
+  <text x="72" y="426" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">② 无激活：仍可折叠</text>
+  <rect x="72" y="458" width="116" height="64" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="96" y="499" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#172554">仿射 1</text>
+  <line x1="188" y1="490" x2="236" y2="490" stroke="#64748b" stroke-width="4" marker-end="url(#neuron-arrow)"/>
+  <rect x="250" y="458" width="116" height="64" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="274" y="499" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#172554">仿射 2</text>
+  <text x="390" y="500" font-family="system-ui, sans-serif" font-size="32" font-weight="800" fill="#334155">= 单个仿射</text>
+  <line x1="92" y1="572" x2="514" y2="572" stroke="#64748b" stroke-width="6"/>
+  <text x="176" y="612" font-family="system-ui, sans-serif" font-size="26" fill="#334155">直线边界 · 层数未带来非线性</text>
+
+  <rect x="606" y="382" width="548" height="240" rx="22" fill="#ffffff" stroke="#7c3aed" stroke-width="4"/>
+  <text x="632" y="426" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#4c1d95">③ 有激活：打破折叠</text>
+  <rect x="632" y="458" width="116" height="64" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="656" y="499" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#172554">仿射 1</text>
+  <line x1="748" y1="490" x2="786" y2="490" stroke="#7c3aed" stroke-width="4" marker-end="url(#neuron-arrow)"/>
+  <circle cx="842" cy="490" r="42" fill="#ecfccb" stroke="#4d7c0f" stroke-width="4"/>
+  <text x="812" y="499" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#365314">激活</text>
+  <line x1="884" y1="490" x2="922" y2="490" stroke="#7c3aed" stroke-width="4" marker-end="url(#neuron-arrow)"/>
+  <rect x="936" y="458" width="116" height="64" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+  <text x="960" y="499" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#4c1d95">仿射 2</text>
+  <path d="M650 586 C740 536 820 626 900 566 C980 510 1050 588 1120 548" fill="none" stroke="#7c3aed" stroke-width="6"/>
+  <text x="730" y="612" font-family="system-ui, sans-serif" font-size="26" fill="#4c1d95">曲线边界 · 表达关系扩大</text>
+</svg>

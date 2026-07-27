@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="ttc-title ttc-desc">
+  <title id="ttc-title">从文本到上下文化表示的六段转换</title>
+  <desc id="ttc-desc">教学算例把猫坐转换为 token、ID、embedding、位置相加与上下文化表示，并比较交换顺序后的结果。</desc>
+  <defs>
+    <marker id="ttc-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="ttc-grid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M12 0 L0 0 L0 12" fill="none" stroke="#315C9B" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="52" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">文本 → token → ID → embedding → position → contextual</text>
+  <text x="900" y="84" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <g data-region="stage-text">
+    <rect x="48" y="94" width="154" height="158" rx="18" fill="#FFFDF7" stroke="#18212B" stroke-width="3"/>
+    <text x="68" y="130" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">步骤 1 · 文本</text>
+    <text x="68" y="185" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#A33A24">“猫坐”</text>
+    <text x="68" y="228" font-family="Trebuchet MS" font-size="26" fill="#18212B">人类输入</text>
+  </g>
+  <line x1="204" y1="173" x2="234" y2="173" stroke="#18212B" stroke-width="4" marker-end="url(#ttc-arrow)"/>
+  <g data-region="stage-token">
+    <rect x="242" y="94" width="154" height="146" rx="18" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+    <text x="258" y="130" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">步骤 2 · token</text>
+    <rect x="260" y="154" width="50" height="52" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <rect x="326" y="154" width="50" height="52" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3" stroke-dasharray="8 5"/>
+    <text x="272" y="190" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">猫</text>
+    <text x="338" y="190" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">坐</text>
+    <text x="242" y="274" font-family="Trebuchet MS" font-size="26" fill="#18212B">教学 tokenizer</text>
+  </g>
+  <line x1="398" y1="173" x2="428" y2="173" stroke="#18212B" stroke-width="4" marker-end="url(#ttc-arrow)"/>
+  <g data-region="stage-id">
+    <rect x="436" y="94" width="154" height="146" rx="18" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+    <text x="456" y="130" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">步骤 3 · ID</text>
+    <rect x="456" y="154" width="48" height="52" rx="26" fill="#FFFFFF" stroke="#C58A10" stroke-width="3"/>
+    <rect x="520" y="154" width="48" height="52" rx="26" fill="#FFFFFF" stroke="#C58A10" stroke-width="3"/>
+    <text x="470" y="190" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">4</text>
+    <text x="534" y="190" font-family="Trebuchet MS" font-size="30" font-weight="700" fill="#18212B">7</text>
+    <text x="436" y="274" font-family="Trebuchet MS" font-size="26" fill="#18212B">token ID 4 / 7</text>
+  </g>
+  <line x1="592" y1="173" x2="622" y2="173" stroke="#18212B" stroke-width="4" marker-end="url(#ttc-arrow)"/>
+  <g data-region="stage-embedding">
+    <rect x="630" y="94" width="210" height="158" rx="18" fill="url(#ttc-grid)" stroke="#315C9B" stroke-width="3"/>
+    <text x="650" y="130" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">步骤 4 · 查表</text>
+    <text x="650" y="174" font-family="Trebuchet MS" font-size="26" fill="#18212B">E4 1.0 / 0.0</text>
+    <text x="650" y="214" font-family="Trebuchet MS" font-size="26" fill="#18212B">E7 0.0 / 1.0</text>
+  </g>
+  <line x1="842" y1="173" x2="872" y2="173" stroke="#18212B" stroke-width="4" marker-end="url(#ttc-arrow)"/>
+  <g data-region="stage-position">
+    <rect x="880" y="94" width="272" height="158" rx="18" fill="#F4E8EB" stroke="#8B4A65" stroke-width="3"/>
+    <text x="900" y="130" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">步骤 5 · 加位置</text>
+    <text x="900" y="170" font-family="Trebuchet MS" font-size="26" fill="#18212B">P0 0.1 / 0.0</text>
+    <text x="900" y="208" font-family="Trebuchet MS" font-size="26" fill="#18212B">P1 0.0 / 0.1</text>
+    <text x="900" y="242" font-family="Trebuchet MS" font-size="26" fill="#18212B">逐位置相加</text>
+  </g>
+
+  <rect x="48" y="284" width="1104" height="114" rx="18" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+  <text x="70" y="322" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">有序结果 · 向量一位小数</text>
+  <text x="70" y="365" font-family="Trebuchet MS" font-size="28" fill="#18212B">[4,7] → 1.1 / 0.0　　0.0 / 1.1</text>
+  <text x="610" y="365" font-family="Trebuchet MS" font-size="28" fill="#18212B">ordered → 上下文层继续更新</text>
+
+  <rect x="48" y="422" width="690" height="190" rx="18" fill="#FFF3D5" stroke="#C58A10" stroke-width="3" stroke-dasharray="12 7"/>
+  <text x="70" y="462" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">交换 token，位置向量不移动</text>
+  <text x="70" y="506" font-family="Trebuchet MS" font-size="28" fill="#18212B">[7,4] → 0.1 / 1.0　　1.0 / 0.1</text>
+  <text x="70" y="552" font-family="Trebuchet MS" font-size="26" fill="#18212B">Method：固定查表 + 逐位置相加</text>
+  <text x="70" y="590" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：向量一位小数。</text>
+
+  <g data-region="stage-contextual">
+    <rect x="766" y="422" width="386" height="190" rx="18" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="790" y="462" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">步骤 6 · contextual</text>
+    <text x="790" y="508" font-family="Trebuchet MS" font-size="28" fill="#18212B">上下文化表示会继续更新</text>
+    <text x="790" y="554" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#A33A24">ID 数值无距离语义</text>
+    <text x="790" y="594" font-family="Trebuchet MS" font-size="26" fill="#18212B">索引 ≠ 连续语义坐标</text>
+  </g>
+  <text x="48" y="640" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">结论：离散 ID 先查表并加入位置；模型层再结合上下文更新表示。</text>
+</svg>

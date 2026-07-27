@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="mhm-title mhm-desc">
+  <title id="mhm-title">两个注意力头分别匹配并聚合 Value，再拼接投影为联合更新</title>
+  <desc id="mhm-desc">同一输入进入两个独立参数头。每头都从 Query 和 Keys 得到权重，再用权重聚合 Values 为 H1 或 H2；两个头的输出沿特征维拼接、乘输出矩阵，最后得到联合更新。</desc>
+  <defs>
+    <marker id="mhm-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#18212B"/>
+    </marker>
+    <pattern id="mhm-stripe" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#315C9B" stroke-width="4"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="40" y="48" font-family="Trebuchet MS" font-size="31" font-weight="700" fill="#18212B">多头注意力：每头匹配并聚合 Value，再拼接投影</text>
+  <text x="930" y="48" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学示例 · 非实测</text>
+
+  <rect x="32" y="218" width="102" height="116" rx="18" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+  <text x="48" y="262" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">输入 X</text>
+  <text x="48" y="304" font-family="Trebuchet MS" font-size="26" fill="#18212B">并行</text>
+  <line x1="136" y1="248" x2="164" y2="171" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <line x1="136" y1="304" x2="164" y2="376" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+
+  <g data-region="attention-head" data-head="1">
+    <rect x="166" y="76" width="758" height="194" rx="20" fill="#E9F2EE" stroke="#1F7A78" stroke-width="4"/>
+    <text x="184" y="113" font-family="Trebuchet MS" font-size="29" font-weight="700" fill="#1F5F5D">Head 1</text>
+    <text x="302" y="113" font-family="Trebuchet MS" font-size="26" fill="#18212B">独立 Q/K/V 参数</text>
+    <text x="592" y="113" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">scores 0.000 / 1.099</text>
+
+    <rect data-region="head-node" data-head="1" data-node="query" x="184" y="132" width="62" height="50" rx="10" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <text x="199" y="166" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">Q</text>
+    <rect data-region="head-node" data-head="1" data-node="keys" x="184" y="198" width="62" height="50" rx="10" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <text x="199" y="232" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">K</text>
+
+    <line data-region="head-edge" data-head="1" data-from="H1-query" data-to="H1-weights" x1="248" y1="157" x2="308" y2="166" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <line data-region="head-edge" data-head="1" data-from="H1-keys" data-to="H1-weights" x1="248" y1="223" x2="308" y2="196" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="1" data-node="weights" x="318" y="140" width="246" height="90" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <text x="331" y="177" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">weights 0.250 / 0.750</text>
+    <rect data-region="head-weight" data-head="1" data-index="0" data-value="0.25" x="337" y="192" width="92" height="26" rx="8" fill="#D5EAE3" stroke="#1F7A78" stroke-width="2"/>
+    <rect data-region="head-weight" data-head="1" data-index="1" data-value="0.75" x="447" y="192" width="92" height="26" rx="8" fill="#B6D9CE" stroke="#1F7A78" stroke-width="2"/>
+
+    <rect data-region="head-node" data-head="1" data-node="values" x="588" y="173" width="156" height="58" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <text x="600" y="211" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Values -1 / 3</text>
+    <line data-region="head-edge" data-head="1" data-from="H1-weights" data-to="H1-aggregate" x1="566" y1="158" x2="764" y2="158" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <line data-region="head-edge" data-head="1" data-from="H1-values" data-to="H1-aggregate" x1="746" y1="203" x2="764" y2="194" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="1" data-node="aggregate" x="774" y="136" width="64" height="86" rx="12" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+    <text x="785" y="170" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">ΣV</text>
+    <text x="790" y="206" font-family="Trebuchet MS" font-size="26" fill="#18212B">2</text>
+    <line data-region="head-edge" data-head="1" data-from="H1-aggregate" data-to="H1" x1="840" y1="179" x2="844" y2="179" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="1" data-node="H1" data-value="2" x="854" y="145" width="60" height="68" rx="12" fill="#FFFFFF" stroke="#1F7A78" stroke-width="3"/>
+    <text x="860" y="187" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">H1 2</text>
+  </g>
+
+  <g data-region="attention-head" data-head="2">
+    <rect x="166" y="284" width="758" height="194" rx="20" fill="#EDF1F8" stroke="#315C9B" stroke-width="4"/>
+    <text x="184" y="321" font-family="Trebuchet MS" font-size="29" font-weight="700" fill="#315C9B">Head 2</text>
+    <text x="302" y="321" font-family="Trebuchet MS" font-size="26" fill="#18212B">独立 Q/K/V 参数</text>
+    <text x="592" y="321" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">scores 0.000 / 0.000</text>
+
+    <rect data-region="head-node" data-head="2" data-node="query" x="184" y="340" width="62" height="50" rx="10" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+    <text x="199" y="374" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">Q</text>
+    <rect data-region="head-node" data-head="2" data-node="keys" x="184" y="406" width="62" height="50" rx="10" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+    <text x="199" y="440" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">K</text>
+
+    <line data-region="head-edge" data-head="2" data-from="H2-query" data-to="H2-weights" x1="248" y1="365" x2="308" y2="374" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <line data-region="head-edge" data-head="2" data-from="H2-keys" data-to="H2-weights" x1="248" y1="431" x2="308" y2="404" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="2" data-node="weights" x="318" y="348" width="246" height="90" rx="12" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+    <text x="331" y="385" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">weights 0.500 / 0.500</text>
+    <rect data-region="head-weight" data-head="2" data-index="0" data-value="0.5" x="337" y="400" width="92" height="26" rx="8" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="2"/>
+    <rect data-region="head-weight" data-head="2" data-index="1" data-value="0.5" x="447" y="400" width="92" height="26" rx="8" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="2"/>
+
+    <rect data-region="head-node" data-head="2" data-node="values" x="588" y="381" width="156" height="58" rx="12" fill="#FFFFFF" stroke="#315C9B" stroke-width="3"/>
+    <text x="600" y="419" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">Values 2 / 4</text>
+    <line data-region="head-edge" data-head="2" data-from="H2-weights" data-to="H2-aggregate" x1="566" y1="366" x2="764" y2="366" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <line data-region="head-edge" data-head="2" data-from="H2-values" data-to="H2-aggregate" x1="746" y1="411" x2="764" y2="402" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="2" data-node="aggregate" x="774" y="344" width="64" height="86" rx="12" fill="#FFF3D5" stroke="#C58A10" stroke-width="3"/>
+    <text x="785" y="378" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">ΣV</text>
+    <text x="790" y="414" font-family="Trebuchet MS" font-size="26" fill="#18212B">3</text>
+    <line data-region="head-edge" data-head="2" data-from="H2-aggregate" data-to="H2" x1="840" y1="387" x2="844" y2="387" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+    <rect data-region="head-node" data-head="2" data-node="H2" data-value="3" x="854" y="353" width="60" height="68" rx="12" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="3"/>
+    <text x="860" y="395" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">H2 3</text>
+  </g>
+
+  <line data-region="merge-edge" data-from="H1" data-to="concat" x1="916" y1="179" x2="938" y2="171" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <line data-region="merge-edge" data-from="H2" data-to="concat" x1="916" y1="387" x2="938" y2="209" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <rect data-region="merge-node" data-node="concat" x="948" y="86" width="220" height="164" rx="18" fill="#FFFFFF" stroke="#18212B" stroke-width="4"/>
+  <text x="966" y="127" font-family="Trebuchet MS" font-size="27" font-weight="700" fill="#18212B">沿特征维 concat</text>
+  <rect x="970" y="145" width="72" height="48" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <rect x="1042" y="145" width="72" height="48" fill="url(#mhm-stripe)" stroke="#315C9B" stroke-width="3"/>
+  <text x="996" y="179" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">2</text>
+  <text x="1068" y="179" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">3</text>
+  <text x="966" y="228" font-family="Trebuchet MS" font-size="26" fill="#18212B">concat 2 / 3</text>
+
+  <line data-region="merge-edge" data-from="concat" data-to="output-projection" x1="1058" y1="252" x2="1058" y2="276" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <rect data-region="merge-node" data-node="output-projection" x="948" y="286" width="220" height="124" rx="18" fill="#F4E8EB" stroke="#8B4A65" stroke-width="4"/>
+  <text x="968" y="327" font-family="Trebuchet MS" font-size="27" font-weight="700" fill="#8B4A65">输出投影 W_O</text>
+  <text x="968" y="371" font-family="Trebuchet MS" font-size="26" fill="#18212B">2×2 → 5 / -1</text>
+
+  <line data-region="merge-edge" data-from="output-projection" data-to="joint-update" x1="1058" y1="412" x2="1058" y2="438" stroke="#18212B" stroke-width="4" marker-end="url(#mhm-arrow)"/>
+  <rect data-region="merge-node" data-node="joint-update" x="948" y="448" width="220" height="92" rx="16" fill="#FFF3D5" stroke="#C58A10" stroke-width="4"/>
+  <text x="968" y="484" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">联合更新</text>
+  <text x="968" y="522" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">output 5 / -1</text>
+
+  <text x="40" y="522" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">不预设语法职责</text>
+  <text x="330" y="522" font-family="Trebuchet MS" font-size="26" fill="#18212B">W_O [[1,1],[1,-1]]</text>
+  <text x="40" y="562" font-family="Trebuchet MS" font-size="26" fill="#18212B">权重三位小数；整数输出不舍入。</text>
+
+  <rect x="32" y="584" width="1136" height="64" rx="16" fill="#18212B"/>
+  <text x="50" y="624" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#FFFFFF">Method：每头 Q/K → weights → ΣV → Hn；沿特征维 concat → W_O → 联合更新。</text>
+</svg>

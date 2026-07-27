@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">版本、切片与日志把 Prompt 攡进变成可回归发布</title>
+  <desc id="desc">版本元组连接四个固定样例、结构业务安全指标和安全硬门；v1 总分百分之七十五但安全切片为零被阻断，失败聚类后修改回归，v2 全部通过发布并保留回滚。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#0B766E"/>
+    </marker>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#49645E" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F6F0E3"/>
+  <path d="M34 112 H1166" stroke="#18312D" stroke-width="2"/>
+  <text x="42" y="62" font-family="Avenir Next, PingFang SC, sans-serif" font-size="32" font-weight="800" fill="#18312D" text-anchor="start">版本、切片与日志把 Prompt 攡进变成可回归发布</text>
+  <rect x="35" y="145" width="180" height="94" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="version-tuple"/>
+  <text x="125" y="186" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">版本元组</text>
+  <text x="125" y="220" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">P · M · S</text>
+  <rect x="275" y="145" width="170" height="94" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="samples"/>
+  <text x="360" y="186" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">4 个样例</text>
+  <text x="360" y="220" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">#3 安全切片</text>
+  <rect x="505" y="145" width="170" height="94" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="metrics"/>
+  <text x="590" y="186" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">三类指标</text>
+  <text x="590" y="220" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">结构 · 业务 · 安全</text>
+  <rect x="735" y="145" width="170" height="94" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="safety-gate"/>
+  <text x="820" y="186" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">Safety Gate</text>
+  <text x="820" y="220" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">先于总分</text>
+  <rect x="965" y="145" width="190" height="94" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="release-v2"/>
+  <text x="1060" y="186" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">✓ 发布 v2</text>
+  <text x="1060" y="220" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">4/4 · S=100%</text>
+  <rect x="735" y="430" width="170" height="86" rx="14" fill="#F5D7D2" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="blocked-v1"/>
+  <text x="820" y="467" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">⛔ 阻断 v1</text>
+  <text x="820" y="501" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">3/4 · S=0%</text>
+  <rect x="505" y="430" width="170" height="86" rx="14" fill="#F5D7D2" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="failure-cluster"/>
+  <text x="590" y="467" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">失败聚类</text>
+  <text x="590" y="501" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">sample 3</text>
+  <rect x="275" y="430" width="170" height="86" rx="14" fill="#F4D88B" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="modify"/>
+  <text x="360" y="467" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">修改</text>
+  <text x="360" y="501" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">契约或系统</text>
+  <rect x="35" y="430" width="180" height="86" rx="14" fill="#D6E8EF" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="regression"/>
+  <text x="125" y="467" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">回归比较</text>
+  <text x="125" y="501" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">v1 ↔ v2</text>
+  <rect x="965" y="430" width="190" height="86" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="eval-loop-node" data-node="rollback"/>
+  <text x="1060" y="467" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">回滚能力</text>
+  <text x="1060" y="501" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="500" fill="#49645E" text-anchor="middle">版本绑定日志</text>
+  <line x1="215" y1="192" x2="270" y2="192" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="version-tuple" data-to="samples" data-edge="version-tuple-samples"/>
+  <line x1="445" y1="192" x2="500" y2="192" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="samples" data-to="metrics" data-edge="samples-metrics"/>
+  <line x1="675" y1="192" x2="730" y2="192" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="metrics" data-to="safety-gate" data-edge="metrics-safety-gate"/>
+  <line x1="905" y1="192" x2="960" y2="192" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="safety-gate" data-to="release-v2" data-edge="safety-gate-release-v2"/>
+  <line x1="820" y1="239" x2="820" y2="425" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="safety-gate" data-to="blocked-v1" data-edge="safety-gate-blocked-v1"/>
+  <line x1="735" y1="473" x2="680" y2="473" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="blocked-v1" data-to="failure-cluster" data-edge="blocked-v1-failure-cluster"/>
+  <line x1="505" y1="473" x2="450" y2="473" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="failure-cluster" data-to="modify" data-edge="failure-cluster-modify"/>
+  <line x1="275" y1="473" x2="220" y2="473" stroke="#0B766E" stroke-width="3" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="modify" data-to="regression" data-edge="modify-regression"/>
+  <line x1="1060" y1="239" x2="1060" y2="425" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="release-v2" data-to="rollback" data-edge="release-v2-rollback"/>
+  <path d="M125 430 V415 H935 V210 H960" fill="none" stroke="#0B766E" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)" data-region="eval-loop-edge" data-from="regression" data-to="release-v2" data-edge="regression-release-v2"/>
+  <text x="45" y="319" font-family="Avenir Next, PingFang SC, sans-serif" font-size="27" font-weight="800" fill="#B94B42" text-anchor="start">v1</text>
+  <rect x="105" y="285" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v1-1" data-kind="normal" data-value="1" data-index="1" data-stage="v1"/>
+  <text x="141" y="317" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">1:✓</text>
+  <rect x="195" y="285" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v1-2" data-kind="normal" data-value="1" data-index="2" data-stage="v1"/>
+  <text x="231" y="317" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">2:✓</text>
+  <rect x="285" y="285" width="72" height="48" rx="14" fill="#F5D7D2" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v1-3" data-kind="safety" data-value="0" data-index="3" data-stage="v1"/>
+  <text x="321" y="317" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">3:×</text>
+  <rect x="375" y="285" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v1-4" data-kind="normal" data-value="1" data-index="4" data-stage="v1"/>
+  <text x="411" y="317" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">4:✓</text>
+  <text x="480" y="319" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#B94B42" text-anchor="start">75.0% · safety 0.0% · BLOCKED</text>
+  <text x="45" y="384" font-family="Avenir Next, PingFang SC, sans-serif" font-size="27" font-weight="800" fill="#0B766E" text-anchor="start">v2</text>
+  <rect x="105" y="350" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v2-1" data-kind="normal" data-value="1" data-index="1" data-stage="v2"/>
+  <text x="141" y="382" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">1:✓</text>
+  <rect x="195" y="350" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v2-2" data-kind="normal" data-value="1" data-index="2" data-stage="v2"/>
+  <text x="231" y="382" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">2:✓</text>
+  <rect x="285" y="350" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v2-3" data-kind="safety" data-value="1" data-index="3" data-stage="v2"/>
+  <text x="321" y="382" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">3:✓</text>
+  <rect x="375" y="350" width="72" height="48" rx="14" fill="#CDE9DF" stroke="#18312D" stroke-width="3" data-region="eval-sample" data-node="v2-4" data-kind="normal" data-value="1" data-index="4" data-stage="v2"/>
+  <text x="411" y="382" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">4:✓</text>
+  <text x="480" y="384" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#0B766E" text-anchor="start">100.0% · safety 100.0% · RELEASE</text>
+  <text x="45" y="570" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Input：4 samples · sample 3=safety</text>
+  <text x="620" y="570" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Method：安全门先于总分</text>
+  <text x="45" y="610" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#0B766E" text-anchor="start">Result：v1 75.0% BLOCKED · v2 100.0% RELEASE</text>
+  <text x="760" y="610" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Rounding：百分比一位</text>
+</svg>

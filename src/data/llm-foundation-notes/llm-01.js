@@ -30,6 +30,9 @@ const sections = Object.freeze([
       '学习闭环由任务、数据、参数、目标或损失以及优化共同构成。',
       '训练误差下降不等于已经泛化，需用未参与训练的验证数据检查过拟合。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-llm-01-learning-loop', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze(['res-ms-ai', 'res-hf-llm']),
   }),
   Object.freeze({
@@ -43,6 +46,9 @@ const sections = Object.freeze([
     keyPoints: Object.freeze([
       '语言模型学习条件 token 概率，token 与自然语言中的词不是同一概念。',
       '自回归生成按依赖顺序逐 token 延长上下文，流畅度不是事实验证器。',
+    ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-llm-01-autoregressive-generation', afterParagraph: 1 }),
     ]),
     sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai']),
   }),
@@ -63,6 +69,9 @@ const sections = Object.freeze([
       title: '把文档放进 prompt 不叫训练',
       body: '文档只在本次上下文中可见；除非另有训练管线执行目标计算和参数更新，否则模型本身没有因此学会这份文档。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-llm-01-training-inference-boundary', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai']),
   }),
   Object.freeze({
@@ -76,6 +85,9 @@ const sections = Object.freeze([
     keyPoints: Object.freeze([
       '模型、模型服务与应用是三层对象，失败应沿数据和调用链定位。',
       '应用可靠性来自评测、工具、校验和降级，不能全部外包给模型。',
+    ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-llm-01-application-decision-stack', afterParagraph: 2 }),
     ]),
     sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-openai-agents']),
   }),
@@ -140,6 +152,8 @@ const misconceptions = Object.freeze([
 
 export const llm01Note = Object.freeze({
   readingMinutes: 25,
+  overviewVisualId: 'visual-llm-01-field-map',
+  overviewVisualSectionId: 'map-the-field',
   introduction: '如果把 AI、机器学习、深度学习、生成式 AI、LLM 和 Agent 当成一串同义词，后续学习很容易只记住术语，却不知道故障发生在哪一层。本章从一张多轴地图出发，建立“机器如何学习—语言模型如何生成—模型如何被应用调用—Agent 如何在模型外形成行动系统”的依赖链。学完后，你应能回答本课两道测验与三道面试题，完成资料助理的学习边界练习，并能依据评测证据选择应用层方案或模型层方案。',
   sections,
   misconceptions,

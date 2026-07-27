@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="lr-title lr-desc">
+  <title id="lr-title">同一损失地形上的三种学习率轨迹</title>
+  <desc id="lr-desc">教学示例，非实测。损失 L(w)=(w-1)²，从 w0=0 出发，用 w_next=w-η·2(w-1) 执行三步。每个面板声明谷底、横轴比例、谷底高度与损失比例，并用同一坐标公式放置 w0 到 w3；适中学习率的 w1 到 w3 以同心圆表示停在同一点。</desc>
+  <defs>
+    <marker id="lr-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#f8fafc"/>
+  <text x="48" y="58" font-family="system-ui, sans-serif" font-size="40" font-weight="800" fill="#172554">学习率改变的是每一步有多远</text>
+  <rect x="850" y="24" width="302" height="60" rx="18" fill="#fef3c7" stroke="#a16207" stroke-width="3"/>
+  <text x="882" y="63" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">教学示例 · 非实测</text>
+  <text x="48" y="98" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#334155">L(w) = (w-1)² · w0 = 0 · w_next = w - η · 2(w - 1)</text>
+  <text x="48" y="132" font-family="system-ui, sans-serif" font-size="26" fill="#475569">各执行三步 · w 三位、loss 四位；断言使用未舍入值。</text>
+  <text x="738" y="132" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#334155">横轴：参数位置 w　纵轴：损失 L</text>
+
+  <rect x="46" y="154" width="350" height="398" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="4" stroke-dasharray="6 8"/>
+  <text x="70" y="194" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#334155">① 小步 · η 0.1</text>
+  <line x1="84" y1="376" x2="356" y2="376" stroke="#64748b" stroke-width="3"/>
+  <line x1="84" y1="220" x2="84" y2="376" stroke="#64748b" stroke-width="3"/>
+  <path data-region="loss-landscape-small" d="M84 238 Q220 498 356 238" fill="none" stroke="#94a3b8" stroke-width="5"/>
+  <g data-region="coordinate-map-small" data-valley-x="220" data-x-scale="116" data-valley-y="368" data-y-scale="90">
+    <polyline points="104,278 127.2,310.4 145.76,331.136 160.608,344.40704" fill="none" stroke="#334155" stroke-width="5" stroke-dasharray="8 7"/>
+    <circle data-region="small-step-0" data-step="0" data-w="0" data-loss="1" cx="104" cy="278" r="9" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+    <circle data-region="small-step-1" data-step="1" data-w="0.2" data-loss="0.64" cx="127.2" cy="310.4" r="9" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+    <circle data-region="small-step-2" data-step="2" data-w="0.36" data-loss="0.4096" cx="145.76" cy="331.136" r="9" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+    <circle data-region="small-step-3" data-step="3" data-w="0.488" data-loss="0.262144" cx="160.608" cy="344.40704" r="9" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+  </g>
+  <text data-region="small-label-0" x="76" y="258" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">w0</text>
+  <text data-region="small-label-1" x="116" y="286" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">w1</text>
+  <text data-region="small-label-2" x="154" y="318" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">w2</text>
+  <text data-region="small-label-3" x="180" y="354" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">w3</text>
+  <text x="70" y="412" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#334155">w：0.200 / 0.360 / 0.488</text>
+  <text x="70" y="448" font-family="system-ui, sans-serif" font-size="26" fill="#334155">loss：0.6400 / 0.4096</text>
+  <text x="70" y="482" font-family="system-ui, sans-serif" font-size="26" fill="#334155">　　 0.2621</text>
+  <text x="70" y="526" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">缓慢靠近低谷</text>
+
+  <rect x="426" y="154" width="350" height="398" rx="22" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+  <text x="450" y="194" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#1e3a8a">② 适中 · η 0.5</text>
+  <line x1="464" y1="376" x2="736" y2="376" stroke="#64748b" stroke-width="3"/>
+  <line x1="464" y1="220" x2="464" y2="376" stroke="#64748b" stroke-width="3"/>
+  <path data-region="loss-landscape-matched" d="M464 238 Q600 498 736 238" fill="none" stroke="#94a3b8" stroke-width="5"/>
+  <g data-region="coordinate-map-matched" data-valley-x="600" data-x-scale="116" data-valley-y="368" data-y-scale="90">
+    <line x1="484" y1="278" x2="600" y2="368" stroke="#2563eb" stroke-width="6"/>
+    <circle data-region="matched-step-0" data-step="0" data-w="0" data-loss="1" cx="484" cy="278" r="10" fill="#dbeafe" stroke="#172554" stroke-width="4"/>
+    <circle data-region="matched-step-3" data-step="3" data-w="1" data-loss="0" cx="600" cy="368" r="20" fill="#dbeafe" stroke="#2563eb" stroke-width="4"/>
+    <circle data-region="matched-step-2" data-step="2" data-w="1" data-loss="0" cx="600" cy="368" r="14" fill="#ffffff" stroke="#2563eb" stroke-width="4"/>
+    <circle data-region="matched-step-1" data-step="1" data-w="1" data-loss="0" cx="600" cy="368" r="8" fill="#2563eb" stroke="#172554" stroke-width="3"/>
+  </g>
+  <text data-region="matched-label-0" x="456" y="258" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">w0</text>
+  <text data-region="matched-label-1-3" x="620" y="354" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">w1–w3</text>
+  <text x="450" y="412" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#1e3a8a">w：1.000 / 1.000 / 1.000</text>
+  <text x="450" y="448" font-family="system-ui, sans-serif" font-size="26" fill="#1e3a8a">loss：0.0000 / 0.0000</text>
+  <text x="450" y="482" font-family="system-ui, sans-serif" font-size="26" fill="#1e3a8a">　　 0.0000</text>
+  <text x="450" y="526" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#1e3a8a">一步到达低谷</text>
+
+  <rect x="806" y="154" width="348" height="398" rx="22" fill="#ffffff" stroke="#a16207" stroke-width="5"/>
+  <text x="830" y="194" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#78350f">③ 大步 · η 1.1</text>
+  <line x1="844" y1="376" x2="1116" y2="376" stroke="#64748b" stroke-width="3"/>
+  <line x1="844" y1="220" x2="844" y2="376" stroke="#64748b" stroke-width="3"/>
+  <path data-region="loss-landscape-large" d="M844 238 Q980 498 1116 238" fill="none" stroke="#94a3b8" stroke-width="5"/>
+  <g data-region="coordinate-map-large" data-valley-x="980" data-x-scale="72" data-valley-y="368" data-y-scale="40">
+    <polyline points="908,328 1066.4,310.4 876.32,285.056 1104.416,248.56064" fill="none" stroke="#a16207" stroke-width="7"/>
+    <circle data-region="large-step-0" data-step="0" data-w="0" data-loss="1" cx="908" cy="328" r="9" fill="#fef3c7" stroke="#78350f" stroke-width="4"/>
+    <circle data-region="large-step-1" data-step="1" data-w="2.2" data-loss="1.44" cx="1066.4" cy="310.4" r="9" fill="#fef3c7" stroke="#78350f" stroke-width="4"/>
+    <circle data-region="large-step-2" data-step="2" data-w="-0.44" data-loss="2.0736" cx="876.32" cy="285.056" r="9" fill="#fef3c7" stroke="#78350f" stroke-width="4"/>
+    <circle data-region="large-step-3" data-step="3" data-w="2.728" data-loss="2.985984" cx="1104.416" cy="248.56064" r="9" fill="#fef3c7" stroke="#78350f" stroke-width="4"/>
+  </g>
+  <text data-region="large-label-0" x="846" y="346" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">w0</text>
+  <text data-region="large-label-1" x="1080" y="324" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">w1</text>
+  <text data-region="large-label-2" x="846" y="270" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">w2</text>
+  <text data-region="large-label-3" x="1070" y="232" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">w3</text>
+  <text x="830" y="412" font-family="system-ui, sans-serif" font-size="26" font-weight="800" fill="#78350f">w：2.200 / -0.440 / 2.728</text>
+  <text x="830" y="448" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">loss：1.4400 / 2.0736</text>
+  <text x="830" y="482" font-family="system-ui, sans-serif" font-size="26" fill="#78350f">　　 2.9860</text>
+  <text x="830" y="526" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#78350f">跨谷震荡并增大</text>
+
+  <rect x="46" y="576" width="1108" height="66" rx="18" fill="#ffffff" stroke="#94a3b8" stroke-width="3"/>
+  <text x="72" y="618" font-family="system-ui, sans-serif" font-size="27" font-weight="800" fill="#334155">坐标公式：cx = valleyX + (w-1)·xScale；cy = valleyY - loss·yScale</text>
+</svg>

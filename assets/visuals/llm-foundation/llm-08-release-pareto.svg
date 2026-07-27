@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">先守安全硬门，再在两个独立坐标系判断 Pareto</title>
+  <desc id="desc">A 到 E 指标表先以安全百分之九十九点五淘汰 C；质量成本与质量 P95 两面板共享候选编号，B 支配 D，A B E 非支配，不合成综合分。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#0B766E"/>
+    </marker>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#49645E" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F6F0E3"/>
+  <path d="M34 112 H1166" stroke="#18312D" stroke-width="2"/>
+  <text x="42" y="62" font-family="Avenir Next, PingFang SC, sans-serif" font-size="32" font-weight="800" fill="#18312D" text-anchor="start">先守安全硬门，再在两个独立坐标系判断 Pareto</text>
+  <text x="35" y="140" font-family="Avenir Next, PingFang SC, sans-serif" font-size="28" font-weight="800" fill="#B94B42" text-anchor="start">① 安全硬门 99.5%</text>
+  <rect x="35" y="155" width="385" height="430" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="2"/>
+  <text x="55" y="190" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">候选   质量   安全   成本   P95</text>
+  <rect x="50" y="215" width="355" height="48" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="pareto-table-row" data-node="A" data-kind="eligible" data-value="82|99.7|1|450" data-index="0"/>
+  <text x="228" y="247" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">A  82.0  99.7  1.0  450</text>
+  <rect x="50" y="273" width="355" height="48" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="pareto-table-row" data-node="B" data-kind="eligible" data-value="88|99.8|2|700" data-index="1"/>
+  <text x="228" y="305" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">B  88.0  99.8  2.0  700</text>
+  <rect x="50" y="331" width="355" height="48" rx="14" fill="#F5D7D2" stroke="#18312D" stroke-width="3" data-region="pareto-table-row" data-node="C" data-kind="rejected" data-value="86|99.4|1.5|500" data-index="2"/>
+  <text x="228" y="363" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">C  86.0  99.4  1.5  500</text>
+  <rect x="50" y="389" width="355" height="48" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="pareto-table-row" data-node="D" data-kind="eligible" data-value="88|99.8|2.4|850" data-index="3"/>
+  <text x="228" y="421" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">D  88.0  99.8  2.4  850</text>
+  <rect x="50" y="447" width="355" height="48" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="3" data-region="pareto-table-row" data-node="E" data-kind="eligible" data-value="91|99.6|3.4|1100" data-index="4"/>
+  <text x="228" y="479" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#18312D" text-anchor="middle">E  91.0  99.6  3.4  1100</text>
+  <text x="55" y="525" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="start">Input：A–E · safety gate 99.5%</text>
+  <text x="55" y="562" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="start">Result：C 淘汰 · B dominates D</text>
+  <text x="490" y="150" font-family="Avenir Next, PingFang SC, sans-serif" font-size="28" font-weight="800" fill="#0B766E" text-anchor="start">② 质量–成本</text>
+  <rect x="490" y="180" width="660" height="88" rx="14" fill="#FFFDF8" stroke="#18312D" stroke-width="2" data-region="pareto-axis-domain" data-node="candidate-domain" data-value="82|91|1|3.4|450|1100"/>
+  <text x="510" y="215" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">坐标按通过安全门候选范围截断</text>
+  <text x="510" y="250" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">质量 82–91 · 成本 1.0–3.4 · P95 450–1100</text>
+  <line x1="490" y1="575" x2="760" y2="575" stroke="#18312D" stroke-width="3"/>
+  <line x1="490" y1="575" x2="490" y2="385" stroke="#18312D" stroke-width="3"/>
+  <text x="625" y="615" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="middle">成本</text>
+  <text x="482" y="370" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="end">质量</text>
+  <circle cx="490" cy="575" r="10" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="A" data-stage="quality-cost" data-value="1" data-count="82" data-kind="non-dominated" data-origin-x="490" data-origin-y="575"/>
+  <text x="504" y="565" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">A</text>
+  <circle cx="490" cy="575" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <rect x="592.5" y="438.33333333333337" width="20" height="20" rx="2" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="B" data-stage="quality-cost" data-value="2" data-count="88" data-kind="non-dominated" data-origin-x="602.5" data-origin-y="448.33333333333337"/>
+  <text x="617" y="438" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">B</text>
+  <circle cx="602.5" cy="448.33333333333337" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <polygon points="647.5,436.33333333333337 659.5,458.33333333333337 635.5,458.33333333333337" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="D" data-stage="quality-cost" data-value="2.4" data-count="88" data-kind="dominated" data-origin-x="647.5" data-origin-y="448.33333333333337"/>
+  <text x="662" y="438" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">D</text>
+  <polygon points="750,379 760,373 770,379 770,391 760,397 750,391" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="E" data-stage="quality-cost" data-value="3.4" data-count="91" data-kind="non-dominated" data-origin-x="760" data-origin-y="385"/>
+  <text x="774" y="375" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">E</text>
+  <circle cx="760" cy="385" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <text x="840" y="150" font-family="Avenir Next, PingFang SC, sans-serif" font-size="28" font-weight="800" fill="#0B766E" text-anchor="start">③ 质量–P95</text>
+  <line x1="840" y1="575" x2="1110" y2="575" stroke="#18312D" stroke-width="3"/>
+  <line x1="840" y1="575" x2="840" y2="385" stroke="#18312D" stroke-width="3"/>
+  <text x="975" y="615" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="middle">P95 ms</text>
+  <text x="832" y="370" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="end">质量</text>
+  <circle cx="840" cy="575" r="10" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="A" data-stage="quality-latency" data-value="450" data-count="82" data-kind="non-dominated" data-origin-x="840" data-origin-y="575"/>
+  <text x="854" y="565" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">A</text>
+  <circle cx="840" cy="575" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <rect x="933.8461538461538" y="438.33333333333337" width="20" height="20" rx="2" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="B" data-stage="quality-latency" data-value="700" data-count="88" data-kind="non-dominated" data-origin-x="943.8461538461538" data-origin-y="448.33333333333337"/>
+  <text x="958" y="438" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">B</text>
+  <circle cx="943.8461538461538" cy="448.33333333333337" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <polygon points="1006.1538461538462,436.33333333333337 1018.1538461538462,458.33333333333337 994.1538461538462,458.33333333333337" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="D" data-stage="quality-latency" data-value="850" data-count="88" data-kind="dominated" data-origin-x="1006.1538461538462" data-origin-y="448.33333333333337"/>
+  <text x="1020" y="438" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">D</text>
+  <polygon points="1100,379 1110,373 1120,379 1120,391 1110,397 1100,391" fill="#CDE9DF" stroke="#0B766E" stroke-width="3" data-region="pareto-point" data-node="E" data-stage="quality-latency" data-value="1100" data-count="91" data-kind="non-dominated" data-origin-x="1110" data-origin-y="385"/>
+  <text x="1124" y="375" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="start">E</text>
+  <circle cx="1110" cy="385" r="19" fill="none" stroke="#D58B28" stroke-width="2"/>
+  <text x="490" y="310" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Method：先安全过滤，再判断 dominance</text>
+  <text x="490" y="350" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="700" fill="#49645E" text-anchor="start">Rounding：质量安全成本一位；P95 整数</text>
+  <path d="M614 448 L636 448" stroke="#B94B42" stroke-width="3" marker-end="url(#arrow)" data-region="dominance-edge" data-from="B" data-to="D" data-edge="B-D"/>
+  <text x="625" y="425" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#B94B42" text-anchor="middle">B 支配 D</text>
+  <text x="600" y="638" font-family="Avenir Next, PingFang SC, sans-serif" font-size="26" font-weight="800" fill="#18312D" text-anchor="middle">A / B / E 非支配 · 两面板独立单位 · 不制造综合分</text>
+</svg>

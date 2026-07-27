@@ -66,7 +66,7 @@ test('lesson detail renders real teaching content and quiz interaction once afte
   assert.ok(noteToc, '应渲染本章目录');
   assert.equal(firstSectionHeading?.textContent, firstSection.title);
   assert.ok(firstSectionHeading?.parentNode.querySelectorAll('p').length >= 2, '首节应包含至少两个正文段落');
-  const sourceLink = knowledgeNote.querySelector('a');
+  const sourceLink = knowledgeNote.querySelector('.knowledge-note__sources a');
   assert.equal(new URL(sourceLink.getAttribute('href')).protocol, 'https:');
   assert.ok(!knowledgeNote.textContent.includes('原理札记'), '新版知识笔记不应继续使用旧标签');
   assert.equal(resourceSelection.querySelector('h2').textContent, '继续深挖');
@@ -117,7 +117,7 @@ test('lesson detail renders released LLM knowledge notes with source-safe deepen
 
     const knowledgeNote = root.querySelector('.knowledge-note');
     const resourceSelection = root.querySelector('.resource-selection');
-    const sourceLink = knowledgeNote?.querySelector('a');
+    const sourceLink = knowledgeNote?.querySelector('.knowledge-note__sources a');
     assert.ok(knowledgeNote, `${lessonId}: 应渲染知识型长文笔记`);
     assert.equal(knowledgeNote.querySelectorAll('nav[aria-label="本章目录"] button').length, lesson.knowledgeNote.sections.length,
       `${lessonId}: 目录按钮数必须等于章节数`);
@@ -144,7 +144,7 @@ test('Agent mechanism renders released knowledge notes with source-safe deepenin
 
     const knowledgeNote = root.querySelector('.knowledge-note');
     const resourceSelection = root.querySelector('.resource-selection');
-    const sourceLink = knowledgeNote?.querySelector('a');
+    const sourceLink = knowledgeNote?.querySelector('.knowledge-note__sources a');
     const evidenceResource = agentMechanism.resources.find((resource) => (
       lesson.resourceIds.includes(resource.id) && resource.evidence
     ));
@@ -185,7 +185,7 @@ test('Agent Harness renders first, middle and last knowledge notes with source-s
 
     const knowledgeNote = root.querySelector('.knowledge-note');
     const resourceSelection = root.querySelector('.resource-selection');
-    const sourceLink = knowledgeNote?.querySelector('a');
+    const sourceLink = knowledgeNote?.querySelector('.knowledge-note__sources a');
     const evidenceResource = agentHarness.resources.find((resource) => (
       lesson.resourceIds.includes(resource.id) && resource.evidence
     ));
@@ -226,7 +226,7 @@ test('Context renders first, middle and last knowledge notes with source-safe ev
 
     const knowledgeNote = root.querySelector('.knowledge-note');
     const resourceSelection = root.querySelector('.resource-selection');
-    const sourceLink = knowledgeNote?.querySelector('a');
+    const sourceLink = knowledgeNote?.querySelector('.knowledge-note__sources a');
     const evidenceResource = contextRagMemory.resources.find((resource) => (
       lesson.resourceIds.includes(resource.id) && resource.evidence
     ));

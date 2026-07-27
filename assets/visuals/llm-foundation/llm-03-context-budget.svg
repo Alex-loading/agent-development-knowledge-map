@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="cb-title cb-desc">
+  <title id="cb-title">先预留输出的共享上下文预算</title>
+  <desc id="cb-desc">100 token 教学预算先放输出和余量，再放输入；检索增加十导致超限十并从历史中裁减。</desc>
+  <defs>
+    <pattern id="cb-output" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M0 12 L12 0" stroke="#8B4A65" stroke-width="3"/>
+    </pattern>
+    <pattern id="cb-margin" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="2" fill="#18212B"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="675" fill="#F7F3E8"/>
+  <text x="48" y="50" font-family="Trebuchet MS" font-size="32" font-weight="700" fill="#18212B">共享窗口：先预留 output，再装输入材料</text>
+  <text x="918" y="50" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#A33A24">教学预算 · 非实测</text>
+
+  <rect x="48" y="78" width="1104" height="86" rx="16" fill="#FFFFFF" stroke="#18212B" stroke-width="3"/>
+  <text x="70" y="116" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#18212B">窗口 100 · 先预留 output / margin</text>
+  <text x="70" y="150" font-family="Trebuchet MS" font-size="26" fill="#18212B">Method：先预留 output/margin，再求和；超限先 trim history</text>
+
+  <text x="48" y="208" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#315C9B">① baseline 100</text>
+  <rect data-region="budget-window" data-total="100" x="60" y="228" width="1080" height="96" fill="#FFFFFF" stroke="#18212B" stroke-width="4"/>
+  <rect data-region="budget-block-output" data-value="15" data-start="0" x="60" y="228" width="162" height="96" fill="url(#cb-output)" stroke="#8B4A65" stroke-width="3"/>
+  <rect data-region="budget-block-margin" data-value="5" data-start="15" x="222" y="228" width="54" height="96" fill="url(#cb-margin)" stroke="#18212B" stroke-width="3"/>
+  <rect data-region="budget-block-system" data-value="20" data-start="20" x="276" y="228" width="216" height="96" fill="#F4C95D" stroke="#8A6510" stroke-width="3"/>
+  <rect data-region="budget-block-user" data-value="15" data-start="40" x="492" y="228" width="162" height="96" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <rect data-region="budget-block-history" data-value="25" data-start="55" x="654" y="228" width="270" height="96" fill="#DCE5F2" stroke="#315C9B" stroke-width="3"/>
+  <rect data-region="budget-block-retrieval" data-value="20" data-start="80" x="924" y="228" width="216" height="96" fill="#F4E8EB" stroke="#8B4A65" stroke-width="3"/>
+  <text x="78" y="266" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">output 15</text>
+  <text x="228" y="306" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">5</text>
+  <text x="302" y="284" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">system 20</text>
+  <text x="510" y="284" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">user 15</text>
+  <text x="702" y="284" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">history 25</text>
+  <text x="946" y="284" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">retrieval 20</text>
+  <text x="48" y="360" font-family="Trebuchet MS" font-size="26" fill="#18212B">system 20 · user 15 · history 25 · retrieval 20 · output 15 · margin 5</text>
+
+  <text x="48" y="414" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#A33A24">② retrieval +10 → expanded 110 → overflow 10</text>
+  <rect x="60" y="434" width="1080" height="62" fill="#FFFFFF" stroke="#18212B" stroke-width="4"/>
+  <rect x="60" y="434" width="1080" height="62" fill="#DCE5F2" stroke="#315C9B" stroke-width="3"/>
+  <rect data-region="budget-overflow" data-value="10" data-start="100" x="1032" y="434" width="108" height="62" fill="#F26B38" stroke="#A33A24" stroke-width="4" stroke-dasharray="10 6"/>
+  <text x="78" y="474" font-family="Trebuchet MS" font-size="26" fill="#18212B">窗口内 100</text>
+  <text x="1010" y="474" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">+10</text>
+
+  <rect x="48" y="510" width="1104" height="100" rx="18" fill="#E9F2EE" stroke="#1F7A78" stroke-width="3"/>
+  <text x="70" y="548" font-family="Trebuchet MS" font-size="28" font-weight="700" fill="#1F5F5D">③ trim history：25 − overflow 10 = history 15</text>
+  <text x="70" y="588" font-family="Trebuchet MS" font-size="28" fill="#18212B">baseline 100　expanded 110　overflow 10　final 100</text>
+  <text x="760" y="588" font-family="Trebuchet MS" font-size="26" fill="#18212B">Rounding：token 数为整数。</text>
+  <text x="48" y="640" font-family="Trebuchet MS" font-size="26" font-weight="700" fill="#18212B">结论：输出不是剩余物；先保护输出与余量，超限时按明确顺序缩减可调整材料。</text>
+</svg>
