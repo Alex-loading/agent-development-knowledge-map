@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Versioned resume gate</title>
+  <desc id="desc">Recovery acquires a lease, compares versions and migrates or blocks before replay.</desc>
+  <rect width="1200" height="675" fill="#f8fafc"/>
+  <text x="64" y="80" font-family="Arial" font-size="30" font-weight="700" fill="#172554">VERSIONED RESUME</text>
+  <g font-family="Arial" text-anchor="middle" font-weight="700">
+    <rect x="64" y="270" width="190" height="82" rx="20" fill="#eef2ff" stroke="#4338ca" stroke-width="3"/>
+    <text x="159" y="318" font-size="17" fill="#312e81">ACQUIRE LEASE</text>
+    <polygon points="388,220 510,311 388,402 266,311" fill="#ecfeff" stroke="#0f766e" stroke-width="3"/>
+    <text x="388" y="318" font-size="15" fill="#115e59">COMPARE VERSIONS</text>
+    <rect x="562" y="142" width="184" height="76" rx="18" fill="#fff7ed" stroke="#c2410c" stroke-width="3"/>
+    <text x="654" y="188" font-size="17" fill="#9a3412">MIGRATE</text>
+    <rect x="562" y="430" width="184" height="76" rx="18" fill="#fee2e2" stroke="#b91c1c" stroke-width="3"/>
+    <text x="654" y="476" font-size="17" fill="#991b1b">BLOCK</text>
+    <rect x="800" y="142" width="150" height="76" rx="18" fill="#f0fdf4" stroke="#15803d" stroke-width="3"/>
+    <text x="875" y="188" font-size="17" fill="#166534">REPLAY</text>
+    <rect x="996" y="142" width="150" height="76" rx="18" fill="#f0fdf4" stroke="#15803d" stroke-width="3"/>
+    <text x="1071" y="188" font-size="17" fill="#166534">VERIFY</text>
+  </g>
+  <g stroke="#172554" stroke-width="4" fill="none">
+    <line x1="254" y1="311" x2="266" y2="311"/>
+    <path d="M441 266 L562 180"/>
+    <path d="M441 356 L562 468"/>
+    <line x1="746" y1="180" x2="800" y2="180"/>
+    <line x1="950" y1="180" x2="996" y2="180"/>
+  </g>
+  <g fill="#172554">
+    <polygon points="548,178 565,178 554,192"/>
+    <polygon points="548,456 565,470 547,469"/>
+    <polygon points="786,169 806,180 786,191"/>
+    <polygon points="982,169 1002,180 982,191"/>
+  </g>
+  <rect x="124" y="528" width="954" height="70" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="601" y="558" font-family="Arial" font-size="15" text-anchor="middle" fill="#475569">model · prompt · tool schema · policy · reducer</text>
+  <text x="601" y="584" font-family="Arial" font-size="14" text-anchor="middle" fill="#64748b">unknown critical version never reaches automatic execution</text>
+</svg>

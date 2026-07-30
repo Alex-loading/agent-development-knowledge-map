@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Isolation mechanism comparison</title>
+  <desc id="desc">Process, container, gVisor and microVM boundaries are compared without an absolute safety claim.</desc>
+  <rect width="1200" height="675" fill="#f7f5ef"/>
+  <text x="60" y="78" font-family="Arial" font-size="30" font-weight="700" fill="#172554">ISOLATION STACK</text>
+  <text x="110" y="124" font-family="Arial" font-size="14" font-weight="700" fill="#9a3412">SHARED KERNEL</text>
+  <text x="1038" y="124" font-family="Arial" font-size="14" font-weight="700" text-anchor="end" fill="#166534">SEPARATE KERNEL</text>
+  <line x1="110" y1="142" x2="1040" y2="142" stroke="#94a3b8" stroke-width="3"/>
+  <polygon points="1022,131 1044,142 1022,153" fill="#94a3b8"/>
+  <g font-family="Arial" text-anchor="middle">
+    <rect x="76" y="184" width="244" height="338" rx="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="3"/>
+    <text x="198" y="235" font-size="20" font-weight="700" fill="#991b1b">PROCESS</text>
+    <text x="198" y="290" font-size="15" fill="#7f1d1d">host identity</text>
+    <text x="198" y="324" font-size="15" fill="#7f1d1d">host paths</text>
+    <rect x="112" y="390" width="172" height="72" rx="16" fill="#ffffff" stroke="#b91c1c" stroke-width="2"/>
+    <text x="198" y="432" font-size="14" fill="#7f1d1d">least boundary</text>
+    <rect x="344" y="184" width="244" height="338" rx="22" fill="#fff7ed" stroke="#c2410c" stroke-width="3"/>
+    <text x="466" y="235" font-size="20" font-weight="700" fill="#9a3412">CONTAINER</text>
+    <text x="466" y="290" font-size="15" fill="#7c2d12">namespace</text>
+    <text x="466" y="324" font-size="15" fill="#7c2d12">cgroup and seccomp</text>
+    <rect x="380" y="390" width="172" height="72" rx="16" fill="#ffffff" stroke="#c2410c" stroke-width="2"/>
+    <text x="466" y="432" font-size="14" fill="#7c2d12">shared host kernel</text>
+    <rect x="612" y="184" width="244" height="338" rx="22" fill="#ecfeff" stroke="#0f766e" stroke-width="3"/>
+    <text x="734" y="235" font-size="20" font-weight="700" fill="#115e59">gVisor</text>
+    <text x="734" y="290" font-size="15" fill="#134e4a">user-space kernel</text>
+    <text x="734" y="324" font-size="15" fill="#134e4a">reduced host surface</text>
+    <rect x="648" y="390" width="172" height="72" rx="16" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+    <text x="734" y="432" font-size="14" fill="#134e4a">compatibility tradeoff</text>
+    <rect x="880" y="184" width="244" height="338" rx="22" fill="#f0fdf4" stroke="#15803d" stroke-width="3"/>
+    <text x="1002" y="235" font-size="20" font-weight="700" fill="#166534">MICROVM</text>
+    <text x="1002" y="290" font-size="15" fill="#14532d">virtual machine</text>
+    <text x="1002" y="324" font-size="15" fill="#14532d">minimal device model</text>
+    <rect x="916" y="390" width="172" height="72" rx="16" fill="#ffffff" stroke="#15803d" stroke-width="2"/>
+    <text x="1002" y="432" font-size="14" fill="#14532d">startup and density</text>
+  </g>
+  <rect x="76" y="554" width="1048" height="68" rx="18" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="600" y="582" font-family="Arial" font-size="15" text-anchor="middle" fill="#334155">every stack still needs filesystem · network · secret · resource · evidence controls</text>
+  <text x="600" y="607" font-family="Arial" font-size="13" text-anchor="middle" fill="#64748b">mechanism comparison is not an absolute security ranking</text>
+</svg>

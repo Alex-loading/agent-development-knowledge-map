@@ -4,7 +4,7 @@ const sections = Object.freeze([
     title: '先用威胁模型决定隔离边界',
     paragraphs: Object.freeze([
       '上一课解决“某个工具调用是否获准”，这一课处理更坏的情况：已获准的 run_code 执行了恶意仓库、依赖安装脚本或失控程序。Threat model（威胁模型）是对受保护资产、攻击者能力、入口、信任边界、预期影响和剩余风险的结构化说明。对于代码 Agent，资产至少包括宿主源码、其他租户数据、长期密钥、内网服务、算力配额和交付产物完整性；攻击路径包括读取越权文件、利用过宽挂载、访问内网、偷取凭证、制造 fork bomb 或填满磁盘。',
-      'Harness 位于控制面，负责验证任务、选择 provider、生成 manifest 与 capability、创建 session、注入受限资源、设置预算、收集事件并终止清理；sandbox 位于执行面，只运行被允许的代码并返回产物。OpenAI Sandbox Agents 文档直接展示这种 control plane 与 sandbox compute plane 的分离，以及 session、snapshot、挂载和凭证边界。但该功能仍是 Beta，属于 OpenAI SDK 和具体 provider 的当前语义；provider 名称本身不能证明隔离配置正确，更不能证明绝对安全。',
+      '飞书“模型之外的全部”与 AgentFS 叙事把责任放回 Harness：控制面验证任务、发现 provider capability、生成 manifest、创建 session、注入受限资源、设置预算、收集事件并终止清理；执行面只运行被允许的文件、Git、Bash 或 VFS 操作并返回产物。OpenAI Sandbox Agents 文档正式展示 control plane 与 sandbox compute plane、session、snapshot、mount 和 credential 边界，但仍是 Beta/provider-specific 语义；provider 名称、VFS 抽象或容器标签都不能证明绝对安全。',
       '威胁模型不同，合理方案也会不同。受信团队仓库中的偶发死循环，重点可能是资源上限、只读输入和可重复清理；来源未知的 PR 连同安装脚本，则还要假设主动探测内网、读取宿主文件和利用运行时漏洞。评审不能只问“用了什么容器”，而要问攻击者能执行到哪一层、哪些资产仍可见、逃逸后果是什么、哪一层负责阻断，以及失败后能否留下不含秘密的诊断证据。',
     ]),
     keyPoints: Object.freeze([
@@ -17,7 +17,12 @@ const sections = Object.freeze([
       title: '先画爆炸半径，再选盒子',
       body: 'sandbox 的目标不是给技术名称贴“安全”标签，而是在最坏输入下把可见资产、可用能力和故障影响压缩到可接受范围。',
     }),
-    sourceIds: Object.freeze(['res-harness-openai-sandboxes']),
+    sourceIds: Object.freeze([
+      'res-harness-openai-sandboxes',
+      'res-harness-primary-feishu-beyond-model',
+      'res-harness-primary-feishu-virtual-filesystem',
+      'res-harness-primary-javaguide-harness-engineering',
+    ]),
   }),
   Object.freeze({
     id: 'compare-isolation-mechanisms',
@@ -26,7 +31,7 @@ const sections = Object.freeze([
       '普通宿主进程直接使用宿主内核与当前用户可见资源，隔离主要依赖操作系统身份、目录权限和进程限制；它适合受信代码，却不是运行未知仓库的充分边界。Container（容器）组合 namespace、cgroup、文件系统视图与权限配置，但仍与宿主共享内核。特权模式、宿主目录或 Docker socket 挂载、过宽 capability 和内核漏洞都会扩大后果，因此“运行在容器里”只能说明使用了若干隔离原语，不能自动等同安全 sandbox。',
       'Rootless mode 让 Docker daemon 与容器以非 root 用户运行，并依赖 user namespace 与 subordinate UID/GID 映射，从而缩小宿主身份和 daemon 权限面；它不会自动限制系统调用、挂载、网络、凭证或资源。Seccomp 则在 syscall 层按 profile 允许或拒绝调用，Docker 默认 profile 使用 allowlist 与拒绝动作，但官方只称其为中等保护。rootless 和 seccomp 可叠加，却分别只回答“以谁的权限运行”和“可请求哪些系统调用”，不能拼成对完整 sandbox 的证明。',
       'gVisor 在应用与宿主内核之间加入用户态 application kernel，以 Sentry/Gofer 等组件承接大量系统调用，目标是减少应用直接触达宿主内核的表面；Firecracker 通过 KVM microVM、精简设备模型与 jailer、cgroup、chroot、seccomp 等层建立另一种 containment。两份资料都来自项目自身，能说明机制与设计边界，却不是独立安全评估，也不证明某方案对所有负载更安全、更兼容或更经济。',
-      '选择时应把威胁、兼容性、启动与复用方式、运维能力、可观测性和逃逸后果放在同一表中。若风险只是受信脚本误耗资源，收紧的 rootless container 可能满足模型；若要运行主动恶意且跨租户的未知代码，团队可评估用户态内核或 microVM 来增加边界，但仍需挂载、网络、身份、预算和清理策略。这里不存在脱离配置和威胁模型的绝对强弱排序。',
+      '执行栈至少比较三种选择。其一，本地文件/Git 加受限 Bash，启动快但直接依赖宿主身份与路径策略，只适合受信输入；其二，container、用户态内核或 microVM sandbox，通过 manifest 暴露文件、网络和进程能力，适合不可信代码但有启动、兼容和运维成本；其三，远端 VFS/provider protocol，只暴露 list/read/write/commit 等能力与稳定 artifact ref，能隐藏宿主路径，却把身份、租户隔离、持久化、一致性和清理责任交给 provider。没有一个栈能省掉 threat model、capability discovery 和证据。',
     ]),
     keyPoints: Object.freeze([
       '普通进程与容器都使用宿主内核；容器的安全性取决于身份、挂载、capability、网络和运行时配置。',
@@ -38,19 +43,24 @@ const sections = Object.freeze([
       title: '层数多不等于结论自动成立',
       body: '每层必须写清它阻断哪条攻击路径、仍信任什么以及失效后的后果；否则“容器加 seccomp 加 microVM”只是技术名词堆叠。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-04-isolation-stack', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-gvisor',
       'res-harness-docker-seccomp',
       'res-harness-docker-rootless',
       'res-harness-firecracker',
+      'res-harness-primary-feishu-virtual-filesystem',
+      'res-harness-primary-javaguide-ai-application-architecture',
     ]),
   }),
   Object.freeze({
     id: 'minimize-files-and-secrets',
     title: '把文件、身份与凭证缩到任务所需',
     paragraphs: Object.freeze([
-      '代码测试任务通常只需要读取一个仓库并写出构建结果，因此文件策略应从默认拒绝开始：输入仓库以只读方式挂载到固定路径，输出写入独立的临时工作区，宿主根目录、用户主目录、其他项目、设备、容器运行时 socket 和敏感配置一律不挂载。写区使用独立 session 标识和容量上限，任务结束只把通过类型、路径、大小、恶意内容和敏感信息检查的指定产物提升到宿主；输入与输出不能共享一个可任意覆盖的目录。',
-      '文件授权不能只检查字符串前缀。Harness 应规范化路径，拒绝越界、设备文件和不允许的链接目标，记录挂载来源、只读或可写属性、sandbox 内目标、内容版本及释放状态；执行面不得自行扩大挂载。OpenAI Sandboxes 的 manifest、capability、session、snapshot 与 mount 边界提供一种实现参照，但完整路径校验、产物提升和清理协议仍是本课程按威胁模型组合的宿主模板。',
+      'AgentFS 是面向 Agent 的文件接口，不是“给模型一块磁盘”。VFS provider protocol 应让 Harness 先 discover capabilities，例如是否支持 list/read/write/rename/snapshot/commit、路径与对象大小上限、并发与一致性模型、artifact ref 格式；再以 tenantId、runId、sessionId 建立命名空间。输入仓库可以只读暴露，写入进入独立工作区，Git commit 或 patch export 是显式高层操作。任务结束只提升通过路径、类型、大小、敏感信息和完整性检查的指定产物。',
+      'Session isolation 要同时约束名称和底层对象：同一相对路径在两个 session 中不得指向同一可写对象，snapshot 与恢复要绑定 providerVersion、namespace 和 content hash，cleanup 要能枚举尚未释放的 mount、workspace 和 artifact lease。文件授权不能只查字符串前缀；Harness 规范化路径，拒绝越界、设备文件和不允许的链接目标，并记录来源、读写属性、版本和释放状态。OpenAI manifest/capability/session 提供官方实现参照，飞书 AgentFS 只提供教学方案。',
       'Secret 应以短期、最小 scope、可撤销的方式提供，最好由 Harness 控制的凭证 broker 或网络代理在获准请求发生时注入，而不是把长期 token 写进镜像、仓库、普通环境转储或 checkpoint。需要提交 Git 变更时，可以让 sandbox 只生成 patch 和测试产物，由控制面验证后使用短期仓库凭证执行提交；若业务必须在 sandbox 内提交，也要把 token 绑定仓库、动作、分支和期限，并在终态立即撤销。Rootless 只降低进程身份权限，并不会自动保护已经暴露给进程的秘密。',
     ]),
     keyPoints: Object.freeze([
@@ -58,9 +68,14 @@ const sections = Object.freeze([
       '短期凭证通过受控 broker 或代理按请求、scope 和期限注入，不能把长期凭证留在 sandbox。',
       '产物返回宿主前要检查路径、类型、大小、敏感信息和完整性，并记录挂载与提升审计。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-04-vfs-session', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-openai-sandboxes',
       'res-harness-docker-rootless',
+      'res-harness-primary-feishu-virtual-filesystem',
+      'res-harness-primary-javaguide-harness-engineering',
     ]),
   }),
   Object.freeze({
@@ -79,6 +94,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-openai-sandboxes',
       'res-harness-smolagents-code',
+      'res-harness-primary-javaguide-ai-application-architecture',
     ]),
   }),
   Object.freeze({
@@ -97,6 +113,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-docker-resources',
       'res-harness-firecracker',
+      'res-harness-primary-feishu-beyond-model',
     ]),
   }),
   Object.freeze({
@@ -116,6 +133,7 @@ const sections = Object.freeze([
       'res-harness-openai-sandboxes',
       'res-harness-docker-resources',
       'res-harness-firecracker',
+      'res-harness-primary-javaguide-harness-engineering',
     ]),
   }),
   Object.freeze({
@@ -144,6 +162,8 @@ const sections = Object.freeze([
       'res-harness-docker-rootless',
       'res-harness-firecracker',
       'res-harness-smolagents-code',
+      'res-harness-primary-feishu-virtual-filesystem',
+      'res-harness-primary-javaguide-ai-application-architecture',
     ]),
   }),
 ]);
@@ -177,7 +197,9 @@ const misconceptions = Object.freeze([
 
 export const harness04Note = Object.freeze({
   readingMinutes: 42,
-  introduction: '当 Agent 获准运行仓库代码时，Prompt、工具 schema 和人工审批已经无法限制程序真正触达的系统资源。本章从不可信仓库测试任务出发，用威胁模型连接 Harness 控制面与 sandbox 执行面：先比较普通进程、共享内核容器、rootless、seccomp、gVisor 用户态内核和 Firecracker microVM 的真实边界，再逐项收紧只读输入与隔离写区、DNS 与网络出口、短期凭证，以及 CPU、内存、进程、磁盘、文件描述符、网络和墙钟时间。最后把超限原因码、进程树终止、临时资源清理、脱敏诊断和产物提升收束成一份可验证策略。学完后，你应能针对两种威胁模型解释为何选择不同组合，并现场审计一份覆盖权限、资源、清理与证据的代码执行配置。',
+  introduction: '当 Agent 获准运行文件、Git 或 Bash 时，Prompt、工具 schema 和人工审批已经无法限制程序真正触达的系统资源。飞书 AgentFS 与“模型之外的全部”提供从虚拟文件到 Harness 控制面的教学主线，JavaGuide Harness/System Design 负责横向比较，OpenAI、Docker、gVisor 与 Firecracker 官方资料限定隔离事实。本章从 threat model 出发，设计 VFS provider protocol、capability discovery、session namespace 与 artifact 提升，再比较本地文件/Git/Bash、受控 sandbox、远端 VFS 三种执行栈；随后收紧 mount、network、secret 和七类资源，保留官方 caveat：container、rootless、seccomp、用户态内核、microVM 或文件抽象都不是脱离配置的安全保证。',
+  overviewVisualId: 'visual-harness-04-sandbox-boundary',
+  overviewVisualSectionId: 'start-from-a-threat-model',
   sections,
   misconceptions,
   recap: Object.freeze([

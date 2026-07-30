@@ -1,9 +1,10 @@
 const sections = Object.freeze([
   Object.freeze({
     id: 'layer-concurrency-limits',
-    title: '先区分并发、并行、吞吐与公平',
+    title: '先选控制结构，再限制并发',
     paragraphs: Object.freeze([
-      'Concurrency（并发）表示多个 run 在同一时间窗口交错推进，parallelism（并行）表示多个计算确实在同一时刻占用不同执行资源；两者都不等于 throughput（吞吐），后者是单位时间完成的有效工作量。增加 worker 可能提高并行度，却也可能先耗尽模型配额、数据库连接、sandbox 容量或第三方 API，令排队、限流和失败增加，最终吞吐反而下降。Fairness（公平性）则回答共享容量怎样分给不同租户和任务，不能用全局完成数掩盖单个租户长期饥饿。',
+      '飞书“ReAct 到 Orchestration”与 JavaGuide Workflow/Graph/Loop 先把控制结构拆开。Workflow 预先声明主要阶段，graph 让节点和有向边表达依赖与分支，loop 根据观察重复决策，parallel 同时推进无依赖分支，pipeline 让不同阶段重叠处理不同工作项，orchestration 则统一管理这些结构的状态、依赖、预算、恢复和人工介入。名称在框架间会重叠，选择依据应是依赖是否已知、分支是否动态、是否需要反馈、并发是否安全以及恢复点在哪里。Mechanical control（机械控制）由 Harness 确定性执行拓扑依赖、队列准入、并发槽位、deadline、retry guard、checkpoint、HITL pause 与状态转换；Model judgment（模型判断）处理开放语义，例如怎样拆解目标、哪个证据更相关、观察是否需要改计划。模型可以提议新增分支，却不能自行修改硬预算、绕过审批或宣称队列工作已经完成。',
+      'Concurrency 表示多个 run 在同一时间窗口交错推进，parallelism 表示多个计算真正同时占用执行资源；两者都不等于 throughput，后者是单位时间完成的有效工作量。增加 worker 可能提高并行度，却也可能耗尽模型配额、数据库连接、sandbox 或第三方 API，令排队与失败增加。Fairness 回答共享容量怎样分给不同租户，不能用全局完成数掩盖单个租户饥饿。',
       'Concurrency limit（并发上限）应按最紧依赖分层：全局上限保护服务总容量；租户上限防止一个客户占满槽位；工具上限保护高成本或高风险工具；依赖上限对应搜索 API、数据库连接池或 sandbox provider 的真实容量。一个 run 内的子任务也要受上限约束。调度器只有同时取得所需层级的许可才启动工作，并在完成、取消或超时后释放；仅按 CPU 核数扩大全局 worker，会绕过外部依赖与租户隔离。',
       '公平没有唯一算法。课程可以使用每租户保留量、权重、轮转、等待时间 aging 与最大在途数的组合，并明确高优先任务可借用多少共享槽位、批处理最多等待多久。Google SRE 资料提供 per-customer limit、criticality、过载与级联故障的工程经验，但阈值和公平算法必须由本系统验证。AgentScope Runtime 的 AaaS、生命周期、sandbox 与状态服务只作实现交叉参照；仓库已进入只读迁移阶段并计划归档，相关能力并入 AgentScope 2.0，不能把其实现提升为通用调度保证。',
     ]),
@@ -16,13 +17,16 @@ const sections = Object.freeze([
       'res-harness-sre-overload',
       'res-harness-sre-cascading',
       'res-harness-agentscope-runtime',
+      'res-harness-primary-feishu-react-orchestration',
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-javaguide-workflow-graph-loop',
     ]),
   }),
   Object.freeze({
     id: 'design-a-bounded-durable-queue',
     title: '让 producer 写入有界耐久队列',
     paragraphs: Object.freeze([
-      'Producer（生产者）接收新 run，先做身份、配额、幂等和 admission control，再把获准任务写入 durable queue（耐久队列）。这里的“耐久”表示任务不会只存在 producer 或 worker 的进程内存中，而是按所选队列服务的持久化契约保存；“有界”表示队列对消息数、字节、等待时间或租户积压有明确容量。队列能吸收短时突发，却不能创造下游处理能力，无界堆积只会把立即拒绝变成长时间等待、存储膨胀和过期任务。',
+      '当 workflow、graph 或 loop 的可运行节点多于即时容量时，orchestrator 把就绪工作交给有界 durable queue。Producer 先做身份、配额、幂等和 admission control，再写获准任务；HITL 节点则持久化 awaiting_approval 并释放 worker，不在队列里占用执行槽位。耐久表示任务按所选队列契约保存而非只在进程内存；有界表示消息数、字节、等待时间或租户积压都有容量。队列吸收短时突发，却不能创造处理能力。',
       '消息应只携带稳定 run 引用和调度元数据，例如 schemaVersion、runId、tenantId、idempotencyKey、priorityClass、enqueuedAt、notBefore、attemptHint 与 traceId。当前 state、checkpoint、审批记录和预算由权威存储按 runId 读取；大型输入、日志、模型上下文与二进制 artifact 放对象存储，并在消息中保留不可变引用、版本与哈希。把完整聊天或大产物塞进消息会放大复制、重投递、更新和敏感数据治理成本，也让旧消息携带过时状态。',
       '顺序与优先级必须写适用范围。FIFO（先进先出）只能在队列或分组提供的顺序边界内帮助重放，不能证明跨租户全局顺序，也不能阻止慢任务形成队首阻塞；严格 priority 可能让批处理永久饥饿。课程策略可按租户分队、在优先级内轮转并对等待任务 aging，但这只是可评审方案，不是 SQS 或 SRE 的通用协议。消息顺序也不能替代 run 内 event sequence 和幂等消费者。',
     ]),
@@ -35,6 +39,8 @@ const sections = Object.freeze([
       'res-harness-sre-overload',
       'res-harness-sre-cascading',
       'res-harness-aws-sqs-visibility',
+      'res-harness-primary-feishu-react-orchestration',
+      'res-harness-primary-javaguide-workflow-graph-loop',
     ]),
   }),
   Object.freeze({
@@ -55,7 +61,13 @@ const sections = Object.freeze([
       title: '不可见不等于只投递一次',
       body: 'Visibility 只降低同一消息同时被领取的机会；网络、确认丢失和队列语义仍可能带来重复，业务效果要由幂等消费者保护。',
     }),
-    sourceIds: Object.freeze(['res-harness-aws-sqs-visibility']),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-07-queue-lease', afterParagraph: 1 }),
+    ]),
+    sourceIds: Object.freeze([
+      'res-harness-aws-sqs-visibility',
+      'res-harness-primary-feishu-react-orchestration',
+    ]),
   }),
   Object.freeze({
     id: 'propagate-cancellation-across-queue-states',
@@ -73,6 +85,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-aws-sqs-visibility',
       'res-harness-sre-cascading',
+      'res-harness-primary-javaguide-workflow-graph-loop',
     ]),
   }),
   Object.freeze({
@@ -88,9 +101,13 @@ const sections = Object.freeze([
       '软水位减速和降级，硬水位拒绝或保留关键流量，并向上游返回原因与 Retry-After。',
       '交互与批处理使用不同等待、优先和恢复策略，同时保留公平下限。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-07-backpressure', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-sre-overload',
       'res-harness-sre-cascading',
+      'res-harness-primary-feishu-loop-engineering-intro',
     ]),
   }),
   Object.freeze({
@@ -110,6 +127,7 @@ const sections = Object.freeze([
       'res-harness-sre-overload',
       'res-harness-sre-cascading',
       'res-harness-aws-sqs-visibility',
+      'res-harness-primary-feishu-react-orchestration',
     ]),
   }),
   Object.freeze({
@@ -130,6 +148,8 @@ const sections = Object.freeze([
       'res-harness-sre-overload',
       'res-harness-sre-cascading',
       'res-harness-agentscope-runtime',
+      'res-harness-primary-feishu-react-orchestration',
+      'res-harness-primary-javaguide-workflow-graph-loop',
     ]),
   }),
 ]);
@@ -163,7 +183,9 @@ const misconceptions = Object.freeze([
 
 export const harness07Note = Object.freeze({
   readingMinutes: 39,
-  introduction: '前两课已经让单个 run 具备有限重试和幂等恢复，但生产 Harness 同时面对许多租户、子任务、sandbox 和下游依赖。若只增加 worker 或把所有请求塞进无界队列，短时突发会变成长等待，重投递会变成重复副作用，单个租户还可能耗尽共享容量。本章从并发、并行、吞吐和公平的区别出发，设计全局、租户、工具与依赖分层上限，再建立只携带稳定 run 引用的有界耐久队列，完整走过 receive、visibility/lease、续租、checkpoint、ack/delete、失联 redelivery 和幂等消费。随后分别处理三种取消状态，用 soft/hard watermark、准入拒绝、load shedding 与降级把压力传回 producer，并通过 Queue Lab 和三条过载轨迹验证资源始终有界。',
+  introduction: '前两课已经让单个 run 具备有限重试和幂等恢复，本课把多个决策和任务组织成系统。飞书从 ReAct 到 Orchestration 的演进提供主线，Loop basics 与 JavaGuide Workflow/Graph/Loop 负责概念交叉检查，SQS 与 Google SRE 官方/专家资料验证队列和过载边界。你将按依赖、动态性、反馈和恢复需求区分 workflow、graph、loop、parallel、pipeline 与 orchestration，划清 Harness 的 mechanical control 和模型 judgment，再把可运行节点送入有界队列，处理 concurrency、HITL、visibility、checkpoint、redelivery、backpressure 与 load shedding。目标不是制造更多并行，而是让每个分支的执行权、容量和恢复证据都可解释。',
+  overviewVisualId: 'visual-harness-07-orchestration-map',
+  overviewVisualSectionId: 'layer-concurrency-limits',
   sections,
   misconceptions,
   recap: Object.freeze([

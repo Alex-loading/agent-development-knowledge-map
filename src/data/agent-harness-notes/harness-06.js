@@ -3,7 +3,7 @@ const sections = Object.freeze([
     id: 'bind-retries-to-business-intent',
     title: '先把业务 intent 与执行 attempt 分开',
     paragraphs: Object.freeze([
-      '上一课已经说明 timeout 后错误可能可重试，但写动作不一定可安全重放。本课先区分两个对象：business intent（业务意图）是“同一调用者要对同一业务对象达成同一结果”，例如为客户 C 的故障 I 创建一张严重级别为高的工单；attempt（执行尝试）则是为了实现这个意图发出的一次网络请求。进程重启、连接重置或队列重投递会增加 attempt，却不应自动制造新的 intent。幂等的目标不是让代码只运行一次，而是让同一 intent 的重复 attempt 不增加可观察业务效果。',
+      'Dynamic Workflow 的恢复难点不在“重新进入节点”，而在 checkpoint gap：远端动作已经发生，本地 journal、completion event 或 checkpoint 只推进了一部分。先区分 business intent 与 attempt：intent 是同一调用者要对同一业务对象达成同一结果，例如创建一张故障工单；attempt 是实现它的一次网络请求。进程重启、连接重置、journaled replay 或队列重投递会增加 attempt，却不应制造新 intent。幂等的目标不是代码只运行一次，而是重复 attempt 不增加可观察业务效果。',
       'Idempotency key（幂等键）是调用方为同一 intent 提供并在所有重试、查询和恢复中复用的稳定标识。它必须在第一次远端调用前由可信宿主持久化，不能由模型临时编造，也不能每个 attempt 重新生成。仅对参数做哈希也不够：两个完全相同的创建请求可能本来就是两个合法业务意图。因此课程把 key 与 caller、tenant、tool、业务对象和 intentId 绑定，并另存 intent fingerprint（意图指纹），即对会改变业务含义的规范化参数、工具版本和授权上下文生成的稳定摘要，用来检测同键异意图，而不是用摘要代替人的意图标识。',
       'Key 还必须有明确 scope（作用域）与 TTL（保留期限）。作用域回答在哪个租户、调用者、工具和操作内判重；TTL 回答服务端保留去重事实多久。TTL 太短，晚到 retry 可能越过去重窗口；无限保留又会积累成本，并使未来合法 key 碰撞更难处理。恢复器必须比较首次记录的 createdAt、expiresAt 与当前时间：过期不能解释为“未执行”，而应查询 operationId 或转人工。AWS 文章提供的是 Amazon 服务设计中验证过的工程经验，具体 key 结构、作用域和期限必须按本系统的资源生命周期、最大重试延迟与合规要求验证。',
     ]),
@@ -19,6 +19,8 @@ const sections = Object.freeze([
     }),
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
+      'res-harness-primary-feishu-dynamic-workflow',
+      'res-harness-primary-javaguide-loop-engineering',
     ]),
   }),
   Object.freeze({
@@ -26,7 +28,7 @@ const sections = Object.freeze([
     title: '幂等保证必须落在服务端原子去重契约',
     paragraphs: Object.freeze([
       '客户端带上 key 只是提出判重请求，真正的幂等语义由接收服务实现。课程把服务端记录具体化为 dedupe record（去重记录）：在能覆盖业务写入的原子边界内保存 caller、scope、key、fingerprint、处理状态、operationId 和可返回结果，并防止两个并发首请求都通过“未见过 key”的检查。若先写业务对象后写记录，崩溃会留下“效果已发生、key 不存在”；若先单独写 key 后业务失败，又可能把未完成动作误报成功。AWS 的模式明确要求记录 token 与相关变更具备服务端原子一致性，这不是 Harness 单方面生成 UUID 就能补出的能力。',
-      '同一 scope 下再次收到相同 key 与相同 intent fingerprint 时，服务端应返回首次处理的结果，或返回在业务意义上等价的当前结果，而不是再创建一张工单。语义等价不要求响应字节完全一致：时间戳或资源状态可能变化，但调用者仍应能判断这是原 intent 对应的同一 operationId 与业务对象。课程协议还要求首次处理进行中时返回明确的 in-progress 状态和查询引用；调用方随后查询，不能因为没拿到最终响应就换 key。',
+      '同一 scope 下再次收到相同 key 与相同 intent fingerprint 时，服务端应返回首次处理的结果，或返回在业务意义上等价的当前结果，而不是再创建一张工单。语义等价不要求响应字节完全一致：时间戳或资源状态可能变化，但调用者仍应能判断这是原 intent 对应的同一 operationId 与业务对象。课程约定还要求首次处理进行中时返回明确的 in-progress 状态和查询引用；调用方随后查询，不能因为没拿到最终响应就换 key。',
       '相同 key 却带来不同的规范化参数、工具版本或关键授权语义时，应返回 idempotency conflict 或参数不匹配，并保留原记录供审计，绝不能静默采用新参数，也不能把旧成功结果冒充新意图的成功。若业务真的改变，例如把工单严重级别由高改为低，应先完成重新授权与业务决策，再创建新的 intent 和 key；若只是字段排序、默认值展开或无业务意义的表示差异，则由规范化规则得到同一 fingerprint。规范化字段和冲突策略必须版本化，否则部署升级可能把同一 intent 错判成不同请求。',
     ]),
     keyPoints: Object.freeze([
@@ -41,6 +43,7 @@ const sections = Object.freeze([
     }),
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
+      'res-harness-primary-feishu-dynamic-workflow',
     ]),
   }),
   Object.freeze({
@@ -48,24 +51,29 @@ const sections = Object.freeze([
     title: '调用前写 intent record，调用后推进副作用账本',
     paragraphs: Object.freeze([
       'Harness 还需要自己的 intent record 与 side-effect ledger（副作用账本），因为本地 checkpoint 和第三方服务通常不共享事务。调用前先取得单一写入权限并持久化 intent：至少记录 runId、callId、intentId、tool/version、caller/tenant、规范化参数、fingerprint、idempotencyKey、scope、expiresAt、审批引用与状态 pending。只有这条记录提交成功，才允许发出远端请求；否则恢复器连“本来要做什么、该用哪个 key 查询”都无法证明。账本字段集合是本课程综合协议，不是 AWS 或 LangGraph 发布的统一 schema。',
-      '请求发出后，账本追加 attemptId、开始时间和传输状态；收到确定响应时记录 operationId、远端状态、结果摘要、证据引用与 succeeded 或 failed，再提交 completion event 并推进 checkpoint 游标。Unknown outcome（未知终态）表示调用方无法由现有证据判定远端是否已产生效果，例如请求中连接断开、远端成功但响应丢失，或成功结果已到达却在本地记账前崩溃。Unknown 不是 failed 的别名，也不是允许换 key 重试的理由；它要求把 pending 转为 unknown 或保持待对账状态，并冻结同一 intent 的新写 attempt。',
-      '更隐蔽的窗口是账本已经记录成功、completion event 也已提交，但 checkpoint 仍停在调用前。旧 checkpoint 只说明控制状态没有推进，不能推翻较新的本地事实。恢复器应先取得 recovery lease，按 callId、intentId 和事件游标读取账本及完成事件，再决定补写 checkpoint。LangGraph 的 fault tolerance 可以保存可恢复控制状态，并在 timeout 时清理节点 buffered writes；这不等于撤销已发往工单、支付或消息服务的远端效果，也不替代 intent record。框架 checkpoint 的恢复能力只能在其版本与运行边界内使用。',
+      '请求发出后，journal 追加 attemptId、开始时间和传输状态；收到确定响应时记录 operationId、远端状态、结果摘要与证据引用，再提交 completion event 并推进 checkpoint 游标。Unknown outcome 表示现有证据无法判定远端是否产生效果，例如请求中断、响应丢失，或成功结果到达却在本地记账前崩溃。Unknown 不是 failed，也不是换 key 重试的理由；它冻结同一 intent 的新写 attempt，要求 reconciliation 先查询远端、去重记录、账本和事件历史。',
+      '更隐蔽的 checkpoint gap 是账本已成功、completion event 已提交，checkpoint 仍停在调用前。旧 checkpoint 只说明控制投影未推进，不能推翻较新的副作用事实。Journaled replay 应从可信 eventCursor 恢复，重放纯 reducer，对 pending/unknown side effect 执行查询或 reconciliation，再补写缺失投影与 checkpoint。Temporal event history 和 LangGraph fault tolerance 提供各自官方实现边界；清理 buffered writes 不等于撤销工单、支付或消息服务。',
     ]),
     keyPoints: Object.freeze([
       '远端调用前先持久化 pending intent record，确保 key、指纹、授权与调用目标可恢复。',
       '账本分别记录 intent、attempt、operationId、远端证据、完成事件和 checkpoint 游标。',
       'Unknown outcome 不能降格成失败；旧 checkpoint 也不能覆盖较新的副作用证据。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-06-side-effect-journal', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
       'res-harness-langgraph-fault-tolerance',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-dynamic-workflow',
     ]),
   }),
   Object.freeze({
     id: 'resume-by-lease-evidence-and-five-decisions',
     title: '用恢复 lease、证据优先级与五路决策续跑',
     paragraphs: Object.freeze([
-      '安全 Resume 的第一步不是重放节点，而是用条件写取得 run 的 recovery lease，记录 owner、leaseVersion 与 expiresAt，阻止两个 worker 同时恢复同一 pending intent。接管者校验 checkpoint 版本和游标后，按原 idempotency key 或 operationId 查询远端；查询请求本身也要有 deadline、有限 retry 与预算。若查询 timeout，仍没有得到写入失败证据：只可在查询预算内再次查询或换获准的只读对账通道，预算耗尽、key 过期、权限不足或远端不可查询时转 manual/handoff，不能因此自动重放写入。',
+      '安全 Resume 的第一步不是重放节点，而是条件获取 recovery lease，阻止两个 worker 同时恢复。接管者先校验 checkpoint 的 eventCursor、journal cursor、modelRef、promptHash、toolSchemaVersion、policyVersion 和 reducerVersion，再按原 key 或 operationId 查询远端。Agent Version Drifting 的边界是：模型或 prompt 变化可能改变下一决策，工具 schema 变化可能让旧参数或审批失效，reducer 变化可能改变同一事件的投影；因此必须通过兼容矩阵、adapter 和冻结轨迹回放后才续跑，未知关键版本直接 manual/handoff。',
       '课程把证据映射为五种动作。skip 用于已有可信 completion event 或账本 succeeded，表示不再调用；reconcile 用于远端成功但本地完成事实缺失，按原 operationId 补写 ledger、completion event 和 checkpoint；retry 只用于已确认未执行或服务端幂等契约有效、同 key 同 fingerprint、错误瞬态、权限仍有效且预算足够的情况；manual 用于未知写入、证据冲突、不可查询、不支持去重、key 过期或补偿含义不清；fail 用于远端明确失败、永久错误、无可用恢复路径或预算耗尽。五路枚举与优先级是课程综合，不是两份来源的标准 API。',
       '补偿与 retry 是不同动作。若确认原 intent 已成功，但业务随后要求撤销，应执行有独立授权、独立 intent/key 和审计记录的 compensate，例如关闭误建工单，而不是把账本改成“从未发生”。补偿可能失败，也可能不能恢复所有外部观察，因此不叫 rollback 魔法。若远端证据与本地 completion 冲突，或两个查询通道返回不同 operationId，恢复器必须保持 lease 或安全封存、停止自动推进并进入 manual；只有对账事实达成一致，才释放 lease 给后续 Runner。',
     ]),
@@ -79,9 +87,16 @@ const sections = Object.freeze([
       title: 'Unknown 期间禁止换 key 写入',
       body: '新 key 会让服务端看到新的业务意图；在原操作尚未对账时这样做，正是重复副作用最常见的来源。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-06-evidence-decision', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
       'res-harness-langgraph-fault-tolerance',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-agent-version-drifting',
+      'res-harness-primary-feishu-dynamic-workflow',
+      'res-harness-primary-javaguide-workflow-graph-loop',
     ]),
   }),
   Object.freeze({
@@ -100,6 +115,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
       'res-harness-langgraph-fault-tolerance',
+      'res-harness-primary-feishu-dynamic-workflow',
     ]),
   }),
   Object.freeze({
@@ -123,6 +139,9 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-aws-idempotent',
       'res-harness-langgraph-fault-tolerance',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-agent-version-drifting',
+      'res-harness-primary-feishu-dynamic-workflow',
     ]),
   }),
 ]);
@@ -156,7 +175,9 @@ const misconceptions = Object.freeze([
 
 export const harness06Note = Object.freeze({
   readingMinutes: 43,
-  introduction: '进程重启、节点重放或队列重投递不会让工单、消息或扣款自动消失。上一课把 timeout 后的写结果标为 unknown，本课继续追问：同一业务 intent 出现多个 attempt 时，Harness 如何识别重复、确认远端事实，并选择 skip、retry、reconcile、manual 或 fail。你将建立稳定 idempotency key、intent fingerprint、scope/TTL、服务端原子 dedupe record、调用前 intent record 与 side-effect ledger，再用原 key 或 operationId 对账和补写。五个崩溃点与 Retry / Resume Simulator 贯穿全文，同时保留边界：AWS 是依赖服务端配合的平台工程经验；LangGraph 恢复控制状态而不回滚远端副作用；账本、recovery lease 与五路决策是课程综合，不能包装成任意工具 exactly-once。',
+  introduction: '进程重启、节点重放或队列重投递不会让工单、消息或扣款自动消失。飞书 Dynamic Workflow 提供 journaled replay 主线，Agent Version Drifting 把安全恢复扩展到 model、prompt、tool schema、policy 与 reducer 迁移；JavaGuide Workflow/Loop 用于交叉检查控制结构，AWS、Temporal 与 LangGraph 验证幂等、事件和恢复边界。本课从 checkpoint gap 与 unknown outcome 出发，建立 stable intent、idempotency key、side-effect journal、reconciliation、recovery lease 和五路决策，并用五个崩溃点证明：durable control flow 只让控制位置可恢复，无共同事务的外部副作用仍不能承诺 exactly-once。',
+  overviewVisualId: 'visual-harness-06-idempotent-recovery',
+  overviewVisualSectionId: 'bind-retries-to-business-intent',
   sections,
   misconceptions,
   recap: Object.freeze([

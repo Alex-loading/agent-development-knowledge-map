@@ -1,6 +1,8 @@
 import { agentHarnessNotes } from './agent-harness-notes.js';
+import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-23';
+const PRIMARY_VERIFIED_AT = '2026-07-30';
 
 const evidenceByResourceId = {
   'res-harness-openai-running': {
@@ -208,7 +210,7 @@ const evidenceByResourceId = {
   },
 };
 
-const resources = [
+const verificationResources = [
   { id: 'res-harness-openai-running', title: 'Running Agents', url: 'https://openai.github.io/openai-agents-python/running_agents/', source: 'OpenAI Agents SDK', language: '英文', type: '官方文档', difficulty: '入门', stage: 'Runner 基础', value: '学习用途：辨认 Runner、run 配置与模型决策的职责边界；证据边界：这是当前 OpenAI Agents SDK 的实现语义，不是跨框架标准。', verifiedAt: VERIFIED_AT },
   { id: 'res-harness-openai-sandboxes', title: 'Sandbox Agents', url: 'https://developers.openai.com/api/docs/guides/agents/sandboxes', source: 'OpenAI Developers', language: '英文', type: '官方文档', difficulty: '进阶', stage: '控制面与执行面', value: '学习用途：直接区分 Harness 控制面与 sandbox compute 执行面；证据边界：这是当前 OpenAI Agents SDK 的 Beta 实现语义，不是跨框架标准，也不证明具体 provider 绝对安全。', verifiedAt: VERIFIED_AT },
   { id: 'res-harness-openai-hitl', title: 'Human-in-the-loop', url: 'https://openai.github.io/openai-agents-python/human_in_the_loop/', source: 'OpenAI Agents SDK', language: '英文', type: '官方文档', difficulty: '进阶', stage: '人工审批', value: '学习用途：对照工具审批的中断、保存和恢复流程；证据边界：这是当前 OpenAI Agents SDK 的实现语义，不是跨框架标准。', verifiedAt: VERIFIED_AT },
@@ -242,6 +244,252 @@ const resources = [
   ...resource,
   evidence: evidenceByResourceId[resource.id],
 }));
+
+function primaryBinding({
+  id,
+  canonicalSourceId,
+  stage,
+  difficulty = '进阶',
+  use,
+  boundary,
+  authority = 'expert',
+  role = 'core',
+  coverage,
+  limitations,
+}) {
+  return createPrimaryReferenceBinding({
+    id,
+    canonicalSourceId,
+    stage,
+    difficulty,
+    value: `学习用途：${use}；证据边界：${boundary}`,
+    evidence: {
+      authority,
+      role,
+      coverage,
+      limitations,
+      verifiedAt: PRIMARY_VERIFIED_AT,
+    },
+  });
+}
+
+const primaryResources = [
+  primaryBinding({
+    id: 'res-harness-primary-feishu-react-loop',
+    canonicalSourceId: 'primary-feishu-react-loop',
+    stage: 'Runner 与 ReAct',
+    use: '以完整工具轨迹解释 ReAct 的提案、执行、观察、继续和停止',
+    boundary: '文章是 Harness 工程教学叙事，具体 SDK 消息格式、并行工具语义与停止行为仍以官方实现为准',
+    coverage: ['ReAct 工具轨迹、继续与停止、Plan-then-Act briefing 与 nudge'],
+    limitations: '正文提供工程教学叙事和作者观察，不代表当前产品、协议或运行时对工具消息顺序、并行调用或停止条件的保证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-beyond-model',
+    canonicalSourceId: 'primary-feishu-beyond-model',
+    stage: 'Harness 责任边界',
+    use: '建立模型提案与 Harness 执行、状态、权限、预算、恢复之间的责任图',
+    boundary: '责任划分是教学架构，不是所有产品必须采用的规范分层',
+    coverage: ['模型提案与 Harness 执行边界、控制面、运行时和证据'],
+    limitations: '正文给出责任边界的教学叙事，不代表任何产品或行业协议必然采用相同分层，也不构成安全与可靠性保证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-loop-engineering-intro',
+    canonicalSourceId: 'primary-feishu-loop-engineering-intro',
+    stage: 'Loop Engineering',
+    use: '把循环、状态、工具、验证、预算和停止组合为可工程化控制结构',
+    boundary: 'Loop Engineering 是教学术语，不能据此推出框架能力或可靠性等级',
+    coverage: ['开环与闭环控制结构、预算、验证、停止和长程任务'],
+    limitations: '正文提供 Loop Engineering 的教学框架和作者推演，不代表行业标准，也不保证任何产品的长程任务可靠性。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-react-orchestration',
+    canonicalSourceId: 'primary-feishu-react-orchestration',
+    stage: '编排演进',
+    use: '比较 ReAct、规划、工作流、图、并行、流水线与编排的控制关系',
+    boundary: '分类用于教学，框架命名、耐久性和并发语义仍需逐个核验',
+    coverage: ['ReAct 到 orchestration、控制流、依赖、并行和恢复'],
+    limitations: '正文给出编排演进的教学观察，不代表工作流、图或运行时协议的统一定义，也不保证框架的耐久执行语义。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-dynamic-workflow',
+    canonicalSourceId: 'primary-feishu-dynamic-workflow',
+    stage: '动态工作流',
+    use: '从教学代码提炼事件日志、控制位置、journaled replay 与副作用边界',
+    boundary: '复刻代码只能说明机制，不能证明生产级耐久性或 exactly-once',
+    coverage: ['动态工作流、事件历史、checkpoint、journaled replay、恢复'],
+    limitations: '正文代码与逆向推演属于教学观察，不代表当前产品或协议的内部实现，也不保证顺序、原子提交或外部副作用 exactly-once。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-agent-version-drifting',
+    canonicalSourceId: 'primary-feishu-agent-version-drifting',
+    stage: '版本迁移',
+    use: '识别模型、prompt、工具 schema、Harness 与依赖独立漂移造成的恢复风险',
+    boundary: '案例是截至冻结日的产品观察，恢复兼容性必须依赖版本记录与回归证据',
+    coverage: ['版本漂移、checkpoint 兼容、模型与 prompt 迁移、工具 schema 迁移'],
+    limitations: '正文描述的是截至冻结日的版本教学观察，不代表当前产品行为保证；具体迁移与兼容结论必须由发布说明和回归测试验证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-tool-truth',
+    canonicalSourceId: 'primary-feishu-tool-truth',
+    stage: '工具契约',
+    use: '区分模型产生 tool intent 与 Harness 校验、授权、执行、记录结果',
+    boundary: '工具协议字段和提供商行为必须由当前官方文档校验',
+    coverage: ['Tool Definition、模型决策、Harness 执行、工具结果 transcript'],
+    limitations: '正文提供模型与执行器边界的教学观察，不代表当前工具协议或产品字段保证，也不构成授权和副作用安全证明。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-company-brain',
+    canonicalSourceId: 'primary-feishu-company-brain',
+    stage: '组织知识交付',
+    role: 'cross-check',
+    use: '把长期运行产物连接到组织知识的权限、版本、引用与治理',
+    boundary: '系统设计叙事不能证明检索质量、合规或访问控制正确',
+    coverage: ['长期产物、知识治理、权限、版本和可追溯交付'],
+    limitations: '正文是组织知识系统的教学叙事，不代表产品、协议或合规保证，也不能单独证明访问控制、时效与检索质量。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-context-offloading',
+    canonicalSourceId: 'primary-feishu-context-offloading',
+    stage: '上下文外置',
+    use: '解释把可恢复细节移到文件和产物、在活动上下文保留索引与检索线索',
+    boundary: '通用外置模式与具体产品自动压缩行为必须分开',
+    coverage: ['Context offloading、外部状态、引用、恢复线索'],
+    limitations: '正文包含产品相关教学观察，不代表当前产品或上下文协议保证；自动外置、恢复与缓存行为可能随版本变化。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-microcompact',
+    canonicalSourceId: 'primary-feishu-microcompact',
+    stage: '上下文压缩',
+    role: 'cross-check',
+    use: '比较消息、工具结果与会话总结等压缩层及其信息损失风险',
+    boundary: '逆向观察不能当作稳定公开契约，正文只采用可迁移的压缩边界',
+    coverage: ['上下文压缩层、信息损失、长期任务证据保留'],
+    limitations: '正文中的内部机制属于逆向教学观察，不代表当前产品实现或协议保证；未公开细节可能不完整并随版本改变。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-virtual-filesystem',
+    canonicalSourceId: 'primary-feishu-virtual-filesystem',
+    stage: 'AgentFS 与 VFS',
+    use: '解释 AgentFS、VFS provider protocol、会话命名空间、持久化与清理责任',
+    boundary: '文件抽象本身不保证隔离、耐久性、来源可信或安全清理',
+    coverage: ['AgentFS、虚拟文件系统、provider protocol、会话隔离、能力发现'],
+    limitations: '正文提供虚拟文件系统的教学方案，不代表任何产品或协议实现，也不保证隔离、持久化、来源可信或安全清理。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-claude-code-tools',
+    canonicalSourceId: 'primary-feishu-claude-code-tools',
+    stage: '工具能力发现',
+    use: '把工具清单作为带名称、schema、权限与可用性的版本化运行时接口',
+    boundary: '清单是截至冻结日的产品观察，不能当作完整或当前工具保证',
+    coverage: ['工具清单、能力发现、工具版本、权限和 transcript 调优'],
+    limitations: '正文中的工具名称与行为是截至冻结日的产品教学观察，不代表当前产品或协议保证，也不能被描述为完整清单。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-claude-ai-memory',
+    canonicalSourceId: 'primary-feishu-claude-ai-memory',
+    stage: 'Prompt 与记忆结构',
+    role: 'cross-check',
+    use: '把观察到的 prompt、memory 与上下文层拆成版本化输入而非稳定内部契约',
+    boundary: '逆向结构可能遗漏隐藏状态，只能用于解释恢复输入的版本边界',
+    coverage: ['Prompt 分层、memory 观察、版本化恢复输入、长期任务交接'],
+    limitations: '正文是对产品内部结构的逆向教学观察，不代表当前产品保证或公开协议；隐藏状态与版本变化可能使观察不完整。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-autonomous-evolution',
+    canonicalSourceId: 'primary-feishu-autonomous-evolution',
+    stage: '自治演进',
+    use: '随自治程度提高同步增加状态、预算、验证、停止与人工介入控制',
+    boundary: '演进阶梯是教学模型，不是产品成熟度标准或可靠性排序',
+    coverage: ['自治程度、长程运行、预算、停止、验证和人工介入'],
+    limitations: '正文提供从循环到自治系统的教学推演，不代表产品成熟度标准、行业分类或任何运行时可靠性保证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-feishu-agent-install-md',
+    canonicalSourceId: 'primary-feishu-agent-install-md',
+    stage: '渐进式安装',
+    use: '用 Install.md 逐层披露前置条件、命令、验证、回滚与权限边界',
+    boundary: 'Install.md 是建议模式，不是技能或运行时的统一安装协议',
+    coverage: ['Install.md、渐进披露、安装验证、回滚、权限边界'],
+    limitations: '正文提出的是 Agent 安装文档教学模式，不代表当前产品或协议标准，也不保证第三方命令、Skill 或 Hook 安全。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-agent-basis',
+    canonicalSourceId: 'primary-javaguide-agent-basis',
+    stage: 'Agent 核心边界',
+    use: '系统化对照 Agent loop、Plan-and-Execute、工作流与 Tools 注册的概念层',
+    boundary: '跨框架分类不是规范，具体行为仍需官方来源验证',
+    coverage: ['Agent loop、Plan-and-Execute、Agentic workflow、工具注册'],
+    limitations: '文章整合不同框架的概念，不能把相同术语当作相同运行语义；协议、产品与可靠性主张需要官方验证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-harness-engineering',
+    canonicalSourceId: 'primary-javaguide-harness-engineering',
+    stage: 'Harness 架构',
+    use: '用 context、tools、state、control、safety、observability 六类责任交叉检查课程边界',
+    boundary: '六层是解释框架，不是行业标准或完整生产蓝图',
+    coverage: ['Harness 六类责任、上下文、工具、状态、控制、安全和可观测性'],
+    limitations: '六层架构属于专家教学整理而非行业标准；团队案例与产品行为仍需官方资料和目标系统证据核验。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-agent-skills',
+    canonicalSourceId: 'primary-javaguide-agent-skills',
+    stage: 'Skills 与渐进披露',
+    use: '区分 Skill、Prompt、MCP 与 Tool，并解释按需加载和信任边界',
+    boundary: '不同产品的发现、加载、权限和信任语义正在演化',
+    coverage: ['Agent Skills、渐进披露、发现、加载、权限和信任'],
+    limitations: '文章提供专家教学分类；Skill 的发现、加载、权限和安全边界随产品而异，当前行为必须由对应官方文档验证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-mcp',
+    canonicalSourceId: 'primary-javaguide-mcp',
+    stage: 'MCP 边界',
+    use: '区分 MCP 集成协议、模型工具选择与应用授权三个层次',
+    boundary: '规范字段、传输、生命周期和安全语义以当前 MCP 官方规范为准',
+    coverage: ['MCP、Function Calling、工具发现、客户端服务器边界'],
+    limitations: '文章是协议教学整理，不替代当前 MCP 规范；协议版本和实现扩展会变化，授权仍由应用 Harness 负责。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-workflow-graph-loop',
+    canonicalSourceId: 'primary-javaguide-workflow-graph-loop',
+    stage: 'Workflow、Graph 与 Loop',
+    use: '按依赖、动态性、恢复与并发需求选择工作流、图和循环',
+    boundary: '名称重叠且不能推出具体框架的耐久性与副作用保证',
+    coverage: ['Workflow、Graph、Loop、依赖、并发、恢复和控制选择'],
+    limitations: '文章的控制结构比较属于专家教学整理；框架术语重叠，执行、checkpoint 和 durability 语义需逐框架验证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-loop-engineering',
+    canonicalSourceId: 'primary-javaguide-loop-engineering',
+    stage: 'Loop 工程边界',
+    use: '把 Loop Engineering 放回控制循环、工作流和可靠性工程历史中校准',
+    boundary: '历史判断有争议，课程只采纳可验证机制而不宣称新范式',
+    coverage: ['Loop Engineering、控制循环、开放与封闭控制、可靠性边界'],
+    limitations: '文章中的历史判断是可争论的专家观点；课程只采用可验证控制机制，不把术语当作新协议或可靠性等级。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-context-engineering',
+    canonicalSourceId: 'primary-javaguide-context-engineering',
+    stage: '上下文工程',
+    use: '把指令、历史、工具、外部状态与产物视作有限上下文预算的可选择输入',
+    boundary: '具体窗口、缓存和自动压缩行为仍以供应商官方资料为准',
+    coverage: ['Context Engineering、上下文预算、渐进披露、外部状态'],
+    limitations: '文章提供上下文工程教学框架；窗口限制、缓存、压缩和产品行为会变化，必须由当前官方资料验证。',
+  }),
+  primaryBinding({
+    id: 'res-harness-primary-javaguide-ai-application-architecture',
+    canonicalSourceId: 'primary-javaguide-ai-application-architecture',
+    stage: '系统设计',
+    use: '比较 Agent 执行栈中的 API、状态、队列、存储、可观测、安全和评估边界',
+    boundary: '参考架构不证明适配未声明工作负载、SLO 或威胁模型',
+    coverage: ['AI 应用系统设计、执行栈、队列、存储、可观测性和安全'],
+    limitations: '文章提供专家参考架构而非通用生产蓝图；容量、可用性、安全和成本结论需以明确工作负载与测量验证。',
+  }),
+];
+
+const resources = [
+  ...verificationResources,
+  ...primaryResources,
+];
 
 function quiz(prompt, choices, answerIndex, explanation) {
   return { prompt, choices, answerIndex, explanation };
@@ -279,7 +527,18 @@ const lessons = [
       { heading: 'Agent 决策与宿主治理分层', body: 'Agent 根据目标、状态与观察提出下一步动作；Harness 则负责运行标识、状态持久化、工具执行、权限审批、预算、隔离、日志和终止。把两者分开，才能让模型输出保持建议性质，并由可信宿主在真正改变环境前执行确定性检查。Prompt 和 guardrail 不等于宿主授权，任何高风险能力都必须在执行边界重新验证。', keyPoints: ['模型可以提出动作，但不能自行授予凭证或越过策略', 'Harness 是控制面与运行时，不是另一个更长的 Prompt'] },
       { heading: 'Runner 生命周期必须可观测', body: '一个 run 先从 created 进入 queued，再由 worker 领取为 running；等待人工审批时进入 awaiting_approval，可重试错误等待退避时进入 retry_wait，缺少外部条件时进入 blocked。满足验收证据后转换为 succeeded，不可恢复错误进入 failed，主动停止进入 cancelled，超过整体 deadline 则进入 timed_out。Runner 在关键转换处触发窄而稳定的 hooks，并同步生成事件、checkpoint 与产物引用。', keyPoints: ['十个规范状态都由明确事件和守卫驱动，非法转换必须被拒绝', 'Hook 观察和扩展生命周期，但不得绕过核心校验'] },
     ],
-    resourceIds: ['res-harness-openai-running', 'res-harness-openai-sandboxes', 'res-harness-temporal-execution', 'res-harness-azure-durable', 'res-harness-agentscope-runtime', 'res-harness-hello-agents-framework'],
+    resourceIds: [
+      'res-harness-openai-running',
+      'res-harness-openai-sandboxes',
+      'res-harness-temporal-execution',
+      'res-harness-azure-durable',
+      'res-harness-agentscope-runtime',
+      'res-harness-hello-agents-framework',
+      'res-harness-primary-feishu-react-loop',
+      'res-harness-primary-feishu-beyond-model',
+      'res-harness-primary-javaguide-agent-basis',
+      'res-harness-primary-javaguide-harness-engineering',
+    ],
     exercise: { title: '绘制可执行 run 生命周期', brief: '为一个能读取仓库并运行测试的 Agent 设计 Runner 状态机和生命周期事件。', steps: ['列出正常、等待审批、阻塞、失败与取消路径，并为每次转换写出触发事件和守卫条件', '为 before_model、before_tool、after_tool 与 on_terminal hooks 定义输入、输出、失败处理和审计字段'], deliverable: '一张状态转换表、一份 hook 契约和两条完整运行轨迹。', experiment: 'run-lifecycle' },
     quizzes: [
       quiz('Agent 与 Harness 的核心职责如何划分？', ['Agent 负责所有系统权限，Harness 负责提示词', 'Agent 提议决策，Harness 执行治理与持久化', '两者只是不同框架名称'], 1, 'Agent 面向任务决策，Harness 在可信宿主侧实施权限、执行、状态、预算和审计。'),
@@ -297,7 +556,14 @@ const lessons = [
       { heading: '快照、历史与恢复点各司其职', body: 'Run state 是驱动下一步的当前结构化快照；event log 是按顺序追加的事实记录，回答状态怎样变化；checkpoint 是可恢复的状态与控制位置封装，帮助新进程从已提交边界继续。Checkpoint 不等于长期 memory：前者服务一次 run 的耐久恢复，后者涉及跨任务信息选择、保留、检索与治理。', keyPoints: ['State 优化当前决策，event log 优化审计与重建', 'Checkpoint 要带版本、游标和已确认副作用引用'] },
       { heading: '保存频率是风险与成本权衡', body: 'Checkpoint 太少会扩大故障后的重算窗口，太多则增加写放大、延迟和一致性复杂度。实践中应在昂贵模型调用后、外部副作用前后、人工暂停前和终态处设置关键提交点，再按可接受恢复点目标补充周期保存；恢复时先校验 schema、事件游标和依赖资源，而不是盲信旧快照。', keyPoints: ['围绕不可重复成本和副作用边界设置恢复点', '恢复必须处理旧版本、部分提交和损坏快照'] },
     ],
-    resourceIds: ['res-harness-openai-run-state', 'res-harness-langgraph-persistence', 'res-harness-temporal-event'],
+    resourceIds: [
+      'res-harness-openai-run-state',
+      'res-harness-langgraph-persistence',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-dynamic-workflow',
+      'res-harness-primary-feishu-agent-version-drifting',
+      'res-harness-primary-javaguide-workflow-graph-loop',
+    ],
     exercise: { title: '设计 run 持久化模型', brief: '为长达两小时的资料整理 run 设计状态表、事件表和 checkpoint 记录。', steps: ['定义三类记录的主键、版本、游标、有效载荷和原子提交边界，并标注哪些字段是事实或派生值', '模拟模型完成、工具写入、进程崩溃和 schema 升级，逐步写出恢复读取与兼容检查'], deliverable: '一份数据 schema、四个提交点以及崩溃恢复时序图。' },
     quizzes: [
       quiz('Event log 与 run state 的关系是什么？', ['两者必须保存相同内容', '前者记录变化历史，后者表示当前快照', 'event log 只存模型文本'], 1, '事件日志保留发生过什么，当前状态聚合对下一步有用的最新事实，两者用途不同。'),
@@ -315,7 +581,17 @@ const lessons = [
       { heading: '注册表是执行契约而非菜单', body: '工具注册表除名称和描述外，还应记录版本、参数与返回 schema、数据分级、所需 scope、风险等级、副作用、幂等能力、超时和责任团队。模型只能从当次 run 被允许的视图中选工具；宿主接到调用后仍需验证结构、业务约束、调用者身份和资源级权限。Prompt 和 guardrail 不等于宿主授权，文字规则不能替代执行层策略。', keyPoints: ['面向模型的说明与面向宿主的强制策略要分离', '高风险、副作用和可重试性应成为一等元数据'] },
       { heading: '审批是有时效的条件授权', body: '认证回答调用者是谁，授权回答其当前能对目标资源做什么，人工审批回答特定高风险意图是否被人接受。审批应绑定工具版本、规范化参数、资源、身份、策略版本和过期时间；恢复执行时必须再次验证，因为凭证、参数、对象状态或策略可能在等待期间变化，避免批准内容与实际执行内容发生偏移。', keyPoints: ['审批令牌必须绑定不可歧义的调用摘要', '批准后重验身份、权限、参数和资源状态，防止时序竞态'] },
     ],
-    resourceIds: ['res-harness-openai-tools', 'res-harness-openai-hitl', 'res-harness-langgraph-interrupts', 'res-harness-nist-tool-use', 'res-harness-owasp-agency'],
+    resourceIds: [
+      'res-harness-openai-tools',
+      'res-harness-openai-hitl',
+      'res-harness-langgraph-interrupts',
+      'res-harness-nist-tool-use',
+      'res-harness-owasp-agency',
+      'res-harness-primary-feishu-tool-truth',
+      'res-harness-primary-feishu-claude-code-tools',
+      'res-harness-primary-javaguide-mcp',
+      'res-harness-primary-javaguide-agent-skills',
+    ],
     exercise: { title: '构建高风险工具策略', brief: '为退款、只读查询和代码执行三个工具定义注册、校验、授权与审批流程。', steps: ['写出每个工具的版本化 schema、scope、风险、副作用、幂等键、超时和审计字段', '模拟审批等待期间参数、权限与资源变化，设计恢复时的摘要比对和重新验证结果'], deliverable: '三条工具注册记录、一份策略矩阵和审批恢复时序。' },
     quizzes: [
       quiz('人工审批主要补充哪一层控制？', ['证明调用者身份', '对具体高风险意图给予条件许可', '保证工具永不失败'], 1, '审批针对具体意图和风险作人为判断，但认证、授权与运行时校验仍分别不可省略。'),
@@ -333,7 +609,19 @@ const lessons = [
       { heading: '容器只是隔离机制的一层', body: 'Container 共享宿主内核，主要提供 namespace、cgroup 和权限边界；配置错误、内核漏洞、过宽挂载与高权限运行都会削弱隔离。因此 Container 不等于绝对安全 sandbox。应先明确攻击者能力、资产和逃逸后果，再按风险组合 rootless、只读文件系统、系统调用过滤、网络出口控制、凭证代理、用户态内核或 microVM。', keyPoints: ['隔离强度必须对应威胁模型和逃逸代价', '默认拒绝挂载、网络、设备与特权能力，再按任务开放'] },
       { heading: '资源限制也是安全边界', body: '代码执行不仅可能读写越权，还可能消耗 CPU、内存、磁盘、进程数、文件描述符、网络带宽和墙钟时间。Harness 应在宿主或编排层设置不可由容器内进程提高的硬上限，监控接近阈值的行为，并为超限定义可识别终态和清理流程；仅依赖提示词要求“节省资源”没有强制力。', keyPoints: ['为 CPU、内存、存储、进程、网络和时间分别设硬预算', '终止后清理临时文件、子进程与短期凭证，并保留证据'] },
     ],
-    resourceIds: ['res-harness-openai-sandboxes', 'res-harness-gvisor', 'res-harness-docker-seccomp', 'res-harness-docker-resources', 'res-harness-docker-rootless', 'res-harness-firecracker', 'res-harness-smolagents-code'],
+    resourceIds: [
+      'res-harness-openai-sandboxes',
+      'res-harness-gvisor',
+      'res-harness-docker-seccomp',
+      'res-harness-docker-resources',
+      'res-harness-docker-rootless',
+      'res-harness-firecracker',
+      'res-harness-smolagents-code',
+      'res-harness-primary-feishu-virtual-filesystem',
+      'res-harness-primary-feishu-beyond-model',
+      'res-harness-primary-javaguide-harness-engineering',
+      'res-harness-primary-javaguide-ai-application-architecture',
+    ],
     exercise: { title: '编写代码 Agent sandbox 配置', brief: '针对不可信仓库测试任务，从威胁模型推导隔离层级与最小权限配置。', steps: ['列出宿主源码、密钥、内网与算力资产，分析恶意代码、依赖脚本和资源耗尽路径', '选择隔离方案并定义只读挂载、临时写区、出口白名单、seccomp、用户身份和六类资源上限'], deliverable: '一份威胁模型、可审查的 sandbox 策略和终止清理清单。' },
     quizzes: [
       quiz('为什么容器不能自动等同安全 sandbox？', ['容器没有文件系统', '共享内核且安全性依赖权限、挂载和运行时配置', '容器无法设置资源限制'], 1, '容器提供重要隔离原语，但共享内核和错误配置仍会留下逃逸或越权路径。'),
@@ -351,7 +639,15 @@ const lessons = [
       { heading: '时间控制不是一个开关', body: 'Timeout 约束单个操作等待多久，deadline 表示整个 run 或调用链最晚完成时刻，cancellation 是向正在执行的组件传播停止意图，rollback 则是业务补偿或事务语义。timeout 不等于 cancel 或 rollback：等待超时后远端动作可能仍在运行或已成功，Harness 必须查询状态、传播取消并按工具契约决定补偿。', keyPoints: ['绝对 deadline 沿调用链传递，子步骤不得重置总时限', '超时结果未知时先确认副作用状态，不能立即盲重试'] },
       { heading: '预算与重试共同限制放大效应', body: '运行预算应覆盖模型调用数、token 或费用、工具调用数、墙钟时间、重试次数和并发槽位，并在父子任务间保守分配。只有明确瞬态且幂等或可安全去重的错误才进入有限重试，采用指数退避与 jitter；参数错误、权限拒绝、业务冲突和预算耗尽通常应修正、阻塞或终止。', keyPoints: ['每次重试都消耗剩余预算并记录原因', '重试策略需防止多层调用各自重试造成乘法放大'] },
     ],
-    resourceIds: ['res-harness-langgraph-fault-tolerance', 'res-harness-temporal-retry', 'res-harness-aws-timeouts', 'res-harness-sre-cascading'],
+    resourceIds: [
+      'res-harness-langgraph-fault-tolerance',
+      'res-harness-temporal-retry',
+      'res-harness-aws-timeouts',
+      'res-harness-sre-cascading',
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-feishu-autonomous-evolution',
+      'res-harness-primary-javaguide-loop-engineering',
+    ],
     exercise: { title: '设计分层运行预算', brief: '为包含检索、生成和写入的 run 分配成本、时间与重试预算。', steps: ['定义全局 deadline、各步骤 timeout、模型和工具配额，并写出父子预算继承及拒绝规则', '把超时、限流、参数错误、权限拒绝和结果未知映射为重试、查询、修正、blocked 或 failed'], deliverable: '一张预算账本、错误决策表和取消传播时序图。' },
     quizzes: [
       quiz('工具调用 timeout 后最安全的第一步通常是什么？', ['立刻用相同参数无限重试', '依据调用标识查询远端状态和副作用', '假定已经 rollback'], 1, '超时只说明等待结束，远端结果可能未知；先查状态可避免重复副作用。'),
@@ -369,7 +665,15 @@ const lessons = [
       { heading: '恢复前先识别已发生的动作', body: 'Harness 在调用副作用工具前应持久化规范化意图、幂等键和状态 pending，执行后记录远端操作标识与结果，再推进 checkpoint。若进程在远端成功后、checkpoint 前崩溃，恢复器先用幂等键或远端标识查询，再把已发生结果补写到本地，不能因为快照仍在旧位置就再次创建动作。', keyPoints: ['幂等键应绑定业务意图，不能每次重试随机生成', '本地账本需表达 pending、succeeded、failed 和 unknown'] },
       { heading: 'Durable 不承诺所有外部 exactly-once', body: 'durable execution 不等于外部副作用 exactly-once。网络分区和跨系统提交使 Harness 很难同时原子写入自身 checkpoint 与任意外部服务；常见保证是至少一次调度，加上工具幂等、去重、状态查询和必要补偿，使业务效果接近一次。对不支持幂等或查询的工具，应减少自动重试并升级人工处理。', keyPoints: ['区分执行尝试次数与可观察业务效果次数', '明确承诺边界，用对账和补偿处理无法原子提交的系统'] },
     ],
-    resourceIds: ['res-harness-langgraph-fault-tolerance', 'res-harness-aws-idempotent'],
+    resourceIds: [
+      'res-harness-langgraph-fault-tolerance',
+      'res-harness-aws-idempotent',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-dynamic-workflow',
+      'res-harness-primary-feishu-agent-version-drifting',
+      'res-harness-primary-javaguide-workflow-graph-loop',
+      'res-harness-primary-javaguide-loop-engineering',
+    ],
     exercise: { title: '演练崩溃后的安全续跑', brief: '为创建工单工具建立副作用账本，并在五个崩溃位置判断恢复动作。', steps: ['定义意图指纹、幂等键、远端操作 ID、账本状态和 checkpoint 游标的更新协议', '分别模拟调用前、请求中、远端成功后、本地记账后和 checkpoint 后崩溃，选择查询、补写、重试或人工对账'], deliverable: '一张提交时序、五条恢复决策和不重复创建工单的验证记录。', experiment: 'retry-resume' },
     quizzes: [
       quiz('副作用成功但 checkpoint 失败后应怎样恢复？', ['直接生成新幂等键再调用', '先按原幂等键或远端 ID 查询并补写结果', '直接把 run 标记 succeeded'], 1, '旧 checkpoint 不证明副作用未发生；恢复必须先对账，确认后再推进本地状态。'),
@@ -387,7 +691,15 @@ const lessons = [
       { heading: '限并发保护共享依赖', body: '并发表示多个 run 在时间上重叠推进，并行表示它们确实同时占用计算资源。即使机器能并行更多任务，模型 API、数据库连接、sandbox 容量和下游限额也可能先饱和。Harness 应按租户、工具和全局设置独立信号量，并把公平性、优先级和每个 run 的子任务上限纳入调度。', keyPoints: ['并发上限依据最紧依赖与错误预算，而非只看 CPU 核数', '限制要分层，避免单个 run 或租户占满所有槽位'] },
       { heading: '队列满是控制信号', body: '长任务进入耐久队列后，由 worker 用租约领取，周期续租并在成功后确认；租约过期会导致重投递，因此处理器仍需幂等。队列深度、等待时间或下游饱和达到阈值时，应暂停生产者、降低接收速率、返回稍后重试、按优先级丢弃或降级，而不是继续无界缓存，这就是背压。', keyPoints: ['队列提供缓冲和耐久，不会消除容量上限', '背压策略必须明确谁等待、谁拒绝、谁降级以及如何观测恢复'] },
     ],
-    resourceIds: ['res-harness-aws-sqs-visibility', 'res-harness-sre-overload', 'res-harness-sre-cascading', 'res-harness-agentscope-runtime'],
+    resourceIds: [
+      'res-harness-aws-sqs-visibility',
+      'res-harness-sre-overload',
+      'res-harness-sre-cascading',
+      'res-harness-agentscope-runtime',
+      'res-harness-primary-feishu-react-orchestration',
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-javaguide-workflow-graph-loop',
+    ],
     exercise: { title: '调度长任务并处理过载', brief: '为每分钟突发一百个长 run 的服务设计队列、worker 与背压策略。', steps: ['定义消息字段、幂等键、租约、续租、重投递、优先级和按租户并发上限', '在 worker 变慢、队列达到软硬阈值和下游限流时，逐级触发减速、拒绝、降级与恢复'], deliverable: '一份队列协议、容量阈值表和三条过载演练轨迹。', experiment: 'queue-backpressure' },
     quizzes: [
       quiz('为什么队列消费者仍必须幂等？', ['队列永远只投递一次', '租约过期或确认丢失会造成重投递', '幂等只用于同步调用'], 1, '多数耐久队列允许至少一次投递，worker 崩溃或确认丢失都可能产生重复消息。'),
@@ -405,7 +717,21 @@ const lessons = [
       { heading: '终态表达下一位操作者能做什么', body: 'blocked 表示当前缺少权限、信息、依赖或人工决定，但满足解除条件后仍可继续；failed 表示本次尝试遇到不可恢复错误或已耗尽规定恢复策略；cancelled 表示收到停止意图并完成必要清理。人工审批进入 awaiting_approval，保存审批请求、过期时间和恢复令牌后释放 worker；验收通过才进入 succeeded。', keyPoints: ['状态名必须配套原因码、证据和允许的后续动作', '长时间等待不能占用 worker、锁或短期凭证'] },
       { heading: 'Handoff 要交付可继续工作的上下文', body: 'Handoff bundle 应包含目标与验收标准、当前状态和版本、关键事件摘要、已尝试动作、未决问题、预算余额、审批与权限状态、副作用账本、产物清单、验证结果、敏感信息引用和建议下一步。产物通过稳定 URI、摘要哈希、媒体类型、生成步骤与保留策略引用，避免只交一段模型总结而无法复核。', keyPoints: ['接管者应能从证据重建现状，而非相信“已经处理”', '敏感凭证不直接塞入 bundle，只保存受控引用和访问要求'] },
     ],
-    resourceIds: ['res-harness-openai-hitl', 'res-harness-langgraph-interrupts', 'res-harness-nist-tool-use', 'res-harness-agent-learning-hub', 'res-harness-douyin'],
+    resourceIds: [
+      'res-harness-openai-hitl',
+      'res-harness-langgraph-interrupts',
+      'res-harness-nist-tool-use',
+      'res-harness-agent-learning-hub',
+      'res-harness-douyin',
+      'res-harness-primary-feishu-agent-install-md',
+      'res-harness-primary-feishu-claude-ai-memory',
+      'res-harness-primary-feishu-beyond-model',
+      'res-harness-primary-feishu-company-brain',
+      'res-harness-primary-feishu-context-offloading',
+      'res-harness-primary-feishu-microcompact',
+      'res-harness-primary-javaguide-context-engineering',
+      'res-harness-primary-javaguide-agent-skills',
+    ],
     exercise: { title: '制作可接管 handoff bundle', brief: '把一个等待生产发布审批且已有测试产物的 run 交给下一班工程师。', steps: ['判断应使用 awaiting_approval、blocked、failed 还是 cancelled，并记录原因、解除条件、恢复令牌与清理状态', '整理目标、事件摘要、副作用账本、预算、审批、产物哈希、验证证据和下一步，检查敏感信息处理'], deliverable: '一个可机读 handoff bundle、产物 manifest 和人工接管检查表。' },
     quizzes: [
       quiz('缺少用户提供的生产账号但稍后可继续，应是什么状态？', ['failed', 'blocked', 'succeeded'], 1, '缺少可补充依赖且存在明确解除条件时属于 blocked，不应伪装为失败或完成。'),
@@ -468,6 +794,79 @@ const interviewQuestions = interviewSpecs.map(([
   };
 });
 
+const sourceImpactAudit = [
+  {
+    lessonId: 'harness-01',
+    sourceId: 'res-harness-primary-feishu-beyond-model',
+    impact: 'adopted',
+    summary: '用“模型只提出候选动作，Harness 才拥有执行权”重组 Runner 课程主线。',
+    boundary: '该责任图是教学架构；工具消息和产品运行语义仍由当前官方文档核验。',
+  },
+  {
+    lessonId: 'harness-02',
+    sourceId: 'res-harness-primary-feishu-dynamic-workflow',
+    impact: 'corrected',
+    summary: '把“保存状态即可恢复”修正为事件历史、控制位置与副作用 journal 共同提交。',
+    boundary: '教学代码不能证明原子提交或外部副作用 exactly-once，课程保留模糊窗口。',
+  },
+  {
+    lessonId: 'harness-03',
+    sourceId: 'res-harness-primary-feishu-tool-truth',
+    impact: 'deepened',
+    summary: '把 Tool Definition 明确为模型可见提案契约，并把校验、授权和执行留给 Harness。',
+    boundary: '协议字段、MCP 生命周期和具体工具清单仍需官方规范与产品文档验证。',
+  },
+  {
+    lessonId: 'harness-04',
+    sourceId: 'res-harness-primary-feishu-virtual-filesystem',
+    impact: 'adopted',
+    summary: '新增 VFS provider、会话命名空间、能力发现与清理责任的执行面比较。',
+    boundary: '文件系统抽象不等于 sandbox，不证明隔离、持久化或来源可信。',
+  },
+  {
+    lessonId: 'harness-05',
+    sourceId: 'res-harness-primary-feishu-loop-engineering-intro',
+    impact: 'corrected',
+    summary: '把开环与闭环从可靠性排名修正为不同反馈结构，并接入预算和停止守卫。',
+    boundary: 'Loop Engineering 不是行业标准，长程可靠性必须由运行时证据证明。',
+  },
+  {
+    lessonId: 'harness-06',
+    sourceId: 'res-harness-primary-feishu-agent-version-drifting',
+    impact: 'deepened',
+    summary: '把安全恢复扩展到模型、prompt、工具 schema、reducer 与依赖版本迁移。',
+    boundary: '版本示例有日期边界，不能外推为当前产品兼容保证。',
+  },
+  {
+    lessonId: 'harness-07',
+    sourceId: 'res-harness-primary-feishu-react-orchestration',
+    impact: 'adopted',
+    summary: '用 ReAct 到 orchestration 的演进解释 workflow、graph、parallel、pipeline 与 HITL。',
+    boundary: '术语分类不决定框架的耐久性、队列语义或故障恢复能力。',
+  },
+  {
+    lessonId: 'harness-08',
+    sourceId: 'res-harness-primary-feishu-agent-install-md',
+    impact: 'deepened',
+    summary: '把 Install.md、Skills、Hooks 与产物清单组合成可停、可交接、可验证的长程交付。',
+    boundary: 'Install.md 是建议模式，不是统一安装协议，也不证明第三方命令安全。',
+  },
+  {
+    lessonId: 'harness-01',
+    sourceId: 'res-harness-primary-feishu-react-loop',
+    impact: 'rejected',
+    summary: '拒绝直接复用来源图片，改从可验证关系原创重绘工具轨迹与控制面图。',
+    boundary: '已访问正文不等于获得媒体再分发或修改许可，原图不会进入仓库。',
+  },
+  {
+    lessonId: 'harness-07',
+    sourceId: 'res-harness-primary-javaguide-workflow-graph-loop',
+    impact: 'duplicate',
+    summary: '课程只保留文章的控制结构横向比较，不把导航性重复定义计作独立事实证据。',
+    boundary: '具体 checkpoint、队列、并发与恢复语义继续绑定官方实现资料。',
+  },
+];
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
@@ -481,4 +880,5 @@ export const agentHarness = deepFreeze({
   lessons,
   resources,
   interviewQuestions,
+  sourceImpactAudit,
 });

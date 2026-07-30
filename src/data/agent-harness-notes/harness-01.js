@@ -3,9 +3,9 @@ const sections = Object.freeze([
     id: 'decision-and-control-planes',
     title: '先分清决策面与控制面',
     paragraphs: Object.freeze([
-      '上一模块的 Agent loop 已经能根据目标、状态和观察提出下一步动作；本章要解决的是，谁有权把这个提议变成真实操作。Agent 属于决策面：它选择候选动作、解释观察并判断还缺什么。Harness（宿主执行系统）属于控制面：它给 run 编号，保存状态，校验工具、身份、权限和预算，安排执行环境，并决定何时拒绝、等待或终止。模型输出因此只是提案，不是系统授权，也不是动作已经发生的证据。',
+      '飞书 Harness 101 用“模型之外的全部”提出本课的第一条责任线：模型根据目标与观察生成候选文本或 tool intent，真正改变文件、数据库和外部服务的是模型之外的执行系统。这里把 Agent 放在决策面，把 Harness 放在控制面与运行时：前者选择下一步并解释观察，后者给 run 编号，组装上下文，校验 schema、身份、权限和预算，安排工具与 sandbox，并决定继续、等待、拒绝或停止。模型输出因此只是提案，不是授权，不是副作用已经发生的证据。',
       'Runner 是 Harness 中驱动一次运行的确定性控制器。OpenAI Agents SDK 的 Runner 会推进模型调用、工具调用、handoff 和最终输出；其 Sandbox Agents 文档又把 harness control plane 与 sandbox compute plane 分开。这个实现可帮助建立边界直觉：控制面决定允许什么并编排生命周期，执行面只在给定 manifest、capability、凭证、挂载和 session 边界内做工作。该页面仍是 Beta，具体隔离强度取决于 provider 与配置，不能据此宣称绝对安全。',
-      '把 Harness 当作“另一段更长的 Prompt”会丢掉最关键的可信边界。Prompt 可以劝模型不要越权，却不能撤销凭证、关闭网络、锁定预算或持久化终态；这些动作必须由模型不能自行改写的宿主代码强制完成。同一个 Agent 策略可以放进治理能力不同的 Harness，同一个 Harness 也可以承载不同策略。工程评审应逐项问：此能力由谁提议、谁验证、谁执行、谁记录、谁能终止。',
+      'JavaGuide 的六类 Harness 责任可作检查表，而不是行业标准：context 决定模型看见什么，tools 决定可提出什么能力，state 保存事实和控制位置，control 推进循环，safety 强制权限与隔离，observability 留下 transcript、事件、checkpoint 和 artifact。Prompt 可以劝模型不要越权，却不能撤销凭证、关闭网络、锁定预算或持久化终态；这些动作必须由模型不能自行改写的宿主代码完成。工程评审应逐项问：谁提议、谁验证、谁执行、谁记录、谁能终止、证据在哪里。',
     ]),
     keyPoints: Object.freeze([
       'Agent 提议下一步，Harness 在可信宿主侧实施权限、执行、持久化、预算、审计和终止。',
@@ -19,25 +19,33 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-openai-running',
       'res-harness-openai-sandboxes',
+      'res-harness-primary-feishu-beyond-model',
+      'res-harness-primary-javaguide-harness-engineering',
     ]),
   }),
   Object.freeze({
     id: 'run-attempt-step-session',
-    title: '用四层标识描述一次执行',
+    title: '从 tool transcript 看见循环如何推进',
     paragraphs: Object.freeze([
-      '为了在重试和进程重启后仍能回答“哪一次动作发生了什么”，本课程约定四个层次。run 是从接收目标到业务终态的一次逻辑运行；attempt 是承接同一 run 的一次执行尝试，worker 崩溃或可重试错误可能产生新 attempt；step 是 attempt 内一个可观察的决策或工具边界；session 是 Harness 向某个执行环境或外部交互通道分配的有生命周期句柄。四者不是各框架共享的标准名词，而是课程用于消除歧义的工程词汇。',
-      '层级关系通常写成一个 run 包含一个或多个 attempts，一个 attempt 包含按序 steps，而 session 由 Harness 创建、引用并释放；session 可以跨多个 step 复用，却不能等同于 run。进程也不等同于 attempt：耐久编排系统通过事件历史重放，让逻辑工作流跨过单个 worker 进程的消亡继续存在；Azure Durable Task 同样把 orchestrator、activity 与 client 等角色拆开。这里得到的稳定结论是“逻辑运行不应依赖某个进程一直存活”，不是所有框架都必须采用相同对象模型。',
-      '日志和事件至少应同时带上 runId、attemptId、stepId；涉及隔离环境时再带 sessionId。这样，模型调用超时后重新尝试不会覆盖旧 attempt，工具结果也能关联到发起它的 step；清理逻辑则可以按 session 查找尚未释放的资源。AgentScope Runtime 的状态 load/save、interrupt 与 sandbox 实现可作为一种运行时交叉参照，但其仓库已进入只读迁移阶段并计划归档，相关能力已迁移至 AgentScope 2.0，不能把项目接口直接提升为通用协议。',
+      '最小的单工具轨迹包含四类事实：Harness 向模型提供当前消息和可见 Tool Definition；模型返回带 callId 的工具意图；Harness 校验后执行并记录 tool result；模型读取该结果后生成终答或下一个意图。比如模型提出 read_file(path)，真正打开文件的是 Harness；result 必须关联 callId、toolVersion、状态和受控结果引用。只保存最后一句自然语言会丢失“模型提议了什么、宿主实际执行了什么、返回了什么”，恢复时无法证明动作边界。',
+      '并行工具轨迹不是把多个结果随意拼回聊天。模型可在同一轮提出 read_a 与 read_b 两个互不依赖的 call，Harness 为它们分配独立 callId，分别做授权、预算和超时检查，再按实现允许的并行策略执行。结果可以不同顺序到达，但写回 transcript 时要有确定性关联与排序规则；任何一个调用有副作用、共享资源冲突或依赖另一个结果时，就应改为顺序执行。并行只改变调度，不降低每个调用的治理要求。',
+      '多轮轨迹会重复“模型提议—Harness 执行—观察写回”。第一轮 search 得到候选，第二轮 read 打开选中文件，第三轮 validate 形成外部证据；每轮之后 Harness 先判断结果是否满足 stop condition、是否还有预算、是否 blocked 或 cancelled，再决定是否把新观察交回模型。为跨 attempt 和 session 保持可追溯，本课程仍记录 runId、attemptId、stepId、sessionId 与 callId：逻辑 run 可以跨进程存在，旧 attempt 不被新尝试覆盖，sandbox session 的创建和释放也有明确 owner。',
+      '这三种 transcript 是教学结构，不是统一 API 格式。OpenAI Runner 展示当前 SDK 如何推进模型与工具，Temporal 和 Azure 展示逻辑运行如何跨 worker 进程延续；飞书文章提供工程叙事。稳定结论是提案、执行、结果和控制判断必须分别记录，具体消息字段、并行行为和耐久语义仍以目标运行时的官方文档与测试为准。',
     ]),
     keyPoints: Object.freeze([
-      'run 表示业务级逻辑运行，attempt 表示一次执行尝试，step 表示可观察边界，session 表示受管理的执行句柄。',
-      '四层术语是课程规范化模型；框架名称可以不同，但身份关联与生命周期所有权不能含糊。',
+      '单工具、并行工具与多轮工具轨迹都要分开记录模型意图、宿主执行、结果与控制判断。',
+      'run、attempt、step、session 与 callId 让重试、并行、跨进程恢复和资源清理仍能关联到原事实。',
+    ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-01-tool-transcript', afterParagraph: 2 }),
     ]),
     sourceIds: Object.freeze([
       'res-harness-openai-sandboxes',
       'res-harness-temporal-execution',
       'res-harness-azure-durable',
       'res-harness-agentscope-runtime',
+      'res-harness-primary-feishu-react-loop',
+      'res-harness-primary-javaguide-agent-basis',
     ]),
   }),
   Object.freeze({
@@ -45,7 +53,7 @@ const sections = Object.freeze([
     title: '十状态、转换守卫与不可逆终态',
     paragraphs: Object.freeze([
       '本课程把 Runner 规范化为十个状态：created、queued、running、awaiting_approval、retry_wait、blocked、succeeded、failed、cancelled、timed_out。它们是为了教学与工程评审统一词义而建立的课程模型，并非 OpenAI、Temporal、Azure 或任何单一 SDK 发布的标准状态枚举。十状态之外不再增加另一个“暂停态”或“完成态”别名：等待审批、退避等待和外部条件缺失分别落到前三个等待类状态，成功结束只能记录为 succeeded。',
-      '转换必须由事件和守卫共同决定。enqueue 只允许 created 到 queued，start 只允许 queued 到 running；running 可因 request-approval、schedule-retry、block 分别进入 awaiting_approval、retry_wait、blocked，再由 approve、retry、resume 回到 running。只有 running 接受 complete 并进入 succeeded；fail、cancel、timeout 可以把任意非终态分别送入 failed、cancelled、timed_out。succeeded、failed、cancelled、timed_out 都是终态，后续业务事件必须被拒绝，不能靠 hook 或普通重试把终态改回运行中。',
+      'ReAct 的“继续还是停止”必须落到确定性守卫，而不是只问模型是否想继续。每次观察写回后，Harness 先检查 completion evidence 是否满足、当前是否 blocked/cancelled、预算和 deadline 是否耗尽、是否仍有待处理 tool call，再决定 complete、等待、终止或进入下一次模型调用。模型可以给出“已完成”的判断，但 succeeded 需要宿主可验证的验收证据；模型也可以要求继续，但超过预算或命中停止策略时 Runner 必须拒绝。',
       '守卫除了检查当前状态，还应检查 eventId 去重、sequence 严格递增、审批对象匹配、预算剩余和调用者权限。若审批到期与取消几乎同时到达，本课程要求先用持久化序列和显式优先策略确定唯一顺序；例如取消命令先被接受，状态就进入 cancelled，稍后的 approve 必须作为非法终态转换被拒绝。Temporal 和 Azure 展示了耐久执行、事件重放以及 suspend、resume、terminate 等实现语义，但它们既不定义这套十状态，也不把外部副作用自动变成只发生一次。',
     ]),
     keyPoints: Object.freeze([
@@ -58,10 +66,14 @@ const sections = Object.freeze([
       title: '耐久执行不等于副作用只发生一次',
       body: '事件历史可让控制流程恢复，但远端工具可能已经成功而本地尚未记录。状态机负责拒绝非法转换，副作用幂等与对账将在后续课程单独处理。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-01-stop-guard', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-openai-running',
       'res-harness-temporal-execution',
       'res-harness-azure-durable',
+      'res-harness-primary-feishu-react-loop',
     ]),
   }),
   Object.freeze({
@@ -69,7 +81,7 @@ const sections = Object.freeze([
     title: '把 lifecycle hooks 收窄成契约',
     paragraphs: Object.freeze([
       'Lifecycle hook 是 Runner 在稳定生命周期边界调用的扩展点，而不是可以随时改数据库的插件后门。本课程要求每个 hook 声明触发时机、只读输入、结构化输出、超时、失败类别、重试上限、执行顺序与审计版本。输入至少关联 run、attempt、step、session、当前状态、事件 sequence、剩余预算和策略版本；输出只能是 schema 允许的观察、拒绝建议或补充元数据，最终状态转换仍由同一 Runner 守卫执行。',
-      '四个练习 hook 的职责应彼此分离。before_model 可裁剪上下文或拒绝超预算请求；before_tool 可根据已解析的工具名、参数摘要和权限结果给出允许、拒绝或要求审批；after_tool 接收已落盘的工具结果引用，追加审计、脱敏或质量判断；on_terminal 在终态事件提交后安排清理和产物封装。观察型 hook 只记录事实，能影响决策的策略型 hook 必须版本化、可审计，并且不能跳过工具注册、授权、预算或 checkpoint 提交边界。',
+      'Plan-then-Act 不会取代控制面，它只是把计划产物显式放进循环。before_model 可以提供 briefing：目标、验收标准、已知事实、预算、禁止项和当前计划版本；模型提出 plan 后，Runner 把可执行步骤转成受控队列。执行偏离、证据不足或计划过期时，Harness 用 nudge 返回具体缺口，例如“先验证测试结果再提交”，而不是偷偷执行模型没有提出的动作。briefing 和 nudge 都要带版本与来源，模型仍不能借计划绕过工具注册、授权和停止守卫。',
       'after_tool 的失败尤其容易造成语义混乱：远端工具结果一旦已经保存，后处理失败不能把它伪装成“工具从未执行”，也不能仅因 hook 重试就再次执行原工具。Runner 应分别记录 tool outcome 与 hook outcome，再按契约选择重试 hook、降低为告警、使 run 失败或交给人工。OpenAI Runner、AgentScope Runtime 及 Hello-Agents 教材都展示了 loop、callback 或生命周期抽象，但完整字段和失败矩阵是本课程的工程契约，不能归因于某一个实现。',
     ]),
     keyPoints: Object.freeze([
@@ -81,6 +93,8 @@ const sections = Object.freeze([
       'res-harness-openai-running',
       'res-harness-agentscope-runtime',
       'res-harness-hello-agents-framework',
+      'res-harness-primary-feishu-react-loop',
+      'res-harness-primary-javaguide-agent-basis',
     ]),
   }),
   Object.freeze({
@@ -101,6 +115,7 @@ const sections = Object.freeze([
       'res-harness-temporal-execution',
       'res-harness-azure-durable',
       'res-harness-agentscope-runtime',
+      'res-harness-primary-feishu-beyond-model',
     ]),
   }),
   Object.freeze({
@@ -125,6 +140,7 @@ const sections = Object.freeze([
       'res-harness-openai-running',
       'res-harness-openai-sandboxes',
       'res-harness-temporal-execution',
+      'res-harness-primary-feishu-react-loop',
     ]),
   }),
 ]);
@@ -154,7 +170,9 @@ const misconceptions = Object.freeze([
 
 export const harness01Note = Object.freeze({
   readingMinutes: 33,
-  introduction: '你已经知道 Agent 会在“观察—决策—动作”循环里选择下一步，但一个能作决定的模型并不会自动成为可靠的运行系统。本章把这条循环放进可信宿主：先划清 Agent、Harness、Runner 与 sandbox 的职责，再用 run、attempt、step、session 四层身份和十状态课程模型描述生命周期，随后收窄 hook 契约、补齐终态清理，并用 Run Lifecycle 实验产出可复核的状态表和两条轨迹。学完后，你应能解释谁有权执行动作，设计等待、恢复与终止守卫，并回答 hooks 失败和并发事件到达时系统如何保持不变量。',
+  introduction: '你已经知道 Agent 会在 ReAct 式“提案—动作—观察”循环里选择下一步，但一个能作决定的模型并不会自动成为可靠运行系统。本章以飞书 Harness 101 的工具轨迹和“模型之外的全部”为主叙事，用 JavaGuide 的 Agent/Harness 分类交叉检查，再由 OpenAI、Temporal 与 Azure 的官方实现限定事实边界。你将逐条拆解单工具、并行工具和多轮 transcript，理解 ReAct 的继续/停止守卫与 Plan-then-Act briefing/nudge，然后把它们放进 control plane、runtime、sandbox、证据链、十状态生命周期和 hook 契约。学完后，你应能证明模型只提出候选动作，Harness 才执行、记录并决定何时继续或停止。',
+  overviewVisualId: 'visual-harness-01-control-system',
+  overviewVisualSectionId: 'decision-and-control-planes',
   sections,
   misconceptions,
   recap: Object.freeze([

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Side effect journal</title>
+  <desc id="desc">Local and remote timelines diverge at an unknown outcome and rejoin through query evidence.</desc>
+  <rect width="1200" height="675" fill="#f7f5ef"/>
+  <text x="62" y="78" font-family="Arial" font-size="30" font-weight="700" fill="#172554">SIDE EFFECT JOURNAL</text>
+  <text x="84" y="184" font-family="Arial" font-size="18" font-weight="700" fill="#312e81">LOCAL JOURNAL</text>
+  <line x1="270" y1="176" x2="1090" y2="176" stroke="#4338ca" stroke-width="4"/>
+  <text x="84" y="420" font-family="Arial" font-size="18" font-weight="700" fill="#9a3412">REMOTE SYSTEM</text>
+  <line x1="270" y1="412" x2="1090" y2="412" stroke="#c2410c" stroke-width="4"/>
+  <g font-family="Arial" text-anchor="middle" font-weight="700">
+    <rect x="300" y="126" width="188" height="96" rx="20" fill="#eef2ff" stroke="#4338ca" stroke-width="3"/>
+    <text x="394" y="183" font-size="18" fill="#312e81">PENDING</text>
+    <rect x="572" y="126" width="188" height="96" rx="20" fill="#fee2e2" stroke="#b91c1c" stroke-width="3"/>
+    <text x="666" y="183" font-size="18" fill="#991b1b">UNKNOWN</text>
+    <rect x="844" y="126" width="188" height="96" rx="20" fill="#dcfce7" stroke="#15803d" stroke-width="3"/>
+    <text x="938" y="183" font-size="18" fill="#166534">SUCCEEDED</text>
+    <rect x="454" y="362" width="250" height="96" rx="20" fill="#fff7ed" stroke="#c2410c" stroke-width="3"/>
+    <text x="579" y="419" font-size="17" fill="#9a3412">operation op-8</text>
+    <rect x="780" y="362" width="252" height="96" rx="20" fill="#ecfeff" stroke="#0f766e" stroke-width="3"/>
+    <text x="906" y="419" font-size="17" fill="#115e59">QUERY EVIDENCE</text>
+  </g>
+  <path d="M488 174 L572 174 M760 174 L844 174" fill="none" stroke="#172554" stroke-width="3"/>
+  <path d="M394 222 L394 410 L454 410" fill="none" stroke="#172554" stroke-width="3"/>
+  <line x1="704" y1="410" x2="780" y2="410" stroke="#172554" stroke-width="3"/>
+  <path d="M906 362 L906 246 L938 222" fill="none" stroke="#15803d" stroke-width="3" stroke-dasharray="9 6"/>
+  <rect x="250" y="512" width="810" height="82" rx="20" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="655" y="546" font-family="Arial" font-size="15" text-anchor="middle" fill="#334155">UNKNOWN freezes new write attempts until the original key is queried</text>
+  <text x="655" y="574" font-family="Arial" font-size="14" text-anchor="middle" fill="#64748b">remote evidence advances ledger, completion event and checkpoint</text>
+</svg>

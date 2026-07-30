@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Time and cancellation semantics</title>
+  <desc id="desc">Timeout, deadline, cancellation and compensation are distinct events.</desc>
+  <rect width="1200" height="675" fill="#f8fafc"/>
+  <text x="62" y="78" font-family="Arial" font-size="30" font-weight="700" fill="#172554">TIME CONTROL</text>
+  <line x1="108" y1="320" x2="1090" y2="320" stroke="#172554" stroke-width="5"/>
+  <polygon points="1070,307 1094,320 1070,333" fill="#172554"/>
+  <g font-family="Arial" text-anchor="middle">
+    <circle cx="208" cy="320" r="22" fill="#4338ca"/>
+    <text x="208" y="254" font-size="20" font-weight="700" fill="#312e81">TIMEOUT</text>
+    <text x="208" y="386" font-size="14" fill="#475569">one wait ends</text>
+    <circle cx="470" cy="320" r="22" fill="#c2410c"/>
+    <text x="470" y="254" font-size="20" font-weight="700" fill="#9a3412">DEADLINE</text>
+    <text x="470" y="386" font-size="14" fill="#475569">run time boundary</text>
+    <circle cx="730" cy="320" r="22" fill="#b91c1c"/>
+    <text x="730" y="254" font-size="20" font-weight="700" fill="#991b1b">CANCEL</text>
+    <text x="730" y="386" font-size="14" fill="#475569">stop intent propagates</text>
+    <circle cx="986" cy="320" r="22" fill="#15803d"/>
+    <text x="986" y="254" font-size="20" font-weight="700" fill="#166534">COMPENSATE</text>
+    <text x="986" y="386" font-size="14" fill="#475569">new authorized effect</text>
+  </g>
+  <path d="M730 342 L730 470 L986 470 L986 342" fill="none" stroke="#b91c1c" stroke-width="3" stroke-dasharray="10 7"/>
+  <rect x="812" y="438" width="186" height="64" rx="18" fill="#fee2e2" stroke="#b91c1c" stroke-width="3"/>
+  <text x="905" y="478" font-family="Arial" font-size="17" font-weight="700" text-anchor="middle" fill="#991b1b">NOT ROLLBACK</text>
+  <rect x="128" y="520" width="942" height="72" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="599" y="550" font-family="Arial" font-size="15" text-anchor="middle" fill="#334155">timeout does not prove remote stop · cancel does not erase a late success</text>
+  <text x="599" y="578" font-family="Arial" font-size="14" text-anchor="middle" fill="#64748b">every in-flight operation keeps an identity for reconciliation</text>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Checkpoint gaps</title>
+  <desc id="desc">A durable timeline highlights crash gaps around remote effects and completion events.</desc>
+  <rect width="1200" height="675" fill="#f7f5ef"/>
+  <text x="64" y="80" font-family="Arial" font-size="30" font-weight="700" fill="#172554">CHECKPOINT GAP</text>
+  <line x1="116" y1="328" x2="1088" y2="328" stroke="#172554" stroke-width="5"/>
+  <polygon points="1068,315 1092,328 1068,341" fill="#172554"/>
+  <g font-family="Arial" text-anchor="middle">
+    <circle cx="176" cy="328" r="20" fill="#4338ca"/>
+    <text x="176" y="270" font-size="18" font-weight="700" fill="#312e81">INTENT</text>
+    <text x="176" y="382" font-size="14" fill="#475569">journal pending</text>
+    <circle cx="430" cy="328" r="20" fill="#c2410c"/>
+    <text x="430" y="270" font-size="18" font-weight="700" fill="#9a3412">REMOTE EFFECT</text>
+    <text x="430" y="382" font-size="14" fill="#7c2d12">operation may exist</text>
+    <circle cx="720" cy="328" r="20" fill="#15803d"/>
+    <text x="720" y="270" font-size="18" font-weight="700" fill="#166534">COMPLETION EVENT</text>
+    <text x="720" y="382" font-size="14" fill="#14532d">fact committed</text>
+    <circle cx="1000" cy="328" r="20" fill="#0f766e"/>
+    <text x="1000" y="270" font-size="18" font-weight="700" fill="#115e59">CHECKPOINT</text>
+    <text x="1000" y="382" font-size="14" fill="#134e4a">cursor advanced</text>
+  </g>
+  <rect x="500" y="142" width="194" height="72" rx="18" fill="#fee2e2" stroke="#b91c1c" stroke-width="3" stroke-dasharray="10 6"/>
+  <text x="597" y="184" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle" fill="#991b1b">CRASH GAP</text>
+  <line x1="597" y1="214" x2="597" y2="308" stroke="#b91c1c" stroke-width="3" stroke-dasharray="8 6"/>
+  <rect x="790" y="438" width="194" height="72" rx="18" fill="#fee2e2" stroke="#b91c1c" stroke-width="3" stroke-dasharray="10 6"/>
+  <text x="887" y="480" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle" fill="#991b1b">CRASH GAP</text>
+  <line x1="887" y1="348" x2="887" y2="438" stroke="#b91c1c" stroke-width="3" stroke-dasharray="8 6"/>
+  <path d="M984 536 L310 536 L310 348" fill="none" stroke="#0f766e" stroke-width="3"/>
+  <polygon points="299,365 310,345 321,365" fill="#0f766e"/>
+  <text x="650" y="576" font-family="Arial" font-size="16" text-anchor="middle" fill="#115e59">recover by reading committed facts and remote evidence</text>
+</svg>

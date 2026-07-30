@@ -679,7 +679,7 @@ test('places every published llm-01–08 visual once in its evidence-owning real
   const { knowledgeVisuals } = await loadRegistry();
   const result = await validateKnowledgeVisualOwnership({
     courseRegistry: { 'llm-foundation': llmFoundation },
-    knowledgeVisuals,
+    knowledgeVisuals: knowledgeVisuals.filter(({ id }) => id.startsWith('visual-llm-')),
     assetExists: async (assetPath) => {
       await access(assetPath);
       return true;

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Harness control system</title>
+  <desc id="desc">Model proposal crosses the Harness control plane before sandbox execution and evidence return.</desc>
+  <rect width="1200" height="675" fill="#f7f5ef"/>
+  <rect x="42" y="36" width="1116" height="603" rx="28" fill="#ffffff" stroke="#172554" stroke-width="3"/>
+  <text x="78" y="92" font-family="Arial" font-size="30" font-weight="700" fill="#172554">CONTROL SYSTEM</text>
+  <line x1="78" y1="116" x2="1122" y2="116" stroke="#cbd5e1" stroke-width="2"/>
+  <g font-family="Arial" text-anchor="middle">
+    <rect x="78" y="174" width="232" height="278" rx="22" fill="#eef2ff" stroke="#3730a3" stroke-width="3"/>
+    <text x="194" y="224" font-size="19" font-weight="700" fill="#3730a3">MODEL PROPOSES</text>
+    <rect x="112" y="274" width="164" height="78" rx="14" fill="#ffffff" stroke="#3730a3" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="194" y="307" font-size="16" fill="#172554">candidate action</text>
+    <text x="194" y="331" font-size="14" fill="#475569">no execution right</text>
+    <rect x="330" y="150" width="300" height="326" rx="22" fill="#ecfeff" stroke="#0f766e" stroke-width="4"/>
+    <text x="480" y="201" font-size="19" font-weight="700" fill="#0f766e">HARNESS CONTROLS</text>
+    <rect x="374" y="250" width="212" height="54" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+    <text x="480" y="283" font-size="16" fill="#134e4a">Runner</text>
+    <rect x="374" y="320" width="212" height="54" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+    <text x="480" y="353" font-size="16" fill="#134e4a">Policy and Budget</text>
+    <rect x="374" y="390" width="212" height="54" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+    <text x="480" y="423" font-size="16" fill="#134e4a">Runtime</text>
+    <rect x="650" y="174" width="232" height="278" rx="22" fill="#fff7ed" stroke="#c2410c" stroke-width="3"/>
+    <text x="766" y="224" font-size="19" font-weight="700" fill="#9a3412">SANDBOX EXECUTES</text>
+    <rect x="684" y="274" width="164" height="78" rx="14" fill="#ffffff" stroke="#c2410c" stroke-width="2"/>
+    <text x="766" y="307" font-size="16" fill="#7c2d12">scoped capability</text>
+    <text x="766" y="331" font-size="14" fill="#7c2d12">isolated session</text>
+    <rect x="902" y="174" width="220" height="278" rx="22" fill="#f0fdf4" stroke="#15803d" stroke-width="3"/>
+    <text x="1012" y="224" font-size="19" font-weight="700" fill="#166534">EVIDENCE RETURNS</text>
+    <text x="1012" y="294" font-size="16" fill="#14532d">observation</text>
+    <text x="1012" y="326" font-size="16" fill="#14532d">event</text>
+    <text x="1012" y="358" font-size="16" fill="#14532d">artifact hash</text>
+  </g>
+  <g fill="#172554">
+    <polygon points="310,302 330,313 310,324"/>
+    <polygon points="630,302 650,313 630,324"/>
+    <polygon points="882,302 902,313 882,324"/>
+  </g>
+  <path d="M1012 452 L1012 530 L480 530 L480 476" fill="none" stroke="#15803d" stroke-width="3" stroke-dasharray="10 7"/>
+  <polygon points="469,491 480,471 491,491" fill="#15803d"/>
+  <text x="746" y="562" font-family="Arial" font-size="15" text-anchor="middle" fill="#475569">evidence updates the next guarded decision</text>
+</svg>

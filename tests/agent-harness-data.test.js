@@ -241,8 +241,8 @@ test('every Harness lesson has a source-grounded long-form knowledge note', asyn
   assertDeepFrozen(agentHarnessNotes, 'agentHarnessNotes');
 });
 
-test('all 29 Harness resources provide complete evidence cards', () => {
-  assert.equal(agentHarness.resources.length, 29, 'Harness 课程必须维护 29 份最终资源');
+test('all 52 Harness resources provide complete evidence cards', () => {
+  assert.equal(agentHarness.resources.length, 52, 'Harness 课程必须维护 29 份校验资源和 23 份一级叙事资源');
   for (const resource of agentHarness.resources) {
     const { evidence } = resource;
     assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
@@ -254,8 +254,11 @@ test('all 29 Harness resources provide complete evidence cards', () => {
       `${resource.id}: evidence.coverage 必须只包含非空字符串`);
     assert.ok(typeof evidence.limitations === 'string' && evidence.limitations.trim().length >= 15,
       `${resource.id}: evidence.limitations 至少需要 15 个字符`);
-    assert.equal(evidence.verifiedAt, '2026-07-23',
-      `${resource.id}: 必须记录本轮正文或元数据核验日期`);
+    assert.equal(
+      evidence.verifiedAt,
+      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      `${resource.id}: 必须记录对应来源冻结或正文核验日期`,
+    );
     assertDeepFrozen(evidence, `${resource.id}.evidence`);
   }
 
@@ -311,13 +314,20 @@ test('only lessons one, six and seven map the specified experiments', () => {
   );
 });
 
-test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
-  assert.equal(agentHarness.resources.length, 29);
-  assert.deepEqual(agentHarness.resources.map(({ url }) => url), resourceUrls);
+test('resources preserve the 29 verified entries and append 23 frozen primary bindings', () => {
+  assert.equal(agentHarness.resources.length, 52);
+  assert.deepEqual(
+    agentHarness.resources.slice(0, resourceUrls.length).map(({ url }) => url),
+    resourceUrls,
+  );
   for (const resource of agentHarness.resources) {
     assert.match(resource.id, /^res-harness-/);
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
+    assert.equal(
+      resource.verifiedAt,
+      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      resource.id,
+    );
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
