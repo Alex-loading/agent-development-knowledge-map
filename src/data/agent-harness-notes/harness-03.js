@@ -5,7 +5,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '飞书“工具的真相”先把工具拆成两个对象。Tool Definition 是面向模型的提案契约：名称与描述帮助发现，输入 schema 约束候选参数，安全的结果说明告诉模型会看到什么；它不包含可信身份、审批凭证或服务端执行权。宿主 Tool Registry 才保存稳定 toolId、语义版本、返回契约、scope、风险、副作用、幂等属性、timeout、owner、凭证引用与审计策略。OpenAI Agents SDK 的函数工具、JSON Schema、Pydantic 约束和逐调用 timeout 提供当前产品证据，但不会自动生成完整治理注册表。',
       '模型可见工具目录是注册表经过身份、任务与策略过滤后的最小子集，通常只暴露调用所需的名称、用途、参数 schema 与安全的结果说明。宿主执行注册表保存 owner、内部端点、凭证引用、数据分类、资源 scope、风险、副作用、幂等、timeout 和审计字段，不能因为模型“需要发现工具”就全部塞入上下文。以 read_file、send_message、issue_refund 为例，模型可以看到如何填写 path、recipient 或 orderId，却不应看到文件服务密钥、退款后台地址，也不应看到自己无权调用的管理工具。',
-      '工具进入模型前还要经过 discovery：Harness 按身份、任务、环境与策略过滤目录，必要时通过 Skill 或 MCP client 发现候选能力；模型随后做 decision，返回一个或多个 tool intent；Harness 再做结构与业务校验、authorization、approval、执行和 result 记录。MCP 位于集成边界，标准化 client 与 server 如何暴露能力，不等于模型已经选择调用，也不替代应用授权。JavaGuide 的 MCP/Skills 比较用于组织概念，规范字段和生命周期必须由当前 MCP 官方规范核验。',
+      '工具进入模型前还要经过 discovery：Harness 按身份、任务、环境与策略过滤目录，必要时通过 Skill 或 MCP client 发现候选能力；模型随后做 decision，返回一个或多个 tool intent；Harness 再做结构与业务校验、authorization、approval、执行和 result 记录。MCP 位于集成边界：2025-11-25 Tools 规范要求 server 声明 tools capability，由 client 通过 tools/list 发现并以 tools/call 调用；协议把工具定义为 model-controlled，却不规定应用交互模型，因此不等于模型已获执行许可，也不替代应用授权。JavaGuide 的 MCP/Skills 比较只用于组织概念，协议消息和行为由版本化 MCP 官方规范核验。',
     ]),
     keyPoints: Object.freeze([
       '执行注册表同时记录版本化 schema、返回契约、scope、风险、副作用、幂等、timeout、owner 与审计策略。',
@@ -24,6 +24,7 @@ const sections = Object.freeze([
       'res-harness-primary-feishu-tool-truth',
       'res-harness-primary-javaguide-mcp',
       'res-harness-primary-javaguide-agent-skills',
+      'res-harness-mcp-tools-spec',
     ]),
   }),
   Object.freeze({

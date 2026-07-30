@@ -3,6 +3,7 @@ import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-23';
 const PRIMARY_VERIFIED_AT = '2026-07-30';
+const MCP_VERIFIED_AT = '2026-07-31';
 
 const evidenceByResourceId = {
   'res-harness-openai-running': {
@@ -32,6 +33,16 @@ const evidenceByResourceId = {
     coverage: ['工具类型、由函数签名生成 JSON Schema、Pydantic 参数约束、逐调用 timeout、动态启用与 approval gate'],
     limitations: '当前 SDK 页面没有定义课程所用的完整版本化工具注册表，也不提供 scope、风险、副作用、幂等、所有者和审计字段的跨框架规范。',
     verifiedAt: VERIFIED_AT,
+  },
+  'res-harness-mcp-tools-spec': {
+    authority: 'official',
+    role: 'core',
+    coverage: [
+      'MCP server tools capability、client tools/list discovery、tools/call invocation、tool schema 与 client-server message flow',
+      'MCP 工具是 model-controlled，但协议不规定应用交互模型，应用仍应提供拒绝调用的人类控制',
+    ],
+    limitations: '这是 2025-11-25 版 Model Context Protocol Tools 规范，只定义该版本的协议消息、能力和安全建议；它不替代 Harness 的身份、资源授权、业务审批、策略执行或副作用控制。',
+    verifiedAt: MCP_VERIFIED_AT,
   },
   'res-harness-openai-run-state': {
     authority: 'official',
@@ -240,6 +251,7 @@ const verificationResources = [
   { id: 'res-harness-smolagents-code', title: 'Code agents', url: 'https://huggingface.co/learn/agents-course/zh-CN/unit2/smolagents/code_agents', source: 'Hugging Face', language: '中文', type: '官方课程', difficulty: '入门到进阶', stage: '代码 Agent', value: '学习用途：作为代码 Agent 执行方式的学习导航和演示；证据边界：该课程不承担可靠性或安全性结论。', verifiedAt: VERIFIED_AT },
   { id: 'res-harness-hello-agents-framework', title: 'Hello-Agents 第六章：框架开发实践', url: 'https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter6/%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E6%A1%86%E6%9E%B6%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5.md', source: 'Datawhale', language: '中文', type: 'GitHub 社区教材', difficulty: '进阶', stage: '框架实践', value: '学习用途：作为 Runner、工具与上下文抽象的学习导航和演示；证据边界：该教材不承担可靠性或安全性结论。', verifiedAt: VERIFIED_AT },
   { id: 'res-harness-douyin', title: '十分钟拆解Agent Skill如何让AI稳定执行任务', url: 'https://jingxuan.douyin.com/m/video/7646732508339457334', source: '老傅1024', language: '中文', type: '社区视频', difficulty: '入门', stage: '概念补充', value: '学习用途：仅以已核验标题、作者、日期、时长和简介作为中文学习导航；证据边界：没有可访问字幕或正文，不承担任何可靠性或安全性结论。', platform: '抖音', verifiedAt: VERIFIED_AT },
+  { id: 'res-harness-mcp-tools-spec', title: 'Model Context Protocol Specification — Tools', url: 'https://modelcontextprotocol.io/specification/2025-11-25/server/tools', source: 'Model Context Protocol', platform: 'modelcontextprotocol.io', language: '英文', type: '官方规范', difficulty: '进阶', stage: 'MCP 工具协议', value: '学习用途：以 2025-11-25 MCP Tools 规范核验 server tools capability、client tools/list、tools/call 与协议不规定应用交互模型的边界；证据边界：版本化规范只定义 MCP 协议消息与安全建议，不替代 Harness 的身份、资源授权、业务审批、策略或副作用控制。', verifiedAt: MCP_VERIFIED_AT },
 ].map((resource) => ({
   ...resource,
   evidence: evidenceByResourceId[resource.id],
@@ -591,6 +603,7 @@ const lessons = [
       'res-harness-primary-feishu-claude-code-tools',
       'res-harness-primary-javaguide-mcp',
       'res-harness-primary-javaguide-agent-skills',
+      'res-harness-mcp-tools-spec',
     ],
     exercise: { title: '构建高风险工具策略', brief: '为退款、只读查询和代码执行三个工具定义注册、校验、授权与审批流程。', steps: ['写出每个工具的版本化 schema、scope、风险、副作用、幂等键、超时和审计字段', '模拟审批等待期间参数、权限与资源变化，设计恢复时的摘要比对和重新验证结果'], deliverable: '三条工具注册记录、一份策略矩阵和审批恢复时序。' },
     quizzes: [
@@ -814,7 +827,14 @@ const sourceImpactAudit = [
     sourceId: 'res-harness-primary-feishu-tool-truth',
     impact: 'deepened',
     summary: '把 Tool Definition 明确为模型可见提案契约，并把校验、授权和执行留给 Harness。',
-    boundary: '协议字段、MCP 生命周期和具体工具清单仍需官方规范与产品文档验证。',
+    boundary: 'MCP 工具消息已由版本化官方规范核验；具体产品工具清单、授权和执行语义仍需对应产品文档验证。',
+  },
+  {
+    lessonId: 'harness-03',
+    sourceId: 'res-harness-mcp-tools-spec',
+    impact: 'corrected',
+    summary: '以版本化官方规范把 MCP 边界收紧为 tools capability、tools/list 与 tools/call 的 client-server 协议行为。',
+    boundary: 'MCP 规范不替代宿主的身份、资源授权、业务审批、策略执行和副作用控制。',
   },
   {
     lessonId: 'harness-04',

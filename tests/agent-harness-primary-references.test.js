@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { agentHarness } from '../src/data/agent-harness.js';
 import { getPrimaryReference } from '../src/data/primary-references.js';
+import { agentHarnessVisuals } from '../src/data/visuals/agent-harness-visuals.js';
 
 const stableLessonIds = Object.freeze([
   'harness-01',
@@ -189,6 +190,73 @@ test('binds primary narratives to every lesson and resolves every section source
       }
     }
   }
+});
+
+test('grounds the MCP protocol section in the versioned official MCP specification', () => {
+  const lesson = agentHarness.lessons.find(({ id }) => id === 'harness-03');
+  const section = lesson.knowledgeNote.sections.find(
+    ({ id }) => id === 'separate-model-catalog-from-host-registry',
+  );
+  const resourcesById = new Map(
+    agentHarness.resources.map((resource) => [resource.id, resource]),
+  );
+  const officialMcpSources = section.sourceIds
+    .map((sourceId) => resourcesById.get(sourceId))
+    .filter((resource) => (
+      resource?.evidence?.authority === 'official'
+      && /^https:\/\/modelcontextprotocol\.io\/specification\/\d{4}-\d{2}-\d{2}\//.test(
+        resource.url,
+      )
+      && /Model Context Protocol|MCP/i.test([
+        resource.title,
+        resource.source,
+        ...resource.evidence.coverage,
+      ].join(' '))
+    ));
+
+  assert.equal(officialMcpSources.length, 1,
+    'MCP protocol claims need one MCP-specific official specification source');
+  const [mcpSource] = officialMcpSources;
+  assert.equal(mcpSource.id, 'res-harness-mcp-tools-spec');
+  assert.ok(lesson.resourceIds.includes(mcpSource.id));
+  assert.equal(
+    mcpSource.url,
+    'https://modelcontextprotocol.io/specification/2025-11-25/server/tools',
+  );
+  assert.equal(mcpSource.source, 'Model Context Protocol');
+  assert.equal(mcpSource.platform, 'modelcontextprotocol.io');
+  const coverage = mcpSource.evidence.coverage.join(' ');
+  for (const requiredClaim of [
+    /tools capability/i,
+    /tools\/list/i,
+    /tools\/call/i,
+    /client/i,
+    /server/i,
+    /model-controlled/i,
+  ]) {
+    assert.match(coverage, requiredClaim);
+  }
+  assert.match(mcpSource.evidence.limitations, /2025-11-25/);
+  assert.equal(mcpSource.verifiedAt, '2026-07-31');
+  assert.equal(mcpSource.evidence.verifiedAt, '2026-07-31');
+
+  const sectionCopy = section.paragraphs.join(' ');
+  for (const requiredSectionClaim of [
+    /2025-11-25 Tools 规范/,
+    /tools capability/,
+    /tools\/list/,
+    /tools\/call/,
+    /model-controlled/,
+    /不规定应用交互模型/,
+    /不替代应用授权/,
+  ]) {
+    assert.match(sectionCopy, requiredSectionClaim);
+  }
+
+  const governanceVisual = agentHarnessVisuals.find(
+    ({ id }) => id === 'visual-harness-03-tool-governance',
+  );
+  assert.ok(governanceVisual.sourceIds.includes(mcpSource.id));
 });
 
 test('publishes a material, enum-safe source-impact audit row for every lesson', () => {

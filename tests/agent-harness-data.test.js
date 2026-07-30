@@ -241,8 +241,9 @@ test('every Harness lesson has a source-grounded long-form knowledge note', asyn
   assertDeepFrozen(agentHarnessNotes, 'agentHarnessNotes');
 });
 
-test('all 52 Harness resources provide complete evidence cards', () => {
-  assert.equal(agentHarness.resources.length, 52, 'Harness 课程必须维护 29 份校验资源和 23 份一级叙事资源');
+test('all 53 Harness resources provide complete evidence cards', () => {
+  assert.equal(agentHarness.resources.length, 53,
+    'Harness 课程必须维护 29 份原校验资源、1 份 MCP 官方规范和 23 份一级叙事资源');
   for (const resource of agentHarness.resources) {
     const { evidence } = resource;
     assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
@@ -256,7 +257,9 @@ test('all 52 Harness resources provide complete evidence cards', () => {
       `${resource.id}: evidence.limitations 至少需要 15 个字符`);
     assert.equal(
       evidence.verifiedAt,
-      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      resource.id === 'res-harness-mcp-tools-spec'
+        ? '2026-07-31'
+        : resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
       `${resource.id}: 必须记录对应来源冻结或正文核验日期`,
     );
     assertDeepFrozen(evidence, `${resource.id}.evidence`);
@@ -314,18 +317,24 @@ test('only lessons one, six and seven map the specified experiments', () => {
   );
 });
 
-test('resources preserve the 29 verified entries and append 23 frozen primary bindings', () => {
-  assert.equal(agentHarness.resources.length, 52);
+test('resources preserve 29 verified entries and append one MCP spec plus 23 primary bindings', () => {
+  assert.equal(agentHarness.resources.length, 53);
   assert.deepEqual(
     agentHarness.resources.slice(0, resourceUrls.length).map(({ url }) => url),
     resourceUrls,
+  );
+  assert.equal(
+    agentHarness.resources[resourceUrls.length].url,
+    'https://modelcontextprotocol.io/specification/2025-11-25/server/tools',
   );
   for (const resource of agentHarness.resources) {
     assert.match(resource.id, /^res-harness-/);
     assert.match(resource.url, /^https:\/\//, resource.id);
     assert.equal(
       resource.verifiedAt,
-      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      resource.id === 'res-harness-mcp-tools-spec'
+        ? '2026-07-31'
+        : resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
       resource.id,
     );
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {

@@ -47,6 +47,58 @@ const EXPECTED_OWNER = Object.freeze({
   'visual-harness-08-handoff-evidence': ['harness-08', 'build-a-verifiable-handoff-bundle'],
 });
 
+function unwrapCode(value) {
+  return value.replace(/^`|`$/g, '');
+}
+
+async function readInventory() {
+  const markdown = await readFile(
+    new URL('../docs/research/2026-07-30-agent-harness-visual-inventory.md', import.meta.url),
+    'utf8',
+  );
+  const lines = markdown.split('\n');
+  const headerIndex = lines.findIndex((line) => (
+    line === '| visualId | role | owner lesson / section | assessed outcomes | cognitive question and form | sourceIds | storyboard and fixture contract | permission decision | status |'
+  ));
+  assert.ok(headerIndex >= 0, 'inventory must publish the traceability column contract');
+
+  const rows = [];
+  for (const line of lines.slice(headerIndex + 2)) {
+    if (!line.startsWith('| `visual-harness-')) break;
+    const cells = line.slice(1, -1).split('|').map((cell) => cell.trim());
+    assert.equal(cells.length, 9, line);
+    const [
+      visualId,
+      role,
+      owner,
+      assessedOutcomes,
+      cognitiveQuestion,
+      sourceIds,
+      storyboard,
+      permissionDecision,
+      status,
+    ] = cells;
+    const ownerMatch = owner.match(/^`(harness-\d{2}) \/ ([a-z0-9-]+)`$/);
+    assert.ok(ownerMatch, `${visualId}: owner cell must name a real lesson and section`);
+    rows.push({
+      visualId: unwrapCode(visualId),
+      role: unwrapCode(role),
+      lessonId: ownerMatch[1],
+      sectionId: ownerMatch[2],
+      assessedOutcomes: [...assessedOutcomes.matchAll(
+        /`((?:quiz|iq)-harness-\d{2}-\d+)`/g,
+      )].map((match) => match[1]),
+      cognitiveQuestion,
+      sourceIds,
+      storyboard,
+      permissionDecision,
+      status,
+    });
+  }
+
+  return { markdown, rows };
+}
+
 function assertDeepFrozen(value, label, seen = new WeakSet()) {
   if (value === null || typeof value !== 'object' || seen.has(value)) return;
   seen.add(value);
@@ -93,6 +145,50 @@ test('registers every Harness visual globally without duplicate IDs', () => {
   for (const visual of agentHarnessVisuals) {
     assert.ok(globalIds.has(visual.id), `${visual.id}: missing from shared registry`);
     assert.ok(knowledgeVisuals.includes(visual), `${visual.id}: identity must be preserved`);
+  }
+});
+
+test('inventory traces every registry visual to its role, real owner and assessed outcomes', async () => {
+  const { markdown, rows } = await readInventory();
+  const rowsByVisualId = new Map(rows.map((row) => [row.visualId, row]));
+  const assessmentIds = new Set([
+    ...agentHarness.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id)),
+    ...agentHarness.interviewQuestions.map(({ id }) => id),
+  ]);
+
+  assert.equal(rows.length, agentHarnessVisuals.length);
+  assert.equal(rowsByVisualId.size, rows.length, 'inventory visual IDs must be unique');
+
+  for (const visual of agentHarnessVisuals) {
+    const row = rowsByVisualId.get(visual.id);
+    assert.ok(row, `${visual.id}: missing inventory row`);
+    assert.equal(row.role, visual.role, `${visual.id}: inventory role drift`);
+    assert.deepEqual(
+      [row.lessonId, row.sectionId],
+      EXPECTED_OWNER[visual.id],
+      `${visual.id}: inventory owner drift`,
+    );
+    const lesson = agentHarness.lessons.find(({ id }) => id === row.lessonId);
+    assert.ok(
+      lesson.knowledgeNote.sections.some(({ id }) => id === row.sectionId),
+      `${visual.id}: inventory section does not exist`,
+    );
+    assert.ok(row.assessedOutcomes.length > 0, `${visual.id}: assessed outcome is required`);
+    for (const outcomeId of row.assessedOutcomes) {
+      assert.ok(assessmentIds.has(outcomeId), `${visual.id}: unknown outcome ${outcomeId}`);
+      assert.ok(outcomeId.includes(row.lessonId), `${visual.id}: cross-lesson outcome ${outcomeId}`);
+    }
+  }
+
+  for (const stepNumber of [1, 2, 3]) {
+    assert.match(
+      markdown,
+      new RegExp(
+        `harness-01-tool-transcript-step-${stepNumber}\\.svg[^\\n]+`
+          + 'inherits `visual-harness-01-tool-transcript` outcomes',
+      ),
+      `step ${stepNumber}: must state inherited parent outcomes`,
+    );
   }
 });
 

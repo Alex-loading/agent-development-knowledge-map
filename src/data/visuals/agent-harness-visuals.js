@@ -131,7 +131,7 @@ export const agentHarnessVisuals = deepFreezeVisual([
     alt: 'TOOL DEFINITION 只帮助发现，MODEL DECISION 只提出调用，HOST REGISTRY 与 POLICY 决定可执行对象，再经 ADAPTER 得到 RESULT。',
     longDescription: '流程从模型可见的 TOOL DEFINITION 开始，MODEL DECISION 选择候选名称和参数；HOST REGISTRY 解析真正实现，POLICY 校验身份、风险与环境，ADAPTER 或协议边界执行转换，最后 RESULT 回到 Harness。模型目录和宿主可执行注册表用不同边框表示。',
     caption: '模型看到的是能力说明，宿主掌握的 registry、策略与 adapter 才拥有实际执行权。',
-    sourceIds: ['res-harness-openai-tools', 'res-harness-nist-tool-use', 'res-harness-primary-feishu-tool-truth', 'res-harness-primary-javaguide-mcp'],
+    sourceIds: ['res-harness-openai-tools', 'res-harness-nist-tool-use', 'res-harness-primary-feishu-tool-truth', 'res-harness-primary-javaguide-mcp', 'res-harness-mcp-tools-spec'],
   }),
   visual({
     id: 'visual-harness-03-control-gates',
