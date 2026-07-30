@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { courseRegistry } from '../src/data/courses.js';
 import {
   PRIMARY_SOURCE_FAMILIES,
   getPrimaryReference,
@@ -21,6 +23,37 @@ import {
 
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const PRIMARY_ID = /^primary-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const ACTIVE_MODULE_IDS = new Set(Object.keys(courseRegistry));
+const STABLE_LESSON_IDS = new Set(
+  Object.values(courseRegistry).flatMap(({ lessons }) => lessons.map(({ id }) => id)),
+);
+const INVENTORY_COLUMNS = [
+  'sourceId',
+  'title',
+  'canonicalUrl',
+  'bodyAccess',
+  'retrievedAt',
+  'updatedAt',
+  'revision',
+  'contentHash',
+  'moduleCandidates',
+  'mediaCount',
+  'permissionDecision',
+  'permissionEvidence',
+  'limitations',
+];
+const CLAIM_COLUMNS = [
+  'claimId',
+  'statement',
+  'status',
+  'primarySourceIds',
+  'verificationNeed',
+  'moduleId',
+  'lessonId',
+  'plannedSection',
+  'sourceContribution',
+  'limitations',
+];
 
 function assertDeepFrozen(value, label, seen = new Set()) {
   if (value === null || typeof value !== 'object' || seen.has(value)) return;
@@ -29,6 +62,35 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   for (const [key, nested] of Object.entries(value)) {
     assertDeepFrozen(nested, `${label}.${key}`, seen);
   }
+}
+
+function parseMarkdownTable(markdown, expectedColumns) {
+  const lines = markdown.split('\n');
+  const headerIndex = lines.findIndex((line) => {
+    if (!line.startsWith('|') || !line.endsWith('|')) return false;
+    const cells = line
+      .slice(1, -1)
+      .split(/(?<!\\)\|/)
+      .map((cell) => cell.trim());
+    return cells.join('\u0000') === expectedColumns.join('\u0000');
+  });
+  assert.notEqual(headerIndex, -1, `missing table: ${expectedColumns.join(' | ')}`);
+  assert.match(lines[headerIndex + 1] ?? '', /^\|(?:\s*:?-+:?\s*\|)+$/);
+
+  const rows = [];
+  for (let index = headerIndex + 2; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line.startsWith('|') || !line.endsWith('|')) break;
+    const cells = line
+      .slice(1, -1)
+      .split(/(?<!\\)\|/)
+      .map((cell) => cell.trim().replaceAll('\\|', '|'));
+    assert.equal(cells.length, expectedColumns.length, `malformed row ${index + 1}`);
+    rows.push(Object.fromEntries(expectedColumns.map((column, cellIndex) => (
+      [column, cells[cellIndex]]
+    ))));
+  }
+  return rows;
 }
 
 test('primary references freeze both requested source families and roots', () => {
@@ -340,4 +402,139 @@ test('Feishu freezer commands and JSON envelope checks stay exact', () => {
 test('private cache is ignored and no private body or access token is tracked', async () => {
   const gitignore = await readFile(new URL('../.gitignore', import.meta.url), 'utf8');
   assert.match(gitignore, /^\.research-cache\/$/m);
+
+  const repository = new URL('..', import.meta.url);
+  const ignored = execFileSync(
+    'git',
+    ['check-ignore', '.research-cache/primary-references/manifest.json'],
+    { cwd: repository, encoding: 'utf8' },
+  ).trim();
+  assert.equal(ignored, '.research-cache/primary-references/manifest.json');
+
+  const tracked = execFileSync('git', ['ls-files'], {
+    cwd: repository,
+    encoding: 'utf8',
+  }).trim().split('\n').filter(Boolean);
+  assert.ok(tracked.every((path) => !path.startsWith('.research-cache/')));
+  assert.ok(tracked.every((path) => !/\.xml$/i.test(path)));
+
+  const credentialPattern = [
+    ['tenant', 'access', 'token'].join('_'),
+    ['user', 'access', 'token'].join('_'),
+    ['Authorization', 'Bearer'].join(': '),
+    't-[a-z]-[A-Za-z0-9_-]{20,}',
+  ].join('|');
+  let credentialMatches = '';
+  try {
+    credentialMatches = execFileSync(
+      'git',
+      [
+        'grep',
+        '-I',
+        '-l',
+        '-E',
+        credentialPattern,
+        '--',
+        '.',
+        ':!tests/primary-references.test.js',
+      ],
+      { cwd: repository, encoding: 'utf8' },
+    );
+  } catch (error) {
+    assert.equal(error.status, 1, error.stderr?.toString() || error.message);
+  }
+  assert.equal(credentialMatches, '');
+});
+
+test('research inventory resolves exactly every frozen source and media decision', async () => {
+  const markdown = await readFile(
+    new URL('../docs/research/2026-07-30-primary-reference-inventory.md', import.meta.url),
+    'utf8',
+  );
+  const rows = parseMarkdownTable(markdown, INVENTORY_COLUMNS);
+  const registryById = new Map(primaryReferences.map((source) => [source.id, source]));
+
+  assert.equal(rows.length, 50);
+  assert.equal(new Set(rows.map(({ sourceId }) => sourceId)).size, rows.length);
+  assert.deepEqual(
+    new Set(rows.map(({ sourceId }) => sourceId)),
+    new Set(primaryReferences.map(({ id }) => id)),
+  );
+  for (const row of rows) {
+    const source = registryById.get(row.sourceId);
+    assert.ok(source, `${row.sourceId}: unknown source`);
+    assert.equal(row.title, source.title);
+    assert.equal(row.canonicalUrl, source.canonicalUrl);
+    assert.equal(row.bodyAccess, source.bodyAccess);
+    assert.equal(row.retrievedAt, source.retrievedAt);
+    assert.equal(row.updatedAt, source.updatedAt ?? '—');
+    assert.equal(row.contentHash, source.contentHash);
+    assert.equal(row.permissionDecision, source.mediaDecision);
+    assert.match(row.revision, /^(?:\d+|—)$/);
+    assert.ok(row.moduleCandidates.length > 0);
+    assert.ok(
+      row.moduleCandidates.split(',').every((id) => ACTIVE_MODULE_IDS.has(id.trim())),
+      `${row.sourceId}: invalid module candidate`,
+    );
+    assert.match(row.mediaCount, /^(?:0|[1-9]\d*)$/);
+    assert.ok(row.permissionEvidence.length >= 20);
+    assert.ok(row.limitations.length >= 20);
+  }
+  assert.equal(
+    rows.reduce((sum, { mediaCount }) => sum + Number(mediaCount), 0),
+    278,
+  );
+  assert.match(markdown, /16 Feishu documents, 34 JavaGuide articles/);
+  assert.match(markdown, /278 media candidates/);
+  assert.match(markdown, /0 redirects and 0 failures/);
+});
+
+test('claim matrix uses exact enums and resolves every source to a stable course lesson', async () => {
+  const markdown = await readFile(
+    new URL('../docs/research/2026-07-30-primary-reference-claim-matrix.md', import.meta.url),
+    'utf8',
+  );
+  const rows = parseMarkdownTable(markdown, CLAIM_COLUMNS);
+  const validStatuses = new Set([
+    'verified',
+    'contested',
+    'volatile',
+    'license-blocked',
+    'source-unavailable',
+  ]);
+  const validContributions = new Set([
+    'adopted',
+    'corrected',
+    'deepened',
+    'rejected',
+    'duplicate',
+  ]);
+  const knownSourceIds = new Set(primaryReferences.map(({ id }) => id));
+  const usedSourceIds = new Set();
+
+  assert.ok(rows.length >= 40);
+  assert.equal(new Set(rows.map(({ claimId }) => claimId)).size, rows.length);
+  for (const row of rows) {
+    assert.match(row.claimId, /^claim-[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    assert.ok(row.statement.length >= 12);
+    assert.ok(validStatuses.has(row.status), `${row.claimId}: invalid status`);
+    assert.ok(row.verificationNeed.length >= 8);
+    assert.ok(ACTIVE_MODULE_IDS.has(row.moduleId), `${row.claimId}: invalid module`);
+    assert.ok(STABLE_LESSON_IDS.has(row.lessonId), `${row.claimId}: invalid lesson`);
+    assert.ok(
+      courseRegistry[row.moduleId].lessons.some(({ id }) => id === row.lessonId),
+      `${row.claimId}: lesson does not belong to module`,
+    );
+    assert.match(row.plannedSection, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    assert.ok(validContributions.has(row.sourceContribution));
+    assert.ok(row.limitations.length >= 12);
+    const sourceIds = row.primarySourceIds.split(',').map((id) => id.trim());
+    assert.ok(sourceIds.length > 0);
+    for (const sourceId of sourceIds) {
+      assert.ok(knownSourceIds.has(sourceId), `${row.claimId}: unknown ${sourceId}`);
+      usedSourceIds.add(sourceId);
+    }
+  }
+  assert.deepEqual(usedSourceIds, knownSourceIds);
+  assert.deepEqual(new Set(rows.map(({ moduleId }) => moduleId)), ACTIVE_MODULE_IDS);
 });
