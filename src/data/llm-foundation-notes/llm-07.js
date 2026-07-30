@@ -8,7 +8,7 @@ export const llm07Note = {
       id: 'prompt-as-runtime-contract',
       title: 'Prompt 是运行时契约，不是咒语',
       paragraphs: [
-        '问题：怎样判断一个 Prompt 是否“健壮”？Prompt 是一次模型调用中对任务和输入的运行时规格。它至少要写清任务目标、输入的起止边界、允许与禁止的行为、成功标准、失败时应返回什么，以及模型可以提出哪些能力请求。角色描述可以帮助交代语境，却不是重点；如果“你是资深客服”之后没有类别定义、证据要求和失败路径，模型仍无法稳定判断什么算完成。可测试性来自明确契约，而不是某句被传说为特别有效的措辞。',
+        '问题：怎样判断一个 Prompt 是否“健壮”？Prompt 是一次模型调用中对任务和输入的运行时规格。它至少要写清 instruction（指令）、message role（消息角色）、输入的起止边界、允许与禁止的行为、tool definition（工具定义）、成功标准与失败行为。角色描述可以帮助交代语境，却不是重点；如果“你是资深客服”之后没有类别定义、证据要求和失败路径，模型仍无法稳定判断什么算完成。可测试性来自明确契约，而不是某句被传说为特别有效的措辞。',
         '契约还要把稳定规则、本次用户目标、检索材料与工具结果分层。稳定规则描述长期不变的业务和安全约束；用户输入提供本次要处理的目标；检索文档与工具结果提供待分析数据。不同厂商可能用 system、developer、user 等角色表达这些层，但具体角色名称、优先级和覆盖语义不是跨供应商统一标准，实施时必须核对所用 API。稳定的工程原则是标明来源与用途，不让数据因为语气像命令就自行升级成授权。',
         '写完后不要凭“读起来很清楚”验收，而要把契约放进版本化样例集：正常请求是否得到所需字段，边界请求是否遵循分类规则，无证据请求是否拒绝猜测，恶意内容是否仍只作为数据处理。一次修改应同时记录 Prompt 版本、模型与主要配置、评测集版本和失败变化。这样面试中回答“怎样设计健壮 Prompt”时，因果链就是“明确契约—分层输入—代表性样例—评测回归”，而不是堆叠角色设定。',
       ],
@@ -21,7 +21,7 @@ export const llm07Note = {
         title: 'Prompt 不是权限系统或事实验证器',
         body: '契约可以减少歧义并要求证据，但不能授予真实权限、证明事实正确或阻止应用执行危险动作；这些职责必须由模型外的可信代码承担。',
       },
-      sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-agents'],
+      sourceIds: ['res-ms-genai', 'res-openai-cookbook', 'res-hf-agents', 'res-llm-primary-javaguide-prompt', 'res-llm-primary-javaguide-api', 'res-llm-primary-feishu-tool-truth'],
     },
     {
       id: 'instruction-and-untrusted-data-boundaries',
@@ -75,7 +75,7 @@ export const llm07Note = {
         body: '模具能保证字段、类型与枚举的位置，却不能证明装进去的理由真实、证据可定位或动作已经获权。',
       },
       visuals: [{ visualId: 'visual-llm-07-schema-pipeline', afterParagraph: 2 }],
-      sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
+      sourceIds: ['res-openai-cookbook', 'res-ms-genai', 'res-hf-agents', 'res-llm-primary-javaguide-structured-output', 'res-llm-primary-feishu-tool-truth'],
     },
     {
       id: 'validation-retry-and-side-effects',

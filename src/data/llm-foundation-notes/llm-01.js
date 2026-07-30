@@ -39,7 +39,7 @@ const sections = Object.freeze([
     id: 'from-generation-to-llm',
     title: '从生成模型到大语言模型',
     paragraphs: Object.freeze([
-      '判别式任务通常要在给定候选中输出标签或分数，例如判断一封邮件属于哪个类别；生成式任务则要产生新的内容。语言模型把生成问题写成“在已有文本条件下，下一个语言单位有多可能”。这种目标不会让模型内置一个事实数据库，而是让它学习文本中可用于预测的模式，所以流畅、相关与事实正确是需要分别评测的性质。',
+      '判别式任务通常要在给定候选中输出标签或分数，例如判断一封邮件属于哪个类别；生成式任务则要产生新的内容。语言模型把生成问题写成 next-token prediction（下一 token 预测）：在已有文本条件下，下一个语言单位有多可能。这种目标不会让模型内置一个答案数据库，而是让它学习文本中可用于预测的模式，所以流畅、相关与事实正确是需要分别评测的性质。',
       '文本进入现代 LLM 前会先被 tokenizer 切成 token，并映射成数字 ID。token 是模型词表中的处理单位，可能是词、子词、标点、汉字或字节片段，不能简单理解为自然语言中的一个词。自回归生成会根据当前全部可见 token 计算下一个 token 的概率分布，选出结果后把它追加到上下文，再重复同一过程，直到满足停止条件。',
       '“大语言模型”中的“大”提示了模型、数据和计算规模，但规模本身不是严格能力保证。对 Agent 开发者更有用的边界是：LLM 接收上下文并生成语言或结构化候选，它擅长从模式中归纳、转换和起草，却可能受训练数据偏差、上下文长度、资源限制和概率生成影响。不要因为输出像解释，就推断模型拥有人的理解，也不要用未经核验的参数量给模型能力排序。',
     ]),
@@ -50,7 +50,7 @@ const sections = Object.freeze([
     visuals: Object.freeze([
       Object.freeze({ visualId: 'visual-llm-01-autoregressive-generation', afterParagraph: 1 }),
     ]),
-    sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai']),
+    sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai', 'res-llm-primary-javaguide-ai', 'res-llm-primary-javaguide-core-concepts']),
   }),
   Object.freeze({
     id: 'training-versus-inference',
