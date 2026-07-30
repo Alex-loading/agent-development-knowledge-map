@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check:primary-references": "node scripts/generate-primary-reference-artifacts.mjs --check",
+    "freeze:primary-references": "node scripts/freeze-primary-references.mjs",
+    "generate:primary-references": "node scripts/generate-primary-reference-artifacts.mjs",
     "test": "node --test",
     "serve": "python3 -m http.server 4173"
   }

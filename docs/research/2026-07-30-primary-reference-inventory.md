@@ -6,9 +6,9 @@
 - Private Feishu access used `lark-cli 1.0.68` as the authenticated user. The node-list envelope returned `ok: true`, exactly 15 direct children, `has_more: false`, and every child reported `has_child: false`.
 - Exact traversal command: `lark-cli wiki +node-list --space-id 7641116018563255484 --parent-node-token L082wubkdie8uMkRUjgceKYQnIe --page-all --page-limit 30 --as user --format json`.
 - Exact document command, repeated for the root and all 15 child node tokens: `lark-cli docs +fetch --doc <nodeToken> --detail simple --format json`. Every envelope returned `ok: true`; the simple response exposed `document_id`, `revision_id`, and `content`.
-- JavaGuide used Node 20 Fetch with breadth-first traversal from `https://javaguide.cn/ai/`. Queries and fragments were stripped before queueing; only same-origin `/ai/` paths were accepted and `/ai-coding/` was excluded.
+- JavaGuide used bounded Node 20 Fetch with breadth-first traversal from `https://javaguide.cn/ai/`. Queries and fragments were stripped before queueing; only same-origin `/ai/` paths were accepted and `/ai-coding/` was excluded. Each response had to be in-scope HTML with a complete document structure and canonical link; challenge/error pages, timeouts, byte/route-limit breaches, non-HTML responses, and partial crawls fail closed.
 - The repeatable live run froze **16 Feishu documents, 34 JavaGuide articles**, found **278 media candidates**, and recorded **0 redirects and 0 failures**. The manifest reported 34 visited JavaGuide routes, so no reachable in-scope route was silently discarded.
-- Raw normalized Feishu XML, raw normalized JavaGuide HTML, media candidate details, and `manifest.json` remain only in ignored `.research-cache/primary-references/`. Git receives this metadata, summaries, claims, dates, revisions, and hashes only.
+- Raw normalized Feishu XML, raw normalized JavaGuide HTML, media candidate details, and `manifest.json` remain only in ignored `.research-cache/primary-references/`. A freeze is built in a uniquely named, path-validated staging directory under `.research-cache/`, validated for the exact 16 + 34 source invariant and zero failures, then promoted by rename with rollback of the prior cache on failure. Git receives only the generated redacted snapshot, summaries, claims, dates, revisions, and hashes.
 
 ## Permission gate
 
@@ -19,6 +19,8 @@ JavaGuide media defaults to `asset-level-review-required`. The repository's Apac
 ## Source inventory
 
 `updatedAt` is `—` only where the Feishu simple-fetch interface did not expose an update date. Feishu `revision` values are live `revision_id` values; JavaGuide dates come from page metadata and JavaGuide has no analogous revision field.
+
+The table and `src/data/primary-reference-snapshot.generated.js` are generated from the ignored manifest with `npm run generate:primary-references`. `npm run check:primary-references` deterministically reconstructs both artifacts and reports drift without exposing raw bodies, access envelopes, document/object IDs, node fields, media candidates, or credentials.
 
 | sourceId | title | canonicalUrl | bodyAccess | retrievedAt | updatedAt | revision | contentHash | moduleCandidates | mediaCount | permissionDecision | permissionEvidence | limitations |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -83,19 +85,11 @@ JavaGuide media defaults to `asset-level-review-required`. The repository's Apac
 
 ## Validation record
 
-- Baseline `npm test`: exit 0; 474 tests passed, 0 failed.
-- Live `node scripts/freeze-primary-references.mjs`: exit 0; `Frozen 50 primary references (16 Feishu, 34 JavaGuide); 0 redirects, 0 failures.`
-- Manifest-to-registry reconciliation: 50 manifest URLs, 50 registry URLs, 0 missing records, and 0 hash mismatches.
-- Registry file SHA-256 after live metadata promotion: `0cc90d3a7aa90217b11bec3c1d0ebd0f8ea040a2bd4cf232215a371555f9148d`.
-
-## Final audit
-
-- `node scripts/freeze-primary-references.mjs`: exit 0 at `2026-07-30T16:08:44.729Z`; 50 sources, 16 Feishu documents, 34 JavaGuide articles, 278 media candidates, 0 redirects, and 0 failures.
-- Live manifest-to-registry date/hash reconciliation: exit 0; 50 manifest records, 50 registry records, and 0 mismatches.
-- `node --test tests/primary-references.test.js tests/course-registry.test.js tests/data.test.js`: exit 0; 34 tests passed, 0 failed, and 0 skipped.
-- `npm test`: exit 0; 488 tests passed, 0 failed, and 0 skipped.
-- `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`: exit 0 with no diagnostics.
-- `git diff --check e6d63af7a5f41e9d4b990f4258c507739f7390cc..HEAD`: final post-evidence-commit exit 0 with no diagnostics; this range-aware check covers every committed implementation change.
-- The incomplete-marker gate over both research documents exited 1 with no matches, which is the expected clean result.
+- Hardened live `npm run freeze:primary-references`: exit 0 at `2026-07-30T16:35:16.137Z`; schema 2, 50 sources, 16 Feishu documents, 34 JavaGuide articles, 34 visited routes, 278 media candidates, 0 redirects, and 0 failures.
+- The first sandboxed network attempt failed closed on the JavaGuide root and left the prior canonical manifest byte-for-byte unchanged; the approved live run then validated the complete staging snapshot before promotion.
+- `npm run check:primary-references`: exit 0; the ignored manifest deterministically reproduces the committed redacted snapshot and inventory.
+- `node --test tests/primary-references.test.js tests/course-registry.test.js tests/data.test.js`: exit 0; 49 tests passed, 0 failed, and 0 skipped.
+- `npm test`: exit 0; 503 tests passed, 0 failed, and 0 skipped.
+- `find src tests scripts -type f \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`: exit 0 with no diagnostics.
+- The primary-reference tests cover unchecked output rejection, staged-cache preservation after builder/validation/partial failures, strict Feishu token and path containment, bounded timeouts and response sizes, fail-closed JavaGuide structure/challenge checks, calendar dates, known lark banner parsing, deterministic ordering, renderer/filter resource compatibility, generated-artifact drift, and private-field exclusion.
 - `git check-ignore .research-cache/primary-references/manifest.json`: exit 0 and returned that exact ignored path; `git ls-files .research-cache` returned no paths.
-- The pre-audit-commit `git status --short` result was empty; `git status --short --ignored` showed only `!! .research-cache/`.

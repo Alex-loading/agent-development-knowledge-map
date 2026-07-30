@@ -5,6 +5,15 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_AUTHORITIES = new Set(['official', 'academic', 'expert', 'community']);
 const VALID_ROLES = new Set(['core', 'cross-check', 'extension']);
 
+function isValidCalendarDate(value) {
+  if (typeof value !== 'string' || !DATE.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+}
+
 function requireNonEmptyString(value, label) {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new TypeError(`${label} must be a non-empty string`);
@@ -30,8 +39,8 @@ function createEvidence(value) {
     throw new TypeError('evidence.coverage must contain non-empty strings');
   }
   requireNonEmptyString(value.limitations, 'evidence.limitations');
-  if (typeof value.verifiedAt !== 'string' || !DATE.test(value.verifiedAt)) {
-    throw new TypeError('evidence.verifiedAt must use YYYY-MM-DD');
+  if (!isValidCalendarDate(value.verifiedAt)) {
+    throw new TypeError('evidence.verifiedAt must be a real YYYY-MM-DD date');
   }
   return Object.freeze({
     authority: value.authority,
@@ -67,6 +76,7 @@ export function createPrimaryReferenceBinding(input) {
     id,
     title: source.title,
     url: source.canonicalUrl,
+    source: source.publisherOrAuthor,
     creator: source.publisherOrAuthor,
     platform: source.sourceFamily === 'feishu-harness-101' ? '飞书' : 'JavaGuide',
     language: '中文',
@@ -74,6 +84,7 @@ export function createPrimaryReferenceBinding(input) {
     difficulty,
     stage,
     value,
+    verifiedAt: evidence.verifiedAt,
     canonicalSourceId: source.id,
     sourceFamily: source.sourceFamily,
     sourceTier: source.sourceTier,

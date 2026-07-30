@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 
+import { filterResources } from '../src/core/filters.js';
 import { courseRegistry } from '../src/data/courses.js';
 import {
   PRIMARY_SOURCE_FAMILIES,
@@ -11,15 +14,32 @@ import {
 } from '../src/data/primary-references.js';
 import * as primaryReferenceModule from '../src/data/primary-references.js';
 import { createPrimaryReferenceBinding } from '../src/data/primary-reference-bindings.js';
+import { primaryReferenceSnapshot } from '../src/data/primary-reference-snapshot.generated.js';
 import {
+  DEFAULT_FREEZE_LIMITS,
   FEISHU_CHILDREN_ARGS,
   FEISHU_DOCUMENT_ARGS,
+  PRIMARY_REFERENCE_CACHE_DIRECTORY,
   canonicalizeJavaGuideUrl,
   crawlJavaGuide,
+  freezePrimaryReferences,
   hashSourceText,
+  isValidCalendarDate,
   normalizeSourceText,
   parseLarkEnvelope,
+  resolveFeishuRawBodyUrl,
+  runLarkCli,
+  sortFeishuNodes,
+  sortManifestCollections,
+  validatePrimaryReferenceManifest,
 } from '../scripts/freeze-primary-references.mjs';
+import {
+  assertGeneratedArtifactCurrent,
+  createSafePrimaryReferenceSnapshot,
+  renderInventoryTable,
+  renderSafePrimaryReferenceSnapshot,
+  replaceInventoryTable,
+} from '../scripts/generate-primary-reference-artifacts.mjs';
 
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const PRIMARY_ID = /^primary-[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -91,6 +111,126 @@ function parseMarkdownTable(markdown, expectedColumns) {
     ))));
   }
   return rows;
+}
+
+function javaGuideHtml({
+  canonicalUrl = 'https://javaguide.cn/ai/',
+  title = 'JavaGuide AI',
+  links = [],
+  extraHead = '',
+  body = '<main><h1>JavaGuide AI</h1></main>',
+} = {}) {
+  return [
+    '<!doctype html><html><head>',
+    `<title>${title}</title>`,
+    `<link rel="canonical" href="${canonicalUrl}">`,
+    extraHead,
+    '</head><body>',
+    body,
+    ...links.map((href) => `<a href="${href}">route</a>`),
+    '</body></html>',
+  ].join('');
+}
+
+function javaGuideResponse({
+  url = 'https://javaguide.cn/ai/',
+  status = 200,
+  redirected = false,
+  contentType = 'text/html; charset=utf-8',
+  body = javaGuideHtml({ canonicalUrl: url }),
+  contentLength,
+} = {}) {
+  const headers = new Headers({ 'content-type': contentType });
+  if (contentLength !== undefined) headers.set('content-length', String(contentLength));
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    url,
+    redirected,
+    headers,
+    text: async () => body,
+  };
+}
+
+function manifestFixture({
+  javaGuideFailures = [],
+  javaGuideCount = 34,
+  feishuCount = 16,
+} = {}) {
+  const hash = `sha256:${'a'.repeat(64)}`;
+  const feishuDocuments = Array.from({ length: feishuCount }, (_, index) => ({
+    nodeToken: index === 0
+      ? 'L082wubkdie8uMkRUjgceKYQnIe'
+      : `A${String(index).padStart(26, '0')}`,
+    canonicalUrl: index === 0
+      ? 'https://my.feishu.cn/wiki/L082wubkdie8uMkRUjgceKYQnIe'
+      : `https://my.feishu.cn/wiki/A${String(index).padStart(26, '0')}`,
+    contentHash: hash,
+    mediaCount: 0,
+  }));
+  const javaGuideArticles = Array.from({ length: javaGuideCount }, (_, index) => ({
+    canonicalUrl: index === 0
+      ? 'https://javaguide.cn/ai/'
+      : `https://javaguide.cn/ai/fixture-${String(index).padStart(2, '0')}.html`,
+    contentHash: hash,
+    mediaCount: 0,
+  }));
+  return {
+    schemaVersion: 2,
+    frozenAt: '2026-07-30T00:00:00.000Z',
+    retrievedAt: '2026-07-30',
+    policy: {
+      rawBodiesCommitted: false,
+      feishuMediaDecision: 'permission-review-required',
+      javaGuideMediaDecision: 'asset-level-review-required',
+    },
+    feishu: {
+      accessResult: 'ok',
+      rootUrl: 'https://my.feishu.cn/wiki/L082wubkdie8uMkRUjgceKYQnIe',
+      expectedDirectLeafChildren: 15,
+      discoveredDirectLeafChildren: 15,
+      documents: feishuDocuments,
+      failures: [],
+    },
+    javaGuide: {
+      accessResult: javaGuideFailures.length === 0 ? 'ok' : 'partial',
+      rootUrl: 'https://javaguide.cn/ai/',
+      visitedRouteCount: javaGuideCount,
+      visitedRoutes: javaGuideArticles.map(({ canonicalUrl }) => canonicalUrl),
+      articles: javaGuideArticles,
+      redirects: [],
+      failures: javaGuideFailures,
+    },
+    totals: {
+      sources: feishuCount + javaGuideCount,
+      feishuDocuments: feishuCount,
+      javaGuideArticles: javaGuideCount,
+      mediaCandidates: 0,
+      redirects: 0,
+      failures: javaGuideFailures.length,
+    },
+  };
+}
+
+function manifestFromSafeSnapshot(records = primaryReferenceSnapshot) {
+  const feishuDocuments = records
+    .filter(({ sourceFamily }) => sourceFamily === 'feishu-harness-101')
+    .map((record) => ({
+      ...record,
+      nodeToken: new URL(record.canonicalUrl).pathname.split('/').at(-1),
+    }));
+  const javaGuideArticles = records
+    .filter(({ sourceFamily }) => sourceFamily === 'javaguide-ai')
+    .map((record) => ({ ...record }));
+  return {
+    retrievedAt: records[0].retrievedAt,
+    policy: {
+      feishuMediaDecision: 'permission-review-required',
+      javaGuideMediaDecision: 'asset-level-review-required',
+    },
+    feishu: { documents: feishuDocuments },
+    javaGuide: { articles: javaGuideArticles },
+  };
 }
 
 test('primary references freeze both requested source families and roots', () => {
@@ -202,6 +342,7 @@ test('course binding derives canonical identity and deeply freezes caller-owned 
     id: input.id,
     title: source.title,
     url: source.canonicalUrl,
+    source: source.publisherOrAuthor,
     creator: source.publisherOrAuthor,
     platform: '飞书',
     language: '中文',
@@ -209,6 +350,7 @@ test('course binding derives canonical identity and deeply freezes caller-owned 
     difficulty: input.difficulty,
     stage: input.stage,
     value: input.value,
+    verifiedAt: input.evidence.verifiedAt,
     canonicalSourceId: source.id,
     sourceFamily: source.sourceFamily,
     sourceTier: source.sourceTier,
@@ -218,6 +360,16 @@ test('course binding derives canonical identity and deeply freezes caller-owned 
   assert.notEqual(binding.evidence.coverage, input.evidence.coverage);
   assertDeepFrozen(binding, 'binding');
   assert.equal(Object.isFrozen(input), false, 'factory must not freeze caller input');
+
+  assert.deepEqual(
+    filterResources([binding], {
+      source: source.publisherOrAuthor,
+      platform: '飞书',
+      type: '一级参考资料',
+    }),
+    [binding],
+    'generated bindings must integrate with the existing resource filters',
+  );
 });
 
 test('course binding rejects malformed required fields, canonical IDs and evidence', () => {
@@ -261,6 +413,7 @@ test('course binding rejects malformed required fields, canonical IDs and eviden
     ['coverage', []],
     ['limitations', ' '],
     ['verifiedAt', 'July 30'],
+    ['verifiedAt', '2026-02-30'],
   ]) {
     assert.throws(
       () => createPrimaryReferenceBinding({
@@ -298,23 +451,36 @@ test('JavaGuide crawler uses BFS and records redirects and failures', async () =
     ['https://javaguide.cn/ai/', {
       url: 'https://javaguide.cn/ai/',
       status: 200,
-      body: '<title>AI</title><a href="/ai/a/?q=1">A</a><a href="/ai/old">Old</a><a href="/ai/fail">Fail</a>',
+      body: javaGuideHtml({
+        title: 'AI',
+        links: ['/ai/a/?q=1', '/ai/old', '/ai/fail'],
+      }),
     }],
     ['https://javaguide.cn/ai/a/', {
       url: 'https://javaguide.cn/ai/a/',
       status: 200,
-      body: '<title>A</title><a href="/ai/b#details">B</a>',
+      body: javaGuideHtml({
+        canonicalUrl: 'https://javaguide.cn/ai/a/',
+        title: 'A',
+        links: ['/ai/b#details'],
+      }),
     }],
     ['https://javaguide.cn/ai/old', {
       url: 'https://javaguide.cn/ai/new',
       status: 200,
       redirected: true,
-      body: '<title>New</title>',
+      body: javaGuideHtml({
+        canonicalUrl: 'https://javaguide.cn/ai/new',
+        title: 'New',
+      }),
     }],
     ['https://javaguide.cn/ai/b', {
       url: 'https://javaguide.cn/ai/b',
       status: 200,
-      body: '<title>B</title>',
+      body: javaGuideHtml({
+        canonicalUrl: 'https://javaguide.cn/ai/b',
+        title: 'B',
+      }),
     }],
   ]);
   const requested = [];
@@ -322,17 +488,10 @@ test('JavaGuide crawler uses BFS and records redirects and failures', async () =
     requested.push(url);
     if (url.endsWith('/fail')) throw new Error('network down');
     const fixture = bodies.get(url);
-    return {
-      ok: fixture.status >= 200 && fixture.status < 300,
-      status: fixture.status,
-      url: fixture.url,
-      redirected: fixture.redirected ?? false,
-      headers: new Headers(),
-      text: async () => fixture.body,
-    };
+    return javaGuideResponse(fixture);
   };
 
-  const result = await crawlJavaGuide({ fetchImpl });
+  const result = await crawlJavaGuide({ fetchImpl, allowPartial: true });
 
   assert.deepEqual(requested, [
     'https://javaguide.cn/ai/',
@@ -353,25 +512,18 @@ test('JavaGuide crawler uses BFS and records redirects and failures', async () =
   assert.deepEqual(result.articles.map(({ canonicalUrl }) => canonicalUrl), [
     'https://javaguide.cn/ai/',
     'https://javaguide.cn/ai/a/',
-    'https://javaguide.cn/ai/new',
     'https://javaguide.cn/ai/b',
+    'https://javaguide.cn/ai/new',
   ]);
 });
 
 test('JavaGuide crawler records an available ISO update date', async () => {
-  const body = [
-    '<meta property="article:modified_time" content="2026-05-25T00:42:42.000Z">',
-    '<title>Dated page</title>',
-  ].join('');
+  const body = javaGuideHtml({
+    title: 'Dated page',
+    extraHead: '<meta property="article:modified_time" content="2026-05-25T00:42:42.000Z">',
+  });
   const result = await crawlJavaGuide({
-    fetchImpl: async (url) => ({
-      ok: true,
-      status: 200,
-      url,
-      redirected: false,
-      headers: new Headers(),
-      text: async () => body,
-    }),
+    fetchImpl: async (url) => javaGuideResponse({ url, body }),
   });
 
   assert.equal(result.articles[0].updatedAt, '2026-05-25');
@@ -385,9 +537,10 @@ test('Feishu freezer commands and JSON envelope checks stay exact', () => {
     '--page-all', '--page-limit', '30',
     '--as', 'user', '--format', 'json',
   ]);
-  assert.deepEqual(FEISHU_DOCUMENT_ARGS('node-token'), [
+  const nodeToken = 'L082wubkdie8uMkRUjgceKYQnIe';
+  assert.deepEqual(FEISHU_DOCUMENT_ARGS(nodeToken), [
     'docs', '+fetch',
-    '--doc', 'node-token',
+    '--doc', nodeToken,
     '--detail', 'simple',
     '--format', 'json',
   ]);
@@ -397,6 +550,375 @@ test('Feishu freezer commands and JSON envelope checks stay exact', () => {
     /denied/,
   );
   assert.throws(() => parseLarkEnvelope('not json'), /valid JSON/);
+});
+
+test('lark envelope parser accepts only JSON or the known node-count banner', () => {
+  const envelope = '{"ok":true,"data":{"value":1}}';
+  assert.deepEqual(parseLarkEnvelope(` \n${envelope}\n`), { value: 1 });
+  assert.deepEqual(
+    parseLarkEnvelope(`Found 15 node(s)\n${envelope}\n`),
+    { value: 1 },
+  );
+  assert.throws(
+    () => parseLarkEnvelope(`diagnostic banner\n${envelope}`),
+    /known banner/,
+  );
+  assert.throws(
+    () => parseLarkEnvelope(`warning {diagnostic}\n${envelope}`),
+    /known banner/,
+  );
+  assert.throws(
+    () => parseLarkEnvelope(`${envelope}\nrequest complete`),
+    /valid JSON/,
+  );
+});
+
+test('Feishu node tokens and raw body paths are strictly contained', () => {
+  const token = 'L082wubkdie8uMkRUjgceKYQnIe';
+  const rawDirectory = new URL('./feishu/', PRIMARY_REFERENCE_CACHE_DIRECTORY);
+  assert.equal(
+    resolveFeishuRawBodyUrl(token, rawDirectory).href,
+    new URL(`${token}.xml`, rawDirectory).href,
+  );
+  for (const invalid of [
+    '../escape',
+    'node-token',
+    'L082wubkdie8uMkRUjgceKYQnI/',
+    'L082wubkdie8uMkRUjgceKYQnI\\',
+    'L082wubkdie8uMkRUjgceKYQnI.',
+    'L082wubkdie8uMkRUjgceKYQnIeX',
+    'L082wubkdie8uMkRUjgceKYQnI%',
+  ]) {
+    assert.throws(() => FEISHU_DOCUMENT_ARGS(invalid), /Feishu node token/);
+    assert.throws(
+      () => resolveFeishuRawBodyUrl(invalid, rawDirectory),
+      /Feishu node token/,
+    );
+  }
+  assert.throws(
+    () => resolveFeishuRawBodyUrl(token, PRIMARY_REFERENCE_CACHE_DIRECTORY),
+    /feishu\/ directory/,
+  );
+  assert.throws(
+    () => resolveFeishuRawBodyUrl(token, new URL('file:///tmp/feishu/')),
+    /managed cache root/,
+  );
+});
+
+test('calendar validation rejects impossible ISO dates', () => {
+  assert.equal(isValidCalendarDate('2024-02-29'), true);
+  assert.equal(isValidCalendarDate('2025-02-29'), false);
+  assert.equal(isValidCalendarDate('2026-02-30'), false);
+  assert.equal(isValidCalendarDate('2026-13-01'), false);
+  assert.equal(isValidCalendarDate('July 30, 2026'), false);
+});
+
+test('JavaGuide crawler fails closed on HTTP failures and challenge pages', async () => {
+  const rootBody = javaGuideHtml({ links: ['/ai/fail'] });
+  const fetchWithFailure = async (url) => {
+    if (url.endsWith('/fail')) return javaGuideResponse({ url, status: 503 });
+    return javaGuideResponse({ url, body: rootBody });
+  };
+  await assert.rejects(
+    crawlJavaGuide({ fetchImpl: fetchWithFailure }),
+    /JavaGuide crawl failed closed.*1 failure/,
+  );
+
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (url) => javaGuideResponse({
+        url,
+        title: 'Just a moment',
+        body: javaGuideHtml({
+          canonicalUrl: url,
+          title: 'Just a moment...',
+          body: '<main>Checking your browser before accessing JavaGuide</main>',
+        }),
+      }),
+    }),
+    /challenge or error page/i,
+  );
+});
+
+test('JavaGuide crawler rejects non-HTML and structurally incomplete 200 responses', async () => {
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (url) => javaGuideResponse({
+        url,
+        contentType: 'application/json',
+        body: '{"message":"ok"}',
+      }),
+    }),
+    /content-type/i,
+  );
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (url) => javaGuideResponse({
+        url,
+        body: '<title>not a complete HTML document</title>',
+      }),
+    }),
+    /HTML structure/i,
+  );
+});
+
+test('JavaGuide crawler enforces route, body and timeout limits without waiting', async () => {
+  await assert.rejects(
+    crawlJavaGuide({
+      limits: { ...DEFAULT_FREEZE_LIMITS, maxRoutes: 1 },
+      fetchImpl: async (url) => javaGuideResponse({
+        url,
+        body: javaGuideHtml({ canonicalUrl: url, links: ['/ai/second'] }),
+      }),
+    }),
+    /route limit/i,
+  );
+  await assert.rejects(
+    crawlJavaGuide({
+      limits: { ...DEFAULT_FREEZE_LIMITS, maxBodyBytes: 16 },
+      fetchImpl: async (url) => javaGuideResponse({
+        url,
+        contentLength: 10_000,
+      }),
+    }),
+    /body byte limit/i,
+  );
+
+  let receivedSignal;
+  const timeoutSignal = AbortSignal.abort(new DOMException('timed out', 'TimeoutError'));
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (_url, options) => {
+        receivedSignal = options.signal;
+        throw options.signal.reason;
+      },
+      timeoutSignalFactory: () => timeoutSignal,
+    }),
+    /timed out|TimeoutError/i,
+  );
+  assert.equal(receivedSignal, timeoutSignal);
+});
+
+test('JavaGuide update date extraction rejects impossible calendar dates', async () => {
+  const result = await crawlJavaGuide({
+    fetchImpl: async (url) => javaGuideResponse({
+      url,
+      body: javaGuideHtml({
+        canonicalUrl: url,
+        extraHead: '<meta property="article:modified_time" content="2026-02-30T00:00:00Z">',
+      }),
+    }),
+  });
+  assert.equal(result.articles[0].updatedAt, null);
+});
+
+test('lark execution applies timeout and output limits with explicit errors', async () => {
+  let receivedOptions;
+  await assert.rejects(
+    runLarkCli(FEISHU_CHILDREN_ARGS, {
+      execFileImpl: async (_file, _args, options) => {
+        receivedOptions = options;
+        const error = new Error('process timed out');
+        error.code = 'ETIMEDOUT';
+        throw error;
+      },
+      limits: { ...DEFAULT_FREEZE_LIMITS, larkTimeoutMs: 7 },
+    }),
+    /timed out after 7ms/,
+  );
+  assert.equal(receivedOptions.timeout, 7);
+
+  await assert.rejects(
+    runLarkCli(FEISHU_CHILDREN_ARGS, {
+      execFileImpl: async () => ({
+        stdout: `{"ok":true,"data":{"value":"${'x'.repeat(100)}"}}`,
+        stderr: '',
+      }),
+      limits: { ...DEFAULT_FREEZE_LIMITS, maxLarkStdoutBytes: 16 },
+    }),
+    /stdout byte limit/i,
+  );
+});
+
+test('manifest validation fails closed on partial or incomplete snapshots', () => {
+  assert.doesNotThrow(() => validatePrimaryReferenceManifest(manifestFixture()));
+  assert.throws(
+    () => validatePrimaryReferenceManifest(manifestFixture({
+      javaGuideFailures: [{ url: 'https://javaguide.cn/ai/fail', error: 'network down' }],
+    })),
+    /zero failures/,
+  );
+  assert.throws(
+    () => validatePrimaryReferenceManifest(manifestFixture({ javaGuideCount: 33 })),
+    /34 JavaGuide/,
+  );
+  assert.throws(
+    () => validatePrimaryReferenceManifest(manifestFixture({ feishuCount: 15 })),
+    /16 Feishu/,
+  );
+  const missingRoot = manifestFixture();
+  missingRoot.javaGuide.articles[0] = {
+    ...missingRoot.javaGuide.articles[0],
+    canonicalUrl: 'https://javaguide.cn/ai/missing-root.html',
+  };
+  assert.throws(
+    () => validatePrimaryReferenceManifest(missingRoot),
+    /JavaGuide root/,
+  );
+});
+
+test('freezer rejects caller-controlled output targets before touching storage', async () => {
+  for (const outputDirectory of [
+    new URL('../', import.meta.url),
+    pathToFileURL(`${homedir()}/`),
+    new URL('file:///tmp/arbitrary-primary-reference-target/'),
+  ]) {
+    await assert.rejects(
+      freezePrimaryReferences({ outputDirectory }),
+      /Unsupported freeze option: outputDirectory/,
+    );
+  }
+});
+
+test('failed staged freeze preserves the prior canonical cache', async () => {
+  const manifestUrl = new URL('./manifest.json', PRIMARY_REFERENCE_CACHE_DIRECTORY);
+  const before = await readFile(manifestUrl, 'utf8');
+  await assert.rejects(
+    freezePrimaryReferences({
+      stagingId: '0123456789abcdef0123456789abcdef',
+      snapshotBuilder: async () => {
+        throw new Error('fixture builder failed');
+      },
+    }),
+    /fixture builder failed/,
+  );
+  assert.equal(await readFile(manifestUrl, 'utf8'), before);
+});
+
+test('invalid or partial staged manifests never replace the canonical cache', async () => {
+  const manifestUrl = new URL('./manifest.json', PRIMARY_REFERENCE_CACHE_DIRECTORY);
+  const before = await readFile(manifestUrl, 'utf8');
+  for (const [stagingId, fixture] of [
+    [
+      '11111111111111111111111111111111',
+      manifestFixture({ javaGuideCount: 33 }),
+    ],
+    [
+      '22222222222222222222222222222222',
+      manifestFixture({
+        javaGuideFailures: [{
+          url: 'https://javaguide.cn/ai/fail',
+          error: 'challenge page',
+        }],
+      }),
+    ],
+  ]) {
+    await assert.rejects(
+      freezePrimaryReferences({
+        stagingId,
+        snapshotBuilder: async () => ({
+          feishu: fixture.feishu,
+          javaGuide: fixture.javaGuide,
+        }),
+      }),
+      /34 JavaGuide|zero failures/,
+    );
+    assert.equal(await readFile(manifestUrl, 'utf8'), before);
+  }
+});
+
+test('manifest collections serialize deterministically regardless of discovery order', () => {
+  const original = manifestFixture();
+  original.feishu.failures = [
+    { nodeToken: 'Z00000000000000000000000000', error: 'z' },
+    { nodeToken: 'B00000000000000000000000000', error: 'b' },
+  ];
+  original.javaGuide.redirects = [
+    { from: 'https://javaguide.cn/ai/z', to: 'https://javaguide.cn/ai/a', status: 200 },
+    { from: 'https://javaguide.cn/ai/b', to: 'https://javaguide.cn/ai/c', status: 200 },
+  ];
+  original.javaGuide.failures = [
+    { url: 'https://javaguide.cn/ai/z', error: 'z' },
+    { url: 'https://javaguide.cn/ai/a', error: 'a' },
+  ];
+  const reversed = structuredClone(original);
+  reversed.feishu.documents.reverse();
+  reversed.feishu.failures.reverse();
+  reversed.javaGuide.articles.reverse();
+  reversed.javaGuide.redirects.reverse();
+  reversed.javaGuide.failures.reverse();
+  reversed.javaGuide.visitedRoutes.reverse();
+
+  assert.equal(
+    JSON.stringify(sortManifestCollections(original)),
+    JSON.stringify(sortManifestCollections(reversed)),
+  );
+  assert.notEqual(original.feishu.documents[0], original.feishu.documents.at(-1));
+});
+
+test('Feishu nodes are sorted before deterministic document retrieval', () => {
+  const nodes = [
+    { node_token: 'Z00000000000000000000000000' },
+    { node_token: 'A00000000000000000000000000' },
+  ];
+  assert.deepEqual(
+    sortFeishuNodes(nodes).map(({ node_token: token }) => token),
+    [
+      'A00000000000000000000000000',
+      'Z00000000000000000000000000',
+    ],
+  );
+  assert.equal(nodes[0].node_token, 'Z00000000000000000000000000');
+});
+
+test('safe generated snapshot and inventory are deterministic and detect drift', async () => {
+  const annotations = primaryReferenceSnapshot.map((record) => ({
+    id: record.id,
+    canonicalUrl: record.canonicalUrl,
+    moduleCandidates: record.moduleCandidates,
+    permissionEvidence: record.permissionEvidence,
+    limitations: record.limitations,
+  }));
+  const reversedManifest = manifestFromSafeSnapshot();
+  reversedManifest.feishu.documents.reverse();
+  reversedManifest.javaGuide.articles.reverse();
+  const generated = createSafePrimaryReferenceSnapshot(reversedManifest, annotations);
+  assert.deepEqual(generated, primaryReferenceSnapshot);
+
+  const rendered = renderSafePrimaryReferenceSnapshot(generated);
+  assert.doesNotThrow(() => (
+    assertGeneratedArtifactCurrent(rendered, rendered, 'fixture')
+  ));
+  assert.throws(
+    () => assertGeneratedArtifactCurrent(
+      rendered.replace(generated[0].contentHash, `sha256:${'0'.repeat(64)}`),
+      rendered,
+      'fixture',
+    ),
+    /drift detected/,
+  );
+
+  const inventoryUrl = new URL(
+    '../docs/research/2026-07-30-primary-reference-inventory.md',
+    import.meta.url,
+  );
+  const inventory = await readFile(inventoryUrl, 'utf8');
+  assert.equal(
+    replaceInventoryTable(inventory, renderInventoryTable(generated)),
+    inventory,
+  );
+
+  const serialized = JSON.stringify(primaryReferenceSnapshot);
+  for (const privateField of [
+    'rawBody',
+    'rawBodyPath',
+    'nodeToken',
+    'objectToken',
+    'documentId',
+    'mediaCandidates',
+  ]) {
+    assert.doesNotMatch(serialized, new RegExp(`"${privateField}"`));
+  }
 });
 
 test('private cache is ignored and no private body or access token is tracked', async () => {
