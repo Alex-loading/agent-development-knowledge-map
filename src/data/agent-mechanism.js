@@ -1,4 +1,10 @@
 import { agentMechanismNotes } from './agent-mechanism-notes.js';
+import {
+  agentMechanismAssessmentConceptTags,
+  agentMechanismAssessmentVisualCoverage,
+  agentMechanismVisualOutcomes,
+} from './agent-mechanism-outcomes.js';
+import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-22';
 
@@ -162,7 +168,7 @@ const evidenceByResourceId = {
   },
 };
 
-const resources = [
+const legacyResources = [
   { id: 'res-agent-anthropic-effective', title: 'Building Effective Agents', url: 'https://www.anthropic.com/engineering/building-effective-agents', source: 'Anthropic', language: '英文', type: '官方工程指南', difficulty: '进阶', stage: '机制总览', value: '厂商团队总结的工程经验，用于比较 workflow 与 Agent、从简单方案逐步增加自治；它不是跨模型、跨场景都成立的普适论文结论。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-openai-guide', title: 'A Practical Guide to Building AI Agents', url: 'https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents/', source: 'OpenAI', language: '英文', type: '官方工程指南', difficulty: '入门到进阶', stage: '机制总览', value: '厂商给出的 Agent 组成、工具与编排工程经验，适合建立实现清单；其建议应结合自己的模型、权限和任务数据验证。', verifiedAt: VERIFIED_AT },
   { id: 'res-agent-berkeley-course', title: 'Large Language Model Agents MOOC', url: 'https://llmagents-learning.org/f24', source: 'UC Berkeley', language: '英文', type: '大学课程', difficulty: '进阶', stage: '系统课程', value: '大学公开课程提供 Agent 推理、规划、工具与应用的系统学习路线，用于扩展本模块而不承担具体性能主张。', verifiedAt: VERIFIED_AT },
@@ -194,12 +200,56 @@ const resources = [
   { id: 'res-agent-douyin-claude-code', title: 'Claude Code 实作演示补充', url: 'https://www.douyin.com/video/7529703060969508130', source: '抖音创作者', platform: '抖音', language: '中文', type: '社区补充短视频', difficulty: '入门', stage: '实作补充', value: '该短视频仅作真实编码 Agent 操作节奏的实作补充，不作为机制事实依据；课程结论应以可复现实验、官方语义和论文边界为准。', verifiedAt: VERIFIED_AT },
 ].map((resource) => ({ ...resource, evidence: evidenceByResourceId[resource.id] }));
 
+const PRIMARY_VERIFIED_AT = '2026-07-30';
+
+const primarySpecs = [
+  ['res-agent-primary-javaguide-agent-basis', 'primary-javaguide-agent-basis', 'Agent Core', 'Agent Loop、Plan-and-Execute、Agentic Workflow 与 tools 的课程主骨架'],
+  ['res-agent-primary-javaguide-prompt', 'primary-javaguide-prompt-engineering', 'Prompt 与任务契约', '从 intent 到 objective、constraints、success 与 termination 的结构化入口'],
+  ['res-agent-primary-javaguide-context', 'primary-javaguide-context-engineering', 'Context', '区分本轮上下文、状态、检索证据与外置内容'],
+  ['res-agent-primary-javaguide-memory', 'primary-javaguide-agent-memory', 'Memory', '区分工作状态、短期信息与跨会话长期记忆'],
+  ['res-agent-primary-javaguide-skills', 'primary-javaguide-agent-skills', 'Skills', '区分 Skills 的操作知识封装与工具协议、控制循环'],
+  ['res-agent-primary-javaguide-mcp', 'primary-javaguide-mcp', 'MCP', '区分 MCP 互操作、function calling 与 Agent 决策循环'],
+  ['res-agent-primary-javaguide-harness', 'primary-javaguide-harness-engineering', 'Harness', '划清 Agent 机制与耐久运行、治理、隔离和恢复的边界'],
+  ['res-agent-primary-javaguide-workflow-loop', 'primary-javaguide-workflow-graph-loop', 'Workflow / Graph / Loop', '比较 direct、workflow graph、plan-then-act、replan 与 loop'],
+  ['res-agent-primary-javaguide-loop-engineering', 'primary-javaguide-loop-engineering', 'Loop Engineering', '组织循环控制、纠错、停止条件与工程边界'],
+  ['res-agent-primary-feishu-react-loop', 'primary-feishu-react-loop', 'ReAct Loop', '以 ReAct 观察建立 reason、action、observation 的教学直觉'],
+  ['res-agent-primary-feishu-beyond-model', 'primary-feishu-beyond-model', 'Model outside model', '强调状态、权限、执行、验证与恢复属于模型外部系统'],
+  ['res-agent-primary-feishu-loop-engineering', 'primary-feishu-loop-engineering-intro', 'Loop Engineering 观察', '补充从模型调用到可治理循环的工程叙事'],
+  ['res-agent-primary-feishu-react-orchestration', 'primary-feishu-react-orchestration', 'ReAct 到 Orchestration', '观察控制从单循环演进到依赖、委派、汇合与编排'],
+  ['res-agent-primary-feishu-tool-truth', 'primary-feishu-tool-truth', 'Tool Truth', '区分 tool transcript、宿主执行与可信 observation'],
+  ['res-agent-primary-feishu-autonomous-evolution', 'primary-feishu-autonomous-evolution', 'Loop evolution', '观察 for 循环到自治系统时状态、预算和出口的演进'],
+  ['res-agent-primary-feishu-dynamic-workflow', 'primary-feishu-dynamic-workflow', 'Dynamic workflow', '观察动态工作流如何按新信息重排任务与分支'],
+  ['res-agent-primary-feishu-agent-version', 'primary-feishu-agent-version-drifting', 'Version drift', '把模型、Prompt、tool schema 与控制策略漂移纳入恢复和评测'],
+  ['res-agent-primary-feishu-prompt-memory', 'primary-feishu-claude-ai-memory', 'Prompt / memory 观察', '观察 prompt、history、memory 与产品外部状态的责任边界'],
+];
+
+const primaryResources = primarySpecs.map(([id, canonicalSourceId, stage, learningUse]) => (
+  createPrimaryReferenceBinding({
+    id,
+    canonicalSourceId,
+    stage,
+    difficulty: '进阶',
+    value: `${learningUse}；本课程将其作为 mental model 与实现观察，不把二手叙事当作产品或协议保证。`,
+    evidence: {
+      authority: 'community',
+      role: 'core',
+      learningUse,
+      coverage: [stage, learningUse],
+      limitations: '一级资料用于课程主干、术语组织和实现观察；涉及产品、协议、权限、安全或效果的行为必须由官方来源、原始论文或本地实验独立核验。',
+      verifiedAt: PRIMARY_VERIFIED_AT,
+    },
+  })
+));
+
+const resources = [...legacyResources, ...primaryResources];
+
 const quiz = (id, prompt, choices, answerIndex, explanation) => ({
   id,
   prompt,
   choices,
   answerIndex,
   explanation,
+  conceptTags: [...agentMechanismAssessmentConceptTags[id]],
 });
 
 const lessons = [
@@ -213,7 +263,7 @@ const lessons = [
       { heading: '差别在控制流而不在名称', body: '普通 LLM 应用通常由代码决定一次或少数几次调用，模型只生成内容；Workflow 由开发者预先写好分支、顺序和重试规则，模型可填充某些节点；Agent 则让模型依据当前目标、状态与新观察，在受限动作空间内选择下一步。三者是控制权连续谱，不应把任何会调用 API 的程序都包装成 Agent。', keyPoints: ['先问谁决定下一步，再判断系统类型', '自治越高，成本、延迟和失败面通常越大'] },
       { heading: '最小行动闭环与选型门槛', body: '最小 Agent 需要可操作目标、保存进展的状态、允许执行的动作或工具、来自环境的观察、依据观察更新状态的决策循环，以及 done、blocked、预算耗尽或 handoff 等显式终止出口。如果路径稳定、结果可由普通代码计算、错误代价很高或缺少可观察反馈，优先使用确定性代码或 Workflow，而不是增加自治。', keyPoints: ['Agent 不是只有模型和工具，还必须有状态与终止', '只有动态决策确实创造价值时才承担自治成本'] },
     ],
-    resourceIds: ['res-agent-anthropic-effective', 'res-agent-openai-guide', 'res-agent-berkeley-course', 'res-agent-hf-course', 'res-agent-ms-course', 'res-agent-hello-agents', 'res-agent-dlai-agentic', 'res-agent-lilian-weng', 'res-agent-lihongyi', 'res-agent-datawhale-bili'],
+    resourceIds: ['res-agent-anthropic-effective', 'res-agent-openai-guide', 'res-agent-berkeley-course', 'res-agent-hf-course', 'res-agent-ms-course', 'res-agent-hello-agents', 'res-agent-dlai-agentic', 'res-agent-lilian-weng', 'res-agent-lihongyi', 'res-agent-datawhale-bili', 'res-agent-primary-javaguide-agent-basis', 'res-agent-primary-feishu-beyond-model', 'res-agent-primary-feishu-react-loop'],
     exercise: { title: '为三个案例选择控制方式', brief: '比较固定格式摘要、审批流和开放资料调查三个案例，决定采用普通调用、Workflow 或 Agent。', steps: ['为每个案例标出路径是否稳定、是否需要环境反馈、错误代价与可验证证据', '写出推荐方案、拒绝另外两种方案的理由，以及完成、阻塞和预算终止条件'], deliverable: '一张包含三个案例、判断证据和终止设计的选型表。' },
     quiz: [
       quiz('quiz-agent-01-1', '区分 Workflow 与 Agent 最关键的问题是什么？', ['界面是否像聊天', '是否使用大模型', '下一步主要由预设代码还是模型依据状态决定', '是否部署在云端'], 2, '核心差别是控制流归属：Workflow 预设路径，Agent 在边界内根据状态和观察动态选择动作。'),
@@ -232,7 +282,7 @@ const lessons = [
       { heading: '从请求到任务契约', body: '自然语言请求往往缺少范围、截止时间、权限、输出格式或成功标准。Agent 应先建立 task contract：写清目标、必须满足的硬约束、可权衡的软偏好、允许的动作、所需产物和预算；再把缺失信息列为未知项，逐项决定查询工具、向用户澄清、采用可撤销假设，还是因风险过高而 blocked，不能把猜测悄悄当成事实。', keyPoints: ['硬约束违反即失败，软偏好允许有证据的权衡', '未知项要有处理策略和来源，而不是被聊天语气掩盖'] },
       { heading: '状态与完成证据', body: '工作状态是驱动下一步决策的结构化快照，例如已确认事实、约束、待办、产物引用、失败次数和剩余预算；聊天历史只是交互记录，既冗长又可能包含过期意见。Agent 判断完成时应检查可观察证据是否满足 task contract，例如文件确已生成、测试确已通过或远端状态确已更新，而不能仅凭模型说“完成了”；证据不足就继续、澄清、阻塞或交接。', keyPoints: ['状态应可更新、可检查，并保留事实来源', '完成是外部或可计算谓词，不是自然语言自我声明'] },
     ],
-    resourceIds: ['res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-coala', 'res-agent-hello-agents'],
+    resourceIds: ['res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-coala', 'res-agent-hello-agents', 'res-agent-primary-javaguide-prompt', 'res-agent-primary-javaguide-workflow-loop', 'res-agent-primary-feishu-react-loop'],
     exercise: { title: '重写模糊差旅请求', brief: '把“帮我安排下周去上海的行程，便宜一点”改写成 Agent 可执行且可停止的任务状态。', steps: ['列出目标、硬约束、软偏好、已知事实、假设和至少四个未知项', '为每个未知项选择查询、澄清、临时假设或阻塞，并为候选行程定义可观察完成证据'], deliverable: '一份带字段说明、未知项处理策略和完成谓词的 task contract。' },
     quiz: [
       quiz('quiz-agent-02-1', '面对缺少日期和预算的差旅请求，最合理的第一步是什么？', ['直接购买最便宜机票', '把缺失信息写成未知项并按风险决定澄清或查询', '假设所有日期都可以', '只保留原始聊天'], 1, '结构化未知项能避免把猜测当事实，并让系统根据风险选择查询、澄清或阻塞。'),
@@ -251,7 +301,7 @@ const lessons = [
       { heading: '模型提出动作，应用负责执行', body: 'Function calling 并不是模型直接进入数据库或操作电脑。应用先把工具名、用途和参数 schema 提供给模型；模型返回工具选择与参数候选；宿主程序再做 schema、业务规则、权限、风险和幂等校验，获准后才调用真实系统。模型输出始终是不可信的动作提案，高风险或不可逆操作还要人工确认，执行责任不能外包给自然语言。', keyPoints: ['结构化调用表示意图，不表示参数正确或已执行', '应用必须在模型之外校验权限、业务规则与副作用'] },
       { heading: '结果回填形成闭环', body: '工具应职责单一，参数名明确，使用必填、类型、枚举和范围减少歧义，并返回 success、data、error code、可重试性和证据引用等结构。执行后的 tool result 必须按调用关联带回模型或控制器，成为新的 observation；否则模型不知道动作成功、失败还是返回空结果，容易凭先验编造后续状态。回填后仍需更新工作状态并重新判断完成或下一动作。', keyPoints: ['工具返回既服务程序判断，也为模型提供环境新证据', '错误要可分类，才能选择重试、修参、换工具或终止'] },
     ],
-    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course'],
+    resourceIds: ['res-agent-openai-function', 'res-agent-anthropic-tools', 'res-agent-aws-idempotent-apis', 'res-agent-toolformer', 'res-agent-ms-tool-video', 'res-agent-hf-course', 'res-agent-primary-javaguide-skills', 'res-agent-primary-javaguide-mcp', 'res-agent-primary-feishu-tool-truth'],
     exercise: { title: '订单工具契约检查器', brief: '为订单查询与取消设计两个职责单一的工具，并用交互实验检查合法、缺参、枚举、额外字段和高风险五类调用。', steps: ['写出工具名、用途、必填参数、枚举、返回结构、权限与幂等要求', '在检查器中分别运行合法、缺参、非法枚举、额外字段和需审批调用，记录宿主应采取的动作'], deliverable: '两份工具 schema、五类调用结果和一份执行边界说明。', experiment: 'tool-contract' },
     quiz: [
       quiz('quiz-agent-03-1', '模型生成合法 JSON 工具调用后，应用下一步应做什么？', ['直接视为已执行', '校验 schema、业务规则、权限与风险后再执行', '让模型假装返回结果', '把所有权限交给模型'], 1, '合法 JSON 只满足语法层，宿主仍要完成参数、业务、权限和副作用校验。'),
@@ -270,7 +320,7 @@ const lessons = [
       { heading: '最小循环是控制程序', body: '一个最小 Agent loop 每轮读取目标与当前状态，先检查是否已有完成证据、是否 blocked、预算是否耗尽，再让模型选择受允许的动作；宿主校验并执行动作，把 observation 追加到事件日志并更新工作状态，然后进入下一轮。done、blocked、failed、budget-exhausted 和 handoff 都应成为显式返回值，max turns、时间或成本预算用于阻止无限执行。', keyPoints: ['终止检查与动作执行同样属于循环核心', '状态只能依据动作结果更新，不能先假定成功'] },
       { heading: 'ReAct 让推理与环境反馈交错', body: '普通 chain-of-thought 描述模型内部生成的推理文本，并不要求系统执行动作或取得新证据；ReAct 则把任务相关的推理摘要、结构化 action 和环境 observation 交错组织，让下一步能根据真实反馈调整。产品日志应记录可观察决策摘要、工具参数和结果，而不是索取或暴露隐藏推理。若状态不变却重复同一调用，通常说明缺少进展检测、错误分类或停止预算。', keyPoints: ['ReAct 的关键是行动后吸收 observation，不是展示长篇思维过程', '重复动作、状态无进展和预算耗尽都应触发停止或恢复策略'] },
     ],
-    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili'],
+    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili', 'res-agent-primary-javaguide-loop-engineering', 'res-agent-primary-feishu-react-loop', 'res-agent-primary-feishu-autonomous-evolution', 'res-agent-primary-feishu-loop-engineering'],
     exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。', experiment: 'agent-loop' },
     quiz: [
       quiz('quiz-agent-04-1', '最小 Agent loop 中，工具执行后必须先做什么再进入下一轮？', ['删除原始目标', '把结果记录为 observation 并更新状态', '自动扩大预算', '重新加载模型参数'], 1, '环境结果必须先进入事件日志和工作状态，下一轮决策才能建立在新证据上。'),
@@ -289,7 +339,7 @@ const lessons = [
       { heading: '按任务结构选择规划策略', body: 'Reactive 策略每轮依据最新 observation 决定下一动作，适合短任务或环境变化频繁的场景，但可能短视和重复。Plan-and-execute 先生成里程碑再逐步执行，适合依赖清楚的长任务，代价是初始计划可能很快过时。Plan-and-Solve 强调先列计划，ReWOO 探索规划与观察解耦，Tree of Thoughts 搜索多个候选思路；方法越重，模型调用、评价误差和延迟也越高。', keyPoints: ['规划深度应与任务依赖和错误成本匹配', '不存在对所有任务最优的单一规划范式'] },
       { heading: '好分解必须可执行和可验证', body: '合理子任务应产生明确产物，依赖关系可排序，粒度足以由一个工具或短循环完成，并在边界设置验证点；“研究一下”“处理数据”这类动作无法判断进展。计划只是基于当前 belief 的假设，新约束、空结果、权限变化或关键步骤失败后，应依据 observation 替换步骤、调整依赖或整体重规划，而不是永远服从初始文本。重规划也要受次数和成本预算限制。', keyPoints: ['用产物、依赖、动作和验收标准检查分解质量', '新证据优先于旧计划，同时必须限制重规划震荡'] },
     ],
-    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper', 'res-agent-aws-idempotent-apis'],
+    resourceIds: ['res-agent-plan-solve', 'res-agent-rewoo', 'res-agent-tot-paper', 'res-agent-ms-plan-video', 'res-agent-disney-planner-bili', 'res-agent-react-paper', 'res-agent-aws-idempotent-apis', 'res-agent-primary-javaguide-workflow-loop', 'res-agent-primary-feishu-react-orchestration', 'res-agent-primary-feishu-dynamic-workflow'],
     exercise: { title: '计划与重规划棋盘', brief: '为供应商研究任务分别设计 reactive、plan-and-execute 与混合策略，并注入数据源故障。', steps: ['为三种策略列出动作、产物、依赖、验证点和预算，说明各自适用条件', '在实验中注入空结果、超时和新约束，决定重试、换动作、替换步骤、重规划或阻塞'], deliverable: '三份策略草图和一份基于 observation 的计划修订记录。', experiment: 'plan-recovery' },
     quiz: [
       quiz('quiz-agent-05-1', '哪种情况更适合先规划后执行？', ['只有一步且环境快速变化', '多个有明确依赖和中间产物的步骤', '没有任何可验证结果', '动作空间只有一个固定函数'], 1, '有依赖的长任务受益于里程碑和验证点；极短或变化频繁的任务通常更适合 reactive。'),
@@ -308,7 +358,7 @@ const lessons = [
       { heading: '先分类再恢复', body: '工具失败后先保存原始 error code、参数、是否产生副作用和可重试标记，再分类处理：临时传输错误可指数退避并有限重试；参数错误依据结构化反馈修参；空结果或业务冲突要换查询或重规划；权限不足应 blocked 并请求授权；能力边界则澄清、降级或 handoff。任何重试都要用幂等键、次数和成本预算保护，不能把所有异常都交给模型自由猜。', keyPoints: ['恢复策略由错误类型和副作用决定', 'blocked 与 handoff 是正常受控结果，不是必须隐藏的失败'] },
       { heading: '反思需要可校准反馈', body: 'Reflection 可以把失败轨迹压缩为下一次尝试的约束，Self-Refine、Reflexion 等工作展示了特定设置中的迭代方法，但模型只凭自身文本批评可能重复原错误甚至降低质量。测试、解析器、数据库状态、规则检查或人工反馈等外部验证通常更强，因为它们提供独立、可观察的信号。系统还应记录动作指纹、失败原因和状态差异；同一动作无进展达到阈值就换策略、阻塞或交接。', keyPoints: ['反思是恢复候选，不是自动正确性证明', '外部信号、动作去重和进展检测共同限制失败循环'] },
     ],
-    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-aws-idempotent-apis'],
+    resourceIds: ['res-agent-reflexion', 'res-agent-self-refine', 'res-agent-no-self-correct', 'res-agent-critic', 'res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-aws-idempotent-apis', 'res-agent-primary-javaguide-loop-engineering', 'res-agent-primary-feishu-agent-version', 'res-agent-primary-feishu-dynamic-workflow'],
     exercise: { title: '构建失败决策表', brief: '为一个会查询并更新工单的 Agent 设计从错误观察到恢复或终止的确定性决策表。', steps: ['为传输、参数、空结果、业务冲突、权限和能力失败写出可观察信号与副作用风险', '为每类选择有限重试、修参、换工具、重规划、澄清、blocked 或 handoff，并加入动作指纹去重'], deliverable: '一张包含错误证据、预算、幂等要求和终止出口的恢复决策表。' },
     quiz: [
       quiz('quiz-agent-06-1', '权限不足的工具调用最合理的默认处理是什么？', ['不断重试', '记录证据并 blocked，按设计请求授权或 handoff', '让模型伪造权限', '删除错误日志'], 1, '权限错误不会因重复相同调用自然消失，应明确阻塞原因并进入授权或交接路径。'),
@@ -327,7 +377,7 @@ const lessons = [
       { heading: '不同载体承担不同职责', body: 'Transcript 是原始消息序列，event log 记录动作、观察和状态变化，state 是当前可计算快照，working memory 是本次任务需要持续读写的短期事实、计划和产物引用，context 则是为下一次模型调用临时组装的输入。长期记忆、向量检索和跨会话个性化属于后续模块；在这里先保证单任务状态不依赖一段不断膨胀且难以校验的聊天历史。', keyPoints: ['memory 是持久化用途概念，context 是某次调用实际可见内容', '状态快照便于决策，事件日志保留可追溯变化'] },
       { heading: '压缩时保留证据边界', body: '窗口接近上限时，先保留系统约束、task contract、当前计划、最新工具观察、失败预算和产物引用，再把早期对话压缩为带来源的事实与决策摘要，必要时按需回取原始记录。Agent belief 是根据证据形成、仍可能错误的内部判断；tool observation 是外部系统返回的原始或结构化信号。两者分开存储，才能发现过期假设、来源冲突和模型把预测写成事实的问题。', keyPoints: ['压缩按决策价值分层，而不是简单删除最早消息', 'belief 必须指向 observation，冲突时优先重新验证'] },
     ],
-    resourceIds: ['res-agent-coala', 'res-agent-lilian-weng', 'res-agent-hello-agents', 'res-agent-berkeley-course'],
+    resourceIds: ['res-agent-coala', 'res-agent-lilian-weng', 'res-agent-hello-agents', 'res-agent-berkeley-course', 'res-agent-primary-javaguide-context', 'res-agent-primary-javaguide-memory', 'res-agent-primary-feishu-prompt-memory'],
     exercise: { title: '压缩二十轮轨迹', brief: '把一段含多次工具调用和失败的长轨迹整理成可供下一轮安全继续的最小上下文。', steps: ['分别产出原始事件日志索引、当前 state 和工作记忆，标记 fact、belief 与 observation', '组装下一轮 context，说明删减内容、回取指针，并核对硬约束、失败预算与未决事项未丢失'], deliverable: '一份事件日志、一份状态快照和一份带压缩依据的下一轮上下文。' },
     quiz: [
       quiz('quiz-agent-07-1', '下面哪项最准确地区分 state 与 transcript？', ['两者必须完全相同', 'state 是当前可计算快照，transcript 是原始交互序列', 'state 只能由用户写', 'transcript 一定更可靠'], 1, '状态面向当前决策并可结构化更新，聊天记录面向交互追溯且可能冗长、重复或过期。'),
@@ -346,7 +396,7 @@ const lessons = [
       { heading: '从机制拼成可审查系统', body: '以只读开源仓库 issue 诊断为例，先写 task contract 和成功证据，再定义仓库读取、搜索、测试等最小权限工具及 schema；状态保存假设、观察、计划、产物与预算；循环按 decide、validate、act、observe、update 运行，并为成功、需要澄清、权限阻塞、工具失败和预算耗尽提供可复现轨迹。设计评审应能沿证据追问每一次状态变化。', keyPoints: ['综合设计必须展示数据结构和控制流，不能只列框架名', '只读边界、完成证据和受控终止要在执行前定义'] },
       { heading: '框架封装机制，后续模块扩展边界', body: '不用框架也能用普通循环、消息结构和工具适配器实现 Agent；框架的价值在于统一模型与工具适配、状态持久化、钩子、追踪、重试和人类介入，但不能替代任务定义与业务验证。Harness 进一步处理耐久执行、权限和部署；RAG 提供外部知识检索；MCP 标准化模型应用与外部能力的连接；多 Agent 分配多个主体协作。本课只定义这些接口，不展开其内部机制。', keyPoints: ['先能手写机制，才能判断框架抽象是否合适', 'RAG、MCP、Harness 与多 Agent 解决不同层面问题，并非 Agent loop 同义词'] },
     ],
-    resourceIds: ['res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-douyin-claude-code', 'res-agent-openai-guide', 'res-agent-ms-course', 'res-agent-hf-course'],
+    resourceIds: ['res-agent-agentbench', 'res-agent-tau-bench', 'res-agent-douyin-claude-code', 'res-agent-openai-guide', 'res-agent-ms-course', 'res-agent-hf-course', 'res-agent-primary-javaguide-agent-basis', 'res-agent-primary-javaguide-harness', 'res-agent-primary-feishu-react-orchestration', 'res-agent-primary-feishu-beyond-model', 'res-agent-primary-feishu-agent-version'],
     exercise: { title: '只读仓库诊断 Agent', brief: '为定位开源仓库 issue 的单 Agent 交付完整设计，并用三类轨迹证明其能够安全停止。', steps: ['定义 task contract、状态 schema、只读工具 schema、循环预算和完成证据', '分别演练成功、需要用户澄清和工具或权限阻塞轨迹，标出 observation、状态更新和终止理由', '回答框架价值及 Harness、RAG、MCP、多 Agent 的接口边界'], deliverable: '一份端到端设计文档、三条可复现轨迹和一轮面试压力测试记录。' },
     quiz: [
       quiz('quiz-agent-08-1', 'Agent 框架最不能替代下面哪一项？', ['模型与工具适配器', '任务成功证据和业务动作校验', '状态持久化接口', '追踪钩子'], 1, '框架能封装通用机制，但目标是否满足、动作是否符合业务规则仍由具体应用定义和验证。'),
@@ -357,7 +407,7 @@ const lessons = [
   },
 ];
 
-const interviewQuestions = [
+const interviewSpecs = [
   {
     id: 'iq-agent-01-1', lessonId: 'agent-01', question: 'LLM、Agent、Workflow 有什么区别？',
     shortAnswer: '判断标准是看控制流和环境反馈：LLM 是生成能力组件；Workflow 由代码预设步骤与分支；Agent 则让模型依据目标、当前状态和新观察，在受限动作空间内动态决定下一步，并由显式终止条件停止。',
@@ -528,6 +578,127 @@ const interviewQuestions = [
   },
 ];
 
+const interviewQuestions = interviewSpecs.map((spec) => ({
+  ...spec,
+  conceptTags: [...agentMechanismAssessmentConceptTags[spec.id]],
+}));
+
+const sourceImpactClaims = [
+  {
+    id: 'agent-is-bounded-decision-authority',
+    lessonId: 'agent-01',
+    text: '决策位置区分 model、app、workflow 与 Agent：model 生成候选，app 和 workflow 固定控制路径，Agent 只在宿主授予的有界权限内依据 state、action 与 feedback 选路。',
+    sourceIds: ['res-agent-primary-javaguide-agent-basis', 'res-agent-primary-feishu-beyond-model'],
+    semanticKeys: ['agency-boundary'],
+  },
+  {
+    id: 'task-plan-is-not-durable-state',
+    lessonId: 'agent-02',
+    text: '自然语言计划是可修订建议，不是耐久事实源；状态机约束合法迁移，append-only event log 保存 action、observation 与状态差异，success predicate 和 termination 决定 continue 或 stop。',
+    sourceIds: ['res-agent-primary-javaguide-prompt', 'res-agent-primary-feishu-react-loop'],
+    semanticKeys: ['task-state'],
+  },
+  {
+    id: 'tool-call-is-not-execution-proof',
+    lessonId: 'agent-03',
+    text: '可信工具链包含 definition、schema、discovery、selection、auth、execution 与 observation；模型输出 tool call 只产生候选，真实执行、权限和结果由宿主日志证明。',
+    sourceIds: ['res-agent-primary-javaguide-mcp', 'res-agent-primary-feishu-tool-truth'],
+    semanticKeys: ['tool-truth'],
+  },
+  {
+    id: 'react-does-not-require-private-cot',
+    lessonId: 'agent-04',
+    text: 'ReAct 保留 reason、action、observation 的控制顺序，但审计记录使用决策摘要、证据引用和结构化动作，不要求保存或泄露 private CoT。',
+    sourceIds: ['res-agent-primary-feishu-react-loop', 'res-agent-react-paper'],
+    semanticKeys: ['react-loop'],
+  },
+  {
+    id: 'planning-mode-follows-uncertainty',
+    lessonId: 'agent-05',
+    text: '在 direct、plan-then-act、replan 与 workflow graph 之间选择，取决于依赖何时可知、观察是否改变路径以及不确定性；orchestration 再处理并行、委派与汇合核验。',
+    sourceIds: ['res-agent-primary-javaguide-workflow-loop', 'res-agent-primary-feishu-react-orchestration'],
+    semanticKeys: ['orchestration'],
+  },
+  {
+    id: 'reflection-is-not-proof',
+    lessonId: 'agent-06',
+    text: '纠错阶梯区分 retry、replan、reflection 与 external validation：reflection 只能形成下一次修订假设，不是 proof，测试、规则、环境状态或人工反馈才提供独立证据。',
+    sourceIds: ['res-agent-primary-javaguide-loop-engineering', 'res-agent-critic', 'res-agent-no-self-correct'],
+    semanticKeys: ['external-validation'],
+  },
+  {
+    id: 'context-compression-must-preserve-provenance',
+    lessonId: 'agent-07',
+    text: 'transcript、scratchpad、plan state、retrieved evidence 与 long-term memory 分属不同对象；预算、压缩和 offload 必须保留 provenance、版本、有效期与原文回取入口。',
+    sourceIds: ['res-agent-primary-javaguide-context', 'res-agent-primary-feishu-prompt-memory'],
+    semanticKeys: ['context-provenance'],
+  },
+  {
+    id: 'end-to-end-agent-needs-pressure-matrix',
+    lessonId: 'agent-08',
+    text: '端到端 single-Agent 在发布前必须用压力矩阵覆盖 tool failure、ambiguous success、stale context、unauthorized action、loop、version drift 与 evaluation，并证明受控出口。',
+    sourceIds: ['res-agent-primary-javaguide-agent-basis', 'res-agent-primary-feishu-agent-version'],
+    semanticKeys: ['pressure-test'],
+  },
+];
+
+export function resolveAgentSourceImpactTarget(targetId) {
+  if (typeof targetId !== 'string' || !targetId.startsWith('claim:')) {
+    throw new TypeError('Agent source-impact target must start with claim:');
+  }
+  const claim = sourceImpactClaims.find(({ id }) => id === targetId.slice(6));
+  if (!claim) throw new RangeError(`Unknown Agent source-impact target: ${targetId}`);
+  return Object.freeze({
+    type: 'claim',
+    lessonId: claim.lessonId,
+    resourceIds: claim.sourceIds,
+    semanticKeys: claim.semanticKeys,
+    value: claim,
+  });
+}
+
+const sourceImpactSpecs = [
+  ['impact-agent-01-boundary', 'agent-01', 'res-agent-primary-feishu-beyond-model', 'agent-is-bounded-decision-authority', 'agency-boundary', 'corrected', 'Agent 自治被重写为决策位置与有界权限，而不是模型获得任意执行权。'],
+  ['impact-agent-02-task-state', 'agent-02', 'res-agent-primary-javaguide-prompt', 'task-plan-is-not-durable-state', 'task-state', 'deepened', '把 Agent 计划深化为任务契约、状态机、事件日志和显式终止的组合。'],
+  ['impact-agent-03-tool-truth', 'agent-03', 'res-agent-primary-feishu-tool-truth', 'tool-call-is-not-execution-proof', 'tool-truth', 'corrected', '修正工具调用文本等于真实执行的误区，以宿主 observation 和日志为准。'],
+  ['impact-agent-04-react', 'agent-04', 'res-agent-primary-feishu-react-loop', 'react-does-not-require-private-cot', 'react-loop', 'corrected', '保留 ReAct 的行动结构，同时拒绝把 private CoT 当作必需审计产物。'],
+  ['impact-agent-05-orchestration', 'agent-05', 'res-agent-primary-feishu-react-orchestration', 'planning-mode-follows-uncertainty', 'orchestration', 'adopted', '以不确定性和依赖关系组织 Agent 规划、重规划与编排模式。'],
+  ['impact-agent-06-validation', 'agent-06', 'res-agent-primary-javaguide-loop-engineering', 'reflection-is-not-proof', 'external-validation', 'corrected', '把 Agent 反思降级为修订候选，并以外部验证关闭证据环。'],
+  ['impact-agent-07-provenance', 'agent-07', 'res-agent-primary-feishu-prompt-memory', 'context-compression-must-preserve-provenance', 'context-provenance', 'deepened', '把 Agent 上下文压缩深化为保留来源、版本、有效期与回取入口的投影。'],
+  ['impact-agent-08-pressure', 'agent-08', 'res-agent-primary-feishu-agent-version', 'end-to-end-agent-needs-pressure-matrix', 'pressure-test', 'adopted', '为单 Agent 端到端设计加入工具失败、成功歧义、漂移与越权压力测试。'],
+];
+
+const sourceImpactAudit = sourceImpactSpecs.map(([
+  decisionId, lessonId, resourceId, claimId, semanticKey, contribution, summary,
+]) => ({
+  decisionId,
+  lessonId,
+  resourceId,
+  scope: 'claim',
+  targetId: `claim:${claimId}`,
+  semanticKey,
+  contribution,
+  summary,
+  rationale: '一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。',
+}));
+
+const assessmentOutcomes = Object.fromEntries([
+  ...lessons.flatMap((lesson) => lesson.quiz.map((assessment) => [
+    assessment.id,
+    { lessonId: lesson.id, outcomeTags: [...assessment.conceptTags] },
+  ])),
+  ...interviewQuestions.map((assessment) => [
+    assessment.id,
+    { lessonId: assessment.lessonId, outcomeTags: [...assessment.conceptTags] },
+  ]),
+]);
+
+const outcomeRegistry = {
+  assessments: assessmentOutcomes,
+  visuals: agentMechanismVisualOutcomes,
+  assessmentVisualCoverage: agentMechanismAssessmentVisualCoverage,
+};
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
@@ -541,4 +712,7 @@ export const agentMechanism = deepFreeze({
   lessons,
   resources,
   interviewQuestions,
+  sourceImpactClaims,
+  sourceImpactAudit,
+  outcomeRegistry,
 });

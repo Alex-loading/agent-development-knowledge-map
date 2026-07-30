@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
+  <title id="title">自然语言计划、状态机与耐久事件日志</title>
+  <desc id="description">图分开计划建议、控制状态与耐久记录：计划可在新观察后变化，状态机限定合法迁移，append-only event log 保存每次动作和状态差异并支持恢复。</desc>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="105" font-size="34" font-weight="750" fill="#F5FBFF">计划、状态机与事件日志</text>
+  <text x="64" y="150" font-size="19" fill="#B8CBD8">自然语言计划可改；状态机控制；event log 负责耐久取证。</text>
+  <g data-edge="visual-agent-02-state-event-log-edge-1">
+      <path d="M 260 322 L 333 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <path d="M 327 314 L 345 322 L 327 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <rect x="264.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
+      <text x="302.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">约束</text>
+    </g>
+<g data-edge="visual-agent-02-state-event-log-edge-2">
+      <path d="M 545 322 L 618 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <path d="M 612 314 L 630 322 L 612 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <rect x="549.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
+      <text x="587.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">追加</text>
+    </g>
+<g data-edge="visual-agent-02-state-event-log-edge-3">
+      <path d="M 830 322 L 903 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <path d="M 897 314 L 915 322 L 897 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
+      <rect x="834.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
+      <text x="872.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">重建</text>
+    </g>
+  <g data-node="visual-agent-02-state-event-log-node-1">
+      <rect x="60" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
+      <text x="160" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">PLAN</text>
+<text x="160" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">可修订建议</text>
+    </g>
+<g data-node="visual-agent-02-state-event-log-node-2">
+      <rect x="345" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
+      <text x="445" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">STATE MACHINE</text>
+<text x="445" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">当前阶段</text>
+    </g>
+<g data-node="visual-agent-02-state-event-log-node-3">
+      <rect x="630" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
+      <text x="730" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">EVENT LOG</text>
+<text x="730" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">不可变变化</text>
+    </g>
+<g data-node="visual-agent-02-state-event-log-node-4">
+      <rect x="915" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
+      <text x="1015" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">RECOVERY</text>
+<text x="1015" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">重放恢复</text>
+    </g>
+  <text x="64" y="590" font-size="18" fill="#7FA1B5">把聊天计划当唯一状态，会同时失去合法迁移约束和故障后的重放证据。</text>
+  <text x="1136" y="610" text-anchor="end" font-size="16" fill="#5F8195">Agent Learner · 2026-07-30</text>
+</svg>

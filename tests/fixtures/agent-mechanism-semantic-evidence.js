@@ -1,0 +1,82 @@
+const evidence = (...patterns) => Object.freeze(patterns);
+
+export const agentAssessmentTextEvidence = Object.freeze({
+  'quiz-agent-01-1': { 'agency-boundary': evidence(/控制流.*动态|模型.*下一步/s) },
+  'quiz-agent-01-2': { 'agent-core': evidence(/行动闭环.*任务.*动作.*观察.*停止/s) },
+  'iq-agent-01-1': { 'agency-boundary': evidence(/控制流.*LLM.*Workflow.*Agent/s) },
+  'iq-agent-01-2': { 'autonomy-fit': evidence(/路径稳定.*确定性程序|错误不可接受/s) },
+  'iq-agent-01-3': { 'agent-core': evidence(/目标.*状态.*动作.*观察.*终止/s) },
+  'quiz-agent-02-1': { 'task-contract': evidence(/缺少日期和预算.*未知项.*澄清或查询/s) },
+  'quiz-agent-02-2': { 'completion-evidence': evidence(/业务目标|可观察.*证据/s) },
+  'iq-agent-02-1': { 'task-contract': evidence(/目标.*硬约束.*软偏好.*成功证据/s) },
+  'iq-agent-02-2': { 'completion-evidence': evidence(/成功谓词.*可观察证据/s) },
+  'iq-agent-02-3': { 'durable-state': evidence(/工作状态.*结构化.*聊天历史/s) },
+  'quiz-agent-03-1': { 'tool-protocol': evidence(/合法 JSON.*schema.*业务规则.*权限.*执行/is) },
+  'quiz-agent-03-2': { 'tool-truth': evidence(/JSON Schema|业务规则|权限/s) },
+  'iq-agent-03-1': { 'tool-protocol': evidence(/工具定义.*schema.*宿主.*执行.*回填/s) },
+  'iq-agent-03-2': { 'tool-truth': evidence(/schema.*权限.*业务规则/s) },
+  'iq-agent-03-3': { 'tool-truth': evidence(/observation.*成功.*失败/s) },
+  'quiz-agent-04-1': { 'loop-control': evidence(/事件日志.*工作状态.*下一轮/s) },
+  'quiz-agent-04-2': { 'loop-control': evidence(/最大.*轮|预算|终止/s) },
+  'iq-agent-04-1': { 'loop-control': evidence(/完成.*阻塞.*预算.*observe|done.*blocked/s) },
+  'iq-agent-04-2': {
+    'react-cycle': evidence(/ReAct.*推理.*action.*observation/is),
+    'private-reasoning-boundary': evidence(/不等于必须.*展示.*隐藏推理/s),
+  },
+  'iq-agent-04-3': { 'loop-control': evidence(/终止.*预算.*反复.*调用/s) },
+  'quiz-agent-05-1': { 'planning-mode': evidence(/先规划后执行.*有依赖.*长任务/s) },
+  'quiz-agent-05-2': { 'planning-mode': evidence(/新约束.*计划.*重规划/s) },
+  'iq-agent-05-1': { 'planning-mode': evidence(/ReAct.*plan-and-execute.*任务依赖.*先规划后执行/is) },
+  'iq-agent-05-2': { orchestration: evidence(/子任务.*依赖图.*关键路径/s) },
+  'iq-agent-05-3': { 'planning-mode': evidence(/初始计划.*observation.*重规划/is) },
+  'quiz-agent-06-1': { 'durable-recovery': evidence(/blocked.*授权|权限/s) },
+  'quiz-agent-06-2': { 'external-validation': evidence(/外部验证.*反馈/s) },
+  'iq-agent-06-1': { 'correction-ladder': evidence(/重试.*重规划.*blocked|错误分类/s) },
+  'iq-agent-06-2': { 'external-validation': evidence(/reflection.*不是正确性保证.*外部反馈/is) },
+  'iq-agent-06-3': { 'correction-ladder': evidence(/动作.*指纹.*换工具.*修订计划.*blocked/s) },
+  'quiz-agent-07-1': { 'context-state': evidence(/state.*transcript|状态.*交互/s) },
+  'quiz-agent-07-2': { 'context-provenance': evidence(/硬约束.*观察.*预算.*未决/s) },
+  'iq-agent-07-1': { 'context-state': evidence(/state.*memory.*context/s) },
+  'iq-agent-07-2': { 'context-provenance': evidence(/来源.*回取|指针/s) },
+  'iq-agent-07-3': { 'context-provenance': evidence(/belief.*observation.*来源/is) },
+  'quiz-agent-08-1': { 'end-to-end-agent': evidence(/业务.*验证|任务成功/s) },
+  'quiz-agent-08-2': { 'end-to-end-agent': evidence(/MCP.*Agent loop/s) },
+  'iq-agent-08-1': { 'pressure-test': evidence(/成功.*澄清.*权限|blocked/s) },
+  'iq-agent-08-2': { 'end-to-end-agent': evidence(/框架.*状态.*工具.*验证/s) },
+  'iq-agent-08-3': { 'pressure-test': evidence(/Harness.*RAG.*MCP.*多 Agent/s) },
+});
+
+export const agentSourceImpactTextEvidence = Object.freeze({
+  'claim:agent-is-bounded-decision-authority': {
+    semanticKey: 'agency-boundary',
+    patterns: evidence(/决策位置.*model.*app.*workflow.*Agent.*有界权限/is),
+  },
+  'claim:task-plan-is-not-durable-state': {
+    semanticKey: 'task-state',
+    patterns: evidence(/自然语言计划.*状态机.*event log.*(?:termination|终止)/s),
+  },
+  'claim:tool-call-is-not-execution-proof': {
+    semanticKey: 'tool-truth',
+    patterns: evidence(/definition.*schema.*auth.*execution.*observation/is),
+  },
+  'claim:react-does-not-require-private-cot': {
+    semanticKey: 'react-loop',
+    patterns: evidence(/ReAct.*reason.*action.*observation.*private.*CoT/is),
+  },
+  'claim:planning-mode-follows-uncertainty': {
+    semanticKey: 'orchestration',
+    patterns: evidence(/direct.*plan-then-act.*replan.*workflow graph.*不确定性/is),
+  },
+  'claim:reflection-is-not-proof': {
+    semanticKey: 'external-validation',
+    patterns: evidence(/retry.*replan.*reflection.*external validation.*proof/is),
+  },
+  'claim:context-compression-must-preserve-provenance': {
+    semanticKey: 'context-provenance',
+    patterns: evidence(/transcript.*scratchpad.*retrieved evidence.*压缩.*provenance/is),
+  },
+  'claim:end-to-end-agent-needs-pressure-matrix': {
+    semanticKey: 'pressure-test',
+    patterns: evidence(/tool failure.*ambiguous success.*stale context.*unauthorized action.*drift/is),
+  },
+});
