@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
+import { basename, join, relative, resolve, sep } from 'node:path';
 import test from 'node:test';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { filterResources } from '../src/core/filters.js';
 import { courseRegistry } from '../src/data/courses.js';
@@ -20,6 +29,7 @@ import {
   FEISHU_CHILDREN_ARGS,
   FEISHU_DOCUMENT_ARGS,
   PRIMARY_REFERENCE_CACHE_DIRECTORY,
+  PRIMARY_REFERENCE_CACHE_ROOT,
   canonicalizeJavaGuideUrl,
   crawlJavaGuide,
   freezePrimaryReferences,
@@ -39,7 +49,12 @@ import {
   renderInventoryTable,
   renderSafePrimaryReferenceSnapshot,
   replaceInventoryTable,
+  validatePrimaryReferenceAnnotations,
 } from '../scripts/generate-primary-reference-artifacts.mjs';
+import {
+  PRIMARY_REFERENCE_IDENTITY_RULES,
+  primaryReferenceAnnotations,
+} from '../scripts/primary-reference-annotations.mjs';
 
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const PRIMARY_ID = /^primary-[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -230,6 +245,43 @@ function manifestFromSafeSnapshot(records = primaryReferenceSnapshot) {
     },
     feishu: { documents: feishuDocuments },
     javaGuide: { articles: javaGuideArticles },
+  };
+}
+
+async function createIsolatedCache(t) {
+  const testRoot = await mkdtemp(join(tmpdir(), 'primary-reference-cache-'));
+  t.after(() => rm(testRoot, { recursive: true, force: true }));
+  const productionRoot = fileURLToPath(PRIMARY_REFERENCE_CACHE_ROOT);
+  const mapTarget = (target) => {
+    const targetPath = fileURLToPath(target);
+    const relativePath = relative(productionRoot, targetPath);
+    assert.ok(
+      relativePath !== '..'
+      && !relativePath.startsWith(`..${sep}`),
+      `unexpected cache target: ${targetPath}`,
+    );
+    return resolve(testRoot, relativePath);
+  };
+  const filesystem = {
+    mkdir: (target, options) => mkdir(mapTarget(target), options),
+    rename: (source, destination) => rename(mapTarget(source), mapTarget(destination)),
+    rm: (target, options) => rm(mapTarget(target), options),
+    stat: (target) => stat(mapTarget(target)),
+    writeFile: (target, value, options) => writeFile(mapTarget(target), value, options),
+  };
+  const canonicalDirectory = mapTarget(PRIMARY_REFERENCE_CACHE_DIRECTORY);
+  const canonicalManifest = mapTarget(
+    new URL('./manifest.json', PRIMARY_REFERENCE_CACHE_DIRECTORY),
+  );
+  return {
+    canonicalDirectory,
+    canonicalManifest,
+    filesystem,
+    mapTarget,
+    async seedCanonical(value) {
+      await mkdir(canonicalDirectory, { recursive: true });
+      await writeFile(canonicalManifest, value, 'utf8');
+    },
   };
 }
 
@@ -699,6 +751,96 @@ test('JavaGuide crawler enforces route, body and timeout limits without waiting'
   assert.equal(receivedSignal, timeoutSignal);
 });
 
+test('JavaGuide aggregate byte exhaustion aborts before fetching later queued routes', async () => {
+  const rootUrl = 'https://javaguide.cn/ai/';
+  const secondUrl = 'https://javaguide.cn/ai/second';
+  const laterUrl = 'https://javaguide.cn/ai/later';
+  const bodies = new Map([
+    [rootUrl, javaGuideHtml({
+      canonicalUrl: rootUrl,
+      links: [secondUrl, laterUrl],
+    })],
+    [secondUrl, javaGuideHtml({
+      canonicalUrl: secondUrl,
+      body: `<main>${'x'.repeat(1024)}</main>`,
+    })],
+    [laterUrl, javaGuideHtml({ canonicalUrl: laterUrl })],
+  ]);
+  const requested = [];
+  let aggregateStreamCancelled = false;
+  const maxTotalBytes = Buffer.byteLength(bodies.get(rootUrl), 'utf8')
+    + Buffer.byteLength(bodies.get(secondUrl), 'utf8')
+    - 1;
+
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (url) => {
+        requested.push(url);
+        const response = javaGuideResponse({ url, body: bodies.get(url) });
+        if (url !== secondUrl) return response;
+        let delivered = false;
+        return {
+          ...response,
+          body: {
+            getReader: () => ({
+              cancel: async () => {
+                aggregateStreamCancelled = true;
+              },
+              read: async () => {
+                if (delivered) return { done: true };
+                delivered = true;
+                return {
+                  done: false,
+                  value: new TextEncoder().encode(bodies.get(url)),
+                };
+              },
+            }),
+          },
+        };
+      },
+      limits: {
+        ...DEFAULT_FREEZE_LIMITS,
+        maxBodyBytes: Buffer.byteLength(bodies.get(secondUrl), 'utf8') - 1,
+        maxTotalBytes,
+      },
+    }),
+    /total byte limit/i,
+  );
+  assert.deepEqual(requested, [rootUrl, secondUrl]);
+  assert.equal(aggregateStreamCancelled, true);
+});
+
+test('aggregate byte failure preserves an isolated prior canonical cache', async (t) => {
+  const cache = await createIsolatedCache(t);
+  const before = '{"fixture":"prior aggregate-safe snapshot"}\n';
+  await cache.seedCanonical(before);
+  const rootBody = javaGuideHtml({
+    links: ['https://javaguide.cn/ai/second', 'https://javaguide.cn/ai/later'],
+  });
+
+  await assert.rejects(
+    freezePrimaryReferences({
+      filesystem: cache.filesystem,
+      stagingId: '44444444444444444444444444444444',
+      snapshotBuilder: async () => {
+        await crawlJavaGuide({
+          fetchImpl: async (url) => javaGuideResponse({
+            url,
+            body: url.endsWith('/ai/') ? rootBody : javaGuideHtml({ canonicalUrl: url }),
+          }),
+          limits: {
+            ...DEFAULT_FREEZE_LIMITS,
+            maxTotalBytes: Buffer.byteLength(rootBody, 'utf8') + 1,
+          },
+        });
+        throw new Error('crawl unexpectedly completed');
+      },
+    }),
+    /total byte limit/i,
+  );
+  assert.equal(await readFile(cache.canonicalManifest, 'utf8'), before);
+});
+
 test('JavaGuide update date extraction rejects impossible calendar dates', async () => {
   const result = await crawlJavaGuide({
     fetchImpl: async (url) => javaGuideResponse({
@@ -780,11 +922,13 @@ test('freezer rejects caller-controlled output targets before touching storage',
   }
 });
 
-test('failed staged freeze preserves the prior canonical cache', async () => {
-  const manifestUrl = new URL('./manifest.json', PRIMARY_REFERENCE_CACHE_DIRECTORY);
-  const before = await readFile(manifestUrl, 'utf8');
+test('failed staged freeze preserves an isolated prior canonical cache', async (t) => {
+  const cache = await createIsolatedCache(t);
+  const before = '{"fixture":"prior canonical snapshot"}\n';
+  await cache.seedCanonical(before);
   await assert.rejects(
     freezePrimaryReferences({
+      filesystem: cache.filesystem,
       stagingId: '0123456789abcdef0123456789abcdef',
       snapshotBuilder: async () => {
         throw new Error('fixture builder failed');
@@ -792,12 +936,13 @@ test('failed staged freeze preserves the prior canonical cache', async () => {
     }),
     /fixture builder failed/,
   );
-  assert.equal(await readFile(manifestUrl, 'utf8'), before);
+  assert.equal(await readFile(cache.canonicalManifest, 'utf8'), before);
 });
 
-test('invalid or partial staged manifests never replace the canonical cache', async () => {
-  const manifestUrl = new URL('./manifest.json', PRIMARY_REFERENCE_CACHE_DIRECTORY);
-  const before = await readFile(manifestUrl, 'utf8');
+test('invalid or partial staged manifests never replace an isolated canonical cache', async (t) => {
+  const cache = await createIsolatedCache(t);
+  const before = '{"fixture":"validated prior snapshot"}\n';
+  await cache.seedCanonical(before);
   for (const [stagingId, fixture] of [
     [
       '11111111111111111111111111111111',
@@ -815,6 +960,7 @@ test('invalid or partial staged manifests never replace the canonical cache', as
   ]) {
     await assert.rejects(
       freezePrimaryReferences({
+        filesystem: cache.filesystem,
         stagingId,
         snapshotBuilder: async () => ({
           feishu: fixture.feishu,
@@ -823,8 +969,61 @@ test('invalid or partial staged manifests never replace the canonical cache', as
       }),
       /34 JavaGuide|zero failures/,
     );
-    assert.equal(await readFile(manifestUrl, 'utf8'), before);
+    assert.equal(await readFile(cache.canonicalManifest, 'utf8'), before);
   }
+});
+
+test('failed freeze does not require or create a canonical private cache', async (t) => {
+  const cache = await createIsolatedCache(t);
+  await assert.rejects(
+    freezePrimaryReferences({
+      filesystem: cache.filesystem,
+      stagingId: '33333333333333333333333333333333',
+      snapshotBuilder: async () => {
+        throw new Error('clean-checkout failure');
+      },
+    }),
+    /clean-checkout failure/,
+  );
+  await assert.rejects(readFile(cache.canonicalManifest, 'utf8'), /ENOENT/);
+});
+
+test('backup cleanup failure warns while keeping the promoted cache active', async (t) => {
+  const cache = await createIsolatedCache(t);
+  await cache.seedCanonical('{"fixture":"prior snapshot retained as backup"}\n');
+  const stagingId = '55555555555555555555555555555555';
+  const backupDirectory = new URL(
+    `.primary-references-backup-${stagingId}/`,
+    PRIMARY_REFERENCE_CACHE_ROOT,
+  );
+  const warnings = [];
+  const filesystem = {
+    ...cache.filesystem,
+    rm: async (target, options) => {
+      if (basename(fileURLToPath(target)).startsWith('.primary-references-backup-')) {
+        throw new Error('simulated backup cleanup failure');
+      }
+      return cache.filesystem.rm(target, options);
+    },
+  };
+  const fixture = manifestFixture();
+
+  const promoted = await freezePrimaryReferences({
+    filesystem,
+    onWarning: (warning) => warnings.push(warning),
+    stagingId,
+    snapshotBuilder: async () => ({
+      feishu: fixture.feishu,
+      javaGuide: fixture.javaGuide,
+    }),
+  });
+
+  assert.equal(promoted.totals.sources, 50);
+  assert.equal(JSON.parse(await readFile(cache.canonicalManifest, 'utf8')).totals.sources, 50);
+  assert.deepEqual(warnings, [
+    'Primary reference cache promoted, but prior backup cleanup failed: simulated backup cleanup failure',
+  ]);
+  await assert.doesNotReject(stat(cache.mapTarget(backupDirectory)));
 });
 
 test('manifest collections serialize deterministically regardless of discovery order', () => {
@@ -872,17 +1071,13 @@ test('Feishu nodes are sorted before deterministic document retrieval', () => {
 });
 
 test('safe generated snapshot and inventory are deterministic and detect drift', async () => {
-  const annotations = primaryReferenceSnapshot.map((record) => ({
-    id: record.id,
-    canonicalUrl: record.canonicalUrl,
-    moduleCandidates: record.moduleCandidates,
-    permissionEvidence: record.permissionEvidence,
-    limitations: record.limitations,
-  }));
   const reversedManifest = manifestFromSafeSnapshot();
   reversedManifest.feishu.documents.reverse();
   reversedManifest.javaGuide.articles.reverse();
-  const generated = createSafePrimaryReferenceSnapshot(reversedManifest, annotations);
+  const generated = createSafePrimaryReferenceSnapshot(
+    reversedManifest,
+    primaryReferenceAnnotations,
+  );
   assert.deepEqual(generated, primaryReferenceSnapshot);
 
   const rendered = renderSafePrimaryReferenceSnapshot(generated);
@@ -894,6 +1089,35 @@ test('safe generated snapshot and inventory are deterministic and detect drift',
       rendered.replace(generated[0].contentHash, `sha256:${'0'.repeat(64)}`),
       rendered,
       'fixture',
+    ),
+    /drift detected/,
+  );
+  assert.throws(
+    () => assertGeneratedArtifactCurrent(
+      rendered.replace(
+        generated[0].limitations,
+        'tampered human-curated limitation',
+      ),
+      rendered,
+      'fixture',
+    ),
+    /drift detected/,
+  );
+  const curatedTamper = structuredClone(generated);
+  curatedTamper[0].limitations = 'tampered in both generated outputs';
+  assert.throws(
+    () => assertGeneratedArtifactCurrent(
+      renderSafePrimaryReferenceSnapshot(curatedTamper),
+      rendered,
+      'tampered snapshot fixture',
+    ),
+    /drift detected/,
+  );
+  assert.throws(
+    () => assertGeneratedArtifactCurrent(
+      renderInventoryTable(curatedTamper),
+      renderInventoryTable(generated),
+      'tampered inventory fixture',
     ),
     /drift detected/,
   );
@@ -919,6 +1143,96 @@ test('safe generated snapshot and inventory are deterministic and detect drift',
   ]) {
     assert.doesNotMatch(serialized, new RegExp(`"${privateField}"`));
   }
+});
+
+test('curated annotations are independent, complete, unique and source-covered', () => {
+  const manifest = manifestFromSafeSnapshot();
+  assert.equal(Object.keys(PRIMARY_REFERENCE_IDENTITY_RULES).length, 2);
+  assert.doesNotThrow(() => (
+    validatePrimaryReferenceAnnotations(primaryReferenceAnnotations, manifest)
+  ));
+  assertDeepFrozen(primaryReferenceAnnotations, 'primaryReferenceAnnotations');
+  assertDeepFrozen(PRIMARY_REFERENCE_IDENTITY_RULES, 'PRIMARY_REFERENCE_IDENTITY_RULES');
+
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations(
+      primaryReferenceAnnotations.slice(0, -1),
+      manifest,
+    ),
+    /Expected exactly 50 curated annotations.*primary-reference-annotations\.mjs/,
+  );
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations([
+      ...primaryReferenceAnnotations,
+      {
+        id: 'primary-javaguide-extra',
+        canonicalUrl: 'https://javaguide.cn/ai/extra.html',
+        moduleCandidates: ['agent-harness'],
+        limitations: 'Fixture limitation with enough detail to satisfy validation.',
+      },
+    ], manifest),
+    /Expected exactly 50 curated annotations.*primary-reference-annotations\.mjs/,
+  );
+
+  const duplicateId = structuredClone(primaryReferenceAnnotations);
+  duplicateId[1].id = duplicateId[0].id;
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations(duplicateId, manifest),
+    /Duplicate curated annotation ID/,
+  );
+  const duplicateUrl = structuredClone(primaryReferenceAnnotations);
+  duplicateUrl[1].canonicalUrl = duplicateUrl[0].canonicalUrl;
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations(duplicateUrl, manifest),
+    /Duplicate curated annotation URL/,
+  );
+
+  const changedManifest = structuredClone(manifest);
+  changedManifest.javaGuide.articles[0].canonicalUrl = 'https://javaguide.cn/ai/new-route.html';
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations(primaryReferenceAnnotations, changedManifest),
+    /manifest source has no curated annotation.*primary-reference-annotations\.mjs/i,
+  );
+  const changedAnnotation = structuredClone(primaryReferenceAnnotations);
+  changedAnnotation[0].canonicalUrl = 'https://example.com/wiki/changed';
+  assert.throws(
+    () => validatePrimaryReferenceAnnotations(changedAnnotation, manifest),
+    /stable URL identity rule/,
+  );
+});
+
+test('generated snapshot is deeply immutable before canonical registry import', () => {
+  const snapshotUrl = new URL(
+    '../src/data/primary-reference-snapshot.generated.js',
+    import.meta.url,
+  ).href;
+  const registryUrl = new URL('../src/data/primary-references.js', import.meta.url).href;
+  const script = `
+    import assert from 'node:assert/strict';
+    const { primaryReferenceSnapshot } = await import(${JSON.stringify(snapshotUrl)});
+    const expectedTitle = primaryReferenceSnapshot[0].title;
+    const expectedModule = primaryReferenceSnapshot[0].moduleCandidates[0];
+    assert.throws(() => {
+      primaryReferenceSnapshot[0].title = 'poisoned before registry import';
+    }, TypeError);
+    assert.throws(() => {
+      primaryReferenceSnapshot[0].moduleCandidates[0] = 'poisoned-module';
+    }, TypeError);
+    assert.throws(() => {
+      primaryReferenceSnapshot.push({});
+    }, TypeError);
+    const { primaryReferences } = await import(${JSON.stringify(registryUrl)});
+    assert.equal(primaryReferences[0].title, expectedTitle);
+    assert.equal(primaryReferenceSnapshot[0].moduleCandidates[0], expectedModule);
+    process.stdout.write('immutable-before-import');
+  `;
+  assert.equal(
+    execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      encoding: 'utf8',
+    }),
+    'immutable-before-import',
+  );
+  assertDeepFrozen(primaryReferenceSnapshot, 'primaryReferenceSnapshot');
 });
 
 test('private cache is ignored and no private body or access token is tracked', async () => {

@@ -357,8 +357,20 @@ function validateLimits(limits) {
   return Object.freeze(merged);
 }
 
-async function readResponseTextWithinLimit(response, limits) {
+class JavaGuideAggregateByteLimitError extends Error {}
+
+function aggregateByteLimitError(limit) {
+  return new JavaGuideAggregateByteLimitError(
+    `JavaGuide total byte limit exceeded: ${limit}`,
+  );
+}
+
+async function readResponseTextWithinLimit(response, limits, remainingTotalBytes) {
+  if (remainingTotalBytes <= 0) throw aggregateByteLimitError(limits.maxTotalBytes);
   const declaredLength = Number(response.headers?.get?.('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > remainingTotalBytes) {
+    throw aggregateByteLimitError(limits.maxTotalBytes);
+  }
   if (Number.isFinite(declaredLength) && declaredLength > limits.maxBodyBytes) {
     throw new Error(
       `JavaGuide body byte limit exceeded: ${declaredLength} > ${limits.maxBodyBytes}`,
@@ -373,6 +385,10 @@ async function readResponseTextWithinLimit(response, limits) {
       const { done, value } = await reader.read();
       if (done) break;
       byteCount += value.byteLength;
+      if (byteCount > remainingTotalBytes) {
+        await reader.cancel();
+        throw aggregateByteLimitError(limits.maxTotalBytes);
+      }
       if (byteCount > limits.maxBodyBytes) {
         await reader.cancel();
         throw new Error(`JavaGuide body byte limit exceeded: > ${limits.maxBodyBytes}`);
@@ -384,6 +400,9 @@ async function readResponseTextWithinLimit(response, limits) {
   }
   const text = await response.text();
   const byteCount = Buffer.byteLength(text, 'utf8');
+  if (byteCount > remainingTotalBytes) {
+    throw aggregateByteLimitError(limits.maxTotalBytes);
+  }
   if (byteCount > limits.maxBodyBytes) {
     throw new Error(`JavaGuide body byte limit exceeded: ${byteCount} > ${limits.maxBodyBytes}`);
   }
@@ -444,11 +463,12 @@ export async function crawlJavaGuide({
       if (!/^text\/html(?:;|$)/i.test(contentType.trim())) {
         throw new Error(`Unexpected JavaGuide content-type: ${contentType || 'missing'}`);
       }
-      const responseBody = await readResponseTextWithinLimit(response, limits);
+      const responseBody = await readResponseTextWithinLimit(
+        response,
+        limits,
+        limits.maxTotalBytes - totalBytes,
+      );
       totalBytes += responseBody.byteCount;
-      if (totalBytes > limits.maxTotalBytes) {
-        throw new Error(`JavaGuide total byte limit exceeded: ${limits.maxTotalBytes}`);
-      }
       const body = normalizeSourceText(responseBody.text);
       const canonicalUrl = validateJavaGuideHtml(body, responseUrl);
 
@@ -477,6 +497,7 @@ export async function crawlJavaGuide({
         });
       }
     } catch (error) {
+      if (error instanceof JavaGuideAggregateByteLimitError) throw error;
       failures.push({
         url: requestedUrl,
         error: error instanceof Error ? error.message : String(error),
@@ -848,6 +869,7 @@ const FREEZE_OPTIONS = new Set([
   'fetchImpl',
   'filesystem',
   'limits',
+  'onWarning',
   'snapshotBuilder',
   'stagingId',
   'timeoutSignalFactory',
@@ -868,10 +890,14 @@ export async function freezePrimaryReferences(options = {}) {
     fetchImpl = fetch,
     filesystem = DEFAULT_FILESYSTEM,
     limits: limitOverrides,
+    onWarning = (warning) => process.stderr.write(`Warning: ${warning}\n`),
     snapshotBuilder = defaultSnapshotBuilder,
     stagingId = randomUUID().replaceAll('-', ''),
     timeoutSignalFactory = (milliseconds) => AbortSignal.timeout(milliseconds),
   } = options;
+  if (typeof onWarning !== 'function') {
+    throw new TypeError('onWarning must be a function');
+  }
   const limits = validateLimits(limitOverrides);
   const stagingDirectory = managedSibling('primary-references-staging', stagingId);
   const backupDirectory = managedSibling('primary-references-backup', stagingId);
@@ -939,8 +965,18 @@ export async function freezePrimaryReferences(options = {}) {
       throw error;
     }
     if (priorMoved) {
-      await removeManagedTransient(backupDirectory, filesystem);
       priorMoved = false;
+      try {
+        await removeManagedTransient(backupDirectory, filesystem);
+      } catch (error) {
+        const warning = 'Primary reference cache promoted, but prior backup cleanup failed: '
+          + (error instanceof Error ? error.message : String(error));
+        try {
+          onWarning(warning);
+        } catch {
+          // Warning reporting is best-effort after the new canonical cache is active.
+        }
+      }
     }
     return manifest;
   } finally {

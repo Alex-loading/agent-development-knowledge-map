@@ -2,6 +2,11 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import {
+  PRIMARY_REFERENCE_IDENTITY_RULES,
+  primaryReferenceAnnotations,
+} from './primary-reference-annotations.mjs';
+
 const REPOSITORY_ROOT = new URL('../', import.meta.url);
 const MANIFEST_URL = new URL(
   './.research-cache/primary-references/manifest.json',
@@ -30,13 +35,14 @@ const INVENTORY_HEADER = [
   'permissionEvidence',
   'limitations',
 ];
-const SNAPSHOT_ANNOTATION_FIELDS = [
-  'id',
-  'canonicalUrl',
-  'moduleCandidates',
-  'permissionEvidence',
-  'limitations',
-];
+const ANNOTATION_FIELDS = ['id', 'canonicalUrl', 'moduleCandidates', 'limitations'];
+const ACTIVE_MODULE_IDS = new Set([
+  'llm-foundation',
+  'agent-mechanism',
+  'agent-harness',
+  'context-rag-memory',
+  'backend-engineering',
+]);
 const SAFE_SNAPSHOT_FIELDS = [
   'id',
   'title',
@@ -63,87 +69,117 @@ function splitMarkdownRow(line) {
     .map((cell) => cell.trim().replaceAll('\\|', '|'));
 }
 
-export function parseInventoryAnnotations(markdown) {
-  const lines = markdown.split('\n');
-  const tableStart = lines.findIndex((line) => (
-    line.startsWith('|')
-    && splitMarkdownRow(line).join('\u0000') === INVENTORY_HEADER.join('\u0000')
+function identityRuleFor(annotation) {
+  const matches = Object.entries(PRIMARY_REFERENCE_IDENTITY_RULES).filter(([, rule]) => (
+    annotation.canonicalUrl.startsWith(rule.canonicalUrlPrefix)
   ));
-  if (tableStart === -1) throw new Error('Primary reference inventory table was not found');
-  const annotations = [];
-  for (let index = tableStart + 2; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (!line.startsWith('|') || !line.endsWith('|')) break;
-    const cells = splitMarkdownRow(line);
-    if (cells.length !== INVENTORY_HEADER.length) {
-      throw new Error(`Malformed primary reference inventory row ${index + 1}`);
-    }
-    const row = Object.fromEntries(
-      INVENTORY_HEADER.map((field, cellIndex) => [field, cells[cellIndex]]),
+  if (matches.length !== 1) {
+    throw new Error(
+      `${annotation.canonicalUrl} does not match one stable URL identity rule`,
     );
-    annotations.push({
-      id: row.sourceId,
-      canonicalUrl: row.canonicalUrl,
-      moduleCandidates: row.moduleCandidates.split(',').map((value) => value.trim()),
-      permissionEvidence: row.permissionEvidence,
-      limitations: row.limitations,
-    });
+  }
+  const [sourceFamily, rule] = matches[0];
+  if (!annotation.id.startsWith(rule.idPrefix)) {
+    throw new Error(`${annotation.id} does not match the ${sourceFamily} stable ID rule`);
+  }
+  if (sourceFamily === 'feishu-harness-101') {
+    const token = annotation.canonicalUrl.slice(rule.canonicalUrlPrefix.length);
+    if (!/^[A-Za-z0-9]{27}$/.test(token)) {
+      throw new Error(
+        `${annotation.canonicalUrl} does not match the Feishu stable URL identity rule`,
+      );
+    }
+  } else {
+    const url = new URL(annotation.canonicalUrl);
+    if (
+      url.origin !== 'https://javaguide.cn'
+      || !url.pathname.startsWith('/ai/')
+      || url.search !== ''
+      || url.hash !== ''
+    ) {
+      throw new Error(
+        `${annotation.canonicalUrl} does not match the JavaGuide stable URL identity rule`,
+      );
+    }
+  }
+  return { sourceFamily, rule };
+}
+
+export function validatePrimaryReferenceAnnotations(annotations, manifest) {
+  if (!Array.isArray(annotations) || annotations.length !== 50) {
+    throw new Error(
+      `Expected exactly 50 curated annotations; update scripts/primary-reference-annotations.mjs (received ${annotations?.length ?? 'non-array'})`,
+    );
+  }
+  const ids = new Set();
+  const urls = new Set();
+  for (const annotation of annotations) {
+    if (
+      !annotation
+      || Object.keys(annotation).join('\u0000') !== ANNOTATION_FIELDS.join('\u0000')
+      || typeof annotation.id !== 'string'
+      || !/^primary-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(annotation.id)
+      || typeof annotation.canonicalUrl !== 'string'
+      || !Array.isArray(annotation.moduleCandidates)
+      || annotation.moduleCandidates.length === 0
+      || annotation.moduleCandidates.some((moduleId) => !ACTIVE_MODULE_IDS.has(moduleId))
+      || new Set(annotation.moduleCandidates).size !== annotation.moduleCandidates.length
+      || typeof annotation.limitations !== 'string'
+      || annotation.limitations.trim().length < 20
+    ) {
+      throw new Error(
+        `Invalid curated annotation; update scripts/primary-reference-annotations.mjs: ${annotation?.id ?? 'unknown'}`,
+      );
+    }
+    if (ids.has(annotation.id)) {
+      throw new Error(`Duplicate curated annotation ID: ${annotation.id}`);
+    }
+    if (urls.has(annotation.canonicalUrl)) {
+      throw new Error(`Duplicate curated annotation URL: ${annotation.canonicalUrl}`);
+    }
+    ids.add(annotation.id);
+    urls.add(annotation.canonicalUrl);
+    identityRuleFor(annotation);
+  }
+  if (manifest) {
+    const manifestSources = [
+      ...(manifest.feishu?.documents ?? []),
+      ...(manifest.javaGuide?.articles ?? []),
+    ];
+    const manifestUrls = new Set(manifestSources.map(({ canonicalUrl }) => canonicalUrl));
+    if (manifestUrls.size !== manifestSources.length) {
+      throw new Error('Private manifest contains duplicate canonical source URLs');
+    }
+    for (const canonicalUrl of manifestUrls) {
+      if (!urls.has(canonicalUrl)) {
+        throw new Error(
+          `Manifest source has no curated annotation: ${canonicalUrl}; update scripts/primary-reference-annotations.mjs`,
+        );
+      }
+    }
+    for (const canonicalUrl of urls) {
+      if (!manifestUrls.has(canonicalUrl)) {
+        throw new Error(
+          `Curated annotation has no manifest source: ${canonicalUrl}; update scripts/primary-reference-annotations.mjs`,
+        );
+      }
+    }
   }
   return annotations;
-}
-
-function annotationFromSnapshot(record) {
-  return Object.fromEntries(
-    SNAPSHOT_ANNOTATION_FIELDS.map((field) => [field, structuredClone(record[field])]),
-  );
-}
-
-function assertSafeAnnotation(annotation) {
-  if (
-    !annotation
-    || typeof annotation.id !== 'string'
-    || typeof annotation.canonicalUrl !== 'string'
-    || !Array.isArray(annotation.moduleCandidates)
-    || annotation.moduleCandidates.length === 0
-    || typeof annotation.permissionEvidence !== 'string'
-    || typeof annotation.limitations !== 'string'
-  ) {
-    throw new Error(`Incomplete safe annotation: ${annotation?.canonicalUrl ?? 'unknown'}`);
-  }
 }
 
 export function createSafePrimaryReferenceSnapshot(manifest, annotations) {
   if (!manifest || typeof manifest !== 'object') {
     throw new TypeError('Private manifest must be an object');
   }
-  if (!Array.isArray(annotations) || annotations.length !== 50) {
-    throw new Error('Exactly 50 safe primary reference annotations are required');
-  }
-  const annotationByUrl = new Map();
-  for (const annotation of annotations) {
-    assertSafeAnnotation(annotation);
-    if (annotationByUrl.has(annotation.canonicalUrl)) {
-      throw new Error(`Duplicate safe annotation: ${annotation.canonicalUrl}`);
-    }
-    annotationByUrl.set(annotation.canonicalUrl, annotation);
-  }
+  validatePrimaryReferenceAnnotations(annotations, manifest);
 
   const sourceByUrl = new Map();
   for (const document of manifest.feishu?.documents ?? []) {
-    sourceByUrl.set(document.canonicalUrl, {
-      ...document,
-      sourceFamily: 'feishu-harness-101',
-      publisherOrAuthor: 'Harness 101',
-      mediaDecision: manifest.policy?.feishuMediaDecision,
-    });
+    sourceByUrl.set(document.canonicalUrl, document);
   }
   for (const article of manifest.javaGuide?.articles ?? []) {
-    sourceByUrl.set(article.canonicalUrl, {
-      ...article,
-      sourceFamily: 'javaguide-ai',
-      publisherOrAuthor: 'JavaGuide',
-      mediaDecision: manifest.policy?.javaGuideMediaDecision,
-    });
+    sourceByUrl.set(article.canonicalUrl, article);
   }
   if (sourceByUrl.size !== 50) {
     throw new Error(`Private manifest must resolve exactly 50 sources; received ${sourceByUrl.size}`);
@@ -155,22 +191,23 @@ export function createSafePrimaryReferenceSnapshot(manifest, annotations) {
       throw new Error(`Private manifest is missing ${annotation.canonicalUrl}`);
     }
     sourceByUrl.delete(annotation.canonicalUrl);
+    const { sourceFamily, rule } = identityRuleFor(annotation);
     const record = {
       id: annotation.id,
       title: source.title,
       canonicalUrl: source.canonicalUrl,
-      sourceFamily: source.sourceFamily,
+      sourceFamily,
       sourceTier: 'primary-narrative',
-      publisherOrAuthor: source.publisherOrAuthor,
+      publisherOrAuthor: rule.publisherOrAuthor,
       bodyAccess: source.bodyAccess,
       retrievedAt: source.retrievedAt ?? manifest.retrievedAt,
       updatedAt: source.updatedAt ?? null,
       contentHash: source.contentHash,
-      mediaDecision: source.mediaDecision,
+      mediaDecision: rule.mediaDecision,
       revision: source.revision ?? null,
       mediaCount: source.mediaCount,
       moduleCandidates: [...annotation.moduleCandidates],
-      permissionEvidence: annotation.permissionEvidence,
+      permissionEvidence: rule.permissionEvidence,
       limitations: annotation.limitations,
     };
     if (Object.keys(record).join('\u0000') !== SAFE_SNAPSHOT_FIELDS.join('\u0000')) {
@@ -190,7 +227,15 @@ export function renderSafePrimaryReferenceSnapshot(records) {
   return [
     '// Generated by scripts/generate-primary-reference-artifacts.mjs.',
     '// Safe metadata only: private bodies, access envelopes, media tokens, and credentials are excluded.',
-    `export const primaryReferenceSnapshot = ${JSON.stringify(records, null, 2)};`,
+    'function deepFreeze(value) {',
+    "  if (value && typeof value === 'object' && !Object.isFrozen(value)) {",
+    '    for (const nested of Object.values(value)) deepFreeze(nested);',
+    '    Object.freeze(value);',
+    '  }',
+    '  return value;',
+    '}',
+    '',
+    `export const primaryReferenceSnapshot = deepFreeze(${JSON.stringify(records, null, 2)});`,
     '',
   ].join('\n');
 }
@@ -247,16 +292,6 @@ export function assertGeneratedArtifactCurrent(actual, expected, label) {
   }
 }
 
-async function loadAnnotations(inventoryMarkdown) {
-  try {
-    const module = await import(`${SNAPSHOT_URL.href}?cacheBust=${Date.now()}`);
-    return module.primaryReferenceSnapshot.map(annotationFromSnapshot);
-  } catch (error) {
-    if (error?.code !== 'ERR_MODULE_NOT_FOUND') throw error;
-    return parseInventoryAnnotations(inventoryMarkdown);
-  }
-}
-
 async function run() {
   const checkOnly = process.argv.includes('--check');
   if (process.argv.some((argument) => !['--check'].includes(argument) && argument !== process.argv[0] && argument !== process.argv[1])) {
@@ -267,8 +302,10 @@ async function run() {
     readFile(INVENTORY_URL, 'utf8'),
   ]);
   const manifest = JSON.parse(manifestText);
-  const annotations = await loadAnnotations(inventoryMarkdown);
-  const records = createSafePrimaryReferenceSnapshot(manifest, annotations);
+  const records = createSafePrimaryReferenceSnapshot(
+    manifest,
+    primaryReferenceAnnotations,
+  );
   const snapshotOutput = renderSafePrimaryReferenceSnapshot(records);
   const inventoryOutput = replaceInventoryTable(
     inventoryMarkdown,
