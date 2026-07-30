@@ -95,7 +95,7 @@ JavaGuide media defaults to `asset-level-review-required`. The repository's Apac
 - `node --test tests/primary-references.test.js tests/course-registry.test.js tests/data.test.js`: exit 0; 34 tests passed, 0 failed, and 0 skipped.
 - `npm test`: exit 0; 488 tests passed, 0 failed, and 0 skipped.
 - `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`: exit 0 with no diagnostics.
-- `git diff --check`: exit 0 with no diagnostics.
+- `git diff --check e6d63af7a5f41e9d4b990f4258c507739f7390cc..HEAD`: final post-evidence-commit exit 0 with no diagnostics; this range-aware check covers every committed implementation change.
 - The incomplete-marker gate over both research documents exited 1 with no matches, which is the expected clean result.
 - `git check-ignore .research-cache/primary-references/manifest.json`: exit 0 and returned that exact ignored path; `git ls-files .research-cache` returned no paths.
 - The pre-audit-commit `git status --short` result was empty; `git status --short --ignored` showed only `!! .research-cache/`.
