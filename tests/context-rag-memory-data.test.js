@@ -289,13 +289,25 @@ test('context-08 assigns an explicit owner to every source-to-citation layer', a
   }
 });
 
-test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
-  assert.equal(contextRagMemory.resources.length, 29);
-  assert.deepEqual(contextRagMemory.resources.map(({ url }) => url), resourceUrls);
+test('resources preserve the exact 29 verified entries and append 15 primary narratives', () => {
+  const legacyResources = contextRagMemory.resources.filter(
+    ({ sourceTier }) => sourceTier !== 'primary-narrative',
+  );
+  const primaryResources = contextRagMemory.resources.filter(
+    ({ sourceTier }) => sourceTier === 'primary-narrative',
+  );
+  assert.equal(contextRagMemory.resources.length, 44);
+  assert.equal(legacyResources.length, 29);
+  assert.equal(primaryResources.length, 15);
+  assert.deepEqual(legacyResources.map(({ url }) => url), resourceUrls);
   for (const resource of contextRagMemory.resources) {
     assert.match(resource.id, /^res-context-/);
     assert.equal(new URL(resource.url).protocol, 'https:', resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
+    assert.equal(
+      resource.verifiedAt,
+      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      resource.id,
+    );
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
@@ -305,7 +317,7 @@ test('resources are the exact 29 verified HTTPS entries with complete metadata',
   }
 });
 
-test('all 29 Context RAG and Memory resources provide complete evidence cards', () => {
+test('all 44 Context RAG and Memory resources provide complete evidence cards', () => {
   const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
   const validRoles = new Set(['core', 'cross-check', 'extension']);
   const byId = new Map(contextRagMemory.resources.map((resource) => [resource.id, resource]));
@@ -325,7 +337,9 @@ test('all 29 Context RAG and Memory resources provide complete evidence cards', 
       && evidence.limitations.trim().length >= 15,
     `${resource.id}: evidence.limitations 至少需要 15 个字符`);
     if (evidence.verifiedAt !== undefined) {
-      assert.equal(evidence.verifiedAt, '2026-07-23',
+      assert.equal(
+        evidence.verifiedAt,
+        resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
         `${resource.id}: evidence.verifiedAt 必须记录本轮正文核验日期`);
     }
   }
@@ -389,6 +403,7 @@ test('each source class states its matching evidence boundary', () => {
     ['公开课程', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
     ['公开指南', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
     ['公开视频', /用于建立直觉与学习导航.*不作为.*权威证据/],
+    ['一级参考资料', /证据边界[：:].{15,}/],
   ]);
 
   for (const resource of contextRagMemory.resources) {

@@ -1,6 +1,8 @@
 import { contextRagMemoryNotes } from './context-rag-memory-notes.js';
+import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-23';
+const PRIMARY_VERIFIED_AT = '2026-07-30';
 
 const officialBoundary = '证据边界：该资料描述当前产品或框架实现，接口和版本会变化，不代表跨产品或框架标准。';
 const researchBoundary = '证据边界：研究结论绑定论文的实验或评测设定，不可外推为所有语料、模型或业务的结论。';
@@ -247,10 +249,165 @@ const evidenceByResourceId = {
   },
 };
 
-const resources = resourceCatalog.map((resource) => ({
+const verificationResources = resourceCatalog.map((resource) => ({
   ...resource,
   evidence: evidenceByResourceId[resource.id],
 }));
+
+function primaryBinding({
+  id,
+  canonicalSourceId,
+  stage,
+  difficulty = '进阶',
+  learningUse,
+  role = 'core',
+  coverage,
+  limitations,
+}) {
+  return createPrimaryReferenceBinding({
+    id,
+    canonicalSourceId,
+    stage,
+    difficulty,
+    value: `学习用途：${learningUse}；覆盖范围：${coverage.join('、')}；证据边界：${limitations}`,
+    evidence: {
+      authority: 'expert',
+      role,
+      learningUse,
+      coverage,
+      limitations,
+      verifiedAt: PRIMARY_VERIFIED_AT,
+    },
+  });
+}
+
+const primaryResources = [
+  primaryBinding({
+    id: 'res-context-primary-feishu-company-brain',
+    canonicalSourceId: 'primary-feishu-company-brain',
+    stage: '组织知识系统',
+    learningUse: '把 RAG 从向量检索扩展为包含摄取、权限、时效、引用和治理的 Company Brain 运行环',
+    coverage: ['Company Brain、知识摄取、权限、时效、引用与治理'],
+    limitations: '正文提供组织知识系统的工程叙事与作者观察，不代表任何产品实现、权限控制、安全或合规保证；访问控制、更新传播与质量必须由所选系统验证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-context-offloading',
+    canonicalSourceId: 'primary-feishu-context-offloading',
+    stage: '上下文外置',
+    learningUse: '解释把可恢复细节移到外部状态，并在活动上下文保留稳定引用、检索线索与恢复入口',
+    coverage: ['Context offloading、外部状态、恢复引用、活动上下文'],
+    limitations: '正文包含产品相关教学观察，不代表当前产品或协议的稳定实现；外置状态也不保证权限隔离、持久化、完整回取或提示注入安全。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-microcompact',
+    canonicalSourceId: 'primary-feishu-microcompact',
+    stage: '上下文压缩',
+    learningUse: '区分消息、工具结果和会话摘要层的压缩位置，并比较各层丢失细节和恢复能力',
+    coverage: ['Context compaction、Microcompact、工具结果消隐、摘要检查点'],
+    limitations: '正文含逆向观察与日期敏感的产品细节，不代表 Claude Code 或其他产品的公开稳定协议；压缩是否触发、保留哪些字段和能否恢复必须由当前官方资料与实测核验。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-agentfs',
+    canonicalSourceId: 'primary-feishu-virtual-filesystem',
+    stage: 'AgentFS 与外部状态',
+    learningUse: '用 Agent 文件系统理解记忆与产物外置时的 namespace、引用、来源、清理和宿主责任',
+    coverage: ['AgentFS、虚拟文件系统、namespace、外部状态、产物引用'],
+    limitations: '正文提供虚拟文件系统的工程观察，不代表 AgentFS 产品实现或安全边界；文件抽象不等于 sandbox、持久记忆、权限隔离或删除保证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-prompt-memory',
+    canonicalSourceId: 'primary-feishu-claude-ai-memory',
+    stage: '提示词与记忆结构',
+    learningUse: '把观测到的提示词和记忆结构作为日期化案例，用来区分活动上下文、产品记忆与隐藏状态',
+    coverage: ['Claude.AI 提示词结构、记忆观察、活动上下文与持久状态边界'],
+    limitations: '正文属于逆向观察和教学分析，不代表 Claude.AI 当前产品实现或公开协议；隐藏状态可能缺失，存储、权限、删除和召回行为需由当前官方产品资料验证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-beyond-model',
+    canonicalSourceId: 'primary-feishu-beyond-model',
+    stage: '模型外部系统',
+    learningUse: '说明上下文选择、状态、存储、权限和恢复属于模型外部宿主系统的责任',
+    coverage: ['模型外部状态、控制面、存储、权限与恢复责任'],
+    limitations: '正文提供责任边界的教学叙事与作者观察，不代表所有产品采用相同实现，也不构成权限、安全或可靠性保证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-feishu-tool-truth',
+    canonicalSourceId: 'primary-feishu-tool-truth',
+    stage: '工具结果与来源',
+    learningUse: '区分模型看到的工具 transcript 与宿主保存的真实执行结果、调用身份和来源证据',
+    coverage: ['工具 transcript、调用身份、执行结果、来源与宿主记录'],
+    limitations: '正文提供工具调用的教学观察，不代表当前产品或工具协议的稳定实现；消息字段、执行权限和结果真实性必须由宿主与官方协议验证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-memory',
+    canonicalSourceId: 'primary-javaguide-agent-memory',
+    stage: 'Agent 记忆',
+    learningUse: '建立短期与长期记忆、情景与语义信息、写入更新和记忆演化的课程骨架',
+    coverage: ['Agent memory 分类、写入、更新、召回、遗忘与演化'],
+    limitations: '文章提供体系化教学框架，不代表模型具有人类认知记忆，也不定义任何产品的持久化、隐私、删除或召回质量保证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-context',
+    canonicalSourceId: 'primary-javaguide-context-engineering',
+    stage: 'Context Engineering',
+    learningUse: '区分 prompt 与 context，并把指令、历史、工具结果、检索证据和状态组织进有限输入预算',
+    coverage: ['Prompt 与 Context 区别、上下文组件、预算、选择、压缩与隔离'],
+    limitations: '文章提供上下文工程的教学体系，不代表统一行业标准；窗口上限、缓存、压缩与产品行为需由当前官方资料验证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-rag',
+    canonicalSourceId: 'primary-javaguide-rag-basis',
+    stage: 'RAG 基础',
+    learningUse: '以摄取、索引、检索、上下文组装、生成和评估阶段建立 RAG 主干',
+    coverage: ['RAG 基础、索引、检索、生成、评估与系统边界'],
+    limitations: '文章提供体系化教学叙事，不是通用架构或质量保证；算法效果与工程参数必须由论文、官方实现资料和目标语料评测核验。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-document-processing',
+    canonicalSourceId: 'primary-javaguide-rag-document-processing',
+    stage: '文档摄取与切分',
+    learningUse: '从解析、清洗、结构识别到 chunk 和多模态处理建立可追溯摄取管线',
+    coverage: ['文档解析、清洗、结构切分、语义切分、parent-child chunk 与元数据'],
+    limitations: '文章给出文档处理方法综述，不代表任意解析器或多模态工具的产品实现；切分质量依赖文档类型、问题分布与评测。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-vector-store',
+    canonicalSourceId: 'primary-javaguide-rag-vector-store',
+    stage: '向量索引与数据库',
+    learningUse: '理解向量索引算法和向量数据库分别承担的召回、过滤、更新与运维责任',
+    coverage: ['向量索引、ANN、向量数据库、召回延迟、过滤与更新权衡'],
+    limitations: '文章提供算法与产品类型综述，不代表任何索引在本语料上的性能保证；召回、延迟、内存和更新成本依赖数据、硬件、实现与参数。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-rag-optimization',
+    canonicalSourceId: 'primary-javaguide-rag-optimization',
+    stage: '检索与重排优化',
+    learningUse: '按召回、融合、重排、去重、上下文打包和生成阶段定位并优化 RAG',
+    coverage: ['Hybrid retrieval、query rewrite、reranking、去重、多样性与上下文优化'],
+    limitations: '文章提供系统调优叙事，不代表配方或收益可跨语料复现；必须先定位失败阶段，再用目标查询集和受控实验验证。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-rag-update',
+    canonicalSourceId: 'primary-javaguide-rag-knowledge-update',
+    stage: '知识更新',
+    learningUse: '把文档身份、内容哈希、版本、去重、删除传播、增量更新与全量重建放入同一生命周期',
+    coverage: ['知识库更新、版本控制、内容哈希、去重、删除与重建'],
+    limitations: '文章提供更新策略的教学框架，不代表具体存储拓扑的事务或一致性保证；阈值、传播延迟和重建条件必须由系统实测。',
+  }),
+  primaryBinding({
+    id: 'res-context-primary-javaguide-graphrag',
+    canonicalSourceId: 'primary-javaguide-graphrag',
+    stage: 'GraphRAG',
+    learningUse: '识别关系密集和全局问题何时值得引入实体关系图、社区摘要与图检索',
+    coverage: ['GraphRAG、实体关系、社区摘要、局部与全局查询、向量检索边界'],
+    limitations: '文章提供 GraphRAG 体系化教学，不代表它自动优于向量检索；收益取决于图构建质量、语料结构、查询类型、成本与评测。',
+  }),
+];
+
+const resources = [
+  ...verificationResources,
+  ...primaryResources,
+];
 
 function quiz(id, prompt, choices, answerIndex, explanation) {
   return {
@@ -295,7 +452,15 @@ const lessons = [
       { heading: '五层对象解决不同问题', body: 'prompt context 是一次调用真正可见的输入；conversation state 保存当前会话的消息、事实和约束；corpus 保存跨调用源文档；checkpoint 保存特定 run 的控制位置与恢复信息；长期记忆保存跨会话且经策略准入的信息。checkpoint 不等于长期记忆，持久化也不会让内容自动进入模型。', keyPoints: ['作用域和用途比存储介质更能定义对象', '持久化对象仍需经过选择与投影才能进入 prompt'] },
       { heading: '上下文是一份有来源的临时清单', body: '每次组装应记录来源层、版本、选择原因、token 成本和排除原因。conversation state、检索 chunk 与长期记忆只把必要投影送入调用，原始 corpus 文档和 run checkpoint 默认不直接投影，从而同时控制预算、隐私和指令边界。', keyPoints: ['模型看见的是投影结果而不是全部后端状态', '来源与排除理由让上下文组装可以审计和诊断'] },
     ],
-    resourceIds: ['res-context-anthropic-engineering', 'res-context-lost-middle', 'res-context-practical-guide'],
+    resourceIds: [
+      'res-context-anthropic-engineering',
+      'res-context-lost-middle',
+      'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
+      'res-context-primary-feishu-prompt-memory',
+      'res-context-primary-feishu-beyond-model',
+    ],
     exercise: { title: '绘制五层信息地图', brief: '把一组系统指令、消息、文档、运行游标和用户偏好放入正确层次。', steps: ['逐项标记作用域、所有者、生命周期、来源和能否直接进入本轮 prompt', '为可投影项写选择条件，为不可投影项写明确原因和替代引用方式'], deliverable: '一张五层分类表和一份本轮 context manifest。' },
     quizzes: [
       quiz('context-01-1', '哪一项最准确描述 checkpoint？', ['跨会话用户偏好库', '特定 run 的控制位置与恢复提交点', '本轮全部检索证据'], 1, 'Checkpoint 服务运行恢复，不等于长期记忆，也不会自动进入 prompt context。'),
@@ -313,7 +478,16 @@ const lessons = [
       { heading: 'Context engineering 管理完整信息系统', body: 'prompt engineering 主要优化指令表达，context engineering 还负责来源发现、状态选择、检索、记忆投影、预算、排序和失效处理。组装前先从总窗口扣除输出预留，再纳入 system instruction 与当前请求等 required 项，最后按策略选择状态和证据。', keyPoints: ['预算先为输出和硬约束留空间', '每一层都要有稳定排序、配额与排除原因'] },
       { heading: '长窗口不是可靠性保证', body: 'Context 越长并不一定越好：无关、冲突和位置不利的信息会稀释有效证据，也会增加成本。required 项自身超限时应返回不可组装错误，而不是静默截断硬约束；普通超限则记录 budget-exceeded 并保留可复查的 manifest。', keyPoints: ['窗口容量与模型有效使用信息的能力不是同一指标', '超限行为必须确定、显式且不破坏硬约束'] },
     ],
-    resourceIds: ['res-context-anthropic-engineering', 'res-context-lost-middle', 'res-context-openai-compaction', 'res-context-practical-guide', 'res-context-youtube'],
+    resourceIds: [
+      'res-context-anthropic-engineering',
+      'res-context-lost-middle',
+      'res-context-openai-compaction',
+      'res-context-practical-guide',
+      'res-context-youtube',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
+      'res-context-primary-feishu-microcompact',
+    ],
     exercise: { title: '组装预算有界的上下文', brief: '为一轮包含硬约束、会话状态、检索证据和偏好的调用分配有限预算。', steps: ['计算输出预留与可用输入预算，标记 required、priority、tokenCost 和 sourceRef', '分别处理刚好装满、普通超限和 required 超限，核对 included 与 excluded 原因'], deliverable: '一份确定排序、预算守恒且带排除原因的 context manifest。', experiment: 'context-router' },
     quizzes: [
       quiz('context-02-1', 'Context engineering 比 prompt engineering 多关注什么？', ['只修改措辞', '信息来源、选择、预算、排序和生命周期', '只增加示例数量'], 1, 'Context engineering 管理模型实际获得信息的全链路，不只优化提示词文本。'),
@@ -331,7 +505,15 @@ const lessons = [
       { heading: '三种表示不能互相冒充', body: 'Transcript 是按顺序保存的原始消息证据；conversation state 是从事件归并出的当前可操作事实、约束和未决项；summary 是为了降低成本而生成的有损派生物。摘要可能遗漏否定、时间和来源，因此不能反过来覆盖原始 transcript 或被当作完整事实库。', keyPoints: ['原始历史负责取证，规范状态负责当前决策', 'summary 是有损压缩，必须保留回取 transcript 的指针'] },
       { heading: '压缩必须处理纠正与冲突', body: '滑窗适合保留最近措辞，摘要适合浓缩连续叙事，retrieval 适合按需找回久远细节。用户修改先前事实时，新值以 supersedes 指向旧值并成为当前状态，旧事件仍保留时间和来源；压缩器还要保存硬约束、未决承诺、工具失败与不确定项。', keyPoints: ['选择滑窗、摘要或 retrieval 取决于任务所需证据形态', '更新当前值不等于抹去历史来源和冲突记录'] },
     ],
-    resourceIds: ['res-context-openai-compaction', 'res-context-langchain-memory', 'res-context-coala', 'res-context-openai-data'],
+    resourceIds: [
+      'res-context-openai-compaction',
+      'res-context-langchain-memory',
+      'res-context-coala',
+      'res-context-openai-data',
+      'res-context-primary-feishu-microcompact',
+      'res-context-primary-feishu-prompt-memory',
+      'res-context-primary-javaguide-memory',
+    ],
     exercise: { title: '压缩一段含纠正的长会话', brief: '把含偏好修改、工具失败和未决承诺的 transcript 转成可继续工作的状态。', steps: ['提取 canonical facts、约束、未决项、来源消息和 supersession 关系', '生成明确标注不确定性的摘要，并为被省略细节保留 transcript 回取指针'], deliverable: '一份 canonical state、一个有损摘要和一张来源映射表。' },
     quizzes: [
       quiz('context-03-1', 'Summary 与 conversation state 的关键区别是什么？', ['Summary 必然完整', 'Summary 是有损叙述，state 表达当前可操作事实与约束', 'State 不需要来源'], 1, '摘要服务压缩而会丢失信息，规范状态服务当前决策并应保留来源。'),
@@ -349,7 +531,17 @@ const lessons = [
       { heading: 'Corpus、index 与检索单元各司其职', body: 'Corpus 是版本化源文档及其治理元数据的集合；chunk 是检索候选单元；citation unit 是答案可精确指向的原文 span；embedding 是表示；index 是加速查找的派生结构。index 不是 corpus 本身，重建索引不能替代源文档、版本和权限记录。', keyPoints: ['源文档是可追溯事实载体，索引只是可重建投影', '检索粒度与引用粒度可以不同但必须建立映射'] },
       { heading: 'Chunking 是带结构的取舍', body: '过小 chunk 容易丢掉标题、定义和上下文，过大 chunk 会降低匹配精度并浪费预算，过度 overlap 则制造重复证据。应依据标题、段落、表格和代码边界切分，继承 documentId、version、department、language、validFrom 和 source span，并在新版本发布后让旧版本失效。', keyPoints: ['切分边界要尊重文档结构和回答所需语义', '版本、权限与失效元数据必须随 chunk 进入索引'] },
     ],
-    resourceIds: ['res-context-openai-embeddings', 'res-context-dpr', 'res-context-openai-retrieval', 'res-context-rag-paper', 'res-context-rag-scratch', 'res-context-llm-universe'],
+    resourceIds: [
+      'res-context-openai-embeddings',
+      'res-context-dpr',
+      'res-context-openai-retrieval',
+      'res-context-rag-paper',
+      'res-context-rag-scratch',
+      'res-context-llm-universe',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-document-processing',
+      'res-context-primary-feishu-company-brain',
+    ],
     exercise: { title: '为异构文档设计 chunk schema', brief: '为 FAQ、产品手册和制度文档制定可检索且能准确引用的切分方案。', steps: ['确定结构边界、目标大小、overlap、标题继承和 retrieval/citation unit 映射', '加入版本、失效、部门、语言、权限和 source span，并演练文档更新后的重建流程'], deliverable: '一份 chunk schema、三类切分示例和版本失效流程。' },
     quizzes: [
       quiz('context-04-1', 'Index 与 corpus 的关系是什么？', ['Index 就是唯一源文档', 'Index 是从 corpus 派生的检索结构', '两者都只保存摘要'], 1, 'Corpus 保留源文档和治理事实，index 是可重建的检索投影。'),
@@ -367,7 +559,18 @@ const lessons = [
       { heading: '召回器的优势来自不同信号', body: 'Sparse retrieval 对产品编号、专有名词和原词匹配透明有效；dense retrieval 擅长语义改写，却可能错过稀有精确词。dense 不一定优于 sparse，领域漂移、语言和 embedding 选择都会改变结果；hybrid 可用 RRF 等方法融合不同排序而不假定原始分数同尺度。', keyPoints: ['方法选择应由查询类型与离线评测支持', '混合检索保留互补信号但仍需稳定的融合规则'] },
       { heading: '过滤与改写都会改变可召回集合', body: 'Metadata filter 应在排序前限制权限、版本、语言和时间范围；threshold 控制最低相关性，top-k 控制候选数量。Query rewrite 能补全缩写或拆分意图，也可能引入用户未表达的假设，所以必须记录原查询、改写结果和各阶段候选，区分语料不存在、漏召、误过滤和排序靠后。', keyPoints: ['无结果不只意味着 corpus 没有答案', '改写与过滤应可回放，避免把召回错误藏在最终列表中'] },
     ],
-    resourceIds: ['res-context-dpr', 'res-context-rrf', 'res-context-contextual-retrieval', 'res-context-openai-retrieval', 'res-context-beir', 'res-context-rag-scratch', 'res-context-all-in-rag', 'res-context-hf-agentic-rag'],
+    resourceIds: [
+      'res-context-dpr',
+      'res-context-rrf',
+      'res-context-contextual-retrieval',
+      'res-context-openai-retrieval',
+      'res-context-beir',
+      'res-context-rag-scratch',
+      'res-context-all-in-rag',
+      'res-context-hf-agentic-rag',
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
+    ],
     exercise: { title: '运行混合检索诊断', brief: '在固定小语料中比较 sparse、dense 和 hybrid，并定位候选消失的阶段。', steps: ['应用版本、部门和语言过滤，记录 sparse/dense 分数、融合名次、threshold 与 top-k', '改写查询并比较 trace，分别标记不存在、未召回、被过滤和排序靠后的原因'], deliverable: '一份可回放 retrieval trace 和三种方法的选择说明。', experiment: 'hybrid-retrieval' },
     quizzes: [
       quiz('context-05-1', '包含精确产品编号的查询通常先重视哪种信号？', ['Sparse 词法匹配', '随机向量', '只用生成模型猜测'], 0, '精确编号和稀有词通常适合词法召回，但仍应通过真实数据验证。'),
@@ -385,7 +588,19 @@ const lessons = [
       { heading: '首阶段候选不是最终上下文', body: '第一阶段检索追求较高召回，reranker 再用更强的查询—文档相关性信号调整顺序。随后要按 documentId、version 和 span 合并近重复内容，并在不同来源之间保留多样性；否则同一文档的重叠 chunk 会占满预算，掩盖相互独立或相互冲突的证据。', keyPoints: ['Reranker 优化候选次序但不能创造 corpus 中不存在的事实', '去重和多样性共同提高有限证据预算的覆盖率'] },
       { heading: '证据存在不代表回答忠实', body: 'Evidence packet 应包含 chunk 文本、sourceRef、documentId、version、span 和选择分数，并按 token budget 打包。检索到相关证据不保证生成忠实，模型仍可能曲解或越界；引用也不自动证明对应 claim，必须检查每个主张是否被所指 span 支持，并分别评估检索与生成。', keyPoints: ['Citation manifest 解决回源，不自动解决蕴含与完整性', '故障定位要分别观察候选、打包结果、引用映射和最终主张'] },
     ],
-    resourceIds: ['res-context-rrf', 'res-context-bert-reranker', 'res-context-contextual-retrieval', 'res-context-rag-paper', 'res-context-openai-citations', 'res-context-alce', 'res-context-ragas', 'res-context-ragflow'],
+    resourceIds: [
+      'res-context-rrf',
+      'res-context-bert-reranker',
+      'res-context-contextual-retrieval',
+      'res-context-rag-paper',
+      'res-context-openai-citations',
+      'res-context-alce',
+      'res-context-ragas',
+      'res-context-ragflow',
+      'res-context-primary-javaguide-rag-optimization',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-tool-truth',
+    ],
     exercise: { title: '打包可引用证据', brief: '把混合召回候选经过重排、版本去重和多样性选择装入固定预算。', steps: ['执行固定 rerank，移除旧版本与近重复 chunk，并记录每次排除原因', '按预算选择互补证据，生成唯一 source/version/span 的 citation manifest 并逐条核对 claim'], deliverable: '一个 evidence packet、排除清单和 claim-to-citation 核对表。' },
     quizzes: [
       quiz('context-06-1', '为什么第一阶段 top-k 不宜直接全部塞入 prompt？', ['候选可能重复、旧版或相关性不足', '模型不能读取文本', '引用只支持单个 chunk'], 0, '候选生成强调召回，仍需重排、版本处理、去重、多样性和预算打包。'),
@@ -403,7 +618,18 @@ const lessons = [
       { heading: '记忆类型是应用建模标签', body: 'Semantic/profile memory 表达相对稳定的事实或偏好，episodic memory 表达一次经历及其时间，procedural memory 表达可复用流程。它们是应用层分类，不证明模型内部拥有相同机制。写入前应判断用户意图、稳定性、敏感性、主体、scope、来源和置信度，不能把每条聊天自动保存为永久记忆。', keyPoints: ['显式保存请求与系统推断应采用不同准入门槛', '敏感、一次性或低置信度信息通常应拒绝或缩短 TTL'] },
       { heading: '长期记忆必须拥有完整生命周期', body: '长期记忆必须可更新、可过期、可删除：重复写入应 no-op，用户纠正生成 supersedes 关系，TTL 到期停止召回，删除后本轮与后续投影都不可出现。召回还要校验 subject、scope、有效期、来源与相关性，并让当前显式输入优先于旧记忆，避免陈旧偏好覆盖用户新要求。', keyPoints: ['召回的是经策略筛选的投影，不是整库记忆', '纠正、过期和删除都要留下受控的生命周期结果与原因'] },
     ],
-    resourceIds: ['res-context-langchain-memory', 'res-context-coala', 'res-context-memgpt', 'res-context-memorybank', 'res-context-longmemeval', 'res-context-openai-data', 'res-context-hello-agents'],
+    resourceIds: [
+      'res-context-langchain-memory',
+      'res-context-coala',
+      'res-context-memgpt',
+      'res-context-memorybank',
+      'res-context-longmemeval',
+      'res-context-openai-data',
+      'res-context-hello-agents',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
+    ],
     exercise: { title: '模拟个人助理记忆生命周期', brief: '为显式偏好、一次性行程、敏感字段、重复观察和用户纠正决定写入与召回。', steps: ['按 admission policy 执行 reject、store、no-op 或 supersede，并记录 provenance、confidence、scope 和 TTL', '推进时间、执行删除并从不同 subject/scope 召回，检查 expired、deleted 与越权记录不会投影'], deliverable: '一份记忆事件日志、有效记录表和本轮 memory projection。', experiment: 'memory-lifecycle' },
     quizzes: [
       quiz('context-07-1', '哪类聊天内容应该自动永久写入长期记忆？', ['所有消息', '没有任何类别应无条件自动永久写入', '每次工具输出'], 1, '长期记忆写入需要明确的准入、作用域、敏感性与生命周期策略。'),
@@ -421,7 +647,22 @@ const lessons = [
       { heading: '综合架构保持层间契约', body: '源文档经摄取、版本化、chunk 和索引生成候选，再经过滤、融合、重排、去重和打包形成 evidence packet；会话状态与长期记忆分别投影后，与指令和当前请求共同进入 prompt context。每一箭头都记录输入版本、输出 ID、预算、排除原因和 sourceRef。', keyPoints: ['状态、RAG 与记忆通过投影汇合但不混成同一存储', '端到端追踪要能从答案回到 evidence span 与源版本'] },
       { heading: '故障定位从分层反证开始', body: 'RAG 答错时依次检查源文档是否存在且有效、chunk 是否保留语义、候选是否召回、filter 是否误删、rerank 是否降权、打包是否超限、记忆是否冲突，以及生成是否忠实使用证据。RAG 适合动态外部知识，fine-tuning 更适合行为和稳定模式，长期记忆适合主体相关且可治理的跨会话信息。', keyPoints: ['先定位信息在哪一层消失，再调整具体组件', '检索指标、引用检查和生成忠实性需要分开观察'] },
     ],
-    resourceIds: ['res-context-ragas', 'res-context-longmemeval', 'res-context-rag-scratch', 'res-context-llm-universe', 'res-context-all-in-rag', 'res-context-hello-agents', 'res-context-hf-agentic-rag', 'res-context-ragflow', 'res-context-bilibili', 'res-context-youtube'],
+    resourceIds: [
+      'res-context-ragas',
+      'res-context-longmemeval',
+      'res-context-rag-scratch',
+      'res-context-llm-universe',
+      'res-context-all-in-rag',
+      'res-context-hello-agents',
+      'res-context-hf-agentic-rag',
+      'res-context-ragflow',
+      'res-context-bilibili',
+      'res-context-youtube',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag-update',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-javaguide-rag',
+    ],
     exercise: { title: '设计并诊断政策助理', brief: '为企业政策助理画出上下文、RAG 与记忆架构，并诊断一组错误回答。', steps: ['定义 source、chunk、candidate、evidence packet、state、memory projection、prompt 和 citation 的接口', '针对未摄取、旧版本、漏召、误过滤、打包丢失、错误记忆和不忠实生成逐层给出证据与修复'], deliverable: '一张综合架构图、一份分层故障树和可执行验收清单。' },
     quizzes: [
       quiz('context-08-1', 'RAG 回答错误时首先应怎样诊断？', ['立刻扩大所有 top-k', '沿 source 到 answer 分层检查信息在哪一步失真或消失', '直接改成长期记忆'], 1, '分层 trace 能区分摄取、检索、打包、记忆冲突和生成忠实性问题。'),
@@ -501,6 +742,201 @@ export function createContextInterviewQuestion(spec) {
 
 const interviewQuestions = interviewSpecs.map(createContextInterviewQuestion);
 
+const sourceImpactClaims = [
+  {
+    id: 'prompt-stuffing-is-context-engineering',
+    lessonId: 'context-01',
+    sectionId: 'projection-pipeline',
+    statement: '把所有可用文本直接塞进提示词不等于上下文工程；投影还必须管理来源、选择、预算、失效和排除原因。',
+    sourceIds: [
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
+      'res-context-anthropic-engineering',
+    ],
+  },
+  {
+    id: 'fixed-context-ratio-is-universal',
+    lessonId: 'context-02',
+    sectionId: 'context-engineering-budget',
+    statement: '上下文预算需要显式分桶与输出预留，但任何固定比例都只是工作负载配置，不能当作跨模型和任务的普适最优值。',
+    sourceIds: [
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
+      'res-context-anthropic-engineering',
+    ],
+  },
+  {
+    id: 'summary-is-canonical-source-of-truth',
+    lessonId: 'context-03',
+    sectionId: 'summary-is-lossy',
+    statement: '会话摘要是带覆盖范围和来源指针的有损派生视图，不应覆盖 transcript 或 canonical conversation state 成为唯一事实源。',
+    sourceIds: [
+      'res-context-primary-feishu-microcompact',
+      'res-context-primary-feishu-prompt-memory',
+      'res-context-openai-compaction',
+    ],
+  },
+  {
+    id: 'vector-database-is-complete-rag',
+    lessonId: 'context-04',
+    sectionId: 'separate-source-retrieval-and-citation-units',
+    statement: '向量数据库只承载检索表示和索引能力的一部分，完整 RAG 还需要源文档治理、摄取、切分、版本、权限、证据打包与引用。',
+    sourceIds: [
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-document-processing',
+      'res-context-rag-paper',
+    ],
+  },
+  {
+    id: 'dense-retrieval-always-dominates',
+    lessonId: 'context-05',
+    sectionId: 'start-with-complementary-retrieval-signals',
+    statement: 'Dense retrieval 不会在所有查询和语料上稳定优于 sparse；精确词法与语义信号应按真实查询切片评测并以明确规则融合。',
+    sourceIds: [
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
+      'res-context-beir',
+    ],
+  },
+  {
+    id: 'retrieval-success-guarantees-grounding',
+    lessonId: 'context-06',
+    sectionId: 'build-an-evidence-packet-and-citation-manifest',
+    statement: '候选被召回或答案带有引用都不保证生成忠实；证据包必须保留真实观察、版本和 span，并逐条核对 claim 支持关系。',
+    sourceIds: [
+      'res-context-primary-javaguide-rag-optimization',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-tool-truth',
+      'res-context-openai-citations',
+    ],
+  },
+  {
+    id: 'transcript-is-long-term-memory',
+    lessonId: 'context-07',
+    sectionId: 'separate-memory-from-history',
+    statement: 'Transcript 记录历史事件，长期记忆只保存经准入、绑定主体和作用域且可更新删除的跨会话信息，两者不能直接等同。',
+    sourceIds: [
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
+      'res-context-coala',
+    ],
+  },
+  {
+    id: 'graphrag-replaces-vector-retrieval',
+    lessonId: 'context-08',
+    sectionId: 'separate-five-system-objects',
+    statement: 'GraphRAG 适合关系密集或全局性查询，但它是可选检索分支，不会自动替代 sparse、dense、hybrid 或原文证据核验。',
+    sourceIds: [
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-company-brain',
+      'res-context-ragas',
+    ],
+  },
+];
+
+export function resolveSourceImpactClaim(targetId) {
+  if (typeof targetId !== 'string' || !targetId.startsWith('claim:')) {
+    throw new TypeError('source-impact claim target must start with claim:');
+  }
+  const claimId = targetId.slice('claim:'.length);
+  const claim = sourceImpactClaims.find(({ id }) => id === claimId);
+  if (!claim) {
+    throw new RangeError(`Unknown source-impact claim: ${targetId}`);
+  }
+  return claim;
+}
+
+function sourceImpactClaimTarget(claimId) {
+  const targetId = `claim:${claimId}`;
+  resolveSourceImpactClaim(targetId);
+  return targetId;
+}
+
+const sourceImpactAudit = [
+  {
+    decisionId: 'impact-context-01-context-projection',
+    lessonId: 'context-01',
+    resourceId: 'res-context-primary-javaguide-context',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('prompt-stuffing-is-context-engineering'),
+    contribution: 'corrected',
+    summary: '把“上下文工程就是把更多文本塞入提示词”修正为有来源、预算和失效规则的投影系统。',
+    rationale: '该体系化叙事用于建立课程主干，具体窗口、压缩和产品行为仍需官方资料与目标模型实测。',
+  },
+  {
+    decisionId: 'impact-context-02-budget-boundary',
+    lessonId: 'context-02',
+    resourceId: 'res-context-primary-feishu-context-offloading',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('fixed-context-ratio-is-universal'),
+    contribution: 'deepened',
+    summary: '把上下文预算深化为固定指令、历史、工具结果、检索证据、草稿和输出预留的显式分桶。',
+    rationale: '来源支持外置和活动上下文边界，但课程拒绝把任何分桶数字提升为跨模型的通用最优比例。',
+  },
+  {
+    decisionId: 'impact-context-03-lossy-summary',
+    lessonId: 'context-03',
+    resourceId: 'res-context-primary-feishu-microcompact',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('summary-is-canonical-source-of-truth'),
+    contribution: 'corrected',
+    summary: '把流畅摘要从“新事实源”降级为带事件游标、已知遗漏和原文回取入口的有损派生视图。',
+    rationale: '文章中的产品观察具有日期和逆向边界，课程只采用压缩层次，不宣称当前产品协议或无损恢复。',
+  },
+  {
+    decisionId: 'impact-context-04-rag-pipeline',
+    lessonId: 'context-04',
+    resourceId: 'res-context-primary-javaguide-document-processing',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('vector-database-is-complete-rag'),
+    contribution: 'deepened',
+    summary: '把向量存储前后的 acquire、parse、normalize、chunk、metadata、embed 和 index 串成可追溯管线。',
+    rationale: '教学综述用于组织处理阶段，具体解析器能力、切分参数和质量收益仍必须在目标文档与查询集验证。',
+  },
+  {
+    decisionId: 'impact-context-05-retrieval-signals',
+    lessonId: 'context-05',
+    resourceId: 'res-context-primary-javaguide-rag-optimization',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('dense-retrieval-always-dominates'),
+    contribution: 'corrected',
+    summary: '把“稠密检索必然更强”修正为按查询切片比较 sparse、dense、hybrid 与融合规则。',
+    rationale: '来源提供优化导航而非跨语料收益保证，课程用 BEIR 等研究边界和本地评测约束方法选择。',
+  },
+  {
+    decisionId: 'impact-context-06-evidence-grounding',
+    lessonId: 'context-06',
+    resourceId: 'res-context-primary-feishu-tool-truth',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('retrieval-success-guarantees-grounding'),
+    contribution: 'deepened',
+    summary: '把证据包深化为同时保留宿主真实 observation、callId、结果哈希、版本与精确 span 的清单。',
+    rationale: '工具 transcript 的教学观察不构成执行真实性或协议保证，因此课程要求宿主记录并逐 claim 核验。',
+  },
+  {
+    decisionId: 'impact-context-07-memory-boundary',
+    lessonId: 'context-07',
+    resourceId: 'res-context-primary-javaguide-memory',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('transcript-is-long-term-memory'),
+    contribution: 'corrected',
+    summary: '把长期记忆从聊天历史集合收紧为经准入、绑定主体与 scope、拥有过期更正删除能力的信息。',
+    rationale: '记忆分类只作为应用建模标签，不支持人类认知类比，也不证明产品隐私、隔离或删除承诺。',
+  },
+  {
+    decisionId: 'impact-context-08-graphrag-boundary',
+    lessonId: 'context-08',
+    resourceId: 'res-context-primary-javaguide-graphrag',
+    scope: 'claim',
+    targetId: sourceImpactClaimTarget('graphrag-replaces-vector-retrieval'),
+    contribution: 'corrected',
+    summary: '把 GraphRAG 从向量检索替代品修正为面向关系密集与全局问题的可选候选生成分支。',
+    rationale: 'GraphRAG 收益依赖图构建、语料和查询类型，最终政策主张仍须回到有效源版本和精确 span。',
+  },
+];
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
@@ -514,4 +950,6 @@ export const contextRagMemory = deepFreeze({
   lessons,
   resources,
   interviewQuestions,
+  sourceImpactClaims,
+  sourceImpactAudit,
 });

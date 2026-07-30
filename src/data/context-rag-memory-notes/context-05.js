@@ -6,7 +6,7 @@ const sections = Object.freeze([
       '上一课已经把有效源版本切成可回源的 retrieval units，本课要回答“查询怎样找到候选”。Sparse retrieval（稀疏检索）主要依据查询与文档中的词项匹配，适合产品编号、法规条款号、专有名词和原词可见的场景；dense retrieval（稠密检索）把查询与段落编码成向量，利用表示空间中的相近关系寻找语义相关内容。两者观察的是不同信号，因此选择题不是“哪一个永远更强”，而是“当前查询和语料需要保留哪些互补证据”。',
       'DPR 的双编码器研究说明了稠密段落召回如何训练与评测，但它的开放域问答数据、负样本与模型设置限制了结论；BEIR 在异构数据集上比较多种检索方法，恰好提醒我们跨任务排名会变化。因而 dense 不一定优于 sparse，sparse 也不等于落后方案。编号查询若被向量表示模糊化，词法信号可能更可靠；同义改写或自然语言描述若与文档措辞差异很大，dense 可能补回 sparse 漏掉的候选。',
       'Hybrid retrieval（混合检索）不是把两个分数随手相加，而是保留多路候选后按明确规则融合。它适合真实查询同时包含精确实体与语义描述的情况，例如“型号 ZX-17 的节能模式为什么在夜间关闭”。ZX-17 需要词法命中，后半句可能需要语义匹配。工程后果是 trace 必须保留每一路候选、原始名次、融合结果和排除原因，否则最终列表无法说明某个文档究竟由哪种信号找回。',
-      '两路检索还具有不同成本与更新特征。词法索引对新增原词通常可直接搜索，dense 路径还依赖 embedding 模型与向量构建；查询时两路并行会增加计算与尾延迟。方法选择因此同时考虑质量、构建时间、查询延迟和故障回退：向量服务不可用时是否能退回 sparse，词法无命中时是否允许语义路径继续，均应写入运行策略。',
+      'Dense 路径通常依赖 approximate nearest neighbor（ANN，近似最近邻）索引，用减少精确比较换取更低延迟和更高吞吐；索引类型、搜索深度与参数会同时改变 recall、latency、内存和更新成本。向量数据库只承载表示、ANN、过滤与运维中的一部分，不等于完整 RAG：采集、版本、ACL、融合、重排、证据打包、生成和评测仍在其外部。方法选择必须记录质量、尾延迟与故障回退。',
     ]),
     keyPoints: Object.freeze([
       'Sparse 擅长精确词项，dense 擅长语义近似，两者优势由查询和语料决定。',
@@ -22,6 +22,8 @@ const sections = Object.freeze([
       'res-context-dpr',
       'res-context-beir',
       'res-context-contextual-retrieval',
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -38,11 +40,16 @@ const sections = Object.freeze([
       '公开论文与厂商数字只属于其报告设置，生产选择必须在目标 corpus 和查询上复验。',
       '总体指标之外还要检查查询切片退化、延迟与上下文成本。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-05-ann-tradeoff', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-beir',
       'res-context-dpr',
       'res-context-contextual-retrieval',
       'res-context-all-in-rag',
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -52,16 +59,20 @@ const sections = Object.freeze([
       'Sparse 分数与 dense 相似度通常不在同一尺度：一个可能受词频、文档长度与查询词影响，另一个来自向量距离或相似度。未经校准就直接相加，会让数值范围较大的一路主导结果。Reciprocal Rank Fusion（RRF，倒数名次融合）绕开原始分数尺度，按每个候选在各排序列表中的名次累积贡献。其形式可写为 RRF(d)=Σᵢ 1/(k+rankᵢ(d))，其中 rankᵢ(d) 是文档 d 在第 i 路列表中的名次，k 是实验配置中的平滑常量。',
       '公式的工程含义是：多路都排在前面的候选会累积较高融合分，只在一路靠前的候选仍能保留贡献；没有进入某一路候选列表的文档，不会凭融合被创造出来。k、每路候选深度、是否加权以及并列名次处理都应写进实验配置。任何具体 k 或 top-k 数字只能描述一次可复现实验，不能被写成 RRF 论文对所有语料的最佳推荐。',
       'RRF 是 rank fusion，不是 reranker。它利用既有名次合并多路列表，不读取 query 与 passage 的完整交互，也不会像下一课的 BERT reranker 那样对候选重新建模评分。若首阶段两路都漏掉正确文档，RRF 无法修复；若正确文档已进入候选但融合后靠后，可以检查各路深度、名次和 k。把两种机制分清，才能判断故障发生在召回、融合还是后续重排。',
-      '融合 trace 最好保留每个候选的贡献明细，而不只保存总分：来自哪些列表、各自 rank、缺席于哪些列表、平滑参数和最终排序。这样当精确编号候选被语义列表压低时，可以判断是 sparse 列表深度不足、dense 噪声过多还是融合配置偏置。没有分项的总分无法支持可重复调参，也无法解释同一候选为何在两次构建后换位。',
+      '若选择分数加权而非 RRF，就必须先在固定查询集上做 score calibration，证明 BM25、向量相似度和其他信号映射后的含义可比较；语料或 embedding 变化后还要重校。融合 trace 最好保留每个候选的来源列表、rank、校准版本、平滑参数和最终排序，才能区分 sparse 深度不足、dense 噪声与融合偏置。',
     ]),
     keyPoints: Object.freeze([
       '不同检索器的原始分数尺度不可默认直接相加，RRF 通过名次贡献规避这一假设。',
       'RRF 参数和候选深度属于实验配置，所有数字都必须绑定具体查询集和结果。',
       'RRF 是 rank fusion 而不是 reranker，不能恢复所有首阶段都漏掉的文档。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-05-rrf-fusion', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-rrf',
       'res-context-dpr',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -81,6 +92,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-openai-retrieval',
       'res-context-contextual-retrieval',
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -101,6 +114,7 @@ const sections = Object.freeze([
       'res-context-contextual-retrieval',
       'res-context-hf-agentic-rag',
       'res-context-openai-retrieval',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -130,6 +144,8 @@ const sections = Object.freeze([
       'res-context-rag-scratch',
       'res-context-all-in-rag',
       'res-context-hf-agentic-rag',
+      'res-context-primary-javaguide-vector-store',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
 ]);
@@ -159,6 +175,8 @@ const misconceptions = Object.freeze([
 
 export const context05Note = Object.freeze({
   readingMinutes: 42,
+  overviewVisualId: 'visual-context-05-hybrid-signals',
+  overviewVisualSectionId: 'start-with-complementary-retrieval-signals',
   introduction: '上一课交付了版本正确、权限清楚且可回源的 chunks，本章把它们送入候选生成管线。你将先比较 sparse 的精确词项信号与 dense 的语义表示信号，再用 hybrid retrieval 保留互补候选；随后理解 RRF 公式为何按名次融合、为何不能把不同检索器的原始分数随手相加，以及它为什么不是 reranker。工程部分把 metadata filter、threshold、top-k 与 query rewrite 放进可回放 trace，并用政策查询实验严格区分四类失败：source 不存在、答案未召回、候选被过滤、候选只是在排序中靠后。所有参数和数字只属于明确实验，不会被写成跨语料最佳值。',
   sections,
   misconceptions,

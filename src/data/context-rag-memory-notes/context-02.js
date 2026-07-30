@@ -5,7 +5,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '上一课已经把后端信息分成五层，并强调只有投影结果进入一次模型调用。本课进一步回答“窗口装不下时怎么选”。Prompt engineering 主要改进指令表达、示例和输出约束；context engineering 的范围更宽，它还管理信息从哪里来、何时有效、按什么顺序投影、占用多少预算、为什么被排除，以及压缩后如何续接。好的提示词若配上陈旧、重复或错误排序的证据，仍然会得到不可靠结果。',
       'Token budget 是本轮允许输入和输出共同占用的容量约束。课程采用确定性预算模型：先设总上限 inputLimit，再预留 outputReserve，得到可用于组装输入的 inputBudget=inputLimit-outputReserve。这里的字段名与计算规则是课程和实验契约，不是某家模型 API 的统一计费规范。真实模型的 token 计算、系统开销和可用窗口会随模型及接口变化，生产系统必须使用目标接口的实际计数方式。',
-      '预算不是越用满越好，而是让必要信息在限制内保持可解释。Context manifest 应记录每个候选的 required、priority、tokenCost、sourceRef、来源层和状态，再记录 included、excluded、used 与 remaining。这样，工程师能区分“模型没看见信息”和“模型看见后没忠实使用”，也能比较两种选择策略，而不把最终 prompt 长度误当质量分数。',
+      '显式预算可写成 W≥I_fixed+H_recent+T_results+R_evidence+S_scratch+O_reserve：总窗口 W 依次容纳固定指令、最近轮次、工具结果、检索证据、工作草稿和输出预留。这个分解是课程的审计模型，不是通用最优比例；每一桶都应记录上限、实际 used、优先级和 sourceRef。这样才能看出是工具输出挤掉证据、历史过长，还是预留不足，而不把“窗口已满”当成单一原因。',
       '预算还要区分估算与结算。候选生成阶段可以使用缓存的 tokenCost 估算排序，但真正调用前应按目标模型重新计数，并确认拼接分隔符、工具 schema 和固定指令没有让输入越界。若重新计数改变了结果，应生成新的 manifest 版本并重新执行同一选择策略，而不是从字符串尾部直接截断。这样做会增加一次校验成本，却能避免“规划时合法、发送时超限”以及截断恰好切掉否定条件的故障。估算误差、重算次数与最终差值也应进入可观测指标，帮助发现 tokenizer 或模板版本已经变化。',
     ]),
     keyPoints: Object.freeze([
@@ -16,6 +16,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
   Object.freeze({
@@ -36,9 +38,13 @@ const sections = Object.freeze([
       title: '预算失败也是正确结果',
       body: '当必要约束无法同时容纳时，返回不可组装比生成一个表面流畅但缺失硬约束的答案更可靠。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-02-injection-loss-guard', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
     ]),
   }),
   Object.freeze({
@@ -57,6 +63,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
     ]),
   }),
   Object.freeze({
@@ -77,9 +84,13 @@ const sections = Object.freeze([
       title: '两个看似相同的“放不下”',
       body: '少一篇辅助证据仍可回答，只需标记降级；少一条安全约束则不能继续。错误不在 token 数，而在被排除条目的语义。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-02-overflow-strategies', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
     ]),
   }),
   Object.freeze({
@@ -88,7 +99,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       'Lost in the Middle 通过多文档问答和 key-value retrieval 的受控实验说明，在论文所测模型与任务中，改变相关信息位置可能显著影响表现；相关内容常在开头或末尾利用较好，在中间变差。这个结果支持“窗口更长不等于有效利用更稳定”，也支持测试排序和截断策略。它不能证明任意模型都有同样曲线，更不能直接给出本课程的 priority、配额或 overflow 契约。',
       'Compaction 是 OpenAI 当前产品提供的长会话压缩与状态续接能力，产品接口和具体语义可能随版本变化。对本课最重要的边界是：opaque compaction item 是供后续调用续接的产品状态，不应被当作人类可读的普通 summary，也没有理由把它描述为可逆或无损。应用若需要可审计的当前事实、原文引用或纠正链，仍要单独维护 conversation state、transcript 指针和自身的来源映射。',
-      '因此，滑窗、应用摘要、retrieval 与产品 compaction 解决的问题不同。滑窗保留最近原话，应用摘要生成可读但有损的派生物，retrieval 按需找回远处细节，opaque compaction 帮助特定产品续接上下文。它们可以组合，却不能互相宣称等价。尤其在法律措辞、用户纠正和高风险约束场景中，应保留可回取原文与结构化状态，而不是把产品压缩对象当成完整证据。',
+      '溢出时有四类动作：selection 排除低价值候选；compression 把连续历史或工具结果变成有损派生物；offloading 把可恢复细节写到外部状态并留下引用；reset 在保存 checkpoint、未决项和回取路径后开启新上下文。四者都可能丢细节；offloaded 文件和重新检索的历史还可能携带 prompt injection，因此必须按不可信内容过滤、保留来源与权限，并让固定指令继续由宿主控制。',
     ]),
     keyPoints: Object.freeze([
       'Lost in the Middle 支持测试位置敏感性，不支持把单篇论文外推为所有模型定律。',
@@ -104,6 +115,9 @@ const sections = Object.freeze([
       'res-context-lost-middle',
       'res-context-openai-compaction',
       'res-context-anthropic-engineering',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
+      'res-context-primary-feishu-microcompact',
     ]),
   }),
   Object.freeze({
@@ -123,6 +137,8 @@ const sections = Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-lost-middle',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
 ]);
@@ -156,6 +172,8 @@ const misconceptions = Object.freeze([
 
 export const context02Note = Object.freeze({
   readingMinutes: 37,
+  overviewVisualId: 'visual-context-02-token-budget',
+  overviewVisualSectionId: 'context-engineering-budget',
   introduction: '上一课回答了“信息属于哪一层、如何投影”，本课回答更现实的问题：窗口有限时，哪些内容必须保留，哪些可以降级，系统怎样证明自己没有悄悄删掉硬约束。我们会把总窗口拆成输出预留和输入预算，区分 required 与普通 priority，用稳定排序消除偶然性，并严格区分可选项 budget-exceeded 与 required-budget-exceeded。随后把长上下文位置效应和 OpenAI compaction 放回各自证据边界，最后用 Context Router 完成 exact fit、普通超限和不可组装三条验收路径。',
   sections,
   misconceptions,

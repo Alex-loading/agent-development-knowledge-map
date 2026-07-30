@@ -6,6 +6,7 @@ const sections = Object.freeze([
       '企业政策助理同时使用多种持久数据，但它们不是同一种“记忆”。RAG corpus 保存可版本化、可授权、能回到源文档的外部政策知识；conversation state 保存当前会话仍有效的目标、约束与待办；checkpoint 保存一次 run 恢复执行所需的位置和中间状态；long-term memory 保存绑定主体与 scope、经准入且可治理的跨会话信息；prompt context 只是上述对象在本轮经过选择后的有限投影。持久化不代表模型自动可见，只有进入 manifest 的投影才占用本轮窗口。',
       'Fine-tuning 改变模型参数或行为模式，RAG 在推理时查找动态外部知识。课程采用的选择边界是：频繁变化、需要引用和撤权的企业政策优先进入 RAG；相对稳定的表达风格或行为模式才可能考虑 fine-tuning；“某用户希望默认看中文”这类主体相关且要更新删除的信息进入长期记忆。三者可以组合，但不能用 fine-tuning 充当最新政策数据库，也不能把公共手册复制到每个用户的记忆空间。',
       'State 与 checkpoint 也不能互换。State 回答“现在任务事实是什么”，例如用户正在询问上海办公室的差旅政策；checkpoint 回答“这个 run 从哪个步骤安全恢复”，可能包含检索游标和已完成工具调用。长期记忆则回答“跨会话是否有获准复用的信息”。综合设计先为每类对象写 owner、subject/tenant、version、retention、read condition 与 projection rule，再画数据流，避免一条“向量库到模型”的线掩盖状态和治理。',
+      'GraphRAG 是对关系型或全局性查询的一条可选检索分支：当问题需要跨实体、跨文档聚合关系时，可以从版本化图结构生成候选或社区摘要；精确条款、关键词、向量相似度和原文引用仍可能走 sparse、dense 或 hybrid 路径。它不是“替换向量检索”的开关，更不能跳过权限、版本、evidence packet 与 claim-to-span 核验。',
     ]),
     keyPoints: Object.freeze([
       'Corpus、state、checkpoint、long-term memory 与 prompt context 的所有者和生命周期不同。',
@@ -21,6 +22,9 @@ const sections = Object.freeze([
       'res-context-ragas',
       'res-context-longmemeval',
       'res-context-ragflow',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -30,15 +34,23 @@ const sections = Object.freeze([
       '第一段契约从 source 开始。Source record 至少保存 sourceId、documentId、sourceVersion、effectiveFrom/To、tenant、accessPolicyRef、contentHash、canonicalUri 与状态，并明确 sourceOwner=政策发布与合规团队，由它确认正文、权限和生效期。Ingest 接收明确 sourceId/version，输出 ingestRunId、parserVersion、normalizedArtifactId、ingestedAt、status 和 rejectionReason，同时记录 ingestOwner=数据摄取服务团队，负责解析运行、失败重放与规范化产物。若文件损坏、权限元数据缺失或版本已撤销，应形成可查询的 rejected 结果，而不是让“没出现在索引”变成无解释空白。',
       'Chunk 层把规范化文档切成 retrieval unit，但保留 documentId、sourceVersion、chunkId、ordinal、headingPath、sourceSpan、language、access labels 与 content hash，并写入 chunkOwner=内容处理与切分团队。ChunkId 不能仅由数组位置临时生成，否则重建索引后引用无法比较；source span 让候选最终能映射回精确 citation unit。表格、FAQ 和政策条款可以采用不同边界，但每次切分都要记录 chunkPolicyVersion，重叠片段也要能识别共同来源，避免同一条款重复占满证据预算。',
       'Index 层输出 indexName/indexVersion、entryId、chunkId、sourceVersion、representationType、embeddingOrAnalyzerVersion、indexedAt，并明确 indexOwner=检索平台团队，负责构建、发布、回滚与版本一致性。发布新政策时，旧 sourceVersion、旧 chunks 和旧 index entries 必须按生效规则停止进入默认检索；若重建失败，系统宁可明确降级到已知一致的版本，也不能静默混用新正文与旧向量。RAGFlow 的版本化产品文档可以交叉观察解析、chunk、检索测试和知识库流程，但它描述的是该产品实现，不定义所有系统的接口或引用保证。',
+      '更新流程用稳定 documentId、contentHash 与 sourceVersion 判断新增、修改、撤权和删除：增量路径只重算受影响的 normalized artifact、chunks、向量或图边，并发布新的 indexVersion；全量重建用于解析器、切分或表示版本变化。无论哪条路径，删除和权限变更都必须传播到 chunk、向量、图索引、缓存与服务别名；发布前做源版本到索引版本的覆盖核对，发布失败则回滚到一致快照，不能把“部分更新成功”当作新版本已生效。',
     ]),
     keyPoints: Object.freeze([
       'Source、ingest、chunk、index 每层都输出稳定 ID、版本、owner、状态与失败原因。',
       'Chunk 继承源版本、权限和 source span，retrieval unit 与 citation unit 可不同但必须可映射。',
       '索引发布与源版本失效要协调，不能让新正文和旧表示静默混答。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-08-graphrag-update-boundary', afterParagraph: 3 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-ragflow',
       'res-context-ragas',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag-update',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -48,6 +60,7 @@ const sections = Object.freeze([
       'Retrieve 输入 requestId、queryId、原始查询、可选 rewriteId、tenant/subject、允许的 corpusVersion、语言、时间点和权限上下文，输出 candidateSetId 与候选 chunkIds，并记录 retrieveOwner=检索服务团队。每个候选保留检索通道、原始分数或名次、indexVersion 和 queryVariant；没有结果也要记录是索引无候选还是调用失败。Query rewrite 不能替代原查询，trace 必须保留两者，才能判断同义扩展提升了召回，还是添加未表达假设导致意图漂移。',
       'Filter 是授权与有效性决策，不只是相关性清理。它接收 candidateSetId，逐项检查 tenant、access labels、document status、sourceVersion、effective time、language 与业务 metadata，输出 filteredSetId、included candidateIds、excluded candidateId/reason，并写入 filterOwner=权限与政策执行团队。权限和撤权应在可控服务层强制；当结果突然归零，工程师先查看 unauthorized、stale-version、not-effective 或 metadata-mismatch，而不是无界提高 top-k 绕过过滤。',
       'Rerank 接收过滤后的候选与 queryId，输出 rankedSetId、rankerVersion、新 rank、score、降权理由与 rerankOwner=搜索排序团队；它只能重新排列首阶段已经召回的内容，不能找回缺失文档。Pack 再由 packOwner=上下文编排团队按 token budget、去重、多样性和来源版本形成 evidencePacketId，保存 included chunk/span、排除原因与 used/remaining budget。相关候选可能因 duplicate、superseded-version、low-rank 或 budget-exceeded 未进入包，因此 candidate 出现不等于模型最终看见。',
+      '关系型问题若启用 GraphRAG，retrieve trace 还要保存 graphVersion、entity/relation IDs、community 或路径摘要的来源文档，以及为什么该 query 被路由到图分支；这些候选之后仍进入相同的权限过滤、重排和预算打包。图摘要若无法映射回当前有效 source span，只能作为导航或候选生成信号，不能直接承担最终政策主张。',
     ]),
     keyPoints: Object.freeze([
       'Retrieve 保存原查询、改写、索引版本和多路候选身份，空结果也必须可解释。',
@@ -57,6 +70,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-ragflow',
       'res-context-ragas',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag',
     ]),
   }),
   Object.freeze({
@@ -76,6 +91,7 @@ const sections = Object.freeze([
       'res-context-longmemeval',
       'res-context-ragas',
       'res-context-ragflow',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -99,6 +115,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-ragas',
       'res-context-ragflow',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -107,17 +125,24 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '当政策答案错误，先提出可被日志证伪的问题，而不是立即改 prompt。Source 层检查正确条款是否存在、由谁负责、在请求时间是否有效；ingest 检查目标 version 是否成功解析；chunk 检查关键条件是否被截断且 span 是否可回源；index 检查对应 entry 是否发布到查询使用的 indexVersion。若信息在某层已不存在，后续扩大 top-k、换模型或加记忆都不能修复根因。',
       '若索引中存在，再沿 retrieve、filter、rerank、pack 检查。候选集中没有目标 chunk 是漏召或 query/rewrite 问题；候选出现但 filteredSet 没有，则用 excluded reason 判断权限、版本、时效或 metadata 是否误删；filtered 有而 ranked 太低，检查 ranker 与候选规模；ranked 有而 packet 没有，检查去重、预算和多样性。每一步用输入输出 ID 做集合差，不靠“看起来相关”的最终答案猜测。',
-      '若 evidence packet 已含正确 span，再检查 state 与 memory 是否带来错误地点、角色或旧偏好，prompt manifest 是否发生优先级冲突，最后逐 claim 比较答案与证据。Packet 正确而 answer 越界属于 generation faithfulness；引用指错 span 属于 citation mapping；公共政策正确但个性化语言错误可能是 memory projection；只有一个端到端分数无法区分这些故障。修复应落在首次失真层，并用同一 request trace 回放证明信息不再在那里消失。',
+      '若 evidence packet 已含正确 span，再检查 state 与 memory 是否带来错误地点、角色或旧偏好，prompt manifest 是否发生优先级冲突，最后逐 claim 比较答案与证据。Packet 正确而 answer 越界属于 generation faithfulness；引用指错 span 属于 citation mapping；公共政策正确但个性化语言错误可能是 memory projection；只有一个端到端分数无法区分这些故障。诊断面板必须把 ingestion、retrieval、rerank、packing、generation、memory-write 和 freshness 分开呈现；修复应落在首次失真层，并用同一 request trace 回放证明信息不再在那里消失。',
     ]),
     keyPoints: Object.freeze([
       '诊断顺序是 source、ingest、chunk、index、retrieve、filter、rerank、pack、state/memory、generate、cite。',
       '每层用稳定输入输出 ID、版本和排除原因做集合差与反证。',
       '修复首次失真层；扩大 top-k 或改 prompt 不能替代摄取、版本、权限与忠实性诊断。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-08-layered-diagnosis', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-ragas',
       'res-context-ragflow',
       'res-context-longmemeval',
+      'res-context-primary-javaguide-rag-update',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-javaguide-rag',
     ]),
   }),
   Object.freeze({
@@ -137,6 +162,10 @@ const sections = Object.freeze([
       'res-context-ragas',
       'res-context-longmemeval',
       'res-context-ragflow',
+      'res-context-primary-javaguide-graphrag',
+      'res-context-primary-javaguide-rag-update',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-javaguide-rag',
     ]),
   }),
 ]);
@@ -170,6 +199,8 @@ const misconceptions = Object.freeze([
 
 export const context08Note = Object.freeze({
   readingMinutes: 44,
+  overviewVisualId: 'visual-context-08-integrated-flow',
+  overviewVisualSectionId: 'separate-five-system-objects',
   introduction: '前七课分别建立了上下文预算、会话 state、版本化 corpus、混合召回、evidence packet 与长期记忆生命周期；最后一课要把它们组合成一个能诊断的企业政策助理。真正的难点不是画出“文档—向量库—模型”三格图，而是为 source、ingest、chunk、index、retrieve、filter、rerank、pack、state projection、memory projection、generate 与 cite 建立层间契约：每层都有输入输出 ID、版本、owner、预算和排除原因。本章先分清 RAG、fine-tuning、state、checkpoint 与 long-term memory 的职责，再沿政策数据流定义可追溯接口，最后用分层反证定位未摄取、旧版本、漏召、误过滤、打包丢失、错误记忆和不忠实生成，交付架构图、故障树与可执行验收清单。',
   sections,
   misconceptions,

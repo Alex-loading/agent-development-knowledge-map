@@ -16,6 +16,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-rag-paper',
       'res-context-contextual-retrieval',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -41,6 +43,7 @@ const sections = Object.freeze([
       'res-context-rrf',
       'res-context-bert-reranker',
       'res-context-contextual-retrieval',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -48,7 +51,7 @@ const sections = Object.freeze([
     title: '按版本与 span 语义去重',
     paragraphs: Object.freeze([
       'Deduplication（去重）不是简单比较文本是否完全相同。政策 v1 与 v2 可能只改了一个金额，却不能被当作可互换重复；同一 v2 的相邻 chunks 可能共享 overlap，内容高度相似但分别包含规则与例外。去重键因此至少考虑 documentId、version、source span 与规范化内容指纹，并先依据有效版本规则排除默认不应参与回答的旧版。',
-      '相邻 span 既可能重复也可能互补。若两个片段来自同一有效版本、范围重叠且合并后仍保持连续语义，可以生成一个组合候选，保留原始 chunkIds 和有序 sourceSpans；若中间跨过无关条款，则不能用一个大连续范围伪装。合并后的 citation unit 仍应能收窄到支持具体 claim 的子 span，而不是让整段文档承担所有主张。',
+      '相邻 span 既可能重复也可能互补。若索引采用 parent-child chunk，可用小子块提高召回，再在版本与 ACL 校验后恢复父标题、定义和相邻条件；父块恢复不是把整份文档塞入预算。合并候选必须保留原始 child chunkIds 和有序 sourceSpans，citation unit 仍收窄到支持具体 claim 的子 span，不能让大父块承担所有主张。',
       '排除清单要区分 stale-version、exact-duplicate、overlap-merged 与 semantic-near-duplicate。对于语义近似但来自独立来源的内容，不应只因文字相近就删除，因为它可能提供独立佐证；对于同一来源的旧版复述，即使 reranker 分数高，也不能绕过版本治理。去重的目标是减少预算浪费，同时保留版本正确性和证据独立性。',
     ]),
     keyPoints: Object.freeze([
@@ -60,6 +63,7 @@ const sections = Object.freeze([
       'res-context-contextual-retrieval',
       'res-context-ragflow',
       'res-context-rag-paper',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
@@ -75,17 +79,21 @@ const sections = Object.freeze([
       '预算选择记录 tokenCost、覆盖方面、来源组、版本、分数与排除理由。',
       '有效来源冲突应显式保留和解释，不能被去重或排序静默抹去。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-06-rerank-dedup-diversity', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-alce',
       'res-context-contextual-retrieval',
       'res-context-ragflow',
+      'res-context-primary-javaguide-rag-optimization',
     ]),
   }),
   Object.freeze({
     id: 'build-an-evidence-packet-and-citation-manifest',
     title: '生成 evidence packet 与 citation manifest',
     paragraphs: Object.freeze([
-      'Evidence packet（证据包）是本轮准备交给生成模型的、预算有界且可回源的证据集合。每项至少包含 evidenceId、chunk text、documentId、version、sourceSpans、sourceRef、选择阶段的分数或名次、tokenCost 和选择理由。Citation manifest（引用清单）则把可展示引用标识映射到 evidenceId 与精确 span，使生成后的 claim 可以回到选中的有效源，而不是临时拼接一个看似可信的链接。',
+      'Evidence packet（证据包）是本轮准备交给生成模型的、预算有界且可回源的证据集合。每项至少包含 evidenceId、chunk text、documentId、version、sourceSpans、sourceRef、选择阶段、tokenCost 和选择理由。工具检索还要保留 callId、真实结果哈希与宿主 observation，避免把模型转述的 tool transcript 冒充执行证据。Citation manifest 再把唯一 citationId 映射到 evidenceId 与精确 span。',
       'OpenAI citation formatting 文档能支撑当前产品中把文件标注转成用户可读引用的实现方式，RAGFlow v0.26.4 展示产品里的引用与 chunk 元数据；二者都不证明引用语义正确。本课 manifest 是跨本练习各阶段的工程合同：citationId 必须唯一，引用范围必须属于已入包 evidence，合并片段保留组成 spans，旧版本和预算排除项不得在生成阶段重新出现。',
       '打包后先做结构验证：所有 sourceRef 可解析，版本当前有效，span 落在对应源文档范围内，token 总和不超过预算，citationId 无重复，每个必需回答方面至少有一个候选支持。结构通过仍不等于答案正确，它只证明生成模型拿到一组可追溯输入；下一步还要逐条检查主张与引用之间的支持关系。',
     ]),
@@ -94,10 +102,16 @@ const sections = Object.freeze([
       'Citation manifest 建立 citationId 到入包证据及精确 span 的唯一映射。',
       '结构可回源只解决追踪，不自动解决主张蕴含、覆盖完整或事实真实。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-06-provenance-packing', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-openai-citations',
       'res-context-ragflow',
       'res-context-alce',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-rag-optimization',
+      'res-context-primary-feishu-tool-truth',
     ]),
   }),
   Object.freeze({
@@ -118,6 +132,7 @@ const sections = Object.freeze([
       'res-context-alce',
       'res-context-openai-citations',
       'res-context-ragas',
+      'res-context-primary-javaguide-rag',
     ]),
   }),
   Object.freeze({
@@ -145,6 +160,9 @@ const sections = Object.freeze([
       'res-context-ragas',
       'res-context-ragflow',
       'res-context-openai-citations',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-rag-optimization',
+      'res-context-primary-feishu-tool-truth',
     ]),
   }),
 ]);
@@ -178,6 +196,8 @@ const misconceptions = Object.freeze([
 
 export const context06Note = Object.freeze({
   readingMinutes: 44,
+  overviewVisualId: 'visual-context-06-candidate-evidence-pipeline',
+  overviewVisualSectionId: 'turn-recalled-items-into-evidence-candidates',
   introduction: '上一课交付的是高召回、可回放的候选列表，本章把它转换成真正可交给生成模型的 evidence packet。你将先把 RRF rank fusion 与 BERT query-passage reranker 明确分开，再按 document、version 与 source span 处理旧版、重复和相邻互补片段；随后在 token 预算内选择覆盖不同 claim、独立来源和冲突观点的证据，并生成唯一的 citation manifest。最后用政策助理案例逐句区分 citation presence、correctness、completeness 与 factuality，说明为什么“有引用”仍可能答错，以及为什么 RAGAS 分数受 evaluator 模型、提示和版本约束，不能取代人工 claim-to-source 核验。',
   sections,
   misconceptions,
