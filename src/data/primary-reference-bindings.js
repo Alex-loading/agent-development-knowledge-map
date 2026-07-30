@@ -44,6 +44,55 @@ function requireNonEmptyString(value, label) {
   return value;
 }
 
+function copyDenseNativeStringArray(value, label) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) {
+    throw new TypeError(`${label} must be a native array`);
+  }
+
+  const lengthDescriptor = Object.getOwnPropertyDescriptor(value, 'length');
+  if (!lengthDescriptor || !Object.hasOwn(lengthDescriptor, 'value')) {
+    throw new TypeError(`${label}.length must be an own data property`);
+  }
+  const { value: length } = lengthDescriptor;
+  if (!Number.isSafeInteger(length) || length <= 0) {
+    throw new TypeError(`${label} must contain non-empty strings`);
+  }
+
+  const ownKeys = Reflect.ownKeys(value);
+  for (let ownKeyIndex = 0; ownKeyIndex < ownKeys.length; ownKeyIndex += 1) {
+    const key = ownKeys[ownKeyIndex];
+    if (key === 'length') continue;
+    const index = typeof key === 'string' ? Number(key) : Number.NaN;
+    if (
+      !Number.isSafeInteger(index)
+      || index < 0
+      || index >= length
+      || String(index) !== key
+    ) {
+      throw new TypeError(`${label} has unexpected own properties`);
+    }
+  }
+
+  const copy = new Array(length);
+  for (let index = 0; index < length; index += 1) {
+    const itemDescriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!itemDescriptor || !Object.hasOwn(itemDescriptor, 'value')) {
+      throw new TypeError(`${label}[${index}] must be an own data property`);
+    }
+    const item = requireNonEmptyString(
+      itemDescriptor.value,
+      `${label}[${index}]`,
+    );
+    Object.defineProperty(copy, String(index), {
+      configurable: true,
+      enumerable: true,
+      value: item,
+      writable: true,
+    });
+  }
+  return Object.freeze(copy);
+}
+
 function createEvidence(value) {
   const evidence = requirePlainRecord(value, 'evidence');
   const authority = readOwnDataProperty(
@@ -80,13 +129,7 @@ function createEvidence(value) {
   if (!VALID_ROLES.has(role)) {
     throw new TypeError('evidence.role is invalid');
   }
-  if (
-    !Array.isArray(coverage)
-    || coverage.length === 0
-    || coverage.some((item) => typeof item !== 'string' || item.trim().length === 0)
-  ) {
-    throw new TypeError('evidence.coverage must contain non-empty strings');
-  }
+  const coverageCopy = copyDenseNativeStringArray(coverage, 'evidence.coverage');
   const learningUse = learningUseValue === undefined
     ? undefined
     : requireNonEmptyString(learningUseValue, 'evidence.learningUse');
@@ -98,7 +141,7 @@ function createEvidence(value) {
     authority,
     role,
     ...(learningUse === undefined ? {} : { learningUse }),
-    coverage: Object.freeze([...coverage]),
+    coverage: coverageCopy,
     limitations,
     verifiedAt,
   });

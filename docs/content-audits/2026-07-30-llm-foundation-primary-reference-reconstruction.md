@@ -126,11 +126,11 @@
 
 以下均为本工作树中的实际命令结果，不以预期值替代运行证据：
 
-- LLM 一级来源、稳定身份、八课概念主干、双向 outcome、独立语义 mutation 与 Markdown 审计契约：7 / 7 通过；与一级来源冻结、binding 安全套件合跑为 44 / 44 通过。
+- LLM 一级来源、稳定身份、八课概念主干、双向 outcome、独立语义 mutation 与 Markdown 审计契约：7 / 7 通过；与一级来源冻结、binding 安全套件合跑为 45 / 45 通过。
 - LLM visual、inventory、visible semantics、geometry、静态安全与 ownership 聚焦套件：161 / 161 通过。
-- 全量 `npm test`：568 / 568 通过；既有 50-source、Harness 与 Context primary bindings 保持兼容。
+- 全量 `npm test`：569 / 569 通过；既有 50-source、Harness 与 Context primary bindings 保持兼容。
 - 52 个本地 SVG 经 `xmllint --noout`：52 / 52 通过；主动内容与 hotlink 定向扫描无命中。
 - 变更文件 marker 与隐私定向扫描无命中；`git ls-files .research-cache` 为空。
-- 模块、binding、独立证据 fixture 和变更测试经 `node --check` 通过；`createPrimaryReferenceBinding` 拒绝继承字段、自定义原型和 accessor 字段，同时接受只有 own data properties 的普通或 null-prototype record。`npm run check:primary-references` 与 `npm run check:context-visuals` 均为 current；`git diff --check` 无输出。
+- 模块、binding、独立证据 fixture 和变更测试经 `node --check` 通过；`createPrimaryReferenceBinding` 拒绝继承字段、自定义原型和 accessor 字段，同时接受只有 own data properties 的普通或 null-prototype record。`evidence.coverage` 只接受稠密原生数组，通过逐索引 own data descriptor 复制为全新冻结数组；索引 getter、Array subclass、覆写的 `some` / iterator、稀疏数组及额外自有字段均被拒绝，且测试计数证明调用方 getter / 方法未执行。`npm run check:primary-references` 与 `npm run check:context-visuals` 均为 current；`git diff --check` 无输出。
 - 提升本机监听权限后启动静态服务器，`/`、`/src/data/llm-foundation.js` 与 `/assets/visuals/llm-foundation/llm-04-score-mask-softmax.svg` 三个 HTTP smoke 请求均返回 200。
 - 未把静态测试表述为真实浏览器验收；全字体、缩放和视口组合仍属于发布前人工观察边界。

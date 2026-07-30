@@ -561,6 +561,103 @@ test('course binding accepts own plain-record fields and rejects prototype or ac
   );
 });
 
+test('course binding copies only dense native coverage arrays without executing caller code', () => {
+  const valid = {
+    id: 'res-harness-primary-react-loop',
+    canonicalSourceId: 'primary-feishu-react-loop',
+    stage: 'Agent Loop',
+    difficulty: '入门到进阶',
+    value: '用于解释单轮、多轮和停止条件。',
+    evidence: {
+      authority: 'expert',
+      role: 'core',
+      coverage: ['单轮与多轮 Agent Loop'],
+      limitations: '工程教学材料；产品行为与协议字段需官方资料校验。',
+      verifiedAt: '2026-07-30',
+    },
+  };
+  const bindCoverage = (coverage) => createPrimaryReferenceBinding({
+    ...valid,
+    evidence: { ...valid.evidence, coverage },
+  });
+
+  let indexGetterCalls = 0;
+  const accessorCoverage = new Array(1);
+  Object.defineProperty(accessorCoverage, '0', {
+    enumerable: true,
+    get() {
+      indexGetterCalls += 1;
+      return '不得读取';
+    },
+  });
+  assert.throws(
+    () => bindCoverage(accessorCoverage),
+    /coverage.*own data property/,
+  );
+  assert.equal(indexGetterCalls, 0);
+
+  let subclassMethodCalls = 0;
+  class CoverageSubclass extends Array {
+    some() {
+      subclassMethodCalls += 1;
+      return false;
+    }
+
+    [Symbol.iterator]() {
+      subclassMethodCalls += 1;
+      return super[Symbol.iterator]();
+    }
+  }
+  assert.throws(
+    () => bindCoverage(new CoverageSubclass('不得接受')),
+    /coverage.*native array/,
+  );
+  assert.equal(subclassMethodCalls, 0);
+
+  let overriddenSomeCalls = 0;
+  const someCoverage = ['不得接受'];
+  Object.defineProperty(someCoverage, 'some', {
+    configurable: true,
+    value() {
+      overriddenSomeCalls += 1;
+      return false;
+    },
+  });
+  assert.throws(
+    () => bindCoverage(someCoverage),
+    /coverage.*unexpected own properties/,
+  );
+  assert.equal(overriddenSomeCalls, 0);
+
+  let overriddenIteratorCalls = 0;
+  const iteratorCoverage = ['不得接受'];
+  Object.defineProperty(iteratorCoverage, Symbol.iterator, {
+    configurable: true,
+    value() {
+      overriddenIteratorCalls += 1;
+      return Array.prototype[Symbol.iterator].call(this);
+    },
+  });
+  assert.throws(
+    () => bindCoverage(iteratorCoverage),
+    /coverage.*unexpected own properties/,
+  );
+  assert.equal(overriddenIteratorCalls, 0);
+
+  const sparseCoverage = new Array(1);
+  assert.throws(
+    () => bindCoverage(sparseCoverage),
+    /coverage.*own data property/,
+  );
+
+  const validCoverage = ['单轮与多轮 Agent Loop'];
+  const binding = bindCoverage(validCoverage);
+  assert.deepEqual(binding.evidence.coverage, ['单轮与多轮 Agent Loop']);
+  assert.notEqual(binding.evidence.coverage, validCoverage);
+  assert.equal(Object.getPrototypeOf(binding.evidence.coverage), Array.prototype);
+  assert.equal(Object.isFrozen(binding.evidence.coverage), true);
+});
+
 test('freezer normalizes line endings and trailing whitespace before hashing', () => {
   const source = ' alpha  \r\nbeta\t\r\n\r\n';
   assert.equal(normalizeSourceText(source), 'alpha\nbeta');
