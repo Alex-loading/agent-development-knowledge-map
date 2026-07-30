@@ -729,6 +729,19 @@ const interviewSpecs = [
   interviewSpec('iq-context-08-3', 'context-08', '请设计上下文、RAG 与记忆架构，并说明 RAG、fine-tuning、长期记忆的职责。', '设计应把动态可引用知识交给版本化 RAG，把稳定行为模式留给 fine-tuning，把主体相关且可治理的信息交给长期记忆；会话 state、这些投影与证据按预算汇入 prompt，并保留端到端 trace。', ['说明 source/index 更新、记忆写入/过期/删除、权限、引用和失败降级。', '验收要分别覆盖职责分配、召回、证据支持、生成忠实性和记忆生命周期。'], '只画向量数据库到模型的一条线，或用训练参数保存频繁变化的政策事实。', '当旧记忆与最新政策证据冲突时如何决胜并记录？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程'], ['integrated-architecture', 'rag-finetuning-memory']),
 ];
 
+const EMPTY_INTERVIEW_CONCEPT_TAGS = Object.freeze([]);
+
+function normalizeInterviewConceptTags(conceptTags) {
+  if (conceptTags === undefined) return EMPTY_INTERVIEW_CONCEPT_TAGS;
+  if (
+    !Array.isArray(conceptTags)
+    || conceptTags.some((tag) => typeof tag !== 'string' || tag.trim().length === 0)
+  ) {
+    throw new TypeError('conceptTags must be an array of non-blank strings');
+  }
+  return Object.freeze([...conceptTags]);
+}
+
 export function createContextInterviewQuestion(spec) {
   return {
     id: spec.id,
@@ -741,7 +754,7 @@ export function createContextInterviewQuestion(spec) {
     frequency: spec.frequency,
     difficulty: spec.difficulty,
     roles: [...spec.roles],
-    conceptTags: [...spec.conceptTags],
+    conceptTags: normalizeInterviewConceptTags(spec.conceptTags),
   };
 }
 
@@ -857,6 +870,108 @@ const sourceImpactClaims = [
     ],
   },
 ];
+
+const sourceContributionLedger = [
+  {
+    unitId: 'context-source-unit-01-projection-narrative',
+    category: 'primary',
+    lessonId: 'context-01',
+    targetId: 'claim:prompt-stuffing-is-context-engineering',
+    resourceIds: ['res-context-primary-javaguide-context'],
+    claimIds: ['prompt-stuffing-is-context-engineering'],
+    rationale: '以 JavaGuide 的上下文工程叙事确定五类对象和有来源投影的主解释顺序。',
+  },
+  {
+    unitId: 'context-source-unit-02-budget-narrative',
+    category: 'primary',
+    lessonId: 'context-02',
+    targetId: 'claim:fixed-context-ratio-is-universal',
+    resourceIds: ['res-context-primary-feishu-context-offloading'],
+    claimIds: ['fixed-context-ratio-is-universal'],
+    rationale: '以活动上下文和外置边界重构预算、输出预留、显式排除与可恢复失败的主叙事。',
+  },
+  {
+    unitId: 'context-source-unit-03-compaction-narrative',
+    category: 'primary',
+    lessonId: 'context-03',
+    targetId: 'claim:summary-is-canonical-source-of-truth',
+    resourceIds: ['res-context-primary-feishu-microcompact'],
+    claimIds: ['summary-is-canonical-source-of-truth'],
+    rationale: '以有损压缩观察确定 summary、canonical state、事件证据和原文回取的责任边界。',
+  },
+  {
+    unitId: 'context-source-unit-04-ingestion-narrative',
+    category: 'primary',
+    lessonId: 'context-04',
+    targetId: 'claim:vector-database-is-complete-rag',
+    resourceIds: ['res-context-primary-javaguide-document-processing'],
+    claimIds: ['vector-database-is-complete-rag'],
+    rationale: '以文档处理叙事组织 acquire 到 index 的七阶段摄取、版本、权限和 span 传递。',
+  },
+  {
+    unitId: 'context-source-unit-05-evidence-narrative',
+    category: 'primary',
+    lessonId: 'context-06',
+    targetId: 'claim:retrieval-success-guarantees-grounding',
+    resourceIds: ['res-context-primary-feishu-tool-truth'],
+    claimIds: ['retrieval-success-guarantees-grounding'],
+    rationale: '以工具 observation 边界深化 evidence packet、callId、hash、citation 与 claim 支持核验。',
+  },
+  {
+    unitId: 'context-source-unit-06-graphrag-narrative',
+    category: 'primary',
+    lessonId: 'context-08',
+    targetId: 'claim:graphrag-replaces-vector-retrieval',
+    resourceIds: ['res-context-primary-javaguide-graphrag'],
+    claimIds: ['graphrag-replaces-vector-retrieval'],
+    rationale: '以 GraphRAG 体系化叙事确定关系查询分支、知识更新边界和原文证据回归路径。',
+  },
+  {
+    unitId: 'context-source-unit-07-context-verification',
+    category: 'verification',
+    lessonId: 'context-02',
+    targetId: 'claim:fixed-context-ratio-is-universal',
+    resourceIds: ['res-context-lost-middle'],
+    claimIds: ['fixed-context-ratio-is-universal'],
+    rationale: '以长上下文研究的任务和位置边界核验窗口容量不等于稳定有效利用，也不导出固定预算比例。',
+  },
+  {
+    unitId: 'context-source-unit-08-retrieval-verification',
+    category: 'verification',
+    lessonId: 'context-05',
+    targetId: 'claim:dense-retrieval-always-dominates',
+    resourceIds: ['res-context-rrf', 'res-context-beir'],
+    claimIds: ['dense-retrieval-always-dominates'],
+    rationale: '以 RRF 数学和 BEIR 任务边界核验 sparse、dense、hybrid 的融合方式与跨数据集外推限制。',
+  },
+  {
+    unitId: 'context-source-unit-09-citation-verification',
+    category: 'verification',
+    lessonId: 'context-06',
+    targetId: 'claim:retrieval-success-guarantees-grounding',
+    resourceIds: ['res-context-openai-citations', 'res-context-alce', 'res-context-ragas'],
+    claimIds: ['retrieval-success-guarantees-grounding'],
+    rationale: '以官方引用格式和学术评测维度核验可回源、citation correctness、completeness 与生成忠实并不等价。',
+  },
+  {
+    unitId: 'context-source-unit-10-curriculum-synthesis',
+    category: 'other',
+    lessonId: 'context-08',
+    targetId: 'claim:graphrag-replaces-vector-retrieval',
+    resourceIds: ['res-context-ragflow'],
+    claimIds: ['graphrag-replaces-vector-retrieval'],
+    rationale: '把既有八课、三项实验、测评和 progress 契约重新接入统一架构，同时保持所有稳定身份与学习路径。',
+  },
+];
+
+const sourceContributionSummary = Object.fromEntries(
+  ['primary', 'verification', 'other'].map((category) => {
+    const decisionUnits = sourceContributionLedger.filter(
+      (unit) => unit.category === category,
+    ).length;
+    return [category, { decisionUnits, share: decisionUnits * 10 }];
+  }),
+);
 
 export function resolveSourceImpactClaim(targetId) {
   if (typeof targetId !== 'string' || !targetId.startsWith('claim:')) {
@@ -974,5 +1089,7 @@ export const contextRagMemory = deepFreeze({
   interviewQuestions,
   sourceImpactClaims,
   sourceImpactAudit,
+  sourceContributionLedger,
+  sourceContributionSummary,
   outcomeRegistry: contextRagMemoryOutcomeRegistry,
 });

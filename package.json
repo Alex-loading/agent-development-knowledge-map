@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "check:primary-references": "node scripts/generate-primary-reference-artifacts.mjs --check",
+    "check:context-visuals": "node scripts/generate-context-rag-memory-visuals.mjs --check && node scripts/generate-context-rag-memory-visual-inventory.mjs --check",
     "freeze:primary-references": "node scripts/freeze-primary-references.mjs",
+    "generate:context-visuals": "node scripts/generate-context-rag-memory-visuals.mjs && node scripts/generate-context-rag-memory-visual-inventory.mjs",
     "generate:primary-references": "node scripts/generate-primary-reference-artifacts.mjs",
     "test": "node --test",
     "serve": "python3 -m http.server 4173"

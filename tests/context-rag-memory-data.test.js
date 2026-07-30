@@ -483,6 +483,41 @@ test('editing interview copy preserves its declared identity and ownership', () 
   assert.notEqual(revised.question, original.question);
 });
 
+test('creates prior-shape and tagged interviews while rejecting invalid concept tags', () => {
+  const priorShape = {
+    id: 'iq-context-compat',
+    lessonId: 'context-01',
+    question: '兼容性问题',
+    shortAnswer: '兼容性答案保留此前所有字段，同时不要求调用方补充新标签。',
+    deepDive: ['第一条深入说明用于兼容测试。', '第二条深入说明用于兼容测试。'],
+    misconceptions: ['错误理解示例。'],
+    followUps: ['后续问题示例？'],
+    frequency: '高',
+    difficulty: '基础',
+    roles: ['Agent 开发'],
+  };
+  const prior = createContextInterviewQuestion(priorShape);
+  assert.deepEqual(prior.conceptTags, []);
+  assert.ok(Object.isFrozen(prior.conceptTags));
+
+  const tagged = createContextInterviewQuestion({
+    ...priorShape,
+    conceptTags: ['projection', 'recoverability'],
+  });
+  assert.deepEqual(tagged.conceptTags, ['projection', 'recoverability']);
+  assert.ok(Object.isFrozen(tagged.conceptTags));
+
+  for (const conceptTags of [null, 'projection', [null], ['projection', '  ']]) {
+    assert.throws(
+      () => createContextInterviewQuestion({ ...priorShape, conceptTags }),
+      {
+        name: 'TypeError',
+        message: /conceptTags must be an array of non-blank strings/,
+      },
+    );
+  }
+});
+
 test('quiz identifiers are stable within and owned by their lessons', () => {
   for (const lesson of contextRagMemory.lessons) {
     assert.deepEqual(

@@ -13,7 +13,7 @@ import {
 import {
   contextRagMemoryVisualFixtures,
   contextRagMemoryVisualInventoryFixtures,
-} from './fixtures/context-rag-memory-visual-fixtures.js';
+} from '../src/data/visuals/context-rag-memory-scenes.js';
 import {
   FakeDocument,
   FakeEvent,

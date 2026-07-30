@@ -10,6 +10,7 @@ import {
 } from '../src/core/progress.js';
 import {
   readMarkdownTable,
+  unwrapCodeSpanList,
   unwrapSingleCodeSpan,
 } from './helpers/markdown-table.js';
 
@@ -350,6 +351,94 @@ test('keeps the Markdown source-impact ledger in exact parity with machine decis
     rationale: row[7],
   }));
   assert.deepEqual(markdownDecisions, contextRagMemory.sourceImpactAudit);
+});
+
+test('publishes a resolvable frozen 6/3/1 source-contribution decision ledger in audit parity', async () => {
+  const units = contextRagMemory.sourceContributionLedger;
+  assert.equal(units.length, 10);
+  assertDeepFrozen(units, 'sourceContributionLedger');
+  const resourcesById = new Map(
+    contextRagMemory.resources.map((resource) => [resource.id, resource]),
+  );
+  const unitIds = new Set();
+  for (const unit of units) {
+    assert.deepEqual(Object.keys(unit), [
+      'unitId',
+      'category',
+      'lessonId',
+      'targetId',
+      'resourceIds',
+      'claimIds',
+      'rationale',
+    ]);
+    assert.match(unit.unitId, /^context-source-unit-\d{2}-[a-z0-9-]+$/);
+    assert.ok(!unitIds.has(unit.unitId), unit.unitId);
+    unitIds.add(unit.unitId);
+    assert.ok(['primary', 'verification', 'other'].includes(unit.category));
+    const lesson = contextRagMemory.lessons.find(({ id }) => id === unit.lessonId);
+    assert.ok(lesson, `${unit.unitId}: lesson`);
+    assert.equal(
+      contextData.resolveSourceImpactClaim(unit.targetId).lessonId,
+      unit.lessonId,
+      `${unit.unitId}: target lesson`,
+    );
+    assert.ok(unit.resourceIds.length > 0, `${unit.unitId}: resources`);
+    assert.ok(unit.claimIds.length > 0, `${unit.unitId}: claims`);
+    for (const resourceId of unit.resourceIds) {
+      assert.ok(resourcesById.has(resourceId), `${unit.unitId}: ${resourceId}`);
+      assert.ok(lesson.resourceIds.includes(resourceId), `${unit.unitId}: lesson resource`);
+    }
+    for (const claimId of unit.claimIds) {
+      assert.equal(
+        contextData.resolveSourceImpactClaim(`claim:${claimId}`).lessonId,
+        unit.lessonId,
+        `${unit.unitId}: ${claimId}`,
+      );
+    }
+    assert.ok(unit.rationale.length >= 20, unit.unitId);
+  }
+  assert.deepEqual(contextRagMemory.sourceContributionSummary, {
+    primary: { decisionUnits: 6, share: 60 },
+    verification: { decisionUnits: 3, share: 30 },
+    other: { decisionUnits: 1, share: 10 },
+  });
+
+  const audit = await readFile(
+    new URL(
+      '../docs/content-audits/2026-07-30-context-rag-memory-primary-reference-reconstruction.md',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  const markdownUnits = readMarkdownTable(audit, [
+    'unitId',
+    'category',
+    'lessonId',
+    'targetId',
+    'resourceIds',
+    'claimIds',
+    'rationale',
+  ]).map((row, index) => ({
+    unitId: unwrapSingleCodeSpan(row[0], `source unit ${index} ID`),
+    category: unwrapSingleCodeSpan(row[1], `source unit ${index} category`),
+    lessonId: unwrapSingleCodeSpan(row[2], `source unit ${index} lesson`),
+    targetId: unwrapSingleCodeSpan(row[3], `source unit ${index} target`),
+    resourceIds: unwrapCodeSpanList(row[4], `source unit ${index} resources`),
+    claimIds: unwrapCodeSpanList(row[5], `source unit ${index} claims`),
+    rationale: row[6],
+  }));
+  assert.deepEqual(markdownUnits, units);
+
+  const summary = Object.fromEntries(
+    readMarkdownTable(audit, ['category', 'decisionUnits', 'share']).map((row, index) => [
+      unwrapSingleCodeSpan(row[0], `source summary ${index} category`),
+      {
+        decisionUnits: Number(row[1]),
+        share: Number(row[2].replace('%', '')),
+      },
+    ]),
+  );
+  assert.deepEqual(summary, contextRagMemory.sourceContributionSummary);
 });
 
 test('keeps reconstructed Context resources and impact registries globally unique and frozen', () => {
