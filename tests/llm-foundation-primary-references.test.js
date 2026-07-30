@@ -94,6 +94,162 @@ const allContributions = new Set([
   'duplicate',
 ]);
 
+const expectedAssessmentOutcomes = Object.freeze({
+  'quiz-llm-01-1': ['field-map', 'model-boundary'],
+  'quiz-llm-01-2': ['application-diagnosis'],
+  'quiz-llm-02-1': ['training-cycle', 'backpropagation', 'optimizer'],
+  'quiz-llm-02-2': ['activation'],
+  'quiz-llm-03-1': ['tokenization'],
+  'quiz-llm-03-2': ['context-budget', 'context-strategy'],
+  'quiz-llm-04-1': ['qkv-attention', 'scaled-dot-product'],
+  'quiz-llm-04-2': ['causal-mask'],
+  'quiz-llm-05-1': ['method-selection', 'rag-finetuning'],
+  'quiz-llm-05-2': ['lora'],
+  'quiz-llm-06-1': ['logit-softmax', 'temperature-top-p'],
+  'quiz-llm-06-2': ['kv-cache'],
+  'quiz-llm-07-1': ['schema-pipeline'],
+  'quiz-llm-07-2': ['instruction-boundary'],
+  'quiz-llm-08-1': ['injection-defense', 'model-application-boundary'],
+  'quiz-llm-08-2': ['eval-funnel'],
+  'iq-llm-01-1': ['field-map', 'model-boundary'],
+  'iq-llm-01-2': ['training-inference-boundary'],
+  'iq-llm-01-3': ['application-diagnosis'],
+  'iq-llm-02-1': ['training-cycle', 'backpropagation', 'optimizer'],
+  'iq-llm-02-2': ['activation'],
+  'iq-llm-02-3': ['generalization'],
+  'iq-llm-03-1': ['tokenization'],
+  'iq-llm-03-2': ['embedding-position'],
+  'iq-llm-03-3': ['context-budget', 'context-strategy'],
+  'iq-llm-04-1': ['qkv-attention', 'scaled-dot-product'],
+  'iq-llm-04-2': ['multi-head'],
+  'iq-llm-04-3': ['transformer-block'],
+  'iq-llm-05-1': ['training-stages', 'preference-boundary'],
+  'iq-llm-05-2': ['method-selection', 'rag-finetuning'],
+  'iq-llm-05-3': ['lora'],
+  'iq-llm-06-1': ['logit-softmax', 'temperature-top-p'],
+  'iq-llm-06-2': ['kv-cache', 'latency-cost'],
+  'iq-llm-06-3': ['latency-cost'],
+  'iq-llm-07-1': [
+    'runtime-contract',
+    'instruction-boundary',
+    'versioned-evaluation',
+  ],
+  'iq-llm-07-2': ['schema-pipeline', 'retry-repair'],
+  'iq-llm-07-3': ['instruction-boundary'],
+  'iq-llm-08-1': ['failure-taxonomy', 'grounding'],
+  'iq-llm-08-2': ['eval-funnel'],
+  'iq-llm-08-3': ['release-pareto'],
+});
+
+const expectedVisualOutcomes = Object.freeze({
+  'visual-llm-01-field-map': ['field-map', 'model-boundary'],
+  'visual-llm-01-learning-loop': ['training-inference-boundary'],
+  'visual-llm-01-autoregressive-generation': ['autoregressive-generation'],
+  'visual-llm-01-training-inference-boundary': ['training-inference-boundary'],
+  'visual-llm-01-application-decision-stack': ['application-diagnosis'],
+  'visual-llm-02-training-cycle': ['training-cycle', 'optimizer'],
+  'visual-llm-02-neuron-forward': ['activation'],
+  'visual-llm-02-backprop-graph': ['backpropagation'],
+  'visual-llm-02-learning-rate-trajectories': ['learning-rate', 'optimizer'],
+  'visual-llm-02-generalization-curves': ['generalization'],
+  'visual-llm-03-text-to-context': ['tokenization', 'embedding-position'],
+  'visual-llm-03-tokenization-comparison': ['tokenization'],
+  'visual-llm-03-embedding-position-space': ['embedding-position'],
+  'visual-llm-03-context-budget': ['context-budget'],
+  'visual-llm-03-context-strategy-matrix': ['context-strategy'],
+  'visual-llm-04-decoder-block': ['transformer-block'],
+  'visual-llm-04-qkv-flow': ['qkv-attention'],
+  'visual-llm-04-score-mask-softmax': ['scaled-dot-product'],
+  'visual-llm-04-multi-head-merge': ['multi-head'],
+  'visual-llm-04-causal-visibility': ['causal-mask'],
+  'visual-llm-05-method-map': ['method-selection'],
+  'visual-llm-05-stage-objectives': ['training-stages'],
+  'visual-llm-05-preference-boundary': ['preference-boundary'],
+  'visual-llm-05-lora-update': ['lora'],
+  'visual-llm-05-rag-finetune-matrix': ['rag-finetuning'],
+  'visual-llm-06-generation-loop': ['sampling-loop'],
+  'visual-llm-06-logit-softmax': ['logit-softmax'],
+  'visual-llm-06-temperature-top-p': ['temperature-top-p'],
+  'visual-llm-06-kv-cache': ['kv-cache'],
+  'visual-llm-06-latency-breakdown': ['latency-cost'],
+  'visual-llm-07-runtime-contract': ['runtime-contract'],
+  'visual-llm-07-instruction-boundary': ['instruction-boundary'],
+  'visual-llm-07-schema-pipeline': ['schema-pipeline'],
+  'visual-llm-07-retry-state-machine': ['retry-repair'],
+  'visual-llm-07-version-eval-loop': ['versioned-evaluation'],
+  'visual-llm-08-failure-map': ['failure-taxonomy'],
+  'visual-llm-08-grounding-chain': ['grounding'],
+  'visual-llm-08-eval-funnel': ['eval-funnel'],
+  'visual-llm-08-injection-defense': [
+    'injection-defense',
+    'model-application-boundary',
+  ],
+  'visual-llm-08-release-pareto': ['release-pareto'],
+});
+
+const sourceImpactContracts = Object.freeze({
+  'impact-llm-01-field-spine': {
+    targetId: 'claim:ai-field-model-application-agent-spine',
+    semanticKey: 'field-spine',
+    summary: /AI.*知识地图.*模型、应用.*Agent runtime/,
+  },
+  'impact-llm-02-training-boundary': {
+    targetId: 'claim:inference-context-does-not-update-parameters',
+    semanticKey: 'training-inference-boundary',
+    summary: /tensor.*activation.*loss.*backprop.*optimizer/,
+  },
+  'impact-llm-03-memory-boundary': {
+    targetId: 'claim:context-is-not-persistent-memory',
+    semanticKey: 'context-memory-boundary',
+    summary: /transcript.*活动上下文.*产品记忆/,
+  },
+  'impact-llm-04-attention-verification': {
+    targetId: 'claim:attention-needs-original-mechanism-verification',
+    semanticKey: 'attention-verification',
+    summary: /Attention.*公式.*架构事实/,
+  },
+  'impact-llm-05-system-versioning': {
+    targetId: 'claim:version-the-whole-llm-system',
+    semanticKey: 'system-versioning',
+    summary: /模型、Prompt、工具 Schema、评测集.*版本化/,
+  },
+  'impact-llm-06-seed-boundary': {
+    targetId: 'claim:seed-is-not-cross-version-determinism',
+    semanticKey: 'seed-version-boundary',
+    summary: /seed.*跨模型版本一致/,
+  },
+  'impact-llm-07-structured-contract': {
+    targetId: 'claim:valid-json-is-not-valid-action',
+    semanticKey: 'structured-output-validation',
+    summary: /parse.*Schema validate.*业务 validate.*repair.*retry/,
+  },
+  'impact-llm-08-eval-loop': {
+    targetId: 'claim:evaluation-is-an-operating-loop',
+    semanticKey: 'evaluation-loop',
+    summary: /Golden Set.*线上灰度.*模型裁判.*人工复核/,
+  },
+  'impact-llm-09-outside-model': {
+    targetId: 'claim:model-safety-is-not-application-control',
+    semanticKey: 'model-application-control-boundary',
+    summary: /模型与应用控制边界.*权限、执行、隐私、监控和恢复/,
+  },
+  'impact-llm-10-tool-protocol-limit': {
+    targetId: 'claim:tool-transcript-is-not-execution-proof',
+    semanticKey: 'tool-execution-truth',
+    summary: /tool call.*真实执行/,
+  },
+  'impact-llm-11-claude-tool-list': {
+    targetId: 'section:llm-07/prompt-as-runtime-contract',
+    semanticKey: 'tool-contract',
+    summary: /Claude Code 工具清单.*工具契约/,
+  },
+  'impact-llm-12-third-party-media': {
+    targetId: 'media-candidate:javaguide-llm-mechanism-figures',
+    semanticKey: 'third-party-mechanism-figures',
+    summary: /拒绝直接复制 JavaGuide.*图表.*原创 SVG/,
+  },
+});
+
 function assertDeepFrozen(value, label, seen = new Set()) {
   if (value === null || typeof value !== 'object' || seen.has(value)) return;
   seen.add(value);
@@ -213,9 +369,28 @@ test('publishes real assessment concept tags and closes visual learning outcomes
   );
 
   assertDeepFrozen(llmFoundation.outcomeRegistry, 'outcomeRegistry');
+  assert.deepEqual(
+    llmFoundation.outcomeRegistry.visuals,
+    expectedVisualOutcomes,
+  );
+  assert.deepEqual(
+    Object.keys(llmFoundation.outcomeRegistry.assessmentVisualCoverage).sort(),
+    Object.keys(expectedAssessmentOutcomes).sort(),
+  );
   for (const [lessonId, assessments] of assessmentsByLesson) {
+    const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
+    const placements = [
+      lesson.knowledgeNote.overviewVisualId,
+      ...lesson.knowledgeNote.sections.flatMap(
+        ({ visuals = [] }) => visuals.map(({ visualId }) => visualId),
+      ),
+    ];
     for (const assessment of assessments) {
-      assert.ok(assessment.conceptTags.length > 0, assessment.id);
+      assert.deepEqual(
+        assessment.conceptTags,
+        expectedAssessmentOutcomes[assessment.id],
+        assessment.id,
+      );
       assert.equal(new Set(assessment.conceptTags).size, assessment.conceptTags.length);
       assert.deepEqual(
         llmFoundation.outcomeRegistry.assessments[assessment.id],
@@ -224,26 +399,33 @@ test('publishes real assessment concept tags and closes visual learning outcomes
           outcomeTags: assessment.conceptTags,
         },
       );
+      const coveredVisualIds = llmFoundation.outcomeRegistry
+        .assessmentVisualCoverage[assessment.id];
+      assert.ok(coveredVisualIds.length > 0, assessment.id);
+      assert.ok(
+        coveredVisualIds.every((visualId) => placements.includes(visualId)),
+        `${assessment.id}: coverage escapes its lesson`,
+      );
+      assert.ok(
+        coveredVisualIds.every((visualId) => expectedVisualOutcomes[visualId]),
+        `${assessment.id}: coverage names an unknown visual`,
+      );
+      const coveredTags = new Set(
+        coveredVisualIds.flatMap((visualId) => (
+          llmFoundation.outcomeRegistry.visuals[visualId]
+        )),
+      );
+      assert.ok(
+        assessment.conceptTags.every((tag) => coveredTags.has(tag)),
+        `${assessment.id}: declared visuals do not cover every assessment outcome`,
+      );
     }
 
-    const lesson = llmFoundation.lessons.find(({ id }) => id === lessonId);
-    const placements = [
-      lesson.knowledgeNote.overviewVisualId,
-      ...lesson.knowledgeNote.sections.flatMap(
-        ({ visuals = [] }) => visuals.map(({ visualId }) => visualId),
-      ),
-    ];
     assert.equal(placements.length, 5, `${lessonId}: five placements`);
     assert.equal(new Set(placements).size, 5, `${lessonId}: unique placements`);
     for (const visualId of placements) {
       const visualTags = llmFoundation.outcomeRegistry.visuals[visualId];
       assert.ok(visualTags?.length > 0, visualId);
-      assert.ok(
-        assessments.some(({ conceptTags }) => (
-          conceptTags.some((tag) => visualTags.includes(tag))
-        )),
-        `${visualId}: no assessment covers its actual outcome`,
-      );
     }
   }
 });
@@ -285,6 +467,10 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
   assert.ok(llmFoundation.sourceImpactClaims.length >= lessonIds.length);
   assertDeepFrozen(llmFoundation.sourceImpactClaims, 'sourceImpactClaims');
   assertDeepFrozen(llmFoundation.sourceImpactAudit, 'sourceImpactAudit');
+  assertDeepFrozen(
+    llmFoundation.sourceImpactMediaCandidates,
+    'sourceImpactMediaCandidates',
+  );
   for (const claim of llmFoundation.sourceImpactClaims) {
     assert.match(claim.id, /^[a-z0-9-]+$/);
     assert.ok(!claimIds.has(claim.id), claim.id);
@@ -294,6 +480,7 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     assert.ok(section, claim.id);
     assert.ok(claim.statement.length >= 30, claim.id);
     assert.ok(claim.sourceIds.length > 0, claim.id);
+    assert.ok(claim.semanticKeys.length > 0, claim.id);
     assert.ok(claim.sourceIds.every((id) => section.sourceIds.includes(id)), claim.id);
     assert.equal(llmData.resolveLlmSourceImpactClaim(`claim:${claim.id}`), claim);
   }
@@ -305,6 +492,7 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
       'resourceId',
       'scope',
       'targetId',
+      'semanticKey',
       'contribution',
       'summary',
       'rationale',
@@ -316,12 +504,26 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     assert.ok(allContributions.has(decision.contribution));
     const lesson = llmFoundation.lessons.find(({ id }) => id === decision.lessonId);
     assert.ok(lesson.resourceIds.includes(decision.resourceId), decision.decisionId);
-    if (decision.scope === 'claim') {
-      const claim = llmData.resolveLlmSourceImpactClaim(decision.targetId);
-      assert.equal(claim.lessonId, decision.lessonId);
-      assert.ok(claim.sourceIds.includes(decision.resourceId));
-    }
+    const contract = sourceImpactContracts[decision.decisionId];
+    assert.ok(contract, decision.decisionId);
+    assert.equal(decision.targetId, contract.targetId, decision.decisionId);
+    assert.equal(decision.semanticKey, contract.semanticKey, decision.decisionId);
+    assert.match(decision.summary, contract.summary, decision.decisionId);
+    const target = llmData.resolveLlmSourceImpactTarget(decision.targetId);
+    const allowedTargetTypes = {
+      claim: ['claim'],
+      narrative: ['section'],
+      media: ['visual', 'asset', 'media-candidate'],
+    }[decision.scope];
+    assert.ok(allowedTargetTypes.includes(target.type), decision.decisionId);
+    assert.equal(target.lessonId, decision.lessonId, decision.decisionId);
+    assert.ok(target.resourceIds.includes(decision.resourceId), decision.decisionId);
+    assert.ok(target.semanticKeys.includes(decision.semanticKey), decision.decisionId);
   }
+  assert.deepEqual(
+    Object.keys(sourceImpactContracts),
+    llmFoundation.sourceImpactAudit.map(({ decisionId }) => decisionId),
+  );
 
   for (const lessonId of lessonIds) {
     assert.ok(
@@ -352,6 +554,7 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     'resourceId',
     'scope',
     'targetId',
+    'semanticKey',
     'contribution',
     'summary',
     'rationale',
@@ -361,9 +564,10 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     resourceId: unwrapSingleCodeSpan(row[2], `decision ${index} resource`),
     scope: unwrapSingleCodeSpan(row[3], `decision ${index} scope`),
     targetId: unwrapSingleCodeSpan(row[4], `decision ${index} target`),
-    contribution: unwrapSingleCodeSpan(row[5], `decision ${index} contribution`),
-    summary: row[6],
-    rationale: row[7],
+    semanticKey: unwrapSingleCodeSpan(row[5], `decision ${index} semantic key`),
+    contribution: unwrapSingleCodeSpan(row[6], `decision ${index} contribution`),
+    summary: row[7],
+    rationale: row[8],
   }));
   assert.deepEqual(markdownDecisions, llmFoundation.sourceImpactAudit);
 

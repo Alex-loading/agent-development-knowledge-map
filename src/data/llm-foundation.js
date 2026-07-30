@@ -396,7 +396,7 @@ const lessons = [
     exercise: { title: '画出自己的 AI 学习边界', brief: '用一张关系图说明领域层级，再为一个资料助理 Agent 选择应用开发路线。', steps: ['画出 AI→机器学习→深度学习，以及生成模型→LLM 的关系并补充交叉说明', '列出训练一个基础模型与调用模型构建 Agent 各自至少四项工作', '写下未来两周只做应用开发时要学与暂缓学的内容'], deliverable: '一张概念关系图和一份不超过 300 字的 Agent 应用开发学习路径。' },
     quiz: [
       quiz('quiz-llm-01-1', '下面哪项最准确地描述 LLM 与深度学习的关系？', ['两者完全等价', 'LLM 通常是基于深度学习的生成模型', '深度学习只是 LLM 的推理接口', 'LLM 包含所有机器学习方法'], 1, 'LLM 通常建立在深度神经网络之上，但深度学习还包括视觉、语音等许多模型。', ['field-map', 'model-boundary']),
-      quiz('quiz-llm-01-2', 'Agent 应用出现事实错误时，第一步更合理的做法是什么？', ['立刻从头训练模型', '增加所有上下文', '建立可复现样例并定位错误来源', '把温度固定为 1'], 2, '先用样例和评测判断是知识、检索、提示还是模型能力问题，才能选择成本合适的修复手段。', ['application-diagnosis', 'training-inference-boundary', 'autoregressive-generation']),
+      quiz('quiz-llm-01-2', 'Agent 应用出现事实错误时，第一步更合理的做法是什么？', ['立刻从头训练模型', '增加所有上下文', '建立可复现样例并定位错误来源', '把温度固定为 1'], 2, '先用样例和评测判断是知识、检索、提示还是模型能力问题，才能选择成本合适的修复手段。', ['application-diagnosis']),
     ],
     interviewQuestionIds: ['iq-llm-01-1', 'iq-llm-01-2', 'iq-llm-01-3'],
     completionCriteria: ['能不看资料画出核心概念关系', '能用训练、推理、应用开发三个视角解释自己的学习范围'],
@@ -415,7 +415,7 @@ const lessons = [
     exercise: { title: '讲清一次参数更新', brief: '任选一个二分类小例子，不依赖公式堆砌，用自己的话串起一轮学习。', steps: ['给出输入、参数、预测与真实标签，并说明损失为何变大或变小', '从损失反推某个权重的梯度方向，再说明优化器如何修改它', '补充学习率过大和过小时分别可能观察到什么'], deliverable: '一段 200–400 字说明，必须包含前向、损失、梯度和参数更新。' },
     quiz: [
       quiz('quiz-llm-02-1', '反向传播直接产生的核心结果是什么？', ['新的训练数据', '每个相关参数的梯度', '最终部署接口', '固定的正确答案'], 1, '反向传播沿计算图使用链式法则计算梯度，参数修改由优化器随后完成。', ['training-cycle', 'backpropagation', 'optimizer']),
-      quiz('quiz-llm-02-2', '多层网络若完全没有非线性激活，主要会怎样？', ['一定无法计算梯度', '多层线性变换仍可合并为一个线性变换', '参数数量自动变成零', '损失函数不再需要'], 1, '线性变换的复合仍是线性变换，网络难以表达复杂的非线性关系。', ['activation', 'generalization', 'learning-rate']),
+      quiz('quiz-llm-02-2', '多层网络若完全没有非线性激活，主要会怎样？', ['一定无法计算梯度', '多层线性变换仍可合并为一个线性变换', '参数数量自动变成零', '损失函数不再需要'], 1, '线性变换的复合仍是线性变换，网络难以表达复杂的非线性关系。', ['activation']),
     ],
     interviewQuestionIds: ['iq-llm-02-1', 'iq-llm-02-2', 'iq-llm-02-3'],
     completionCriteria: ['能从输入到更新完整口述一次训练迭代', '能解释梯度、学习率和激活函数各自解决什么问题'],
@@ -433,8 +433,8 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-03'],
     exercise: { title: 'Token 与上下文预算实验', brief: '比较中英文、代码和重复历史的 token 数，设计一个不超预算的客服 Agent 输入。', steps: ['用 tokenizer 记录同义中英文句子、JSON 和代码片段的 token 数', '给定窗口预算，分别分配系统指令、历史、检索、用户输入和输出额度', '人为加入无关长文并比较模型回答，再写出截断或摘要策略'], deliverable: '一张预算表、三组 token 计数和一段说明质量变化原因的实验结论。', experiment: 'token-budget' },
     quiz: [
-      quiz('quiz-llm-03-1', '关于 token 的说法哪项正确？', ['一个 token 永远等于一个汉字', 'token 边界由 tokenizer 规则决定', 'token 与 embedding 是同一个对象', '所有模型共享完全相同的词表'], 1, '不同 tokenizer 的词表与编码规则不同，同一文本的 token 划分和数量都可能变化。', ['tokenization', 'embedding-position']),
-      quiz('quiz-llm-03-2', '上下文未超过窗口上限时，增加材料为何仍可能变差？', ['模型会自动删除参数', '无关或冲突信息可能干扰注意与指令执行', 'Embedding 会停止工作', '推理会变成训练'], 1, '窗口是容量约束而非质量保证；噪声、冲突和关键证据位置都会影响输出。', ['context-budget', 'context-strategy', 'memory-boundary']),
+      quiz('quiz-llm-03-1', '关于 token 的说法哪项正确？', ['一个 token 永远等于一个汉字', 'token 边界由 tokenizer 规则决定', 'token 与 embedding 是同一个对象', '所有模型共享完全相同的词表'], 1, '不同 tokenizer 的词表与编码规则不同，同一文本的 token 划分和数量都可能变化。', ['tokenization']),
+      quiz('quiz-llm-03-2', '上下文未超过窗口上限时，增加材料为何仍可能变差？', ['模型会自动删除参数', '无关或冲突信息可能干扰注意与指令执行', 'Embedding 会停止工作', '推理会变成训练'], 1, '窗口是容量约束而非质量保证；噪声、冲突和关键证据位置都会影响输出。', ['context-budget', 'context-strategy']),
     ],
     interviewQuestionIds: ['iq-llm-03-1', 'iq-llm-03-2', 'iq-llm-03-3'],
     completionCriteria: ['能用 tokenizer 实测而不是凭字符数猜 token 数', '能为一个真实请求制定包含输出余量的上下文预算'],
@@ -453,7 +453,7 @@ const lessons = [
     exercise: { title: '操纵 Attention 直觉实验', brief: '改变一个短句中的 Query-Key 相似度与掩码，观察权重和输出表示如何变化。', steps: ['在交互面板选择某个 token，记录它对其他位置的注意权重', '提高一个 Key 的匹配分数并解释对应 Value 对输出的影响', '打开因果掩码，说明哪些连接被禁止及其训练意义'], deliverable: '两张权重对比记录，以及一段从输入表示到更新表示的信息流解释。', experiment: 'attention' },
     quiz: [
       quiz('quiz-llm-04-1', 'Self-Attention 中最终被加权汇总的是什么？', ['Query 向量', 'Key 向量', 'Value 向量', '损失函数'], 2, 'Query 与 Key 产生权重，权重用于对 Value 加权汇总，从其他位置读取信息。', ['qkv-attention', 'scaled-dot-product']),
-      quiz('quiz-llm-04-2', 'decoder-only 语言模型使用因果掩码的主要原因是什么？', ['减少词表大小', '阻止训练位置读取未来 token', '删除所有残差连接', '让每个头参数相同'], 1, '下一 token 预测不能偷看答案，因果掩码让训练时的信息可见性符合生成过程。', ['causal-mask', 'transformer-block', 'multi-head']),
+      quiz('quiz-llm-04-2', 'decoder-only 语言模型使用因果掩码的主要原因是什么？', ['减少词表大小', '阻止训练位置读取未来 token', '删除所有残差连接', '让每个头参数相同'], 1, '下一 token 预测不能偷看答案，因果掩码让训练时的信息可见性符合生成过程。', ['causal-mask']),
     ],
     interviewQuestionIds: ['iq-llm-04-1', 'iq-llm-04-2', 'iq-llm-04-3'],
     completionCriteria: ['能不用公式也准确解释 Q、K、V 的协作', '能画出 decoder-only Transformer 块并说明信息与梯度通路'],
@@ -471,8 +471,8 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-05'],
     exercise: { title: '训练方案决策表', brief: '为客服语气、公司制度问答和专业分类三个需求比较技术路线。', steps: ['分别写出预训练、SFT、偏好优化、LoRA 和 RAG 的直接优化目标', '从数据、计算、更新频率、可引用性和风险五个维度评分', '为三个需求选择方案并写出在上线前必须通过的评测'], deliverable: '一张目标—成本—用例对比表，以及三项有证据链的技术选择。' },
     quiz: [
-      quiz('quiz-llm-05-1', '需要每天更新且回答必须给出处的制度知识，优先验证哪种方案？', ['从头预训练', 'RAG', '只提高温度', '删除系统指令'], 1, 'RAG 可在推理时使用可更新、可引用的外部资料，也更容易做权限与版本管理。', ['method-selection', 'rag-finetuning', 'versioned-system']),
-      quiz('quiz-llm-05-2', 'LoRA 的核心取舍更接近哪项？', ['完全不训练任何参数', '只训练低秩增量以降低微调资源成本', '自动消除幻觉', '把上下文窗口变成无限'], 1, 'LoRA 冻结大部分原参数并学习低秩适配参数，但仍需训练数据、验证与部署管理。', ['lora', 'training-stages', 'preference-boundary']),
+      quiz('quiz-llm-05-1', '需要每天更新且回答必须给出处的制度知识，优先验证哪种方案？', ['从头预训练', 'RAG', '只提高温度', '删除系统指令'], 1, 'RAG 可在推理时使用可更新、可引用的外部资料，也更容易做权限与版本管理。', ['method-selection', 'rag-finetuning']),
+      quiz('quiz-llm-05-2', 'LoRA 的核心取舍更接近哪项？', ['完全不训练任何参数', '只训练低秩增量以降低微调资源成本', '自动消除幻觉', '把上下文窗口变成无限'], 1, 'LoRA 冻结大部分原参数并学习低秩适配参数，但仍需训练数据、验证与部署管理。', ['lora']),
     ],
     interviewQuestionIds: ['iq-llm-05-1', 'iq-llm-05-2', 'iq-llm-05-3'],
     completionCriteria: ['能按目标而不是按流行度选择 RAG 或微调', '能解释预训练、SFT、偏好优化与 LoRA 的关系和边界'],
@@ -490,8 +490,8 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-06'],
     exercise: { title: '采样参数对比实验', brief: '固定提示，组合调整 temperature 与 top-p，比较稳定性、多样性和任务适配。', steps: ['用同一提示在低温与高温下各生成多次，记录重复率和错误类型', '固定 temperature 后逐步收窄 top-p，观察候选变化', '为代码生成、创意标题和结构化抽取分别选择参数并说明理由'], deliverable: '至少六次输出的对比表，以及面向三类任务的参数决策说明。', experiment: 'sampling' },
     quiz: [
-      quiz('quiz-llm-06-1', 'temperature 调高通常直接改变什么？', ['训练数据', 'logits 转换后的概率分布形状', '上下文窗口硬上限', 'KV Cache 层数'], 1, 'temperature 缩放 logits，使概率分布通常更平或更尖，从而影响采样多样性。', ['sampling-loop', 'logit-softmax', 'temperature-top-p']),
-      quiz('quiz-llm-06-2', 'KV Cache 加速自回归生成的原因是什么？', ['缓存历史 token 的 K/V，避免每步重复计算全部前缀', '提前存下所有正确答案', '减少模型参数数量', '取消注意力计算'], 0, '历史位置的 K/V 在后续步可复用，新 token 仍要计算并与缓存做注意力。', ['kv-cache', 'latency-cost', 'version-drift']),
+      quiz('quiz-llm-06-1', 'temperature 调高通常直接改变什么？', ['训练数据', 'logits 转换后的概率分布形状', '上下文窗口硬上限', 'KV Cache 层数'], 1, 'temperature 缩放 logits，使概率分布通常更平或更尖，从而影响采样多样性。', ['logit-softmax', 'temperature-top-p']),
+      quiz('quiz-llm-06-2', 'KV Cache 加速自回归生成的原因是什么？', ['缓存历史 token 的 K/V，避免每步重复计算全部前缀', '提前存下所有正确答案', '减少模型参数数量', '取消注意力计算'], 0, '历史位置的 K/V 在后续步可复用，新 token 仍要计算并与缓存做注意力。', ['kv-cache']),
     ],
     interviewQuestionIds: ['iq-llm-06-1', 'iq-llm-06-2', 'iq-llm-06-3'],
     completionCriteria: ['能从 logits 讲到采样和停止条件', '能说明 KV Cache 为什么提速、为什么又限制长上下文并发'],
@@ -509,8 +509,8 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-07'],
     exercise: { title: '设计结构化输出契约', brief: '为工单分类器设计提示、JSON Schema、验证错误和降级行为。', steps: ['定义类别、优先级、理由和证据字段，写出必填、类型和枚举约束', '加入两个边界示例与一条不可信工单内容，明确它不能覆盖系统规则', '设计解析失败、业务校验失败和连续失败时的不同处理'], deliverable: '一份提示模板、一份 JSON Schema 和带最大重试次数的伪代码。' },
     quiz: [
-      quiz('quiz-llm-07-1', '模型返回了可解析 JSON，生产系统下一步应做什么？', ['直接执行所有动作', '继续做 Schema 与业务规则校验', '删除日志', '把温度调到最高'], 1, '语法正确不代表字段齐全或业务有效，必须在可信代码中执行结构与业务校验。', ['schema-pipeline', 'retry-repair', 'tool-truth']),
-      quiz('quiz-llm-07-2', '检索文档中出现“忽略之前规则”时，应如何理解？', ['它自动升级为系统指令', '它属于不可信数据，不能覆盖更高层规则', '它证明模型已被微调', '它应无限重试'], 1, '外部内容是任务数据而不是授权来源，应用要通过边界、权限和工具校验抵抗注入。', ['instruction-boundary', 'runtime-contract', 'versioned-evaluation']),
+      quiz('quiz-llm-07-1', '模型返回了可解析 JSON，生产系统下一步应做什么？', ['直接执行所有动作', '继续做 Schema 与业务规则校验', '删除日志', '把温度调到最高'], 1, '语法正确不代表字段齐全或业务有效，必须在可信代码中执行结构与业务校验。', ['schema-pipeline']),
+      quiz('quiz-llm-07-2', '检索文档中出现“忽略之前规则”时，应如何理解？', ['它自动升级为系统指令', '它属于不可信数据，不能覆盖更高层规则', '它证明模型已被微调', '它应无限重试'], 1, '外部内容是任务数据而不是授权来源，应用要通过边界、权限和工具校验抵抗注入。', ['instruction-boundary']),
     ],
     interviewQuestionIds: ['iq-llm-07-1', 'iq-llm-07-2', 'iq-llm-07-3'],
     completionCriteria: ['能把一个模糊提示改写成包含成功标准和边界的契约', '能实现 Schema 校验、有限重试与安全降级流程'],
@@ -528,8 +528,8 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-08'],
     exercise: { title: 'LLM 功能测试清单', brief: '为“读取知识库并起草退款答复”的功能建立发布前检查表。', steps: ['收集正常、信息不足、冲突材料、超长上下文和对抗指令样例', '为正确性、忠实度、格式、安全、成本和 P95 延迟定义指标与阈值', '列出工具最小权限、高风险操作确认、日志脱敏和失败降级方案'], deliverable: '一份至少 15 条用例、含指标与责任人的发布检查表。' },
     quiz: [
-      quiz('quiz-llm-08-1', '以下哪项最能构成 Prompt Injection 的系统性防线？', ['只在提示里写“不要被攻击”', '最小权限、输入标记、参数校验和敏感动作确认', '无限扩大上下文', '隐藏所有错误'], 1, '提示可辅助模型识别风险，但真正的安全边界来自权限、验证、隔离和人工控制。', ['injection-defense', 'failure-taxonomy', 'model-application-boundary']),
-      quiz('quiz-llm-08-2', '高质量离线评测集应该主要从哪里演进？', ['只用随机百科问题', '真实需求、边界条件与生产失败样例', '只保留模型答对的题', '每次发布都换成完全不同指标'], 1, '真实任务和失败日志让评测能预测用户风险，版本化固定集还能发现回归。', ['eval-funnel', 'grounding', 'release-pareto']),
+      quiz('quiz-llm-08-1', '以下哪项最能构成 Prompt Injection 的系统性防线？', ['只在提示里写“不要被攻击”', '最小权限、输入标记、参数校验和敏感动作确认', '无限扩大上下文', '隐藏所有错误'], 1, '提示可辅助模型识别风险，但真正的安全边界来自权限、验证、隔离和人工控制。', ['injection-defense', 'model-application-boundary']),
+      quiz('quiz-llm-08-2', '高质量离线评测集应该主要从哪里演进？', ['只用随机百科问题', '真实需求、边界条件与生产失败样例', '只保留模型答对的题', '每次发布都换成完全不同指标'], 1, '真实任务和失败日志让评测能预测用户风险，版本化固定集还能发现回归。', ['eval-funnel']),
     ],
     interviewQuestionIds: ['iq-llm-08-1', 'iq-llm-08-2', 'iq-llm-08-3'],
     completionCriteria: ['能为常见错误选择对应的评测与缓解方案', '能提交兼顾质量、安全、成本和延迟的上线门槛'],
@@ -709,29 +709,29 @@ const interviewSpecs = [
 
 const interviewConceptTags = {
   'iq-llm-01-1': ['field-map', 'model-boundary'],
-  'iq-llm-01-2': ['training-inference-boundary', 'autoregressive-generation'],
-  'iq-llm-01-3': ['application-diagnosis', 'model-boundary'],
+  'iq-llm-01-2': ['training-inference-boundary'],
+  'iq-llm-01-3': ['application-diagnosis'],
   'iq-llm-02-1': ['training-cycle', 'backpropagation', 'optimizer'],
-  'iq-llm-02-2': ['activation', 'training-cycle'],
-  'iq-llm-02-3': ['generalization', 'learning-rate'],
+  'iq-llm-02-2': ['activation'],
+  'iq-llm-02-3': ['generalization'],
   'iq-llm-03-1': ['tokenization'],
   'iq-llm-03-2': ['embedding-position'],
-  'iq-llm-03-3': ['context-budget', 'context-strategy', 'memory-boundary'],
+  'iq-llm-03-3': ['context-budget', 'context-strategy'],
   'iq-llm-04-1': ['qkv-attention', 'scaled-dot-product'],
-  'iq-llm-04-2': ['multi-head', 'qkv-attention'],
-  'iq-llm-04-3': ['transformer-block', 'causal-mask'],
+  'iq-llm-04-2': ['multi-head'],
+  'iq-llm-04-3': ['transformer-block'],
   'iq-llm-05-1': ['training-stages', 'preference-boundary'],
   'iq-llm-05-2': ['method-selection', 'rag-finetuning'],
-  'iq-llm-05-3': ['lora', 'training-stages'],
-  'iq-llm-06-1': ['sampling-loop', 'temperature-top-p', 'logit-softmax'],
+  'iq-llm-05-3': ['lora'],
+  'iq-llm-06-1': ['logit-softmax', 'temperature-top-p'],
   'iq-llm-06-2': ['kv-cache', 'latency-cost'],
-  'iq-llm-06-3': ['latency-cost', 'version-drift'],
+  'iq-llm-06-3': ['latency-cost'],
   'iq-llm-07-1': ['runtime-contract', 'instruction-boundary', 'versioned-evaluation'],
   'iq-llm-07-2': ['schema-pipeline', 'retry-repair'],
-  'iq-llm-07-3': ['instruction-boundary', 'tool-truth'],
+  'iq-llm-07-3': ['instruction-boundary'],
   'iq-llm-08-1': ['failure-taxonomy', 'grounding'],
-  'iq-llm-08-2': ['eval-funnel', 'grounding'],
-  'iq-llm-08-3': ['release-pareto', 'model-application-boundary'],
+  'iq-llm-08-2': ['eval-funnel'],
+  'iq-llm-08-3': ['release-pareto'],
 };
 
 const interviewQuestions = interviewSpecs.map((spec) => ({
@@ -750,10 +750,10 @@ const visualOutcomes = {
   'visual-llm-02-backprop-graph': ['backpropagation'],
   'visual-llm-02-learning-rate-trajectories': ['learning-rate', 'optimizer'],
   'visual-llm-02-generalization-curves': ['generalization'],
-  'visual-llm-03-text-to-context': ['tokenization', 'context-budget'],
+  'visual-llm-03-text-to-context': ['tokenization', 'embedding-position'],
   'visual-llm-03-tokenization-comparison': ['tokenization'],
   'visual-llm-03-embedding-position-space': ['embedding-position'],
-  'visual-llm-03-context-budget': ['context-budget', 'memory-boundary'],
+  'visual-llm-03-context-budget': ['context-budget'],
   'visual-llm-03-context-strategy-matrix': ['context-strategy'],
   'visual-llm-04-decoder-block': ['transformer-block'],
   'visual-llm-04-qkv-flow': ['qkv-attention'],
@@ -764,16 +764,16 @@ const visualOutcomes = {
   'visual-llm-05-stage-objectives': ['training-stages'],
   'visual-llm-05-preference-boundary': ['preference-boundary'],
   'visual-llm-05-lora-update': ['lora'],
-  'visual-llm-05-rag-finetune-matrix': ['rag-finetuning', 'versioned-system'],
+  'visual-llm-05-rag-finetune-matrix': ['rag-finetuning'],
   'visual-llm-06-generation-loop': ['sampling-loop'],
   'visual-llm-06-logit-softmax': ['logit-softmax'],
   'visual-llm-06-temperature-top-p': ['temperature-top-p'],
   'visual-llm-06-kv-cache': ['kv-cache'],
-  'visual-llm-06-latency-breakdown': ['latency-cost', 'version-drift'],
+  'visual-llm-06-latency-breakdown': ['latency-cost'],
   'visual-llm-07-runtime-contract': ['runtime-contract'],
   'visual-llm-07-instruction-boundary': ['instruction-boundary'],
   'visual-llm-07-schema-pipeline': ['schema-pipeline'],
-  'visual-llm-07-retry-state-machine': ['retry-repair', 'tool-truth'],
+  'visual-llm-07-retry-state-machine': ['retry-repair'],
   'visual-llm-07-version-eval-loop': ['versioned-evaluation'],
   'visual-llm-08-failure-map': ['failure-taxonomy'],
   'visual-llm-08-grounding-chain': ['grounding'],
@@ -793,13 +793,111 @@ const assessmentOutcomes = Object.fromEntries([
   ]),
 ]);
 
+const assessmentVisualCoverage = {
+  'quiz-llm-01-1': ['visual-llm-01-field-map'],
+  'quiz-llm-01-2': ['visual-llm-01-application-decision-stack'],
+  'quiz-llm-02-1': [
+    'visual-llm-02-training-cycle',
+    'visual-llm-02-backprop-graph',
+  ],
+  'quiz-llm-02-2': ['visual-llm-02-neuron-forward'],
+  'quiz-llm-03-1': ['visual-llm-03-tokenization-comparison'],
+  'quiz-llm-03-2': [
+    'visual-llm-03-context-budget',
+    'visual-llm-03-context-strategy-matrix',
+  ],
+  'quiz-llm-04-1': [
+    'visual-llm-04-qkv-flow',
+    'visual-llm-04-score-mask-softmax',
+  ],
+  'quiz-llm-04-2': ['visual-llm-04-causal-visibility'],
+  'quiz-llm-05-1': [
+    'visual-llm-05-method-map',
+    'visual-llm-05-rag-finetune-matrix',
+  ],
+  'quiz-llm-05-2': ['visual-llm-05-lora-update'],
+  'quiz-llm-06-1': [
+    'visual-llm-06-logit-softmax',
+    'visual-llm-06-temperature-top-p',
+  ],
+  'quiz-llm-06-2': ['visual-llm-06-kv-cache'],
+  'quiz-llm-07-1': ['visual-llm-07-schema-pipeline'],
+  'quiz-llm-07-2': ['visual-llm-07-instruction-boundary'],
+  'quiz-llm-08-1': ['visual-llm-08-injection-defense'],
+  'quiz-llm-08-2': ['visual-llm-08-eval-funnel'],
+  'iq-llm-01-1': ['visual-llm-01-field-map'],
+  'iq-llm-01-2': ['visual-llm-01-training-inference-boundary'],
+  'iq-llm-01-3': ['visual-llm-01-application-decision-stack'],
+  'iq-llm-02-1': [
+    'visual-llm-02-training-cycle',
+    'visual-llm-02-backprop-graph',
+  ],
+  'iq-llm-02-2': ['visual-llm-02-neuron-forward'],
+  'iq-llm-02-3': ['visual-llm-02-generalization-curves'],
+  'iq-llm-03-1': ['visual-llm-03-tokenization-comparison'],
+  'iq-llm-03-2': ['visual-llm-03-embedding-position-space'],
+  'iq-llm-03-3': [
+    'visual-llm-03-context-budget',
+    'visual-llm-03-context-strategy-matrix',
+  ],
+  'iq-llm-04-1': [
+    'visual-llm-04-qkv-flow',
+    'visual-llm-04-score-mask-softmax',
+  ],
+  'iq-llm-04-2': ['visual-llm-04-multi-head-merge'],
+  'iq-llm-04-3': ['visual-llm-04-decoder-block'],
+  'iq-llm-05-1': [
+    'visual-llm-05-stage-objectives',
+    'visual-llm-05-preference-boundary',
+  ],
+  'iq-llm-05-2': [
+    'visual-llm-05-method-map',
+    'visual-llm-05-rag-finetune-matrix',
+  ],
+  'iq-llm-05-3': ['visual-llm-05-lora-update'],
+  'iq-llm-06-1': [
+    'visual-llm-06-logit-softmax',
+    'visual-llm-06-temperature-top-p',
+  ],
+  'iq-llm-06-2': [
+    'visual-llm-06-kv-cache',
+    'visual-llm-06-latency-breakdown',
+  ],
+  'iq-llm-06-3': ['visual-llm-06-latency-breakdown'],
+  'iq-llm-07-1': [
+    'visual-llm-07-runtime-contract',
+    'visual-llm-07-instruction-boundary',
+    'visual-llm-07-version-eval-loop',
+  ],
+  'iq-llm-07-2': [
+    'visual-llm-07-schema-pipeline',
+    'visual-llm-07-retry-state-machine',
+  ],
+  'iq-llm-07-3': ['visual-llm-07-instruction-boundary'],
+  'iq-llm-08-1': [
+    'visual-llm-08-failure-map',
+    'visual-llm-08-grounding-chain',
+  ],
+  'iq-llm-08-2': ['visual-llm-08-eval-funnel'],
+  'iq-llm-08-3': ['visual-llm-08-release-pareto'],
+};
+
 const sourceImpactClaims = [
+  {
+    id: 'ai-field-model-application-agent-spine',
+    lessonId: 'llm-01',
+    sectionId: 'map-the-field',
+    statement: 'AI 领域地图必须区分能力目标、模型方法、应用系统与 Agent runtime：LLM 是模型组件，应用与 Agent 在模型之外组织上下文、工具和控制。',
+    sourceIds: ['res-llm-primary-javaguide-ai', 'res-ms-ai', 'res-ms-genai'],
+    semanticKeys: ['field-spine'],
+  },
   {
     id: 'llm-is-not-an-answer-database',
     lessonId: 'llm-01',
     sectionId: 'from-generation-to-llm',
     statement: 'LLM 通过 next-token prediction 学习条件分布，不是保存并检索正确答案的数据库；流畅、相关与事实正确必须分别评测。',
     sourceIds: ['res-llm-primary-javaguide-ai', 'res-llm-primary-javaguide-core-concepts', 'res-hf-llm'],
+    semanticKeys: ['autoregressive-truth-boundary'],
   },
   {
     id: 'inference-context-does-not-update-parameters',
@@ -807,6 +905,7 @@ const sourceImpactClaims = [
     sectionId: 'training-loop-and-tensor-shapes',
     statement: '训练闭环通过反向传播和优化器更新参数，标准推理上下文只参与前向计算，不会自动成为训练样本。',
     sourceIds: ['res-llm-primary-javaguide-mechanism', 'res-d2l-zh', 'res-karpathy'],
+    semanticKeys: ['training-inference-boundary'],
   },
   {
     id: 'context-is-not-persistent-memory',
@@ -814,6 +913,7 @@ const sourceImpactClaims = [
     sectionId: 'context-and-shared-budget',
     statement: '上下文窗口承载本次请求的 transcript 与证据，但不等于跨会话持久记忆；持久状态由模型外部系统选择和注入。',
     sourceIds: ['res-llm-primary-javaguide-mechanism', 'res-llm-primary-javaguide-prompt', 'res-llm-primary-feishu-prompt-memory', 'res-llm-primary-feishu-context-offloading', 'res-openai-cookbook'],
+    semanticKeys: ['context-memory-boundary'],
   },
   {
     id: 'attention-needs-original-mechanism-verification',
@@ -821,6 +921,7 @@ const sourceImpactClaims = [
     sectionId: 'scaled-dot-softmax',
     statement: 'JavaGuide 可组织 Q、K、V 与采样的教学顺序，但 scaled dot-product、因果掩码和 Transformer block 的机制必须由原论文与可核验教材支撑。',
     sourceIds: ['res-llm-primary-javaguide-mechanism', 'res-attention-paper', 'res-rasbt'],
+    semanticKeys: ['attention-verification'],
   },
   {
     id: 'version-the-whole-llm-system',
@@ -828,6 +929,7 @@ const sourceImpactClaims = [
     sectionId: 'data-quality-bias-and-evaluation',
     statement: '模型、推理 Prompt、工具 Schema 和 eval set 必须分别版本化，才能把质量变化归因到可复现的系统元组。',
     sourceIds: ['res-llm-primary-feishu-version-drifting', 'res-llm-primary-javaguide-core-concepts', 'res-openai-cookbook'],
+    semanticKeys: ['system-versioning'],
   },
   {
     id: 'seed-is-not-cross-version-determinism',
@@ -835,13 +937,23 @@ const sourceImpactClaims = [
     sectionId: 'temperature-and-greedy-boundary',
     statement: '低温、greedy 或 seed 只能在受控条件下提高复现机会，不能保证跨模型版本、服务后端或硬件得到一致输出。',
     sourceIds: ['res-llm-primary-feishu-version-drifting', 'res-llm-primary-javaguide-mechanism', 'res-openai-cookbook'],
+    semanticKeys: ['seed-version-boundary'],
   },
   {
     id: 'valid-json-is-not-valid-action',
     lessonId: 'llm-07',
     sectionId: 'schema-and-structured-output',
     statement: '结构化输出即使通过 JSON 解析和 Schema，也可能在权限、资源存在性和业务不变量上错误，必须继续 validate、repair 或安全降级。',
-    sourceIds: ['res-llm-primary-javaguide-structured-output', 'res-llm-primary-feishu-tool-truth', 'res-openai-cookbook'],
+    sourceIds: ['res-llm-primary-javaguide-structured-output', 'res-openai-cookbook'],
+    semanticKeys: ['structured-output-validation'],
+  },
+  {
+    id: 'tool-transcript-is-not-execution-proof',
+    lessonId: 'llm-07',
+    sectionId: 'prompt-as-runtime-contract',
+    statement: '模型生成 tool call 或对话 transcript 出现 tool result，只能证明候选或消息被记录，不能证明宿主实际执行；执行身份、真实 observation 与副作用必须由执行器日志核验。',
+    sourceIds: ['res-llm-primary-feishu-tool-truth', 'res-hf-agents'],
+    semanticKeys: ['tool-execution-truth'],
   },
   {
     id: 'model-safety-is-not-application-control',
@@ -849,6 +961,7 @@ const sourceImpactClaims = [
     sectionId: 'defense-in-depth-and-runtime-operations',
     statement: '模型安全能力不能替代应用的最小权限、参数校验、人工确认、隐私控制、监控和 kill switch；模型只产生候选。',
     sourceIds: ['res-llm-primary-feishu-beyond-model', 'res-owasp-prompt-injection', 'res-hf-agents'],
+    semanticKeys: ['model-application-control-boundary'],
   },
   {
     id: 'evaluation-is-an-operating-loop',
@@ -856,6 +969,21 @@ const sourceImpactClaims = [
     sectionId: 'eval-dataset-and-slices',
     statement: '评测从 dataset 与 rubric 出发，经 offline eval、model grader 和 human review 校准，再由 production monitoring 回灌真实失败。',
     sourceIds: ['res-llm-primary-javaguide-evaluation', 'res-llm-primary-feishu-version-drifting', 'res-openai-evals'],
+    semanticKeys: ['evaluation-loop'],
+  },
+];
+
+const sourceImpactSectionSemantics = Object.freeze({
+  'section:llm-07/prompt-as-runtime-contract': Object.freeze(['tool-contract']),
+});
+
+const sourceImpactMediaCandidates = [
+  {
+    id: 'javaguide-llm-mechanism-figures',
+    lessonId: 'llm-04',
+    resourceIds: ['res-llm-primary-javaguide-mechanism'],
+    semanticKeys: ['third-party-mechanism-figures'],
+    description: 'JavaGuide LLM 运行机制页面中用于解释 Attention 与 Transformer 的第三方图表候选。',
   },
 ];
 
@@ -866,6 +994,55 @@ export function resolveLlmSourceImpactClaim(targetId) {
   const claim = sourceImpactClaims.find(({ id }) => id === targetId.slice(6));
   if (!claim) throw new RangeError(`Unknown LLM source-impact claim: ${targetId}`);
   return claim;
+}
+
+export function resolveLlmSourceImpactTarget(targetId) {
+  if (typeof targetId !== 'string') {
+    throw new TypeError('LLM source-impact target must be a string');
+  }
+  if (targetId.startsWith('claim:')) {
+    const claim = resolveLlmSourceImpactClaim(targetId);
+    return {
+      type: 'claim',
+      lessonId: claim.lessonId,
+      resourceIds: claim.sourceIds,
+      semanticKeys: claim.semanticKeys,
+      value: claim,
+    };
+  }
+  if (targetId.startsWith('section:')) {
+    const match = /^section:(llm-\d{2})\/([a-z0-9-]+)$/.exec(targetId);
+    if (!match) throw new RangeError(`Invalid LLM source-impact section: ${targetId}`);
+    const lesson = lessons.find(({ id }) => id === match[1]);
+    const section = lesson?.knowledgeNote.sections.find(({ id }) => id === match[2]);
+    const semanticKeys = sourceImpactSectionSemantics[targetId];
+    if (!section || !semanticKeys) {
+      throw new RangeError(`Unknown LLM source-impact section: ${targetId}`);
+    }
+    return {
+      type: 'section',
+      lessonId: lesson.id,
+      resourceIds: section.sourceIds,
+      semanticKeys,
+      value: section,
+    };
+  }
+  if (targetId.startsWith('media-candidate:')) {
+    const candidate = sourceImpactMediaCandidates.find(
+      ({ id }) => id === targetId.slice('media-candidate:'.length),
+    );
+    if (!candidate) {
+      throw new RangeError(`Unknown LLM source-impact media candidate: ${targetId}`);
+    }
+    return {
+      type: 'media-candidate',
+      lessonId: candidate.lessonId,
+      resourceIds: candidate.resourceIds,
+      semanticKeys: candidate.semanticKeys,
+      value: candidate,
+    };
+  }
+  throw new RangeError(`Unsupported LLM source-impact target: ${targetId}`);
 }
 
 function claimTarget(id) {
@@ -880,7 +1057,8 @@ const sourceImpactAudit = [
     lessonId: 'llm-01',
     resourceId: 'res-llm-primary-javaguide-ai',
     scope: 'claim',
-    targetId: claimTarget('llm-is-not-an-answer-database'),
+    targetId: claimTarget('ai-field-model-application-agent-spine'),
+    semanticKey: 'field-spine',
     contribution: 'adopted',
     summary: '采用 JavaGuide 的 AI 应用知识地图作为八课入口，并把模型、应用和 Agent runtime 分层。',
     rationale: '该来源适合课程导航，但 next-token 机制、模型架构和产品行为继续交给论文与官方资料核验。',
@@ -891,6 +1069,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-javaguide-mechanism',
     scope: 'claim',
     targetId: claimTarget('inference-context-does-not-update-parameters'),
+    semanticKey: 'training-inference-boundary',
     contribution: 'deepened',
     summary: '把 tensor、layer、activation、loss、backprop 和 optimizer 收束为一次可计算的训练闭环。',
     rationale: '综述用于建立顺序，小型数值例和梯度机制仍由 D2L、micrograd 等可核验资料交叉支持。',
@@ -901,6 +1080,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-feishu-prompt-memory',
     scope: 'claim',
     targetId: claimTarget('context-is-not-persistent-memory'),
+    semanticKey: 'context-memory-boundary',
     contribution: 'corrected',
     summary: '把 transcript、活动上下文和产品记忆拆开，修正“模型看过就会永久记住”的误区。',
     rationale: '飞书正文是日期化逆向观察，不视为 Claude 当前协议或通用 LLM 事实，持久化责任落在宿主系统。',
@@ -911,6 +1091,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-javaguide-mechanism',
     scope: 'claim',
     targetId: claimTarget('attention-needs-original-mechanism-verification'),
+    semanticKey: 'attention-verification',
     contribution: 'adopted',
     summary: '采用运行机制文章的教学导航，但不让二手综述单独承担 Attention 公式和架构事实。',
     rationale: 'QKV、scaled dot-product、mask、multi-head、residual 与 block 均保留原论文和教材核验链。',
@@ -921,6 +1102,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-feishu-version-drifting',
     scope: 'claim',
     targetId: claimTarget('version-the-whole-llm-system'),
+    semanticKey: 'system-versioning',
     contribution: 'deepened',
     summary: '把后训练课程深化为模型、Prompt、工具 Schema、评测集和宿主配置分别版本化。',
     rationale: 'Agent 漂移观察帮助建立系统元组，但不把特定产品案例外推为所有模型的漂移规律。',
@@ -931,6 +1113,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-feishu-version-drifting',
     scope: 'claim',
     targetId: claimTarget('seed-is-not-cross-version-determinism'),
+    semanticKey: 'seed-version-boundary',
     contribution: 'corrected',
     summary: '修正 seed、低温或 greedy 可保证跨模型版本一致的错误承诺。',
     rationale: '复现必须固定完整系统版本并重复验证；seed 只作为部分服务的尽力实验参数。',
@@ -941,6 +1124,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-javaguide-structured-output',
     scope: 'claim',
     targetId: claimTarget('valid-json-is-not-valid-action'),
+    semanticKey: 'structured-output-validation',
     contribution: 'deepened',
     summary: '把结构化输出扩展为 parse、Schema validate、业务 validate、repair、retry 与降级链。',
     rationale: 'Function Calling 和 JSON 契约只约束候选结构，权限和副作用始终由可信代码与宿主控制。',
@@ -951,6 +1135,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-javaguide-evaluation',
     scope: 'claim',
     targetId: claimTarget('evaluation-is-an-operating-loop'),
+    semanticKey: 'evaluation-loop',
     contribution: 'adopted',
     summary: '采用 Golden Set 到线上灰度的评测主干，并显式加入模型裁判校准和人工复核。',
     rationale: '来源不提供本项目阈值或 gold truth，model grader 仍需以人标 heldout 数据持续校准。',
@@ -961,6 +1146,7 @@ const sourceImpactAudit = [
     resourceId: 'res-llm-primary-feishu-beyond-model',
     scope: 'claim',
     targetId: claimTarget('model-safety-is-not-application-control'),
+    semanticKey: 'model-application-control-boundary',
     contribution: 'deepened',
     summary: '深化模型与应用控制边界，把权限、执行、隐私、监控和恢复明确放在模型之外。',
     rationale: '作者叙事用于责任划分，不构成任何产品的安全、权限、可靠性或恢复能力保证。',
@@ -970,7 +1156,8 @@ const sourceImpactAudit = [
     lessonId: 'llm-07',
     resourceId: 'res-llm-primary-feishu-tool-truth',
     scope: 'claim',
-    targetId: claimTarget('valid-json-is-not-valid-action'),
+    targetId: claimTarget('tool-transcript-is-not-execution-proof'),
+    semanticKey: 'tool-execution-truth',
     contribution: 'corrected',
     summary: '修正“模型输出 tool call 就证明工具已真实执行”的错误推断。',
     rationale: '对话 transcript 与宿主 observation 不同；执行身份、结果和副作用必须由宿主日志核验。',
@@ -980,7 +1167,8 @@ const sourceImpactAudit = [
     lessonId: 'llm-07',
     resourceId: 'res-llm-primary-feishu-claude-tools',
     scope: 'narrative',
-    targetId: 'llm-07:tool-implementation-example',
+    targetId: 'section:llm-07/prompt-as-runtime-contract',
+    semanticKey: 'tool-contract',
     contribution: 'duplicate',
     summary: 'Claude Code 工具清单与现有工具契约教学重复，只保留为特定实现扩展阅读。',
     rationale: '工具名称和能力随产品演进，不能替代通用的定义、权限、校验、执行和 observation 边界。',
@@ -990,9 +1178,10 @@ const sourceImpactAudit = [
     lessonId: 'llm-04',
     resourceId: 'res-llm-primary-javaguide-mechanism',
     scope: 'media',
-    targetId: 'llm-04:all-existing-visuals',
+    targetId: 'media-candidate:javaguide-llm-mechanism-figures',
+    semanticKey: 'third-party-mechanism-figures',
     contribution: 'rejected',
-    summary: '拒绝直接复制 JavaGuide 页面图表，保留 52 个既有原创 SVG 及其官方和论文证据链。',
+    summary: '拒绝直接复制 JavaGuide 运行机制页面图表，继续使用本课既有原创 SVG 及其官方和论文证据链。',
     rationale: '页面图表缺少独立可发布许可记录；原创重绘能保持标签、无障碍描述和几何检查的一致性。',
   },
 ];
@@ -1000,6 +1189,7 @@ const sourceImpactAudit = [
 const outcomeRegistry = {
   assessments: assessmentOutcomes,
   visuals: visualOutcomes,
+  assessmentVisualCoverage,
 };
 
 const deepFreeze = (value) => {
@@ -1016,6 +1206,7 @@ export const llmFoundation = deepFreeze({
   resources,
   interviewQuestions,
   sourceImpactClaims,
+  sourceImpactMediaCandidates,
   sourceImpactAudit,
   outcomeRegistry,
 });

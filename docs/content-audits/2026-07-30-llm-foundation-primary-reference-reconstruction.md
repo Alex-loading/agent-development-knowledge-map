@@ -8,25 +8,26 @@
 - 权威核验：Attention 与 Transformer 公式继续由原论文和可核验教材支撑；API、安全、评测与产品行为继续由官方资料或目标系统实测约束。
 - 内容形态：八篇笔记仍是递进知识文章，一级来源进入真实 section 的 `sourceIds`，不是尾部链接列表。
 - 视觉形态：40 张主视觉和 12 张分步 SVG 全部保留为原创重绘，没有下载或复制第三方图表，没有热链或 data URI。
+- 学习闭环：40 个 assessment 与 40 个主视觉分别使用精确 outcome allow-set；`assessmentVisualCoverage` 逐题声明真正承担对应概念的视觉，禁止用任意相交 tag 伪造覆盖。
 
 ## 来源影响决策
 
-机器数据为 `llmFoundation.sourceImpactAudit`；下表按相同顺序保持逐字段完全一致。`adopted`、`corrected` 与 `deepened` 表示材料产生实质影响；`duplicate` 与 `rejected` 记录有作用域的非采用决策。
+机器数据为 `llmFoundation.sourceImpactAudit`；下表按相同顺序保持逐字段完全一致。`adopted`、`corrected` 与 `deepened` 表示材料产生实质影响；`duplicate` 与 `rejected` 记录有作用域的非采用决策。每个 `targetId` 必须由统一 resolver 解析为真实 claim、section 或 media candidate；`semanticKey` 同时存在于 decision 和目标契约中，并由逐决策 summary 主题契约检查，不能只靠 lesson 相同宣称同义。
 
-| decisionId | lessonId | resourceId | scope | targetId | contribution | summary | rationale |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `impact-llm-01-field-spine` | `llm-01` | `res-llm-primary-javaguide-ai` | `claim` | `claim:llm-is-not-an-answer-database` | `adopted` | 采用 JavaGuide 的 AI 应用知识地图作为八课入口，并把模型、应用和 Agent runtime 分层。 | 该来源适合课程导航，但 next-token 机制、模型架构和产品行为继续交给论文与官方资料核验。 |
-| `impact-llm-02-training-boundary` | `llm-02` | `res-llm-primary-javaguide-mechanism` | `claim` | `claim:inference-context-does-not-update-parameters` | `deepened` | 把 tensor、layer、activation、loss、backprop 和 optimizer 收束为一次可计算的训练闭环。 | 综述用于建立顺序，小型数值例和梯度机制仍由 D2L、micrograd 等可核验资料交叉支持。 |
-| `impact-llm-03-memory-boundary` | `llm-03` | `res-llm-primary-feishu-prompt-memory` | `claim` | `claim:context-is-not-persistent-memory` | `corrected` | 把 transcript、活动上下文和产品记忆拆开，修正“模型看过就会永久记住”的误区。 | 飞书正文是日期化逆向观察，不视为 Claude 当前协议或通用 LLM 事实，持久化责任落在宿主系统。 |
-| `impact-llm-04-attention-verification` | `llm-04` | `res-llm-primary-javaguide-mechanism` | `claim` | `claim:attention-needs-original-mechanism-verification` | `adopted` | 采用运行机制文章的教学导航，但不让二手综述单独承担 Attention 公式和架构事实。 | QKV、scaled dot-product、mask、multi-head、residual 与 block 均保留原论文和教材核验链。 |
-| `impact-llm-05-system-versioning` | `llm-05` | `res-llm-primary-feishu-version-drifting` | `claim` | `claim:version-the-whole-llm-system` | `deepened` | 把后训练课程深化为模型、Prompt、工具 Schema、评测集和宿主配置分别版本化。 | Agent 漂移观察帮助建立系统元组，但不把特定产品案例外推为所有模型的漂移规律。 |
-| `impact-llm-06-seed-boundary` | `llm-06` | `res-llm-primary-feishu-version-drifting` | `claim` | `claim:seed-is-not-cross-version-determinism` | `corrected` | 修正 seed、低温或 greedy 可保证跨模型版本一致的错误承诺。 | 复现必须固定完整系统版本并重复验证；seed 只作为部分服务的尽力实验参数。 |
-| `impact-llm-07-structured-contract` | `llm-07` | `res-llm-primary-javaguide-structured-output` | `claim` | `claim:valid-json-is-not-valid-action` | `deepened` | 把结构化输出扩展为 parse、Schema validate、业务 validate、repair、retry 与降级链。 | Function Calling 和 JSON 契约只约束候选结构，权限和副作用始终由可信代码与宿主控制。 |
-| `impact-llm-08-eval-loop` | `llm-08` | `res-llm-primary-javaguide-evaluation` | `claim` | `claim:evaluation-is-an-operating-loop` | `adopted` | 采用 Golden Set 到线上灰度的评测主干，并显式加入模型裁判校准和人工复核。 | 来源不提供本项目阈值或 gold truth，model grader 仍需以人标 heldout 数据持续校准。 |
-| `impact-llm-09-outside-model` | `llm-08` | `res-llm-primary-feishu-beyond-model` | `claim` | `claim:model-safety-is-not-application-control` | `deepened` | 深化模型与应用控制边界，把权限、执行、隐私、监控和恢复明确放在模型之外。 | 作者叙事用于责任划分，不构成任何产品的安全、权限、可靠性或恢复能力保证。 |
-| `impact-llm-10-tool-protocol-limit` | `llm-07` | `res-llm-primary-feishu-tool-truth` | `claim` | `claim:valid-json-is-not-valid-action` | `corrected` | 修正“模型输出 tool call 就证明工具已真实执行”的错误推断。 | 对话 transcript 与宿主 observation 不同；执行身份、结果和副作用必须由宿主日志核验。 |
-| `impact-llm-11-claude-tool-list` | `llm-07` | `res-llm-primary-feishu-claude-tools` | `narrative` | `llm-07:tool-implementation-example` | `duplicate` | Claude Code 工具清单与现有工具契约教学重复，只保留为特定实现扩展阅读。 | 工具名称和能力随产品演进，不能替代通用的定义、权限、校验、执行和 observation 边界。 |
-| `impact-llm-12-third-party-media` | `llm-04` | `res-llm-primary-javaguide-mechanism` | `media` | `llm-04:all-existing-visuals` | `rejected` | 拒绝直接复制 JavaGuide 页面图表，保留 52 个既有原创 SVG 及其官方和论文证据链。 | 页面图表缺少独立可发布许可记录；原创重绘能保持标签、无障碍描述和几何检查的一致性。 |
+| decisionId | lessonId | resourceId | scope | targetId | semanticKey | contribution | summary | rationale |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `impact-llm-01-field-spine` | `llm-01` | `res-llm-primary-javaguide-ai` | `claim` | `claim:ai-field-model-application-agent-spine` | `field-spine` | `adopted` | 采用 JavaGuide 的 AI 应用知识地图作为八课入口，并把模型、应用和 Agent runtime 分层。 | 该来源适合课程导航，但 next-token 机制、模型架构和产品行为继续交给论文与官方资料核验。 |
+| `impact-llm-02-training-boundary` | `llm-02` | `res-llm-primary-javaguide-mechanism` | `claim` | `claim:inference-context-does-not-update-parameters` | `training-inference-boundary` | `deepened` | 把 tensor、layer、activation、loss、backprop 和 optimizer 收束为一次可计算的训练闭环。 | 综述用于建立顺序，小型数值例和梯度机制仍由 D2L、micrograd 等可核验资料交叉支持。 |
+| `impact-llm-03-memory-boundary` | `llm-03` | `res-llm-primary-feishu-prompt-memory` | `claim` | `claim:context-is-not-persistent-memory` | `context-memory-boundary` | `corrected` | 把 transcript、活动上下文和产品记忆拆开，修正“模型看过就会永久记住”的误区。 | 飞书正文是日期化逆向观察，不视为 Claude 当前协议或通用 LLM 事实，持久化责任落在宿主系统。 |
+| `impact-llm-04-attention-verification` | `llm-04` | `res-llm-primary-javaguide-mechanism` | `claim` | `claim:attention-needs-original-mechanism-verification` | `attention-verification` | `adopted` | 采用运行机制文章的教学导航，但不让二手综述单独承担 Attention 公式和架构事实。 | QKV、scaled dot-product、mask、multi-head、residual 与 block 均保留原论文和教材核验链。 |
+| `impact-llm-05-system-versioning` | `llm-05` | `res-llm-primary-feishu-version-drifting` | `claim` | `claim:version-the-whole-llm-system` | `system-versioning` | `deepened` | 把后训练课程深化为模型、Prompt、工具 Schema、评测集和宿主配置分别版本化。 | Agent 漂移观察帮助建立系统元组，但不把特定产品案例外推为所有模型的漂移规律。 |
+| `impact-llm-06-seed-boundary` | `llm-06` | `res-llm-primary-feishu-version-drifting` | `claim` | `claim:seed-is-not-cross-version-determinism` | `seed-version-boundary` | `corrected` | 修正 seed、低温或 greedy 可保证跨模型版本一致的错误承诺。 | 复现必须固定完整系统版本并重复验证；seed 只作为部分服务的尽力实验参数。 |
+| `impact-llm-07-structured-contract` | `llm-07` | `res-llm-primary-javaguide-structured-output` | `claim` | `claim:valid-json-is-not-valid-action` | `structured-output-validation` | `deepened` | 把结构化输出扩展为 parse、Schema validate、业务 validate、repair、retry 与降级链。 | Function Calling 和 JSON 契约只约束候选结构，权限和副作用始终由可信代码与宿主控制。 |
+| `impact-llm-08-eval-loop` | `llm-08` | `res-llm-primary-javaguide-evaluation` | `claim` | `claim:evaluation-is-an-operating-loop` | `evaluation-loop` | `adopted` | 采用 Golden Set 到线上灰度的评测主干，并显式加入模型裁判校准和人工复核。 | 来源不提供本项目阈值或 gold truth，model grader 仍需以人标 heldout 数据持续校准。 |
+| `impact-llm-09-outside-model` | `llm-08` | `res-llm-primary-feishu-beyond-model` | `claim` | `claim:model-safety-is-not-application-control` | `model-application-control-boundary` | `deepened` | 深化模型与应用控制边界，把权限、执行、隐私、监控和恢复明确放在模型之外。 | 作者叙事用于责任划分，不构成任何产品的安全、权限、可靠性或恢复能力保证。 |
+| `impact-llm-10-tool-protocol-limit` | `llm-07` | `res-llm-primary-feishu-tool-truth` | `claim` | `claim:tool-transcript-is-not-execution-proof` | `tool-execution-truth` | `corrected` | 修正“模型输出 tool call 就证明工具已真实执行”的错误推断。 | 对话 transcript 与宿主 observation 不同；执行身份、结果和副作用必须由宿主日志核验。 |
+| `impact-llm-11-claude-tool-list` | `llm-07` | `res-llm-primary-feishu-claude-tools` | `narrative` | `section:llm-07/prompt-as-runtime-contract` | `tool-contract` | `duplicate` | Claude Code 工具清单与现有工具契约教学重复，只保留为特定实现扩展阅读。 | 工具名称和能力随产品演进，不能替代通用的定义、权限、校验、执行和 observation 边界。 |
+| `impact-llm-12-third-party-media` | `llm-04` | `res-llm-primary-javaguide-mechanism` | `media` | `media-candidate:javaguide-llm-mechanism-figures` | `third-party-mechanism-figures` | `rejected` | 拒绝直接复制 JavaGuide 运行机制页面图表，继续使用本课既有原创 SVG 及其官方和论文证据链。 | 页面图表缺少独立可发布许可记录；原创重绘能保持标签、无障碍描述和几何检查的一致性。 |
 
 ## 八课知识主干与核验
 
@@ -116,7 +117,7 @@
 
 ## 质量评分
 
-正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 均有 conceptTags。
+正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 使用逐题精确 conceptTags，并由显式视觉覆盖表闭环。
 
 视觉评分采用六项，每项 10 分：语义正确 10、叙事一致 10、caption/labels/alt/longDescription 一致 9、来源与许可 10、静态安全 10、几何与可读性 9，合计 **58 / 60**，每类均不低于 8。扣分只反映静态检查不能替代真实浏览器在所有字体和缩放组合下的人工验收，不代表发现已知碰撞。
 
