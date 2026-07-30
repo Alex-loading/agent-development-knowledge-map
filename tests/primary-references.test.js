@@ -94,6 +94,14 @@ test('every primary reference has unique, attributable, dated and hashed metadat
   assertDeepFrozen(primaryReferences, 'primaryReferences');
 });
 
+test('every JavaGuide reference preserves its available source update date', () => {
+  const javaGuideSources = primaryReferences.filter(
+    ({ sourceFamily }) => sourceFamily === 'javaguide-ai',
+  );
+  assert.equal(javaGuideSources.length, 34);
+  assert.ok(javaGuideSources.every(({ updatedAt }) => updatedAt !== null));
+});
+
 test('primary lookup is private, immutable and null-safe', () => {
   assert.deepEqual(Object.keys(primaryReferenceModule).sort(), [
     'PRIMARY_SOURCE_FAMILIES',
@@ -286,6 +294,25 @@ test('JavaGuide crawler uses BFS and records redirects and failures', async () =
     'https://javaguide.cn/ai/new',
     'https://javaguide.cn/ai/b',
   ]);
+});
+
+test('JavaGuide crawler records an available ISO update date', async () => {
+  const body = [
+    '<meta property="article:modified_time" content="2026-05-25T00:42:42.000Z">',
+    '<title>Dated page</title>',
+  ].join('');
+  const result = await crawlJavaGuide({
+    fetchImpl: async (url) => ({
+      ok: true,
+      status: 200,
+      url,
+      redirected: false,
+      headers: new Headers(),
+      text: async () => body,
+    }),
+  });
+
+  assert.equal(result.articles[0].updatedAt, '2026-05-25');
 });
 
 test('Feishu freezer commands and JSON envelope checks stay exact', () => {
