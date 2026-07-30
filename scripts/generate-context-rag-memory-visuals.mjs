@@ -98,7 +98,14 @@ export async function checkContextVisualArtifacts({
 } = {}) {
   const directory = fileURLToPathSafe(outputDirectory);
   const expected = buildContextVisualArtifacts();
-  const actualNames = (await readdir(directory))
+  let directoryEntries;
+  try {
+    directoryEntries = await readdir(directory);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+    directoryEntries = [];
+  }
+  const actualNames = directoryEntries
     .filter((filename) => filename.endsWith('.svg'))
     .sort();
   const expectedNames = [...expected.keys()].sort();

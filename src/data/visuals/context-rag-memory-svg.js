@@ -90,23 +90,62 @@ function nodePositions(nodes) {
 
 function renderFlow(scene, prefix, markerId) {
   const positions = nodePositions(scene.nodes);
+  const sameRowLabelLaneByEdge = new Map();
+  const labelCountsByRow = new Map();
+  for (const edge of scene.edges) {
+    if (!edge.label) continue;
+    const from = positions.get(edge.from);
+    const to = positions.get(edge.to);
+    if (!from || !to || from.y !== to.y) continue;
+    const count = labelCountsByRow.get(from.y) ?? 0;
+    sameRowLabelLaneByEdge.set(edge.id, count);
+    labelCountsByRow.set(from.y, count + 1);
+  }
   const edges = scene.edges.map((edge) => {
     const from = positions.get(edge.from);
     const to = positions.get(edge.to);
     if (!from || !to) throw new RangeError(`Unknown flow edge endpoint: ${edge.id}`);
     const sameRow = from.y === to.y;
-    const startX = sameRow ? from.x + from.width : from.x + from.width / 2;
-    const startY = sameRow ? from.y + from.height / 2 : from.y + from.height;
-    const endX = sameRow ? to.x : to.x + to.width / 2;
-    const endY = sameRow ? to.y + to.height / 2 : to.y;
-    const middleY = sameRow
-      ? startY
-      : Math.min(560, Math.max(140, (startY + endY) / 2));
-    const points = sameRow
-      ? `${startX},${startY} ${endX},${endY}`
-      : `${startX},${startY} ${startX},${middleY} ${endX},${middleY} ${endX},${endY}`;
+    const crossesNode = sameRow && [...positions.entries()].some(([id, position]) => (
+      id !== edge.from
+      && id !== edge.to
+      && position.y === from.y
+      && position.x < Math.max(from.x, to.x)
+      && position.x + position.width > Math.min(from.x + from.width, to.x + to.width)
+    ));
+    let startX;
+    let startY;
+    let endX;
+    let endY;
+    let middleY;
+    let points;
+    const labelLaneIndex = sameRowLabelLaneByEdge.get(edge.id);
+    if (crossesNode || labelLaneIndex !== undefined) {
+      const routeAbove = labelLaneIndex === undefined
+        ? from.y === 170
+        : labelLaneIndex % 2 === 0;
+      startX = from.x + from.width / 2;
+      startY = routeAbove ? from.y : from.y + from.height;
+      endX = to.x + to.width / 2;
+      endY = routeAbove ? to.y : to.y + to.height;
+      middleY = routeAbove ? from.y - 24 : from.y + from.height + 42;
+      points = `${startX},${startY} ${startX},${middleY} ${endX},${middleY} ${endX},${endY}`;
+    } else {
+      startX = sameRow ? from.x + from.width : from.x + from.width / 2;
+      startY = sameRow ? from.y + from.height / 2 : from.y + from.height;
+      endX = sameRow ? to.x : to.x + to.width / 2;
+      endY = sameRow ? to.y + to.height / 2 : to.y;
+      middleY = sameRow
+        ? startY
+        : Math.min(560, Math.max(140, (startY + endY) / 2));
+      points = sameRow
+        ? `${startX},${startY} ${endX},${endY}`
+        : `${startX},${startY} ${startX},${middleY} ${endX},${middleY} ${endX},${endY}`;
+    }
     const dash = edge.kind === 'excluded' ? '9 6' : undefined;
     const stroke = edge.kind === 'excluded' ? '#c2410c' : '#64748b';
+    const labelWidth = edge.label ? [...edge.label].length * 12 * 0.58 + 16 : 0;
+    const labelX = (startX + endX) / 2;
     return [
       `<polyline ${attributes({
         id: `${prefix}-edge-${safeId(edge.id)}`,
@@ -121,10 +160,27 @@ function renderFlow(scene, prefix, markerId) {
         'marker-end': `url(#${markerId})`,
       })}/>`,
       edge.label
-        ? text((startX + endX) / 2, middleY - 8, edge.label, {
-          size: 12,
-          fill: stroke,
-        })
+        ? [
+          `<g ${attributes({
+            id: `${prefix}-edge-label-${safeId(edge.id)}`,
+            'data-edge-label': edge.id,
+          })}>`,
+          `<rect ${attributes({
+            x: labelX - labelWidth / 2,
+            y: middleY - 13,
+            width: labelWidth,
+            height: 24,
+            rx: 6,
+            fill: '#f8fafc',
+            stroke,
+            'stroke-width': 1,
+          })}/>`,
+          text(labelX, middleY + 4, edge.label, {
+            size: 12,
+            fill: stroke,
+          }),
+          '</g>',
+        ].join('')
         : '',
     ].join('');
   }).join('');
@@ -217,19 +273,96 @@ function renderTable(scene, prefix) {
   return chunks.join('');
 }
 
+function estimatedTextWidth(value, size) {
+  return [...String(value)].length * size * 0.58;
+}
+
+function wrapChartLabel(value, maximumCharacters = 20) {
+  const tokens = String(value).split(' · ');
+  const lines = [];
+  let line = '';
+  for (const token of tokens) {
+    const candidate = line ? `${line} · ${token}` : token;
+    if (line && [...candidate].length > maximumCharacters) {
+      lines.push(`${line} · `);
+      line = token;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function chartLabelGroup(prefix, key, centerX, top, lines, {
+  size = 11,
+  color = '#475569',
+  fill = '#ffffff',
+} = {}) {
+  const lineHeight = size + 4;
+  const width = Math.max(...lines.map((line) => estimatedTextWidth(line, size))) + 16;
+  const height = lines.length * lineHeight + 8;
+  const x = Math.min(WIDTH - width - 12, Math.max(12, centerX - width / 2));
+  const adjustedCenterX = x + width / 2;
+  return {
+    width,
+    height,
+    centerX: adjustedCenterX,
+    markup: [
+      `<g ${attributes({
+        id: `${prefix}-chart-label-${safeId(key)}`,
+        'data-chart-label': key,
+      })}>`,
+      `<rect ${attributes({
+        x,
+        y: top,
+        width,
+        height,
+        rx: 6,
+        fill,
+        stroke: color,
+        'stroke-width': 1,
+      })}/>`,
+      `<text ${attributes({
+        x: adjustedCenterX,
+        y: top + size + 3,
+        'font-family': 'Inter, Arial, sans-serif',
+        'font-size': size,
+        'font-weight': 600,
+        fill: color,
+        'text-anchor': 'middle',
+      })}>`,
+      ...lines.map((line, index) => (
+        `<tspan ${attributes({
+          x: adjustedCenterX,
+          y: top + size + 3 + index * lineHeight,
+          'font-family': 'Inter, Arial, sans-serif',
+          'font-size': size,
+          'font-weight': 600,
+          fill: color,
+          'text-anchor': 'middle',
+        })}>${escapeXml(line)}</tspan>`
+      )),
+      '</text>',
+      '</g>',
+    ].join(''),
+  };
+}
+
 function renderChart(scene, prefix) {
   const left = 130;
-  const top = 168;
+  const top = 190;
   const plotWidth = 980;
-  const plotHeight = 350;
+  const plotHeight = 270;
+  const plotBottom = top + plotHeight;
   const min = Number(scene.yAxis.min);
   const max = Number(scene.yAxis.max);
   const range = max - min || 1;
   const maxPoints = Math.max(...scene.series.map(({ points }) => points.length));
   const step = plotWidth / maxPoints;
   const chunks = [
-    `<line id="${prefix}-axis-y" x1="${left}" y1="${top}" x2="${left}" y2="${top + plotHeight}" stroke="#334155" stroke-width="2"/>`,
-    `<line id="${prefix}-axis-x" x1="${left}" y1="${top + plotHeight}" x2="${left + plotWidth}" y2="${top + plotHeight}" stroke="#334155" stroke-width="2"/>`,
+    `<line id="${prefix}-axis-y" x1="${left}" y1="${top}" x2="${left}" y2="${plotBottom}" stroke="#334155" stroke-width="2"/>`,
+    `<line id="${prefix}-axis-x" x1="${left}" y1="${plotBottom}" x2="${left + plotWidth}" y2="${plotBottom}" stroke="#334155" stroke-width="2"/>`,
     text(50, top + plotHeight / 2, scene.yAxis.label, {
       size: 14,
       fill: '#475569',
@@ -237,8 +370,20 @@ function renderChart(scene, prefix) {
     }),
   ];
 
+  let legendLeft = left;
   for (const [seriesIndex, series] of scene.series.entries()) {
     const color = COLORS[seriesIndex % COLORS.length];
+    const legendLines = wrapChartLabel(series.label);
+    const legend = chartLabelGroup(
+      prefix,
+      `series:${series.id}`,
+      legendLeft + (estimatedTextWidth(legendLines[0], 11) + 16) / 2,
+      132,
+      legendLines,
+      { size: 11, color, fill: '#f8fafc' },
+    );
+    chunks.push(legend.markup);
+    legendLeft += legend.width + 12;
     const pointCoordinates = [];
     for (const [pointIndex, point] of series.points.entries()) {
       const value = Number(point.value);
@@ -275,22 +420,47 @@ function renderChart(scene, prefix) {
           'stroke-width': 2,
         })}/>`);
       }
+      const eventTop = plotBottom + 18 + seriesIndex * 32;
+      const event = chartLabelGroup(
+        prefix,
+        `event:${series.id}:${point.id}`,
+        x,
+        eventTop,
+        wrapChartLabel(point.label),
+        {
+          size: maxPoints > 6 ? 10 : 11,
+          color,
+          fill: '#f8fafc',
+        },
+      );
       chunks.push(
-        text(x, top + plotHeight + 24 + seriesIndex * 15, point.label, {
-          size: maxPoints > 6 ? 10 : 12,
-          fill: '#475569',
-        }),
+        `<line ${attributes({
+          'data-chart-leader': `${series.id}:${point.id}`,
+          x1: x,
+          y1: y,
+          x2: event.centerX,
+          y2: eventTop,
+          stroke: color,
+          'stroke-width': 1,
+          'stroke-dasharray': '4 4',
+        })}/>`,
+        event.markup,
         text(x, Math.max(top + 14, y - 12), point.value, {
           size: 12,
           fill: color,
         }),
-        point.note
-          ? text(x, Math.min(570, y + 24), point.note, {
-            size: 10,
-            fill: '#475569',
-          })
-          : '',
       );
+      if (point.note) {
+        const note = chartLabelGroup(
+          prefix,
+          `note:${series.id}:${point.id}`,
+          x,
+          plotBottom + 18 + scene.series.length * 32,
+          wrapChartLabel(point.note),
+          { size: 10, color: '#475569', fill: '#ffffff' },
+        );
+        chunks.push(note.markup);
+      }
     }
     if (scene.mode !== 'bars' && pointCoordinates.length > 1) {
       chunks.unshift(`<polyline ${attributes({
@@ -301,14 +471,9 @@ function renderChart(scene, prefix) {
         'stroke-width': 3,
       })}/>`);
     }
-    chunks.push(text(1110, 148 + seriesIndex * 18, series.label, {
-      size: 11,
-      fill: color,
-      anchor: 'end',
-    }));
   }
   if (scene.totalLabel || scene.footer) {
-    chunks.push(text(600, 610, scene.totalLabel ?? scene.footer, {
+    chunks.push(text(600, 640, scene.totalLabel ?? scene.footer, {
       size: 14,
       fill: '#475569',
     }));

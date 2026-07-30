@@ -52,6 +52,21 @@ test('accepts a well-formed accessible SVG with resolved local references and sa
   assert.equal(parsed.localReferences[0].targetId, 'p');
 });
 
+test('accepts XML predefined entities as decoded inert text and attribute data', () => {
+  const svg = safeSvg(
+    '<text id="escaped" data-region="A&amp;B &lt;region&gt;">'
+    + 'A&amp;B &lt;safe&gt; &quot;quoted&quot; &apos;single&apos;</text>',
+    {
+      title: 'A&amp;B &lt;title&gt;',
+      desc: 'Escaped &quot;description&quot; stays text',
+    },
+  );
+  const parsed = assertSafeStaticSvg(svg, visual, 'safe-predefined-entities.svg');
+  assert.equal(parsed.ids.get('escaped').text, `A&B <safe> "quoted" 'single'`);
+  assert.equal(parsed.ids.get('escaped').attributes.get('data-region'), 'A&B <region>');
+  assert.equal(parsed.elementsByName.get('title')[0].text, 'A&B <title>');
+});
+
 test('rejects active content, remote URLs, unsafe elements and prefixed names', () => {
   assertUnsafe(new Map([
     ['script', safeSvg('<script>alert(1)</script>')],
@@ -81,6 +96,7 @@ test('rejects encoded references while allowing percent signs outside URL and pa
   assertUnsafe(new Map([
     ['CSS escapes', fullyCssEscapedUrl],
     ['numeric entities', numericEntityUrl],
+    ['custom named entity', safeSvg('<text>&unsafe;</text>')],
     ['percent href', safeSvg('<use id="shape" href="%23shape"/>')],
     ['percent local paint', safeSvg('<rect fill="url(%23shape)"/>')],
     ['percent remote paint', safeSvg('<rect fill="%68%74%74%70%73%3A%2F%2Fexample.com/a.svg"/>')],
@@ -95,6 +111,7 @@ test('rejects processing instructions, declarations and malformed XML stacks', (
     ['comment', safeSvg('<!-- hidden -->')],
     ['CDATA', safeSvg('<text><![CDATA[hidden]]></text>')],
     ['DOCTYPE', `<!DOCTYPE svg>${safeSvg()}`],
+    ['ENTITY declaration', `<!DOCTYPE svg [<!ENTITY unsafe "x">]>${safeSvg()}`],
     ['unclosed element', safeSvg('<g><rect/>')],
     ['misordered close', safeSvg('<g><rect></g></rect>')],
     ['two roots', `${safeSvg()}${safeSvg()}`],

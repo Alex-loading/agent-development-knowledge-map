@@ -64,6 +64,9 @@ const SAFE_SVG_ATTRIBUTES = new Set([
   'data-vector-y',
   'data-node',
   'data-edge',
+  'data-edge-label',
+  'data-chart-label',
+  'data-chart-leader',
   'data-from',
   'data-to',
   'data-kind',
@@ -148,6 +151,20 @@ const SVG_VIEW_BOX_PATTERN = new RegExp(
   + `(${SVG_NUMBER_SOURCE})$`,
 );
 const POSITIVE_DECIMAL_INTEGER_PATTERN = /^[1-9][0-9]*$/;
+const XML_PREDEFINED_ENTITIES = Object.freeze({
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&apos;': "'",
+});
+
+function decodeXmlPredefinedEntities(value) {
+  return value.replace(
+    /&(?:amp|lt|gt|quot|apos);/g,
+    (entity) => XML_PREDEFINED_ENTITIES[entity],
+  );
+}
 
 function findTagEnd(svg, start, label) {
   let quote = null;
@@ -200,10 +217,11 @@ function parseSvgAttributes(rawAttributes, elementName, isRoot, label) {
     );
     const closingQuote = rawAttributes.indexOf(quote, cursor + 1);
     assert.ok(closingQuote > cursor, `${label}:${elementName}.${attributeName}: 属性值必须闭合`);
-    const value = rawAttributes.slice(cursor + 1, closingQuote);
+    const rawValue = rawAttributes.slice(cursor + 1, closingQuote);
     cursor = closingQuote + 1;
 
-    assert.doesNotMatch(value, /[<>]/, `${label}:${elementName}.${attributeName}: 属性值含非法标记`);
+    assert.doesNotMatch(rawValue, /[<>]/, `${label}:${elementName}.${attributeName}: 属性值含非法标记`);
+    const value = decodeXmlPredefinedEntities(rawValue);
     assert.ok(
       SAFE_SVG_ATTRIBUTES.has(attributeName),
       `${label}:${elementName}: 禁止 SVG 属性 ${attributeName}`,
@@ -280,7 +298,11 @@ export function parseStrictSvg(svg, label) {
   assert.equal(svg, svg.normalize('NFC'), `${label}: 必须使用 NFC Unicode`);
   assert.doesNotMatch(svg, /\uFFFD/, `${label}: 必须是有效 UTF-8`);
   assert.doesNotMatch(svg, /\\/, `${label}: 禁止 CSS 转义与反斜线`);
-  assert.doesNotMatch(svg, /&/, `${label}: 禁止 XML/HTML entity 与字符引用`);
+  assert.doesNotMatch(
+    svg,
+    /&(?!(?:amp|lt|gt|quot|apos);)/,
+    `${label}: 只允许 XML 预定义 entity，禁止数字、自定义与未闭合字符引用`,
+  );
   assert.doesNotMatch(svg, /<\?/, `${label}: 禁止所有 XML 处理指令`);
   assert.doesNotMatch(svg, /<!/, `${label}: 禁止注释、CDATA、DOCTYPE 与 ENTITY`);
   assert.doesNotMatch(
@@ -303,11 +325,12 @@ export function parseStrictSvg(svg, label) {
     if (svg[cursor] !== '<') {
       const nextTag = svg.indexOf('<', cursor);
       const end = nextTag === -1 ? svg.length : nextTag;
-      const characterData = svg.slice(cursor, end);
+      const rawCharacterData = svg.slice(cursor, end);
       if (stack.length === 0) {
-        assert.match(characterData, /^[\t\n\r ]*$/, `${label}: 根节点外禁止文本`);
+        assert.match(rawCharacterData, /^[\t\n\r ]*$/, `${label}: 根节点外禁止文本`);
       } else {
-        assert.doesNotMatch(characterData, /\]\]>/, `${label}: 正文禁止 CDATA 终止序列 ]]>`);
+        assert.doesNotMatch(rawCharacterData, /\]\]>/, `${label}: 正文禁止 CDATA 终止序列 ]]>`);
+        const characterData = decodeXmlPredefinedEntities(rawCharacterData);
         for (const node of stack) node.text += characterData;
         stack.at(-1).ownText += characterData;
       }

@@ -10,7 +10,7 @@ import {
   renderContextRagMemorySvg,
 } from '../src/data/visuals/context-rag-memory-svg.js';
 import { contextRagMemoryVisuals } from '../src/data/visuals/context-rag-memory-visuals.js';
-import { parseStrictSvg } from './helpers/static-svg.js';
+import { assertSafeStaticSvg, parseStrictSvg } from './helpers/static-svg.js';
 
 function assertDeepFrozen(value, label, seen = new WeakSet()) {
   if (value === null || typeof value !== 'object' || seen.has(value)) return;
@@ -38,9 +38,62 @@ function number(node, attribute) {
   return Number(node.attributes.get(attribute));
 }
 
+function rectangleForNode(parsed, nodeId) {
+  const group = elements(
+    parsed,
+    (node) => node.attributes.get('data-node') === nodeId,
+  )[0];
+  const rect = group?.children.find(({ name }) => name === 'rect');
+  assert.ok(rect, `missing rectangle for node ${nodeId}`);
+  return {
+    left: number(rect, 'x'),
+    right: number(rect, 'x') + number(rect, 'width'),
+    top: number(rect, 'y'),
+    bottom: number(rect, 'y') + number(rect, 'height'),
+  };
+}
+
+function polylineSegments(node) {
+  const points = node.attributes.get('points').trim().split(/\s+/)
+    .map((pair) => pair.split(',').map(Number));
+  return points.slice(1).map((point, index) => [points[index], point]);
+}
+
+function segmentIntersectsRectangleInterior([[x1, y1], [x2, y2]], rectangle) {
+  if (x1 === x2) {
+    return x1 > rectangle.left
+      && x1 < rectangle.right
+      && Math.max(y1, y2) > rectangle.top
+      && Math.min(y1, y2) < rectangle.bottom;
+  }
+  assert.equal(y1, y2, 'flow routing must remain orthogonal');
+  return y1 > rectangle.top
+    && y1 < rectangle.bottom
+    && Math.max(x1, x2) > rectangle.left
+    && Math.min(x1, x2) < rectangle.right;
+}
+
+function rectanglesOverlap(first, second) {
+  return first.left < second.right
+    && first.right > second.left
+    && first.top < second.bottom
+    && first.bottom > second.top;
+}
+
+function rectangleForText(node) {
+  const x = number(node, 'x');
+  const y = number(node, 'y');
+  const fontSize = number(node, 'font-size');
+  const width = [...node.ownText].length * fontSize * 0.58;
+  const anchor = node.attributes.get('text-anchor');
+  const left = anchor === 'start' ? x : anchor === 'end' ? x - width : x - width / 2;
+  const right = anchor === 'start' ? x + width : anchor === 'end' ? x : x + width / 2;
+  return { left, right, top: y - fontSize, bottom: y };
+}
+
 function assertGeometryInsideViewBox(parsed, label) {
   for (const node of elements(parsed, ({ name }) => (
-    ['rect', 'circle', 'line', 'polyline', 'polygon', 'text'].includes(name)
+    ['rect', 'circle', 'line', 'polyline', 'polygon', 'text', 'tspan'].includes(name)
   ))) {
     if (node.name === 'rect') {
       assert.ok(number(node, 'x') >= 0, `${label}:${node.name} x`);
@@ -116,6 +169,199 @@ function resolveSemanticRef(scene, ref) {
   }
   return false;
 }
+
+test('routes every flow edge around non-endpoint node boxes', () => {
+  for (const visual of contextRagMemoryVisuals) {
+    const scene = contextRagMemoryScenesById.get(visual.id).scene;
+    if (scene.type !== 'flow') continue;
+    const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+    for (const edge of scene.edges) {
+      const polyline = elements(
+        parsed,
+        (node) => node.attributes.get('data-edge') === edge.id,
+      )[0];
+      for (const node of scene.nodes) {
+        if (node.id === edge.from || node.id === edge.to) continue;
+        const rectangle = rectangleForNode(parsed, node.id);
+        for (const segment of polylineSegments(polyline)) {
+          assert.equal(
+            segmentIntersectsRectangleInterior(segment, rectangle),
+            false,
+            `${visual.id}:${edge.id} intersects ${node.id}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test('places flow edge labels in unobstructed bounded boxes', () => {
+  for (const visual of contextRagMemoryVisuals) {
+    const scene = contextRagMemoryScenesById.get(visual.id).scene;
+    if (scene.type !== 'flow') continue;
+    const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+    for (const edge of scene.edges.filter(({ label }) => label)) {
+      const group = elements(
+        parsed,
+        (node) => node.attributes.get('data-edge-label') === edge.id,
+      )[0];
+      assert.ok(group, `${visual.id}:${edge.id} label group`);
+      const background = group.children.find(({ name }) => name === 'rect');
+      const label = group.children.find(({ name }) => name === 'text');
+      assert.ok(background && label, `${visual.id}:${edge.id} label background`);
+      const labelBox = {
+        left: number(background, 'x'),
+        right: number(background, 'x') + number(background, 'width'),
+        top: number(background, 'y'),
+        bottom: number(background, 'y') + number(background, 'height'),
+      };
+      assert.ok(labelBox.left >= 0 && labelBox.right <= 1200, `${edge.id}: horizontal bounds`);
+      assert.ok(labelBox.top >= 0 && labelBox.bottom <= 675, `${edge.id}: vertical bounds`);
+      const textBox = rectangleForText(label);
+      assert.ok(
+        textBox.left >= labelBox.left
+        && textBox.right <= labelBox.right
+        && textBox.top >= labelBox.top
+        && textBox.bottom <= labelBox.bottom,
+        `${edge.id}: text fits background`,
+      );
+      for (const node of scene.nodes) {
+        assert.equal(
+          rectanglesOverlap(labelBox, rectangleForNode(parsed, node.id)),
+          false,
+          `${visual.id}:${edge.id} label overlaps ${node.id}`,
+        );
+      }
+    }
+  }
+
+  const visual = contextRagMemoryVisuals.find(
+    ({ id }) => id === 'visual-context-04-version-acl-delete',
+  );
+  const scene = contextRagMemoryScenesById.get(visual.id).scene;
+  const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+  assert.deepEqual(
+    elements(parsed, (node) => node.attributes.has('data-edge-label'))
+      .map((group) => group.children.find(({ name }) => name === 'text').ownText)
+      .sort(),
+    ['CONSISTENT SNAPSHOT', 'TOMBSTONE', 'VERSION + ACL'],
+  );
+  const v3Edge = elements(
+    parsed,
+    (node) => node.attributes.get('data-edge') === 'v3-chunks',
+  )[0];
+  for (const segment of polylineSegments(v3Edge)) {
+    assert.equal(
+      segmentIntersectsRectangleInterior(segment, rectangleForNode(parsed, 'revoke-v2')),
+      false,
+      'source-v3→chunks must route around revoke-v2',
+    );
+  }
+});
+
+test('lays out chart series, event, and note labels without collisions', () => {
+  for (const visual of contextRagMemoryVisuals) {
+    const scene = contextRagMemoryScenesById.get(visual.id).scene;
+    if (scene.type !== 'chart') continue;
+    const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+    const labelGroups = elements(
+      parsed,
+      (node) => node.attributes.has('data-chart-label'),
+    );
+    const expectedLabelCount = scene.series.length
+      + scene.series.reduce(
+        (count, series) => count
+          + series.points.length
+          + series.points.filter(({ note }) => note).length,
+        0,
+      );
+    assert.equal(labelGroups.length, expectedLabelCount, `${visual.id}: chart label count`);
+    const boxes = labelGroups.map((group) => {
+      const background = group.children.find(({ name }) => name === 'rect');
+      const texts = group.children.filter(({ name }) => name === 'text');
+      assert.ok(background && texts.length > 0, `${visual.id}: chart label structure`);
+      const box = {
+        id: group.attributes.get('data-chart-label'),
+        left: number(background, 'x'),
+        right: number(background, 'x') + number(background, 'width'),
+        top: number(background, 'y'),
+        bottom: number(background, 'y') + number(background, 'height'),
+      };
+      assert.ok(box.left >= 0 && box.right <= 1200, `${visual.id}:${box.id} horizontal`);
+      assert.ok(box.top >= 0 && box.bottom <= 675, `${visual.id}:${box.id} vertical`);
+      const labelRuns = texts.flatMap((label) => (
+        label.children.some(({ name }) => name === 'tspan')
+          ? label.children.filter(({ name }) => name === 'tspan')
+          : [label]
+      ));
+      for (const label of labelRuns) {
+        const textBox = rectangleForText(label);
+        assert.ok(
+          textBox.left >= box.left
+          && textBox.right <= box.right
+          && textBox.top >= box.top
+          && textBox.bottom <= box.bottom,
+          `${visual.id}:${box.id} text fits`,
+        );
+      }
+      return box;
+    });
+    for (const [index, box] of boxes.entries()) {
+      for (const other of boxes.slice(index + 1)) {
+        assert.equal(
+          rectanglesOverlap(box, other),
+          false,
+          `${visual.id}:${box.id} overlaps ${other.id}`,
+        );
+      }
+    }
+    for (const series of scene.series) {
+      for (const point of series.points) {
+        assert.equal(
+          elements(
+            parsed,
+            (node) => node.attributes.get('data-chart-leader') === `${series.id}:${point.id}`,
+          ).length,
+          1,
+          `${visual.id}:${series.id}/${point.id} leader`,
+        );
+      }
+    }
+  }
+
+  const visual = contextRagMemoryVisuals.find(
+    ({ id }) => id === 'visual-context-07-decay-delete',
+  );
+  const scene = contextRagMemoryScenesById.get(visual.id).scene;
+  const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+  const labelBox = (id) => {
+    const group = elements(
+      parsed,
+      (node) => node.attributes.get('data-chart-label') === id,
+    )[0];
+    const rect = group.children.find(({ name }) => name === 'rect');
+    return {
+      left: number(rect, 'x'),
+      right: number(rect, 'x') + number(rect, 'width'),
+      top: number(rect, 'y'),
+      bottom: number(rect, 'y') + number(rect, 'height'),
+      text: group.children.filter(({ name }) => name === 'text')
+        .map(({ text }) => text).join(' '),
+    };
+  };
+  for (const [eventId, noteId] of [
+    ['event:relevance:fresh', 'note:state-boundaries:ttl'],
+    ['event:relevance:aged', 'note:state-boundaries:superseded'],
+  ]) {
+    assert.equal(rectanglesOverlap(labelBox(eventId), labelBox(noteId)), false);
+  }
+  assert.match(labelBox('note:state-boundaries:ttl').text, /STOP RECALL/);
+  assert.match(labelBox('note:state-boundaries:superseded').text, /USE NEW VALUE/);
+  assert.match(
+    labelBox('note:state-boundaries:delete').text,
+    /STORE.*INDEX.*CACHE.*PROJECTION/,
+  );
+});
 
 test('publishes deeply frozen typed production scenes whose storyboard semantics resolve', () => {
   assert.equal(contextRagMemoryScenes.length, 24);
@@ -270,6 +516,8 @@ test('escapes hostile titles, labels, edge conditions, and attribute IDs as XML 
     title: `A&B <title> "quoted" 'single'`,
     caption: `Caption & <script>alert("x")</script>`,
     role: 'process',
+    width: 1200,
+    height: 675,
   };
   const hostileScene = {
     type: 'flow',
@@ -286,6 +534,9 @@ test('escapes hostile titles, labels, edge conditions, and attribute IDs as XML 
   assert.match(svg, /A&amp;B &lt;title&gt; &quot;quoted&quot; &apos;single&apos;/);
   assert.match(svg, /FROM &amp; &lt;unsafe&gt;/);
   assert.match(svg, /YES &amp; &lt;NO&gt;/);
+  const parsed = assertSafeStaticSvg(svg, hostileVisual, 'hostile-renderer.svg');
+  assert.equal(parsed.elementsByName.get('title')[0].text, hostileVisual.title);
+  assert.equal(parsed.elementsByName.get('desc')[0].text, hostileVisual.caption);
   const validation = spawnSync('xmllint', ['--noout', '-'], {
     input: svg,
     encoding: 'utf8',

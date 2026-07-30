@@ -129,6 +129,10 @@ Assessment outcome registry 不再维护与题目平行的手写映射：每个�
 
 Reviewer 指定语义均由结构而不是通用卡片表达：ingestion 明确保存 `chunk → metadata` wrap edge；ANN 用 `fast`、`balanced`、`deep` 三行绑定 recall、p95、memory、update 四项指标；RRF 用 rank 2/1 和两个 contribution 得到 `0.0325`；memory admission 用 scope、sensitivity、consent、confidence、existing-value 五级治理分支落到 reject/store/no-op/supersede，且四个 outcome 与 final action summary 均不重叠、不越界。
 
+Flow renderer 会检测同排非相邻节点并把 connector 放入 node box 之外的正交 lane；所有带条件的 edge 使用有背景的独立 label box，label 与非端点 node 均有通用不相交断言。`context-04-version-acl-delete` 因而把 VERSION + ACL、TOMBSTONE、CONSISTENT SNAPSHOT 三条条件作为互不遮挡的可见语义发布。Chart renderer 把 series legend、event 和 note 分入独立 label lane，必要时以 `tspan` 换行并保留 leader；`context-07-decay-delete` 的 FRESH、AGED、STALE、TTL EXPIRED、SUPERSEDED、DELETE PROPAGATION 及三个 action label 均由通用 label-box non-overlap 契约覆盖。
+
+严格静态 SVG publication gate 以解析后的 XML 数据为准，只允许 XML 五个预定义实体并恰好解码一次；numeric reference、custom named entity、DTD/ENTITY declaration、processing instruction、active element、event handler 与 remote URL 都继续拒绝。hostile production scene 的 renderer 输出会实际进入该 publication gate，而不只执行 XML well-formedness 检查。
+
 评分按 Accuracy、Evidence boundaries、Teaching value、Accessibility、Responsive rendering、Fallback 各 10 分，总分 60；发布阈值为总分至少 51 且每项至少 8。
 
 | Lesson | Accuracy | Evidence boundaries | Teaching value | Accessibility | Responsive | Fallback | Total |
@@ -168,6 +172,10 @@ Primary references 中的截图、插图和视频帧没有经过可验证的再�
 - interview compatibility 契约首次运行：旧 shape 缺少 `conceptTags` 时触发 `spec.conceptTags is not iterable`；改为缺省 frozen empty list、合法数组 defensive copy + freeze、非法形状明确 `TypeError` 后通过。
 - source-contribution ledger 契约首次运行：`sourceContributionLedger` 为 `undefined`；实现可解析 deeply frozen 10-unit 账本、派生 summary 与 Markdown exact parity 后通过，汇总严格为 6/3/1 和 60/30/10。
 - admission preview regression 首次运行：`no-op overlaps supersede`；调整 decision outcome layout 后通过，并与 ingestion connector 一起重新生成、重新渲染检查。
+- flow obstacle regression 首次运行：`visual-context-01-projection-lifecycle:budget-excluded intersects manifest`；实现非相邻同排 edge 的正交避障 lane、背景 label box 和通用 node/label 几何断言后通过，并以 version/ACL scene 明确核验 VERSION + ACL、TOMBSTONE、CONSISTENT SNAPSHOT。
+- chart label regression 首次运行：预期的 `data-chart-label` 数量为 0；实现 series/event/note lane、换行和 leader 后通过。focused integration 随后发现换行破坏既有完整可见语义 `STORE · INDEX · CACHE · PROJECTION`，改为单一 `text` 内的 `tspan` 后同时满足精确文本与视觉换行。
+- strict XML regression 首次运行：publication gate 的 blanket ampersand ban 拒绝安全预定义实体；改为五个 predefined entity 的单次解码 allowlist，并增加 numeric/custom/DTD/active 负向用例与 hostile rendered scene publication-gate 正向用例后通过。
+- missing-artifact regression 首次运行：完全不存在的输出目录抛出原始 `ENOENT`；checker 改为报告全部 expected SVG missing。另在隔离临时目录真实删除一个生成 SVG，验证它只进入 missing、不会混入 changed/unexpected，且 check 不重建文件、不改变 canonical 或未触碰临时文件的 mtime。
 
 以下命令均从仓库 worktree 根目录逐字执行；结果包含精确 exit 与汇总。
 
@@ -177,7 +185,7 @@ Focused Context gate：
 node --test tests/context-rag-memory-scenes.test.js tests/context-rag-memory-artifacts.test.js tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/readme-visual-publication.test.js
 ```
 
-结果：exit 0；52 tests、52 pass、0 fail、0 skipped。
+结果：exit 0；57 tests、57 pass、0 fail、0 skipped。
 
 Shared visual/UI/static gate：
 
@@ -185,7 +193,7 @@ Shared visual/UI/static gate：
 node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js
 ```
 
-结果：exit 0；110 tests、110 pass、0 fail、0 skipped。
+结果：exit 0；111 tests、111 pass、0 fail、0 skipped。
 
 Privacy/progress/UI gate：
 
@@ -217,7 +225,7 @@ Full regression：
 npm test
 ```
 
-结果：exit 0；554 tests、554 pass、0 fail、0 skipped。
+结果：exit 0；560 tests、560 pass、0 fail、0 skipped。
 
 JS/MJS syntax 与文件计数：
 
@@ -243,7 +251,7 @@ Visual semantic、strict SVG 与 static-security gate：
 node --test tests/context-rag-memory-scenes.test.js tests/context-rag-memory-artifacts.test.js tests/context-rag-memory-visual-data.test.js tests/static-svg.test.js
 ```
 
-结果：exit 0；27 tests、27 pass、0 fail、0 skipped。
+结果：exit 0；33 tests、33 pass、0 fail、0 skipped。
 
 Marker scan（exit 1 在 `rg` 中表示零命中）：
 
@@ -297,10 +305,10 @@ git status --short
 python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/context-rag-memory-http.log 2>&1 &
 CONTEXT_HTTP_PID=$!
 sleep 1
-curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/
-curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/src/data/visuals/context-rag-memory-scenes.js
-curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-04-ingestion-pipeline.svg
-curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-admission-conflict.svg
+curl --silent --show-error --fail --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/
+curl --silent --show-error --fail --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/src/data/visuals/context-rag-memory-svg.js
+curl --silent --show-error --fail --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-04-version-acl-delete.svg
+curl --silent --show-error --fail --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-decay-delete.svg
 kill "$CONTEXT_HTTP_PID"
 wait "$CONTEXT_HTTP_PID"
 CONTEXT_STOP_EXIT=$?
@@ -312,15 +320,17 @@ echo "server-stop exit=0 (wait=$CONTEXT_STOP_EXIT)"
 
 ```text
 http://127.0.0.1:4173/ 200
-http://127.0.0.1:4173/src/data/visuals/context-rag-memory-scenes.js 200
-http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-04-ingestion-pipeline.svg 200
-http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-admission-conflict.svg 200
+http://127.0.0.1:4173/src/data/visuals/context-rag-memory-svg.js 200
+http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-04-version-acl-delete.svg 200
+http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-decay-delete.svg 200
 server-stop exit=0 (wait=143)
 ```
 
 浏览器 backend 仍不可用：`getForUrl` 返回 `No browser is available`，`browsers.list()` 返回空数组。因此未生成 1440px、390px 或 320px 交互式浏览器截图，也不声称完成键盘或人工 viewport sweep。响应式结论来自已通过的 DOM、CSS、SVG 和 UI 自动化契约。
 
 本机 image viewer 不能直接解码 SVG；macOS Quick Look 可以把本地 SVG 渲染为 PNG thumbnail。为避免 Quick Look 默认方形 thumbnail 对 1200×675 图的 cover crop，检查时只对 `/tmp` 中的副本把临时 canvas 扩到 1200×1200，production SVG bytes 保持不变。先后检查 `context-04-ingestion-pipeline.svg`、`context-05-ann-tradeoff.svg`、`context-05-rrf-fusion.svg`、`context-07-admission-conflict.svg`。首次检查发现 same-row flow connector 不够清晰和 admission 的 NO-OP/SUPERSEDE box 重叠；修复 renderer、加入 outcome non-overlap regression、重新生成后再次渲染，四个 reviewer-critical scene 的标签、关系、方向、数值、分支和 final action 均清晰且无裁切。
+
+本轮重审又在相同 Quick Look 临时扩展 canvas 流程中检查 `context-04-version-acl-delete.svg` 与 `context-07-decay-delete.svg`。前者的 VERSION + ACL 从 source-v3 绕过 revoke-v2 到 chunks，TOMBSTONE 与 CONSISTENT SNAPSHOT 分占独立 label lane；后者的 decay 状态、三个治理事件、STOP RECALL、USE NEW VALUE 及换行显示但仍保留完整 XML 文本的 STORE · INDEX · CACHE · PROJECTION 均无重叠或裁切。production SVG 在最后一次 `tspan` 兼容修复后重新生成，并再次渲染检查 decay/delete scene。
 
 ## Compatibility and residual limitations
 

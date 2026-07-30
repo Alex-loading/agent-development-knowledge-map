@@ -5,6 +5,7 @@ import {
   mkdtemp,
   readFile,
   stat,
+  unlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -74,7 +75,7 @@ test('visual and inventory generators reject every unknown argument', () => {
   }
 });
 
-test('visual artifact checker reports missing, changed, and unexpected SVG drift', async () => {
+test('visual artifact checker reports changed and unexpected SVG drift', async () => {
   const outputDirectory = await mkdtemp(join(tmpdir(), 'context-visuals-'));
   const expected = buildContextVisualArtifacts();
   assert.equal(expected.size, 27);
@@ -92,6 +93,50 @@ test('visual artifact checker reports missing, changed, and unexpected SVG drift
       return true;
     },
   );
+});
+
+test('visual artifact checker reports one removed SVG as missing without writing anywhere', async () => {
+  const outputDirectory = await mkdtemp(join(tmpdir(), 'context-visuals-missing-'));
+  const canonicalPath = fileURLToPath(
+    new URL(
+      '../assets/visuals/context-rag-memory/context-04-version-acl-delete.svg',
+      import.meta.url,
+    ),
+  );
+  const canonicalMtime = (await stat(canonicalPath)).mtimeMs;
+  await writeContextVisualArtifacts({ outputDirectory });
+  const removedName = 'context-04-version-acl-delete.svg';
+  const untouchedName = 'context-05-rrf-fusion.svg';
+  const untouchedPath = join(outputDirectory, untouchedName);
+  const untouchedMtime = (await stat(untouchedPath)).mtimeMs;
+  await unlink(join(outputDirectory, removedName));
+
+  await assert.rejects(
+    checkContextVisualArtifacts({ outputDirectory }),
+    (error) => {
+      assert.match(error.message, /missing: context-04-version-acl-delete\.svg/);
+      assert.doesNotMatch(error.message, /changed:|unexpected:/);
+      return true;
+    },
+  );
+  await assert.rejects(stat(join(outputDirectory, removedName)), { code: 'ENOENT' });
+  assert.equal((await stat(untouchedPath)).mtimeMs, untouchedMtime);
+  assert.equal((await stat(canonicalPath)).mtimeMs, canonicalMtime);
+});
+
+test('visual artifact checker reports every expected SVG as missing when directory is absent', async () => {
+  const parent = await mkdtemp(join(tmpdir(), 'context-visuals-no-directory-'));
+  const outputDirectory = join(parent, 'does-not-exist');
+  await assert.rejects(
+    checkContextVisualArtifacts({ outputDirectory }),
+    (error) => {
+      assert.match(error.message, /Context visual artifact drift:/);
+      assert.match(error.message, /missing: context-01-object-map\.svg/);
+      assert.match(error.message, /missing: context-08-layered-diagnosis\.svg/);
+      return true;
+    },
+  );
+  await assert.rejects(stat(outputDirectory), { code: 'ENOENT' });
 });
 
 test('inventory checker reports byte drift and inventory is derived from production scenes', async () => {
