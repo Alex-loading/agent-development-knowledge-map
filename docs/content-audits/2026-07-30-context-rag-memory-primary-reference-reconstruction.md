@@ -98,11 +98,13 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 | `context-01` | `five-information-objects`、`projection-pipeline`、`scope-lifecycle-ownership`；`context-01-1` → object/checkpoint boundary，`context-01-2` → offloading/recoverability | `iq-context-01-1` → five objects；`iq-context-01-2` → context engineering/projection；`iq-context-01-3` → projection/ingestion/provenance | “绘制五层信息地图” → `classification-worked-example`；交付分类表、manifest 与可验证外置回取记录 |
 | `context-02` | `context-engineering-budget`、`required-and-output-reserve`、`priority-and-stable-order`、`two-overflow-modes`；`context-02-1` → budget，`context-02-2` → required reserve | `iq-context-02-1` → budget；`iq-context-02-2` → `long-context-and-compaction`；`iq-context-02-3` → long-context + overflow | “组装预算有界的上下文”与 `context-router-worked-example`；`context-router` 验收预算守恒和排除原因 |
 | `context-03` | `three-conversation-representations`、`canonical-state-schema`、`supersession-and-conflict`；`context-03-1` → representations/summary，`context-03-2` → supersession | `iq-context-03-1` → representations；`iq-context-03-2` → `summary-is-lossy` + `sliding-summary-retrieval`；`iq-context-03-3` → supersession | “压缩一段含纠正的长会话”与 `compression-deliverable`；验收 state、lossy summary、source map |
-| `context-04` | chunk、three units、ingestion、version/ACL；`context-04-1` → index/corpus，`context-04-2` → overlap/version | `iq-context-04-1` → chunk；`iq-context-04-2` → version/validity；`iq-context-04-3` → seven-stage ingestion + source/retrieval/citation units | “为异构文档设计 chunk schema”与 `build-and-diagnose-a-versioned-corpus`；验收 schema、examples、invalidating flow |
+| `context-04` | chunk、three units、ingestion、version/ACL；`context-04-1` → index/corpus，`context-04-2` → versioned ingestion、ACL propagation、tombstone/delete 与派生索引重建 | `iq-context-04-1` → chunk strategy + excessive overlap/duplicate candidates/budget；`iq-context-04-2` → version/validity；`iq-context-04-3` → seven-stage ingestion + source/retrieval/citation units | “为异构文档设计 chunk schema”与 `build-and-diagnose-a-versioned-corpus`；验收 schema、examples、invalidating flow，并保留 overlap 重复率与预算浪费检查 |
 | `context-05` | hybrid、RRF、ANN tradeoff、filter 与 rewrite；`context-05-1` → sparse，`context-05-2` → ANN joint metrics | `iq-context-05-1` → method selection + RRF calculation；`iq-context-05-2` → filter/top-k；`iq-context-05-3` → ANN recall/p95/memory/update | `hybrid-retrieval` 同时验收 ANN 联合权衡、可回放 trace 与 query rewrite 风险；被替换的 rewrite 结果保留在 objective、section、exercise 和 completion criterion |
 | `context-06` | candidates、rerank、dedup/diversity、evidence provenance/citation；`context-06-1` → candidates，`context-06-2` → citation grounding | `iq-context-06-1` → candidate/rerank；`iq-context-06-2` → dedup/diversity；`iq-context-06-3` → observation/call/hash/source/span/claim | “打包可引用证据”验收 packet、排除清单和 claim-to-citation map |
 | `context-07` | memory lifecycle、admission、decay/expiry/supersession/deletion；`context-07-1` → salience vs governance，`context-07-2` → decay vs TTL | `iq-context-07-1` → lifecycle/admission；`iq-context-07-2` → memory types；`iq-context-07-3` → decay/expiry/supersession/deletion | `memory-lifecycle` 验收含 decay score 的 event/effective table 与 projection；纠正、过期、删除覆盖保留在 objective、interview、exercise 和 completion criterion |
 | `context-08` | integrated roles、GraphRAG/update、diagnosis；`context-08-1` → diagnosis，`context-08-2` → GraphRAG routing + rebuild | `iq-context-08-1` → diagnosis；`iq-context-08-2` → GraphRAG/update；`iq-context-08-3` → architecture + RAG/fine-tuning/memory roles | Capstone 验收职责矩阵、GraphRAG/update 边界、architecture、fault tree、checklist；被替换的 RAG/fine-tuning/memory 结果保留在 objective、note、exercise、`iq-context-08-3` 与 completion criterion |
+
+Assessment outcome registry 不再维护与题目平行的手写映射：每个实际 quiz/interview record 都携带 `conceptTags`，发布 registry 的 40 个 assessment outcome 由这些记录及其 lesson ownership 派生；section/visual teaching outcome 保留为独立教学覆盖注册表。
 
 ## Visual publication and quality
 
@@ -139,6 +141,7 @@ Primary references 中的截图、插图和视频帧没有经过可验证的再�
 - visual 契约首次运行：因 Context visual registry 尚不存在而失败；实现 24 个主视觉、3 个 step state、placement 与 inventory 后 7/7 通过。
 - README publication 契约首次运行：旧发布计数不匹配；更新发布事实后通过。
 - outcome semantic 契约首次运行：`Context outcome registry` 断言失败；实现 40 个稳定 assessment、24 个 owner section 与 24 个 visual coverage 后通过。
+- `context-04` assessment semantic 契约首次运行：实际 `quiz-context-04-2` 仍只检查 overlap，且 quiz/interview record 没有 `conceptTags`；改为唯一正确的 version/ACL/tombstone/delete/rebuild 题，并把 overlap/duplicate/budget 保留在 `iq-context-04-1` 后通过。
 - decay 契约首次运行：`expire-supersede-and-delete` 没有 `relevance decay`；补充 note、assessment、exercise/completion、source 与 synthetic fixture 边界后通过。
 - inventory coverage 列首次运行：Markdown header 与更新后的可见标签缺失；重新生成 inventory/SVG 后通过。
 
@@ -150,7 +153,7 @@ Focused Context gate：
 node --test tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/readme-visual-publication.test.js
 ```
 
-结果：exit 0；39 tests、39 pass、0 fail、0 skipped。
+结果：exit 0；40 tests、40 pass、0 fail、0 skipped。
 
 Shared visual/UI/static gate：
 
@@ -182,7 +185,7 @@ Full regression：
 npm test
 ```
 
-结果：exit 0；541 tests、541 pass、0 fail、0 skipped。
+结果：exit 0；542 tests、542 pass、0 fail、0 skipped。
 
 JS/MJS syntax 与文件计数：
 
@@ -208,7 +211,7 @@ Visual semantic、strict SVG 与 static-security gate：
 node --test tests/context-rag-memory-visual-data.test.js tests/static-svg.test.js
 ```
 
-结果：exit 0；16 tests、16 pass、0 fail、0 skipped。
+结果：exit 0；17 tests、17 pass、0 fail、0 skipped。
 
 Marker scan（exit 1 在 `rg` 中表示零命中）：
 

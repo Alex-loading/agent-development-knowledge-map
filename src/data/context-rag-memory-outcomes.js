@@ -1,55 +1,8 @@
-function outcome(lessonId, outcomeTags) {
-  return { lessonId, outcomeTags };
-}
-
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nestedValue of Object.values(value)) deepFreeze(nestedValue);
   return Object.freeze(value);
 }
-
-const assessments = {
-  'quiz-context-01-1': outcome('context-01', ['object-boundaries', 'checkpoint']),
-  'quiz-context-01-2': outcome('context-01', ['offloading', 'recoverability']),
-  'iq-context-01-1': outcome('context-01', ['object-boundaries', 'projection']),
-  'iq-context-01-2': outcome('context-01', ['context-engineering', 'projection']),
-  'iq-context-01-3': outcome('context-01', ['projection', 'ingestion-pipeline', 'evidence-provenance']),
-  'quiz-context-02-1': outcome('context-02', ['context-engineering']),
-  'quiz-context-02-2': outcome('context-02', ['assembly-guards', 'overflow-strategies']),
-  'iq-context-02-1': outcome('context-02', ['context-budget', 'assembly-guards']),
-  'iq-context-02-2': outcome('context-02', ['overflow-strategies', 'lossy-compaction', 'offloading']),
-  'iq-context-02-3': outcome('context-02', ['long-context', 'retrieval-evaluation']),
-  'quiz-context-03-1': outcome('context-03', ['conversation-representations', 'lossy-compaction']),
-  'quiz-context-03-2': outcome('context-03', ['supersession']),
-  'iq-context-03-1': outcome('context-03', ['conversation-representations', 'supersession']),
-  'iq-context-03-2': outcome('context-03', ['lossy-compaction', 'recoverability']),
-  'iq-context-03-3': outcome('context-03', ['supersession', 'recoverability']),
-  'quiz-context-04-1': outcome('context-04', ['corpus-index-boundary']),
-  'quiz-context-04-2': outcome('context-04', ['chunk-strategy', 'version-acl-propagation']),
-  'iq-context-04-1': outcome('context-04', ['chunk-strategy', 'citation-units']),
-  'iq-context-04-2': outcome('context-04', ['version-acl-propagation']),
-  'iq-context-04-3': outcome('context-04', ['ingestion-pipeline', 'citation-units']),
-  'quiz-context-05-1': outcome('context-05', ['hybrid-retrieval']),
-  'quiz-context-05-2': outcome('context-05', ['ann-tradeoffs', 'retrieval-evaluation']),
-  'iq-context-05-1': outcome('context-05', ['hybrid-retrieval', 'rank-fusion']),
-  'iq-context-05-2': outcome('context-05', ['retrieval-filtering']),
-  'iq-context-05-3': outcome('context-05', ['ann-tradeoffs', 'retrieval-evaluation']),
-  'quiz-context-06-1': outcome('context-06', ['candidate-pipeline', 'dedup-diversity']),
-  'quiz-context-06-2': outcome('context-06', ['citation-grounding']),
-  'iq-context-06-1': outcome('context-06', ['candidate-pipeline', 'reranking']),
-  'iq-context-06-2': outcome('context-06', ['dedup-diversity']),
-  'iq-context-06-3': outcome('context-06', ['evidence-provenance', 'citation-grounding']),
-  'quiz-context-07-1': outcome('context-07', ['memory-admission', 'consent-boundary']),
-  'quiz-context-07-2': outcome('context-07', ['memory-decay', 'ttl-expiry']),
-  'iq-context-07-1': outcome('context-07', ['memory-lifecycle', 'memory-admission']),
-  'iq-context-07-2': outcome('context-07', ['memory-types']),
-  'iq-context-07-3': outcome('context-07', ['memory-decay', 'ttl-expiry', 'memory-supersession', 'memory-deletion']),
-  'quiz-context-08-1': outcome('context-08', ['layered-diagnosis']),
-  'quiz-context-08-2': outcome('context-08', ['graphrag-routing', 'knowledge-update']),
-  'iq-context-08-1': outcome('context-08', ['layered-diagnosis']),
-  'iq-context-08-2': outcome('context-08', ['graphrag-routing', 'knowledge-update']),
-  'iq-context-08-3': outcome('context-08', ['integrated-architecture', 'rag-finetuning-memory']),
-};
 
 const sections = {
   'context-01/five-information-objects': ['object-boundaries', 'projection'],
@@ -105,8 +58,7 @@ const visuals = {
   'visual-context-08-layered-diagnosis': ['layered-diagnosis'],
 };
 
-export const contextRagMemoryOutcomeRegistry = deepFreeze({
-  assessments,
+export const contextRagMemoryTeachingOutcomeRegistry = deepFreeze({
   sections,
   visuals,
 });

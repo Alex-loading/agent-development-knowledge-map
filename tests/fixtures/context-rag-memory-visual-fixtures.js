@@ -1,4 +1,4 @@
-import { contextRagMemoryOutcomeRegistry } from '../../src/data/context-rag-memory-outcomes.js';
+import { contextRagMemoryTeachingOutcomeRegistry } from '../../src/data/context-rag-memory-outcomes.js';
 import { deepFreezeVisual } from '../../src/data/visuals/visual-contract.js';
 
 function fixture(visualId, labels, values = [], stepLabels = undefined) {
@@ -245,7 +245,7 @@ function inventory(
   return {
     visualId,
     assessedOutcomes,
-    assessedCoverage: contextRagMemoryOutcomeRegistry.visuals[visualId],
+    assessedCoverage: contextRagMemoryTeachingOutcomeRegistry.visuals[visualId],
     outcomeCriteria,
     cognitiveQuestion,
     storyboard,

@@ -191,6 +191,29 @@ test('maps every visual to assessments and an owning section with intersecting s
       fixture,
     ]),
   );
+  const assessmentsById = new Map([
+    ...contextRagMemory.lessons.flatMap((lesson) => (
+      lesson.quiz.map((assessment) => [
+        assessment.id,
+        { ...assessment, lessonId: lesson.id },
+      ])
+    )),
+    ...contextRagMemory.interviewQuestions.map((assessment) => [
+      assessment.id,
+      assessment,
+    ]),
+  ]);
+  assert.deepEqual(
+    registry.assessments,
+    Object.fromEntries([...assessmentsById].map(([id, assessment]) => [
+      id,
+      {
+        lessonId: assessment.lessonId,
+        outcomeTags: assessment.conceptTags,
+      },
+    ])),
+    'assessment registry must be derived exactly from actual assessment records',
+  );
   for (const visual of contextRagMemoryVisuals) {
     const [lessonId, sectionId] = EXPECTED_OWNER[visual.id];
     const sectionKey = `${lessonId}/${sectionId}`;
@@ -208,11 +231,20 @@ test('maps every visual to assessments and an owning section with intersecting s
       `${visual.id}: owning section must teach an assessed visual outcome`,
     );
     for (const assessmentId of inventory.assessedOutcomes) {
+      const actualAssessment = assessmentsById.get(assessmentId);
       const assessment = registry.assessments[assessmentId];
-      assert.ok(assessment, `${visual.id}: ${assessmentId} semantic registry`);
-      assert.equal(assessment.lessonId, lessonId, `${assessmentId}: lesson`);
+      assert.ok(actualAssessment, `${visual.id}: ${assessmentId} actual assessment`);
       assert.ok(
-        assessment.outcomeTags.some((outcome) => visualOutcomes.includes(outcome)),
+        actualAssessment.conceptTags.length > 0,
+        `${assessmentId}: declared concepts`,
+      );
+      assert.ok(assessment, `${visual.id}: ${assessmentId} semantic registry`);
+      assert.deepEqual(assessment, {
+        lessonId,
+        outcomeTags: actualAssessment.conceptTags,
+      }, `${assessmentId}: registry derived from assessment`);
+      assert.ok(
+        actualAssessment.conceptTags.some((outcome) => visualOutcomes.includes(outcome)),
         `${visual.id}: ${assessmentId} must assess the visual concept`,
       );
     }
@@ -258,6 +290,51 @@ test('maps every visual to assessments and an owning section with intersecting s
     ].flat().join(' '),
     /RAG[\s\S]*fine-tuning[\s\S]*(?:长期记忆|memory)/i,
   );
+});
+
+test('assesses version, ACL, and deletion propagation without losing overlap-budget coverage', () => {
+  const lesson = contextRagMemory.lessons.find(({ id }) => id === 'context-04');
+  const propagationQuiz = lesson.quiz.find(
+    ({ id }) => id === 'quiz-context-04-2',
+  );
+  const chunkInterview = contextRagMemory.interviewQuestions.find(
+    ({ id }) => id === 'iq-context-04-1',
+  );
+  const propagationText = [
+    propagationQuiz.prompt,
+    ...propagationQuiz.choices,
+    propagationQuiz.explanation,
+    ...propagationQuiz.conceptTags,
+  ].join(' ');
+  assert.match(propagationText, /version|版本/i);
+  assert.match(propagationText, /ACL|权限/i);
+  assert.match(propagationText, /delete|删除|tombstone/i);
+  assert.match(propagationText, /chunk[\s\S]*index[\s\S]*cache/i);
+  assert.equal(
+    propagationQuiz.choices.filter((choice) => (
+      /传播|propagat/i.test(choice)
+      && /chunk/i.test(choice)
+      && /index/i.test(choice)
+      && /cache/i.test(choice)
+    )).length,
+    1,
+    'exactly one option describes complete propagation',
+  );
+  assert.match(
+    propagationQuiz.choices[propagationQuiz.answerIndex],
+    /传播|propagat/i,
+  );
+
+  const overlapText = [
+    chunkInterview.question,
+    chunkInterview.shortAnswer,
+    ...chunkInterview.deepDive,
+    ...chunkInterview.followUps,
+    ...chunkInterview.conceptTags,
+  ].join(' ');
+  assert.match(overlapText, /overlap/i);
+  assert.match(overlapText, /重复|duplicate/i);
+  assert.match(overlapText, /预算|budget/i);
 });
 
 test('teaches and assesses relevance decay separately from expiry, supersession, and deletion', () => {

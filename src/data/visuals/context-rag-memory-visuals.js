@@ -1,4 +1,4 @@
-import { contextRagMemoryOutcomeRegistry } from '../context-rag-memory-outcomes.js';
+import { contextRagMemoryTeachingOutcomeRegistry } from '../context-rag-memory-outcomes.js';
 import { deepFreezeVisual } from './visual-contract.js';
 
 const VERIFIED_AT = '2026-07-30';
@@ -22,7 +22,7 @@ function visual({
     kind,
     role,
     tags,
-    assessedCoverage: contextRagMemoryOutcomeRegistry.visuals[id],
+    assessedCoverage: contextRagMemoryTeachingOutcomeRegistry.visuals[id],
     title,
     alt,
     longDescription,
