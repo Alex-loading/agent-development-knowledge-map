@@ -452,7 +452,7 @@ const lessons = [
     knowledgeNote: llmFoundationNotes['llm-04'],
     exercise: { title: '操纵 Attention 直觉实验', brief: '改变一个短句中的 Query-Key 相似度与掩码，观察权重和输出表示如何变化。', steps: ['在交互面板选择某个 token，记录它对其他位置的注意权重', '提高一个 Key 的匹配分数并解释对应 Value 对输出的影响', '打开因果掩码，说明哪些连接被禁止及其训练意义'], deliverable: '两张权重对比记录，以及一段从输入表示到更新表示的信息流解释。', experiment: 'attention' },
     quiz: [
-      quiz('quiz-llm-04-1', 'Self-Attention 中最终被加权汇总的是什么？', ['Query 向量', 'Key 向量', 'Value 向量', '损失函数'], 2, 'Query 与 Key 产生权重，权重用于对 Value 加权汇总，从其他位置读取信息。', ['qkv-attention', 'scaled-dot-product']),
+      quiz('quiz-llm-04-1', 'Self-Attention 中最终被加权汇总的是什么？', ['Query 向量', 'Key 向量', 'Value 向量', '损失函数'], 2, 'Query 与 Key 先经缩放点积和 softmax 产生权重，权重再用于对 Value 加权汇总，从其他位置读取信息。', ['qkv-attention', 'scaled-dot-product']),
       quiz('quiz-llm-04-2', 'decoder-only 语言模型使用因果掩码的主要原因是什么？', ['减少词表大小', '阻止训练位置读取未来 token', '删除所有残差连接', '让每个头参数相同'], 1, '下一 token 预测不能偷看答案，因果掩码让训练时的信息可见性符合生成过程。', ['causal-mask']),
     ],
     interviewQuestionIds: ['iq-llm-04-1', 'iq-llm-04-2', 'iq-llm-04-3'],
@@ -587,9 +587,9 @@ const interviewSpecs = [
     frequency: '高', difficulty: '基础', roles: ['Agent 开发', 'AI 应用', '后端工程'],
   },
   {
-    id: 'iq-llm-03-2', lessonId: 'llm-03', question: 'Embedding 是什么，为什么能表达语义？',
-    shortAnswer: 'Embedding 把离散 token ID 映射为连续向量；训练目标推动能产生相似预测作用的表示形成可利用的几何关系，但向量不是人工编写的词义表，也会受上下文继续更新。',
-    deepDive: ['输入 embedding 是初始表示，经过多层注意力后会成为上下文化表示。', 'RAG 的向量 embedding 与生成模型内部 token embedding 用途相关但不一定是同一模型或空间。'],
+    id: 'iq-llm-03-2', lessonId: 'llm-03', question: 'Embedding 与位置表示怎样把 token 变成模型可处理的输入？',
+    shortAnswer: 'Embedding 把离散 token ID 映射为连续向量，位置表示再编码 token 在序列中的顺序；两者组合后成为模型层的输入起点，经过注意力后继续更新为上下文化表示。',
+    deepDive: ['token ID 只是查表索引，数值大小本身没有语义距离；位置表示让相同 token 出现在不同位置时仍可被区分。', '训练目标推动能产生相似预测作用的表示形成可利用的几何关系；RAG 向量与生成模型内部 token embedding 不一定来自同一模型或空间。'],
     misconceptions: ['认为每个词只有一个永远不变、可直接解释的语义坐标。'], followUps: ['相似度高为什么不保证检索结果一定相关？'],
     frequency: '高', difficulty: '进阶', roles: ['Agent 开发', 'AI 应用'],
   },
@@ -855,7 +855,10 @@ const assessmentVisualCoverage = {
     'visual-llm-03-text-to-context',
     'visual-llm-03-tokenization-comparison',
   ],
-  'iq-llm-03-2': ['visual-llm-03-embedding-position-space'],
+  'iq-llm-03-2': [
+    'visual-llm-03-text-to-context',
+    'visual-llm-03-embedding-position-space',
+  ],
   'iq-llm-03-3': [
     'visual-llm-03-context-budget',
     'visual-llm-03-context-strategy-matrix',
@@ -911,14 +914,6 @@ const sourceImpactClaims = [
     statement: 'AI 领域地图必须区分能力目标、模型方法、应用系统与 Agent runtime：LLM 是模型组件，应用与 Agent 在模型之外组织上下文、工具和控制。',
     sourceIds: ['res-llm-primary-javaguide-ai', 'res-ms-ai', 'res-ms-genai'],
     semanticKeys: ['field-spine'],
-  },
-  {
-    id: 'llm-is-not-an-answer-database',
-    lessonId: 'llm-01',
-    sectionId: 'from-generation-to-llm',
-    statement: 'LLM 通过 next-token prediction 学习条件分布，不是保存并检索正确答案的数据库；流畅、相关与事实正确必须分别评测。',
-    sourceIds: ['res-llm-primary-javaguide-ai', 'res-llm-primary-javaguide-core-concepts', 'res-hf-llm'],
-    semanticKeys: ['autoregressive-truth-boundary'],
   },
   {
     id: 'inference-context-does-not-update-parameters',
@@ -1023,13 +1018,13 @@ export function resolveLlmSourceImpactTarget(targetId) {
   }
   if (targetId.startsWith('claim:')) {
     const claim = resolveLlmSourceImpactClaim(targetId);
-    return {
+    return Object.freeze({
       type: 'claim',
       lessonId: claim.lessonId,
       resourceIds: claim.sourceIds,
       semanticKeys: claim.semanticKeys,
       value: claim,
-    };
+    });
   }
   if (targetId.startsWith('section:')) {
     const match = /^section:(llm-\d{2})\/([a-z0-9-]+)$/.exec(targetId);
@@ -1040,13 +1035,13 @@ export function resolveLlmSourceImpactTarget(targetId) {
     if (!section || !semanticKeys) {
       throw new RangeError(`Unknown LLM source-impact section: ${targetId}`);
     }
-    return {
+    return Object.freeze({
       type: 'section',
       lessonId: lesson.id,
       resourceIds: section.sourceIds,
       semanticKeys,
       value: section,
-    };
+    });
   }
   if (targetId.startsWith('media-candidate:')) {
     const candidate = sourceImpactMediaCandidates.find(
@@ -1055,13 +1050,13 @@ export function resolveLlmSourceImpactTarget(targetId) {
     if (!candidate) {
       throw new RangeError(`Unknown LLM source-impact media candidate: ${targetId}`);
     }
-    return {
+    return Object.freeze({
       type: 'media-candidate',
       lessonId: candidate.lessonId,
       resourceIds: candidate.resourceIds,
       semanticKeys: candidate.semanticKeys,
       value: candidate,
-    };
+    });
   }
   throw new RangeError(`Unsupported LLM source-impact target: ${targetId}`);
 }

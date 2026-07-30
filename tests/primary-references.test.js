@@ -478,6 +478,89 @@ test('course binding rejects malformed required fields, canonical IDs and eviden
   }
 });
 
+test('course binding accepts own plain-record fields and rejects prototype or accessor pollution', () => {
+  const valid = {
+    id: 'res-harness-primary-react-loop',
+    canonicalSourceId: 'primary-feishu-react-loop',
+    stage: 'Agent Loop',
+    difficulty: '入门到进阶',
+    value: '用于解释单轮、多轮和停止条件。',
+    evidence: {
+      authority: 'expert',
+      role: 'core',
+      coverage: ['单轮与多轮 Agent Loop'],
+      limitations: '工程教学材料；产品行为与协议字段需官方资料校验。',
+      verifiedAt: '2026-07-30',
+    },
+  };
+
+  assert.throws(
+    () => createPrimaryReferenceBinding(Object.create(valid)),
+    /plain record|own data property/,
+  );
+  assert.throws(
+    () => createPrimaryReferenceBinding(
+      Object.assign(Object.create({ poisoned: true }), valid),
+    ),
+    /plain record/,
+  );
+  assert.throws(
+    () => createPrimaryReferenceBinding({
+      ...valid,
+      evidence: Object.create(valid.evidence),
+    }),
+    /plain record|own data property/,
+  );
+
+  let inputGetterInvoked = false;
+  const accessorInput = { ...valid };
+  Object.defineProperty(accessorInput, 'id', {
+    enumerable: true,
+    get() {
+      inputGetterInvoked = true;
+      return valid.id;
+    },
+  });
+  assert.throws(
+    () => createPrimaryReferenceBinding(accessorInput),
+    /own data property/,
+  );
+  assert.equal(inputGetterInvoked, false);
+
+  let evidenceGetterInvoked = false;
+  const accessorEvidence = { ...valid.evidence };
+  Object.defineProperty(accessorEvidence, 'coverage', {
+    enumerable: true,
+    get() {
+      evidenceGetterInvoked = true;
+      return valid.evidence.coverage;
+    },
+  });
+  assert.throws(
+    () => createPrimaryReferenceBinding({
+      ...valid,
+      evidence: accessorEvidence,
+    }),
+    /own data property/,
+  );
+  assert.equal(evidenceGetterInvoked, false);
+
+  const nullPrototypeEvidence = Object.assign(
+    Object.create(null),
+    valid.evidence,
+  );
+  const nullPrototypeInput = Object.assign(
+    Object.create(null),
+    valid,
+    { evidence: nullPrototypeEvidence },
+  );
+  assert.equal(
+    createPrimaryReferenceBinding(nullPrototypeInput).id,
+    valid.id,
+    'null-prototype records with own data fields remain compatible',
+  );
+});
+
 test('freezer normalizes line endings and trailing whitespace before hashing', () => {
   const source = ' alpha  \r\nbeta\t\r\n\r\n';
   assert.equal(normalizeSourceText(source), 'alpha\nbeta');

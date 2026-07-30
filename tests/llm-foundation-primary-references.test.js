@@ -6,6 +6,10 @@ import * as llmData from '../src/data/llm-foundation.js';
 import { getPrimaryReference } from '../src/data/primary-references.js';
 import { llmFoundationVisuals } from '../src/data/visuals/llm-foundation-visuals.js';
 import {
+  assessmentTextEvidenceContracts,
+  sourceImpactTargetTextContracts,
+} from './fixtures/llm-foundation-semantic-evidence.js';
+import {
   readMarkdownTable,
   unwrapSingleCodeSpan,
 } from './helpers/markdown-table.js';
@@ -269,6 +273,125 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   for (const [key, nested] of Object.entries(value)) {
     assertDeepFrozen(nested, `${label}.${key}`, seen);
   }
+}
+
+function getAssessments(course) {
+  return [
+    ...course.lessons.flatMap((lesson) => lesson.quiz.map((assessment) => ({
+      ...assessment,
+      lessonId: lesson.id,
+    }))),
+    ...course.interviewQuestions,
+  ];
+}
+
+function getAssessmentVisibleText(assessment) {
+  if (Object.hasOwn(assessment, 'prompt')) {
+    return [
+      assessment.prompt,
+      assessment.choices[assessment.answerIndex],
+      assessment.explanation,
+    ].join('\n');
+  }
+  return [
+    assessment.question,
+    assessment.shortAnswer,
+    ...assessment.deepDive,
+    ...assessment.misconceptions,
+    ...assessment.followUps,
+  ].join('\n');
+}
+
+function assertAssessmentTextEvidence(course) {
+  const assessments = getAssessments(course);
+  const assessmentById = new Map(
+    assessments.map((assessment) => [assessment.id, assessment]),
+  );
+  assert.deepEqual(
+    Object.keys(assessmentTextEvidenceContracts).sort(),
+    [...assessmentById.keys()].sort(),
+    'independent text evidence must cover every real assessment exactly once',
+  );
+
+  for (const [assessmentId, outcomeContracts] of Object.entries(
+    assessmentTextEvidenceContracts,
+  )) {
+    const assessment = assessmentById.get(assessmentId);
+    assert.ok(assessment, `${assessmentId}: evidence contract names a ghost assessment`);
+    assert.deepEqual(
+      Object.keys(outcomeContracts).sort(),
+      [...assessment.conceptTags].sort(),
+      `${assessmentId}: independent text outcomes must match declared outcomes`,
+    );
+    const visibleText = getAssessmentVisibleText(assessment);
+    for (const [outcomeTag, patterns] of Object.entries(outcomeContracts)) {
+      assert.ok(patterns.length > 0, `${assessmentId}/${outcomeTag}: no text anchor`);
+      for (const pattern of patterns) {
+        assert.match(
+          visibleText,
+          pattern,
+          `${assessmentId}/${outcomeTag}: visible assessment text lacks independent evidence`,
+        );
+      }
+    }
+  }
+}
+
+function getSourceImpactTargetVisibleText(target) {
+  if (target.type === 'claim') return target.value.statement;
+  if (target.type === 'section') {
+    return [
+      target.value.title,
+      ...target.value.paragraphs,
+      ...target.value.keyPoints,
+    ].join('\n');
+  }
+  if (target.type === 'media-candidate') {
+    return [
+      target.value.id,
+      target.value.lessonId,
+      ...target.value.resourceIds,
+      target.value.description,
+    ].join('\n');
+  }
+  if (target.type === 'visual' || target.type === 'asset') {
+    return [
+      target.value.title,
+      target.value.alt,
+      target.value.longDescription,
+      target.value.caption,
+      target.value.description,
+      target.value.assetPath,
+      ...(target.value.sourceIds ?? []),
+    ].filter(Boolean).join('\n');
+  }
+  throw new TypeError(`Unsupported semantic evidence target type: ${target.type}`);
+}
+
+function assertSourceImpactTargetTextEvidence(target, decision) {
+  const contract = sourceImpactTargetTextContracts[decision.targetId];
+  assert.ok(contract, `${decision.targetId}: missing independent target contract`);
+  assert.equal(contract.semanticKey, decision.semanticKey, decision.decisionId);
+  const visibleText = getSourceImpactTargetVisibleText(target);
+  for (const pattern of contract.patterns) {
+    assert.match(
+      visibleText,
+      pattern,
+      `${decision.targetId}/${decision.semanticKey}: target text lacks independent evidence`,
+    );
+  }
+}
+
+function assertSourceImpactDecisionSummaryEvidence(decision) {
+  const contract = sourceImpactContracts[decision.decisionId];
+  assert.ok(contract, `${decision.decisionId}: missing independent summary contract`);
+  assert.equal(decision.targetId, contract.targetId, decision.decisionId);
+  assert.equal(decision.semanticKey, contract.semanticKey, decision.decisionId);
+  assert.match(
+    decision.summary,
+    contract.summary,
+    `${decision.decisionId}: summary lacks independent semantic evidence`,
+  );
 }
 
 test('preserves every public LLM identity while adding primary bindings', () => {
@@ -550,7 +673,36 @@ test('closes assessment and visual outcomes in both directions with exact semant
       coveringAssessmentIds.length > 0,
       `${visualId}: no same-lesson assessment explicitly covers this visual`,
     );
+    const linkedAssessmentTags = new Set(
+      coveringAssessmentIds.flatMap(
+        (assessmentId) => assessmentById.get(assessmentId).conceptTags,
+      ),
+    );
+    assert.ok(
+      visualOutcomes[visualId].every((tag) => linkedAssessmentTags.has(tag)),
+      `${visualId}: visual outcomes are not all evidenced by linked assessments`,
+    );
   }
+});
+
+test('binds every assessment outcome to independent visible-text evidence', () => {
+  assertAssessmentTextEvidence(llmFoundation);
+
+  const mutated = structuredClone(llmFoundation);
+  const assessment = mutated.interviewQuestions.find(
+    ({ id }) => id === 'iq-llm-03-2',
+  );
+  assessment.question = 'HTTP 缓存中的 ETag 有什么作用？';
+  assessment.shortAnswer = 'ETag 用于条件请求并帮助服务端返回 304。';
+  assessment.deepDive = ['浏览器会在后续请求中发送 If-None-Match。'];
+  assessment.misconceptions = ['把缓存校验器当成缓存有效期。'];
+  assessment.followUps = ['Cache-Control 与 ETag 如何配合？'];
+
+  assert.throws(
+    () => assertAssessmentTextEvidence(mutated),
+    /iq-llm-03-2\/embedding-position: visible assessment text lacks independent evidence/,
+    'an unrelated HTTP-cache rewrite must break semantic assessment evidence',
+  );
 });
 
 test('reconstructs all eight knowledge notes as the requested concept spine', () => {
@@ -586,6 +738,7 @@ test('reconstructs all eight knowledge notes as the requested concept spine', ()
 test('publishes resolvable scoped source-impact decisions in Markdown parity', async () => {
   const claimIds = new Set();
   const decisionIds = new Set();
+  const auditedTargetIds = new Set();
 
   assert.ok(llmFoundation.sourceImpactClaims.length >= lessonIds.length);
   assertDeepFrozen(llmFoundation.sourceImpactClaims, 'sourceImpactClaims');
@@ -629,10 +782,9 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     assert.ok(lesson.resourceIds.includes(decision.resourceId), decision.decisionId);
     const contract = sourceImpactContracts[decision.decisionId];
     assert.ok(contract, decision.decisionId);
-    assert.equal(decision.targetId, contract.targetId, decision.decisionId);
-    assert.equal(decision.semanticKey, contract.semanticKey, decision.decisionId);
-    assert.match(decision.summary, contract.summary, decision.decisionId);
+    assertSourceImpactDecisionSummaryEvidence(decision);
     const target = llmData.resolveLlmSourceImpactTarget(decision.targetId);
+    assertDeepFrozen(target, `${decision.targetId}: resolved target wrapper`);
     const allowedTargetTypes = {
       claim: ['claim'],
       narrative: ['section'],
@@ -642,10 +794,69 @@ test('publishes resolvable scoped source-impact decisions in Markdown parity', a
     assert.equal(target.lessonId, decision.lessonId, decision.decisionId);
     assert.ok(target.resourceIds.includes(decision.resourceId), decision.decisionId);
     assert.ok(target.semanticKeys.includes(decision.semanticKey), decision.decisionId);
+    assert.equal(
+      auditedTargetIds.has(decision.targetId),
+      false,
+      `${decision.targetId}: target is reused by multiple audit decisions`,
+    );
+    auditedTargetIds.add(decision.targetId);
+    assertSourceImpactTargetTextEvidence(target, decision);
   }
   assert.deepEqual(
     Object.keys(sourceImpactContracts),
     llmFoundation.sourceImpactAudit.map(({ decisionId }) => decisionId),
+  );
+  assert.deepEqual(
+    [...auditedTargetIds].sort(),
+    Object.keys(sourceImpactTargetTextContracts).sort(),
+    'every independently contracted target must have exactly one audit decision',
+  );
+  assert.deepEqual(
+    llmFoundation.sourceImpactClaims
+      .map(({ id }) => `claim:${id}`)
+      .sort(),
+    llmFoundation.sourceImpactAudit
+      .filter(({ scope }) => scope === 'claim')
+      .map(({ targetId }) => targetId)
+      .sort(),
+    'claim registry and claim audit decisions must be one-to-one',
+  );
+  assert.deepEqual(
+    llmFoundation.sourceImpactMediaCandidates
+      .map(({ id }) => `media-candidate:${id}`)
+      .sort(),
+    llmFoundation.sourceImpactAudit
+      .filter(({ scope }) => scope === 'media')
+      .map(({ targetId }) => targetId)
+      .sort(),
+    'media candidate registry and media audit decisions must be one-to-one',
+  );
+
+  const mutatedDecision = llmFoundation.sourceImpactAudit.find(
+    ({ decisionId }) => decisionId === 'impact-llm-01-field-spine',
+  );
+  const resolvedTarget = llmData.resolveLlmSourceImpactTarget(
+    mutatedDecision.targetId,
+  );
+  const mutatedTarget = {
+    ...resolvedTarget,
+    value: {
+      ...resolvedTarget.value,
+      statement: 'HTTP 缓存使用 ETag 和 If-None-Match 完成条件请求。',
+    },
+  };
+  assert.throws(
+    () => assertSourceImpactTargetTextEvidence(mutatedTarget, mutatedDecision),
+    /claim:ai-field-model-application-agent-spine\/field-spine: target text lacks independent evidence/,
+    'an unrelated HTTP-cache rewrite must break source-impact target evidence',
+  );
+  assert.throws(
+    () => assertSourceImpactDecisionSummaryEvidence({
+      ...mutatedDecision,
+      summary: '采用 ETag 与 If-None-Match 优化 HTTP 条件请求。',
+    }),
+    /impact-llm-01-field-spine: summary lacks independent semantic evidence/,
+    'an unrelated HTTP-cache rewrite must break decision summary evidence',
   );
 
   for (const lessonId of lessonIds) {

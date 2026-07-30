@@ -8,11 +8,12 @@
 - 权威核验：Attention 与 Transformer 公式继续由原论文和可核验教材支撑；API、安全、评测与产品行为继续由官方资料或目标系统实测约束。
 - 内容形态：八篇笔记仍是递进知识文章，一级来源进入真实 section 的 `sourceIds`，不是尾部链接列表。
 - 视觉形态：40 张主视觉和 12 张分步 SVG 全部保留为原创重绘，没有下载或复制第三方图表，没有热链或 data URI。
-- 学习闭环：40 个 assessment 与 40 个主视觉分别使用精确 outcome allow-set；`assessmentVisualCoverage` 逐题声明真正承担对应概念的视觉，并保证 40 / 40 主视觉都能反向追溯到至少一道同课 assessment。映射不存在重复或幽灵 ID，每条 assessment→visual 边都必须有精确 outcome tag 交集，禁止用多个无关视觉的 tag 并集伪造覆盖。
+- 学习闭环：40 个 assessment 与 40 个主视觉分别使用精确 outcome allow-set；`assessmentVisualCoverage` 逐题声明真正承担对应概念的视觉，并保证 40 / 40 主视觉都能反向追溯到至少一道同课 assessment。映射不存在重复或幽灵 ID，每条 assessment→visual 边都必须有精确 outcome tag 交集，同时每个视觉的全部 tags 都必须被关联 assessment tags 的并集覆盖。
+- 独立语义证据：测试 fixture 不导入生产课程数据，手写冻结 40 个 assessment、64 个 outcome 与 66 个可见文本 anchor；quiz 只读取题干、正确答案与 explanation，interview 读取 prompt、参考答案、展开、误区和追问。把 `iq-llm-03-2` 整题替换为 HTTP/ETag 缓存内容的 mutation 必须失败，防止 `conceptTags` 与 allow-set 相互自证。
 
 ## 来源影响决策
 
-机器数据为 `llmFoundation.sourceImpactAudit`；下表按相同顺序保持逐字段完全一致。`adopted`、`corrected` 与 `deepened` 表示材料产生实质影响；`duplicate` 与 `rejected` 记录有作用域的非采用决策。每个 `targetId` 必须由统一 resolver 解析为真实 claim、section 或 media candidate；`semanticKey` 同时存在于 decision 和目标契约中，并由逐决策 summary 主题契约检查，不能只靠 lesson 相同宣称同义。
+机器数据为 `llmFoundation.sourceImpactAudit`；下表按相同顺序保持逐字段完全一致。`adopted`、`corrected` 与 `deepened` 表示材料产生实质影响；`duplicate` 与 `rejected` 记录有作用域的非采用决策。每个 `targetId` 必须由统一 resolver 解析为真实 claim、section 或 media candidate，resolver wrapper 与其嵌套值全部冻结。独立测试 fixture 为 12 个合法 target 分别声明真实文本 anchor：claim 读取 statement，section 读取 title、paragraphs 与 keyPoints，media candidate 读取 description 和非语义 metadata，明确不把生产 `semanticKeys` 当作正文证据；decision summary 另由逐决策独立契约验证。10 个 claims、1 个 section、1 个 media candidate 与 12 条 audit decision 一一对应；把 field-spine 的 claim statement 或 decision summary 替换为 HTTP 缓存内容的 mutation 都必须失败。
 
 | decisionId | lessonId | resourceId | scope | targetId | semanticKey | contribution | summary | rationale |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -117,7 +118,7 @@
 
 ## 质量评分
 
-正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 使用逐题精确 conceptTags，并由显式视觉覆盖表双向闭环。反向复审补强了 `iq-llm-01-2` 的训练闭环与自回归逐 token 生成、`iq-llm-02-1` 的学习率轨迹、`iq-llm-06-1` 的完整 sampling loop 题意，没有仅为通过 registry 而挂载宽泛 tag。
+正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 使用逐题精确 conceptTags，并由显式视觉覆盖表双向闭环。反向复审补强了 `iq-llm-01-2` 的训练闭环与自回归逐 token 生成、`iq-llm-02-1` 的学习率轨迹、`iq-llm-03-2` 的 Embedding 与位置表示、`quiz-llm-04-1` 的 scaled dot-product，以及 `iq-llm-06-1` 的完整 sampling loop 题意；每个声明 outcome 都必须通过独立可见文本证据，不能仅为通过 registry 而挂载 tag。
 
 视觉评分采用六项，每项 10 分：语义正确 10、叙事一致 10、caption/labels/alt/longDescription 一致 9、来源与许可 10、静态安全 10、几何与可读性 9，合计 **58 / 60**，每类均不低于 8。扣分只反映静态检查不能替代真实浏览器在所有字体和缩放组合下的人工验收，不代表发现已知碰撞。
 
@@ -125,11 +126,11 @@
 
 以下均为本工作树中的实际命令结果，不以预期值替代运行证据：
 
-- 一级来源、稳定身份、八课概念主干、双向测评 outcome 与 Markdown 审计契约：6 / 6 通过。
+- LLM 一级来源、稳定身份、八课概念主干、双向 outcome、独立语义 mutation 与 Markdown 审计契约：7 / 7 通过；与一级来源冻结、binding 安全套件合跑为 44 / 44 通过。
 - LLM visual、inventory、visible semantics、geometry、静态安全与 ownership 聚焦套件：161 / 161 通过。
-- 全量 `npm test`：566 / 566 通过。
+- 全量 `npm test`：568 / 568 通过；既有 50-source、Harness 与 Context primary bindings 保持兼容。
 - 52 个本地 SVG 经 `xmllint --noout`：52 / 52 通过；主动内容与 hotlink 定向扫描无命中。
 - 变更文件 marker 与隐私定向扫描无命中；`git ls-files .research-cache` 为空。
-- 模块、八篇 note 和变更测试经 `node --check` 通过；`npm run check:primary-references` 与 `npm run check:context-visuals` 均为 current；`git diff --check` 无输出。
+- 模块、binding、独立证据 fixture 和变更测试经 `node --check` 通过；`createPrimaryReferenceBinding` 拒绝继承字段、自定义原型和 accessor 字段，同时接受只有 own data properties 的普通或 null-prototype record。`npm run check:primary-references` 与 `npm run check:context-visuals` 均为 current；`git diff --check` 无输出。
 - 提升本机监听权限后启动静态服务器，`/`、`/src/data/llm-foundation.js` 与 `/assets/visuals/llm-foundation/llm-04-score-mask-softmax.svg` 三个 HTTP smoke 请求均返回 200。
 - 未把静态测试表述为真实浏览器验收；全字体、缩放和视口组合仍属于发布前人工观察边界。

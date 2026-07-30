@@ -5,6 +5,29 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_AUTHORITIES = new Set(['official', 'academic', 'expert', 'community']);
 const VALID_ROLES = new Set(['core', 'cross-check', 'extension']);
 
+function requirePlainRecord(value, label) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new TypeError(`${label} must be a plain record`);
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new TypeError(`${label} must be a plain record`);
+  }
+  return value;
+}
+
+function readOwnDataProperty(record, key, label, { optional = false } = {}) {
+  const descriptor = Object.getOwnPropertyDescriptor(record, key);
+  if (!descriptor) {
+    if (optional) return undefined;
+    throw new TypeError(`${label} must be an own data property`);
+  }
+  if (!Object.hasOwn(descriptor, 'value')) {
+    throw new TypeError(`${label} must be an own data property`);
+  }
+  return descriptor.value;
+}
+
 function isValidCalendarDate(value) {
   if (typeof value !== 'string' || !DATE.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
@@ -22,59 +45,104 @@ function requireNonEmptyString(value, label) {
 }
 
 function createEvidence(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new TypeError('evidence must be an object');
-  }
-  if (!VALID_AUTHORITIES.has(value.authority)) {
+  const evidence = requirePlainRecord(value, 'evidence');
+  const authority = readOwnDataProperty(
+    evidence,
+    'authority',
+    'evidence.authority',
+  );
+  const role = readOwnDataProperty(evidence, 'role', 'evidence.role');
+  const coverage = readOwnDataProperty(
+    evidence,
+    'coverage',
+    'evidence.coverage',
+  );
+  const learningUseValue = readOwnDataProperty(
+    evidence,
+    'learningUse',
+    'evidence.learningUse',
+    { optional: true },
+  );
+  const limitations = readOwnDataProperty(
+    evidence,
+    'limitations',
+    'evidence.limitations',
+  );
+  const verifiedAt = readOwnDataProperty(
+    evidence,
+    'verifiedAt',
+    'evidence.verifiedAt',
+  );
+
+  if (!VALID_AUTHORITIES.has(authority)) {
     throw new TypeError('evidence.authority is invalid');
   }
-  if (!VALID_ROLES.has(value.role)) {
+  if (!VALID_ROLES.has(role)) {
     throw new TypeError('evidence.role is invalid');
   }
   if (
-    !Array.isArray(value.coverage)
-    || value.coverage.length === 0
-    || value.coverage.some((item) => typeof item !== 'string' || item.trim().length === 0)
+    !Array.isArray(coverage)
+    || coverage.length === 0
+    || coverage.some((item) => typeof item !== 'string' || item.trim().length === 0)
   ) {
     throw new TypeError('evidence.coverage must contain non-empty strings');
   }
-  const learningUse = value.learningUse === undefined
+  const learningUse = learningUseValue === undefined
     ? undefined
-    : requireNonEmptyString(value.learningUse, 'evidence.learningUse');
-  requireNonEmptyString(value.limitations, 'evidence.limitations');
-  if (!isValidCalendarDate(value.verifiedAt)) {
+    : requireNonEmptyString(learningUseValue, 'evidence.learningUse');
+  requireNonEmptyString(limitations, 'evidence.limitations');
+  if (!isValidCalendarDate(verifiedAt)) {
     throw new TypeError('evidence.verifiedAt must be a real YYYY-MM-DD date');
   }
   return Object.freeze({
-    authority: value.authority,
-    role: value.role,
+    authority,
+    role,
     ...(learningUse === undefined ? {} : { learningUse }),
-    coverage: Object.freeze([...value.coverage]),
-    limitations: value.limitations,
-    verifiedAt: value.verifiedAt,
+    coverage: Object.freeze([...coverage]),
+    limitations,
+    verifiedAt,
   });
 }
 
 export function createPrimaryReferenceBinding(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) {
-    throw new TypeError('Primary reference binding input must be an object');
-  }
-  const id = requireNonEmptyString(input.id, 'id');
+  const bindingInput = requirePlainRecord(
+    input,
+    'Primary reference binding input',
+  );
+  const id = requireNonEmptyString(
+    readOwnDataProperty(bindingInput, 'id', 'id'),
+    'id',
+  );
   if (!RESOURCE_ID.test(id)) {
     throw new TypeError('id must be a globally unique course resource ID');
   }
   const canonicalSourceId = requireNonEmptyString(
-    input.canonicalSourceId,
+    readOwnDataProperty(
+      bindingInput,
+      'canonicalSourceId',
+      'canonicalSourceId',
+    ),
     'canonicalSourceId',
   );
   const source = getPrimaryReference(canonicalSourceId);
   if (!source) {
     throw new TypeError(`Unknown primary source: ${canonicalSourceId}`);
   }
-  const stage = requireNonEmptyString(input.stage, 'stage');
-  const difficulty = requireNonEmptyString(input.difficulty, 'difficulty');
-  const value = requireNonEmptyString(input.value, 'value');
-  const evidence = createEvidence(input.evidence);
+  const stage = requireNonEmptyString(
+    readOwnDataProperty(bindingInput, 'stage', 'stage'),
+    'stage',
+  );
+  const difficulty = requireNonEmptyString(
+    readOwnDataProperty(bindingInput, 'difficulty', 'difficulty'),
+    'difficulty',
+  );
+  const value = requireNonEmptyString(
+    readOwnDataProperty(bindingInput, 'value', 'value'),
+    'value',
+  );
+  const evidence = createEvidence(
+    readOwnDataProperty(bindingInput, 'evidence', 'evidence'),
+  );
 
   return Object.freeze({
     id,
