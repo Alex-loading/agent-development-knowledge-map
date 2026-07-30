@@ -23,7 +23,7 @@ The non-canonical-registry addition `res-harness-mcp-tools-spec` is an ordinary 
 
 ## Source-impact audit
 
-The machine-readable copy of this table is exported as the deeply frozen `agentHarness.sourceImpactAudit`. Decisions apply to a named narrative, claim, or media target—not to an entire resource. `adopted`, `corrected`, and `deepened` are material contributions; `rejected` and `duplicate` make scoped non-use decisions auditable. Tests parse this table and require exact ordered parity with the machine data.
+The machine-readable copy of this table is exported as the deeply frozen `agentHarness.sourceImpactAudit`. Decisions apply to a named narrative, claim, or media target—not to an entire resource. Claim targets resolve through the separate deeply frozen `agentHarness.sourceImpactClaims` registry, where each claim owns a real lesson section and exact section-local supporting source IDs; the resolver rejects undeclared claim targets. The registry remains machine data rather than a second hand-maintained Markdown table. `adopted`, `corrected`, and `deepened` are material contributions; `rejected` and `duplicate` make scoped non-use decisions auditable. Tests parse this decision table and require exact ordered parity with the machine data.
 
 | decisionId | lessonId | resourceId | scope | targetId | contribution | summary | rationale |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -144,7 +144,7 @@ The following commands were run from the isolated reconstruction worktree root o
 node --test tests/agent-harness-data.test.js tests/agent-harness-primary-references.test.js tests/agent-harness-visual-data.test.js tests/readme-visual-publication.test.js
 ```
 
-Exit `0`: `27` tests, `27` pass, `0` fail/skipped. This includes the scoped source-impact/Markdown parity contract, exact 24-main-plus-three-step inventory contract, parsed visible-label contract, and data-derived README publication contract.
+Exit `0`: `28` tests, `28` pass, `0` fail/skipped. This includes the scoped source-impact/Markdown parity contract, independently resolved and deeply frozen claim registry, exact 24-main-plus-three-step inventory contract, parsed visible-label contract, and data-derived README publication contract.
 
 ```sh
 node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js
@@ -156,7 +156,7 @@ Exit `0`: `110` tests, `110` pass, `0` fail/skipped.
 npm test
 ```
 
-Exit `0`: `525` tests, `525` pass, `0` fail/skipped.
+Exit `0`: `526` tests, `526` pass, `0` fail/skipped.
 
 ```sh
 node --test tests/primary-references.test.js

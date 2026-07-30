@@ -2,13 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 
-import { agentHarness } from '../src/data/agent-harness.js';
+import * as agentHarnessData from '../src/data/agent-harness.js';
 import { getPrimaryReference } from '../src/data/primary-references.js';
 import { agentHarnessVisuals } from '../src/data/visuals/agent-harness-visuals.js';
 import {
   readMarkdownTable,
   unwrapSingleCodeSpan,
 } from './helpers/markdown-table.js';
+
+const { agentHarness } = agentHarnessData;
 
 const stableLessonIds = Object.freeze([
   'harness-01',
@@ -417,6 +419,85 @@ test('publishes unique scoped source-impact decisions with resolvable targets', 
   assert.match(workflowDuplicate.targetId, /^claim:/);
 });
 
+test('resolves every claim decision through an independent frozen claim registry', () => {
+  const claims = agentHarness.sourceImpactClaims;
+  const resolveClaim = agentHarnessData.resolveSourceImpactClaim;
+  const resourcesById = new Map(
+    agentHarness.resources.map((resource) => [resource.id, resource]),
+  );
+  const claimIds = new Set();
+
+  assert.ok(Array.isArray(claims));
+  assert.ok(claims.length > 0);
+  assert.equal(typeof resolveClaim, 'function');
+  assertDeepFrozen(claims, 'sourceImpactClaims');
+
+  for (const claim of claims) {
+    assert.deepEqual(Object.keys(claim), [
+      'id',
+      'lessonId',
+      'sectionId',
+      'statement',
+      'sourceIds',
+    ]);
+    assert.match(claim.id, /^[a-z0-9]+(?:-[a-z0-9]+)+$/);
+    assert.ok(!claimIds.has(claim.id), `duplicate claim ${claim.id}`);
+    claimIds.add(claim.id);
+    assert.ok(stableLessonIds.includes(claim.lessonId), claim.id);
+    assert.ok(typeof claim.statement === 'string' && claim.statement.length >= 20, claim.id);
+    assert.ok(Array.isArray(claim.sourceIds) && claim.sourceIds.length > 0, claim.id);
+    assert.equal(new Set(claim.sourceIds).size, claim.sourceIds.length, claim.id);
+
+    const lesson = agentHarness.lessons.find(({ id }) => id === claim.lessonId);
+    const section = lesson.knowledgeNote.sections.find(({ id }) => id === claim.sectionId);
+    assert.ok(section, `${claim.id}: unknown section ${claim.sectionId}`);
+    for (const sourceId of claim.sourceIds) {
+      assert.ok(resourcesById.has(sourceId), `${claim.id}: unknown source ${sourceId}`);
+      assert.ok(lesson.resourceIds.includes(sourceId),
+        `${claim.id}: ${sourceId} is outside ${lesson.id}`);
+      assert.ok(section.sourceIds.includes(sourceId),
+        `${claim.id}: ${sourceId} is outside ${section.id}`);
+    }
+
+    const targetId = `claim:${claim.id}`;
+    assert.equal(resolveClaim(targetId), claim, `${claim.id}: resolver identity drift`);
+    const decisions = agentHarness.sourceImpactAudit.filter(
+      (decision) => decision.scope === 'claim' && decision.targetId === targetId,
+    );
+    assert.ok(decisions.length > 0, `${claim.id}: unreferenced claim`);
+    for (const decision of decisions) {
+      assert.equal(decision.lessonId, claim.lessonId, decision.decisionId);
+      assert.ok(claim.sourceIds.includes(decision.resourceId), decision.decisionId);
+      assert.ok(section.sourceIds.includes(decision.resourceId), decision.decisionId);
+    }
+  }
+
+  const claimDecisions = agentHarness.sourceImpactAudit.filter(
+    ({ scope }) => scope === 'claim',
+  );
+  assert.ok(claimDecisions.length >= claims.length);
+  for (const decision of claimDecisions) {
+    assert.equal(
+      resolveClaim(decision.targetId).lessonId,
+      decision.lessonId,
+      decision.decisionId,
+    );
+  }
+
+  const inventedDecision = {
+    ...claimDecisions[0],
+    targetId: 'claim:totally-made-up-claim',
+  };
+  assert.throws(
+    () => resolveClaim(inventedDecision.targetId),
+    /Unknown source-impact claim/,
+  );
+  assert.throws(
+    () => resolveClaim('section:totally-made-up-claim'),
+    /must start with claim:/,
+  );
+});
+
 test('keeps the Markdown source-impact ledger in exact parity with machine decisions', async () => {
   const audit = await readFile(
     new URL(
@@ -450,11 +531,13 @@ test('keeps the Markdown source-impact ledger in exact parity with machine decis
 
 test('keeps resource IDs globally unique and the reconstructed data deeply frozen', () => {
   const resourceIds = agentHarness.resources.map(({ id }) => id);
+  assert.ok(Array.isArray(agentHarness.sourceImpactClaims));
   const allIds = [
     ...agentHarness.lessons.map(({ id }) => id),
     ...resourceIds,
     ...agentHarness.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id)),
     ...agentHarness.interviewQuestions.map(({ id }) => id),
+    ...agentHarness.sourceImpactClaims.map(({ id }) => id),
   ];
   assert.equal(new Set(resourceIds).size, resourceIds.length);
   assert.equal(new Set(allIds).size, allIds.length);

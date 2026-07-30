@@ -784,6 +784,75 @@ const interviewQuestions = interviewSpecs.map(([
   };
 });
 
+const sourceImpactClaims = deepFreeze([
+  {
+    id: 'state-save-is-sufficient-for-recovery',
+    lessonId: 'harness-02',
+    sectionId: 'commit-events-and-projections-atomically',
+    statement: '只保存可变状态不足以安全恢复；事件事实、控制位置和副作用证据必须共同决定恢复动作。',
+    sourceIds: [
+      'res-harness-langgraph-persistence',
+      'res-harness-temporal-event',
+      'res-harness-primary-feishu-dynamic-workflow',
+    ],
+  },
+  {
+    id: 'mcp-tools-capability-list-call-boundary',
+    lessonId: 'harness-03',
+    sectionId: 'separate-model-catalog-from-host-registry',
+    statement: 'MCP Tools 规范定义 tools capability、tools/list 与 tools/call 的协议边界，但不授予应用侧执行权限。',
+    sourceIds: [
+      'res-harness-mcp-tools-spec',
+    ],
+  },
+  {
+    id: 'open-closed-loop-reliability-ranking',
+    lessonId: 'harness-05',
+    sectionId: 'build-a-hierarchical-run-budget',
+    statement: '开环和闭环描述不同反馈结构，不能脱离预算、验证与停止条件直接排列可靠性高低。',
+    sourceIds: [
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-javaguide-loop-engineering',
+    ],
+  },
+  {
+    id: 'checkpoint-version-equivalence-for-resume',
+    lessonId: 'harness-06',
+    sectionId: 'resume-by-lease-evidence-and-five-decisions',
+    statement: 'Checkpoint 可被读取不代表版本等价；恢复前必须核对模型、prompt、工具 schema、reducer 与依赖版本。',
+    sourceIds: [
+      'res-harness-primary-feishu-agent-version-drifting',
+    ],
+  },
+  {
+    id: 'workflow-graph-loop-navigation-definitions',
+    lessonId: 'harness-07',
+    sectionId: 'layer-concurrency-limits',
+    statement: 'Workflow、Graph 与 Loop 的导航性重复定义不构成独立事实证据，课程只保留其控制结构比较。',
+    sourceIds: [
+      'res-harness-primary-javaguide-workflow-graph-loop',
+    ],
+  },
+]);
+
+export function resolveSourceImpactClaim(targetId) {
+  if (typeof targetId !== 'string' || !targetId.startsWith('claim:')) {
+    throw new TypeError('source-impact claim target must start with claim:');
+  }
+  const claimId = targetId.slice('claim:'.length);
+  const claim = sourceImpactClaims.find(({ id }) => id === claimId);
+  if (!claim) {
+    throw new RangeError(`Unknown source-impact claim: ${targetId}`);
+  }
+  return claim;
+}
+
+function sourceImpactClaimTarget(claimId) {
+  const targetId = `claim:${claimId}`;
+  resolveSourceImpactClaim(targetId);
+  return targetId;
+}
+
 const sourceImpactAudit = [
   {
     decisionId: 'impact-harness-01-control-authority',
@@ -800,7 +869,7 @@ const sourceImpactAudit = [
     lessonId: 'harness-02',
     resourceId: 'res-harness-primary-feishu-dynamic-workflow',
     scope: 'claim',
-    targetId: 'claim:state-save-is-sufficient-for-recovery',
+    targetId: sourceImpactClaimTarget('state-save-is-sufficient-for-recovery'),
     contribution: 'corrected',
     summary: '把“保存状态即可恢复”修正为事件历史、控制位置与副作用 journal 共同提交。',
     rationale: '教学代码不能证明原子提交或外部副作用 exactly-once，因此课程明确保留崩溃模糊窗口。',
@@ -820,7 +889,7 @@ const sourceImpactAudit = [
     lessonId: 'harness-03',
     resourceId: 'res-harness-mcp-tools-spec',
     scope: 'claim',
-    targetId: 'claim:mcp-tools-capability-list-call-boundary',
+    targetId: sourceImpactClaimTarget('mcp-tools-capability-list-call-boundary'),
     contribution: 'corrected',
     summary: '以版本化官方规范把 MCP 边界收紧为 tools capability、tools/list 与 tools/call 的 client-server 协议行为。',
     rationale: '该协议主张不替代宿主的身份、资源授权、业务审批、策略执行和副作用控制。',
@@ -840,7 +909,7 @@ const sourceImpactAudit = [
     lessonId: 'harness-05',
     resourceId: 'res-harness-primary-feishu-loop-engineering-intro',
     scope: 'claim',
-    targetId: 'claim:open-closed-loop-reliability-ranking',
+    targetId: sourceImpactClaimTarget('open-closed-loop-reliability-ranking'),
     contribution: 'corrected',
     summary: '把开环与闭环从可靠性排名修正为不同反馈结构，并接入预算和停止守卫。',
     rationale: 'Loop Engineering 不是行业标准，任何长程可靠性结论仍必须由目标运行时证据证明。',
@@ -850,7 +919,7 @@ const sourceImpactAudit = [
     lessonId: 'harness-06',
     resourceId: 'res-harness-primary-feishu-agent-version-drifting',
     scope: 'claim',
-    targetId: 'claim:checkpoint-version-equivalence-for-resume',
+    targetId: sourceImpactClaimTarget('checkpoint-version-equivalence-for-resume'),
     contribution: 'deepened',
     summary: '把安全恢复扩展到模型、prompt、工具 schema、reducer 与依赖版本迁移。',
     rationale: '版本示例有明确日期边界，不能外推为当前产品兼容保证，恢复必须保留版本证据。',
@@ -890,7 +959,7 @@ const sourceImpactAudit = [
     lessonId: 'harness-07',
     resourceId: 'res-harness-primary-javaguide-workflow-graph-loop',
     scope: 'claim',
-    targetId: 'claim:workflow-graph-loop-navigation-definitions',
+    targetId: sourceImpactClaimTarget('workflow-graph-loop-navigation-definitions'),
     contribution: 'duplicate',
     summary: '课程只保留文章的控制结构横向比较，不把导航性重复定义计作独立事实证据。',
     rationale: '该判定只作用于重复定义；来源其余比较仍被使用，具体运行语义继续绑定官方实现资料。',
@@ -910,5 +979,6 @@ export const agentHarness = deepFreeze({
   lessons,
   resources,
   interviewQuestions,
+  sourceImpactClaims,
   sourceImpactAudit,
 });
