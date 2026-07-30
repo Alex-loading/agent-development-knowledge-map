@@ -87,5 +87,15 @@ JavaGuide media defaults to `asset-level-review-required`. The repository's Apac
 - Live `node scripts/freeze-primary-references.mjs`: exit 0; `Frozen 50 primary references (16 Feishu, 34 JavaGuide); 0 redirects, 0 failures.`
 - Manifest-to-registry reconciliation: 50 manifest URLs, 50 registry URLs, 0 missing records, and 0 hash mismatches.
 - Registry file SHA-256 after live metadata promotion: `0cc90d3a7aa90217b11bec3c1d0ebd0f8ea040a2bd4cf232215a371555f9148d`.
-- The final full regression, syntax check, diff check, ignored-cache check, and clean-status evidence are recorded after the last verification run in this document's final audit section.
 
+## Final audit
+
+- `node scripts/freeze-primary-references.mjs`: exit 0 at `2026-07-30T16:08:44.729Z`; 50 sources, 16 Feishu documents, 34 JavaGuide articles, 278 media candidates, 0 redirects, and 0 failures.
+- Live manifest-to-registry date/hash reconciliation: exit 0; 50 manifest records, 50 registry records, and 0 mismatches.
+- `node --test tests/primary-references.test.js tests/course-registry.test.js tests/data.test.js`: exit 0; 34 tests passed, 0 failed, and 0 skipped.
+- `npm test`: exit 0; 488 tests passed, 0 failed, and 0 skipped.
+- `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`: exit 0 with no diagnostics.
+- `git diff --check`: exit 0 with no diagnostics.
+- The incomplete-marker gate over both research documents exited 1 with no matches, which is the expected clean result.
+- `git check-ignore .research-cache/primary-references/manifest.json`: exit 0 and returned that exact ignored path; `git ls-files .research-cache` returned no paths.
+- The pre-audit-commit `git status --short` result was empty; `git status --short --ignored` showed only `!! .research-cache/`.
