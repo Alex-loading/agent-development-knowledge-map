@@ -365,10 +365,22 @@ function aggregateByteLimitError(limit) {
   );
 }
 
+async function cancelBodyBestEffort(body) {
+  try {
+    await body?.cancel?.();
+  } catch {
+    // Cancellation is secondary; callers preserve the limit error that triggered it.
+  }
+}
+
 async function readResponseTextWithinLimit(response, limits, remainingTotalBytes) {
-  if (remainingTotalBytes <= 0) throw aggregateByteLimitError(limits.maxTotalBytes);
+  if (remainingTotalBytes <= 0) {
+    await cancelBodyBestEffort(response.body);
+    throw aggregateByteLimitError(limits.maxTotalBytes);
+  }
   const declaredLength = Number(response.headers?.get?.('content-length'));
   if (Number.isFinite(declaredLength) && declaredLength > remainingTotalBytes) {
+    await cancelBodyBestEffort(response.body);
     throw aggregateByteLimitError(limits.maxTotalBytes);
   }
   if (Number.isFinite(declaredLength) && declaredLength > limits.maxBodyBytes) {
@@ -386,7 +398,7 @@ async function readResponseTextWithinLimit(response, limits, remainingTotalBytes
       if (done) break;
       byteCount += value.byteLength;
       if (byteCount > remainingTotalBytes) {
-        await reader.cancel();
+        await cancelBodyBestEffort(reader);
         throw aggregateByteLimitError(limits.maxTotalBytes);
       }
       if (byteCount > limits.maxBodyBytes) {

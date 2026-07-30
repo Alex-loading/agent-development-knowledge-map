@@ -810,13 +810,64 @@ test('JavaGuide aggregate byte exhaustion aborts before fetching later queued ro
   assert.equal(aggregateStreamCancelled, true);
 });
 
-test('aggregate byte failure preserves an isolated prior canonical cache', async (t) => {
+test('declared aggregate overrun cancels the body and aborts before later routes', async () => {
+  const rootUrl = 'https://javaguide.cn/ai/';
+  const secondUrl = 'https://javaguide.cn/ai/second';
+  const laterUrl = 'https://javaguide.cn/ai/later';
+  const rootBody = javaGuideHtml({
+    canonicalUrl: rootUrl,
+    links: [secondUrl, laterUrl],
+  });
+  const requested = [];
+  let responseBodyCancelled = false;
+  const remainingAfterRoot = 16;
+
+  await assert.rejects(
+    crawlJavaGuide({
+      fetchImpl: async (url) => {
+        requested.push(url);
+        if (url === rootUrl) return javaGuideResponse({ url, body: rootBody });
+        const response = javaGuideResponse({
+          url,
+          contentLength: remainingAfterRoot + 1,
+        });
+        return {
+          ...response,
+          body: {
+            cancel: async () => {
+              responseBodyCancelled = true;
+            },
+          },
+        };
+      },
+      limits: {
+        ...DEFAULT_FREEZE_LIMITS,
+        maxTotalBytes: Buffer.byteLength(rootBody, 'utf8') + remainingAfterRoot,
+      },
+    }),
+    /total byte limit/i,
+  );
+  assert.deepEqual(requested, [rootUrl, secondUrl]);
+  assert.equal(responseBodyCancelled, true);
+});
+
+test('rejecting aggregate cancellation preserves the sentinel and prior cache', async (t) => {
   const cache = await createIsolatedCache(t);
   const before = '{"fixture":"prior aggregate-safe snapshot"}\n';
   await cache.seedCanonical(before);
+  const rootUrl = 'https://javaguide.cn/ai/';
+  const secondUrl = 'https://javaguide.cn/ai/second';
+  const laterUrl = 'https://javaguide.cn/ai/later';
   const rootBody = javaGuideHtml({
-    links: ['https://javaguide.cn/ai/second', 'https://javaguide.cn/ai/later'],
+    canonicalUrl: rootUrl,
+    links: [secondUrl, laterUrl],
   });
+  const secondBody = javaGuideHtml({
+    canonicalUrl: secondUrl,
+    body: `<main>${'x'.repeat(1024)}</main>`,
+  });
+  const requested = [];
+  let cancelAttempted = false;
 
   await assert.rejects(
     freezePrimaryReferences({
@@ -824,20 +875,50 @@ test('aggregate byte failure preserves an isolated prior canonical cache', async
       stagingId: '44444444444444444444444444444444',
       snapshotBuilder: async () => {
         await crawlJavaGuide({
-          fetchImpl: async (url) => javaGuideResponse({
-            url,
-            body: url.endsWith('/ai/') ? rootBody : javaGuideHtml({ canonicalUrl: url }),
-          }),
+          fetchImpl: async (url) => {
+            requested.push(url);
+            if (url === rootUrl) return javaGuideResponse({ url, body: rootBody });
+            if (url === laterUrl) return javaGuideResponse({ url });
+            const response = javaGuideResponse({ url, body: secondBody });
+            let delivered = false;
+            return {
+              ...response,
+              body: {
+                getReader: () => ({
+                  cancel: async () => {
+                    cancelAttempted = true;
+                    throw new Error('secondary cancellation diagnostic');
+                  },
+                  read: async () => {
+                    if (delivered) return { done: true };
+                    delivered = true;
+                    return {
+                      done: false,
+                      value: new TextEncoder().encode(secondBody),
+                    };
+                  },
+                }),
+              },
+            };
+          },
           limits: {
             ...DEFAULT_FREEZE_LIMITS,
-            maxTotalBytes: Buffer.byteLength(rootBody, 'utf8') + 1,
+            maxTotalBytes: Buffer.byteLength(rootBody, 'utf8')
+              + Buffer.byteLength(secondBody, 'utf8')
+              - 1,
           },
         });
         throw new Error('crawl unexpectedly completed');
       },
     }),
-    /total byte limit/i,
+    (error) => {
+      assert.match(error.message, /total byte limit/i);
+      assert.doesNotMatch(error.message, /secondary cancellation diagnostic/i);
+      return true;
+    },
   );
+  assert.equal(cancelAttempted, true);
+  assert.deepEqual(requested, [rootUrl, secondUrl]);
   assert.equal(await readFile(cache.canonicalManifest, 'utf8'), before);
 });
 
