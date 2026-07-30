@@ -23,21 +23,21 @@ The non-canonical-registry addition `res-harness-mcp-tools-spec` is an ordinary 
 
 ## Source-impact audit
 
-The machine-readable copy of this table is exported as the deeply frozen `agentHarness.sourceImpactAudit`. `adopted`, `corrected`, and `deepened` are material contributions; `rejected` and `duplicate` make non-use decisions auditable.
+The machine-readable copy of this table is exported as the deeply frozen `agentHarness.sourceImpactAudit`. Decisions apply to a named narrative, claim, or media target—not to an entire resource. `adopted`, `corrected`, and `deepened` are material contributions; `rejected` and `duplicate` make scoped non-use decisions auditable. Tests parse this table and require exact ordered parity with the machine data.
 
-| Lesson | Source | Impact | Material change | Boundary kept |
-| --- | --- | --- | --- | --- |
-| `harness-01` | `res-harness-primary-feishu-beyond-model` | adopted | Reorganized the lesson around model proposal versus Harness execution authority. | Tool messages and product runtime behavior remain tied to current official documentation. |
-| `harness-02` | `res-harness-primary-feishu-dynamic-workflow` | corrected | Replaced “save state and resume” with event history, control cursor, checkpoint, journaled replay, and crash gaps. | Teaching code does not prove atomic persistence or external exactly-once effects. |
-| `harness-03` | `res-harness-primary-feishu-tool-truth` | deepened | Separated Tool Definition, model decision, host registry, policy, adapter, and result feedback. | MCP tool-message semantics now use the versioned official specification; product-specific tool behavior and application authorization still require their own current evidence. |
-| `harness-03` | `res-harness-mcp-tools-spec` | corrected | Replaced the weak “some official source exists” proxy with versioned MCP evidence for `tools` capability, `tools/list`, `tools/call`, schemas, and client-server message flow. | The protocol does not grant application identity, resource authorization, business approval, policy enforcement, or side-effect safety. |
-| `harness-04` | `res-harness-primary-feishu-virtual-filesystem` | adopted | Added VFS provider capability discovery, session namespaces, Files/Git/Bash scope, artifact promotion, and cleanup ownership. | A virtual filesystem is not itself a sandbox or a trust guarantee. |
-| `harness-05` | `res-harness-primary-feishu-loop-engineering-intro` | corrected | Recast open and closed loops as feedback structures rather than reliability rankings, then placed both under hard budgets and stop guards. | Long-horizon reliability must be demonstrated by runtime evidence. |
-| `harness-06` | `res-harness-primary-feishu-agent-version-drifting` | deepened | Extended resume checks to model, prompt, tool schema, policy, reducer, and dependency versions. | Dated examples do not guarantee current product compatibility. |
-| `harness-07` | `res-harness-primary-feishu-react-orchestration` | adopted | Related workflow, graph, loop, parallel, pipeline, orchestration, queues, and HITL without erasing their control boundaries. | The taxonomy does not establish durability, queue, or recovery semantics. |
-| `harness-08` | `res-harness-primary-feishu-agent-install-md` | deepened | Connected Install.md, Skills, Hooks, context offloading, artifacts, stop points, and handoff evidence. | Install.md is a suggested pattern, not a universal installation or trust protocol. |
-| `harness-01` | `res-harness-primary-feishu-react-loop` | rejected | The source image was not copied; an original tool-transcript teaching diagram was drawn from verified relationships. | Access to source text is not media redistribution or modification permission. |
-| `harness-07` | `res-harness-primary-javaguide-workflow-graph-loop` | duplicate | Retained the useful cross-structure comparison but did not count repeated navigation definitions as independent factual evidence. | Checkpoint, queue, concurrency, and recovery claims continue to use official implementation sources. |
+| decisionId | lessonId | resourceId | scope | targetId | contribution | summary | rationale |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `impact-harness-01-control-authority` | `harness-01` | `res-harness-primary-feishu-beyond-model` | `narrative` | `section:decision-and-control-planes` | `adopted` | 用“模型只提出候选动作，Harness 才拥有执行权”重组 Runner 课程主线。 | 该决定只采纳责任边界的教学叙事；工具消息和产品运行语义仍由当前官方文档核验。 |
+| `impact-harness-02-recovery-model` | `harness-02` | `res-harness-primary-feishu-dynamic-workflow` | `claim` | `claim:state-save-is-sufficient-for-recovery` | `corrected` | 把“保存状态即可恢复”修正为事件历史、控制位置与副作用 journal 共同提交。 | 教学代码不能证明原子提交或外部副作用 exactly-once，因此课程明确保留崩溃模糊窗口。 |
+| `impact-harness-03-tool-registry-boundary` | `harness-03` | `res-harness-primary-feishu-tool-truth` | `narrative` | `section:separate-model-catalog-from-host-registry` | `deepened` | 把 Tool Definition 明确为模型可见提案契约，并把校验、授权和执行留给 Harness。 | MCP 工具消息由版本化官方规范核验；具体产品工具清单、授权和执行语义仍需对应产品文档验证。 |
+| `impact-harness-03-mcp-tool-protocol` | `harness-03` | `res-harness-mcp-tools-spec` | `claim` | `claim:mcp-tools-capability-list-call-boundary` | `corrected` | 以版本化官方规范把 MCP 边界收紧为 tools capability、tools/list 与 tools/call 的 client-server 协议行为。 | 该协议主张不替代宿主的身份、资源授权、业务审批、策略执行和副作用控制。 |
+| `impact-harness-04-vfs-capability-model` | `harness-04` | `res-harness-primary-feishu-virtual-filesystem` | `narrative` | `section:minimize-files-and-secrets` | `adopted` | 新增 VFS provider、会话命名空间、能力发现与清理责任的执行面比较。 | 该叙事只支持能力建模；文件系统抽象不等于 sandbox，也不证明隔离、持久化或来源可信。 |
+| `impact-harness-05-loop-feedback-structure` | `harness-05` | `res-harness-primary-feishu-loop-engineering-intro` | `claim` | `claim:open-closed-loop-reliability-ranking` | `corrected` | 把开环与闭环从可靠性排名修正为不同反馈结构，并接入预算和停止守卫。 | Loop Engineering 不是行业标准，任何长程可靠性结论仍必须由目标运行时证据证明。 |
+| `impact-harness-06-version-safe-resume` | `harness-06` | `res-harness-primary-feishu-agent-version-drifting` | `claim` | `claim:checkpoint-version-equivalence-for-resume` | `deepened` | 把安全恢复扩展到模型、prompt、工具 schema、reducer 与依赖版本迁移。 | 版本示例有明确日期边界，不能外推为当前产品兼容保证，恢复必须保留版本证据。 |
+| `impact-harness-07-orchestration-taxonomy` | `harness-07` | `res-harness-primary-feishu-react-orchestration` | `narrative` | `section:layer-concurrency-limits` | `adopted` | 用 ReAct 到 orchestration 的演进解释 workflow、graph、parallel、pipeline 与 HITL。 | 该分类只组织控制结构，不决定框架的耐久性、队列语义或故障恢复能力。 |
+| `impact-harness-08-install-handoff-pattern` | `harness-08` | `res-harness-primary-feishu-agent-install-md` | `narrative` | `section:persist-and-release-long-approvals` | `deepened` | 把 Install.md、Skills、Hooks 与产物清单组合成可停、可交接、可验证的长程交付。 | Install.md 是建议模式而不是统一安装协议，也不证明第三方命令或 Hook 安全。 |
+| `impact-harness-01-react-loop-media` | `harness-01` | `res-harness-primary-feishu-react-loop` | `media` | `media-candidate:feishu-react-loop-source-image` | `rejected` | 拒绝直接复用来源图片，改从可验证关系原创重绘工具轨迹与控制面图。 | 该拒绝仅针对媒体候选；正文仍被课程使用，但正文访问不构成图片再分发或修改许可。 |
+| `impact-harness-07-navigation-definition` | `harness-07` | `res-harness-primary-javaguide-workflow-graph-loop` | `claim` | `claim:workflow-graph-loop-navigation-definitions` | `duplicate` | 课程只保留文章的控制结构横向比较，不把导航性重复定义计作独立事实证据。 | 该判定只作用于重复定义；来源其余比较仍被使用，具体运行语义继续绑定官方实现资料。 |
 
 ## Reconstructed learning sequence
 
@@ -116,7 +116,7 @@ Paths such as `objectives[0]`, `exercise.steps[1]`, and `completionCriteria[0]` 
 
 ## Visual and permission audit
 
-The inventory was frozen before asset production in `docs/research/2026-07-30-agent-harness-visual-inventory.md`. It records the cognitive question, owner section, source IDs, storyboard, fixture scope, permission decision, and production status for all 24 visuals.
+The inventory was frozen before asset production in `docs/research/2026-07-30-agent-harness-visual-inventory.md`. It records the cognitive question, owner section, source IDs, storyboard, fixture scope, permission decision, and production status for all 24 visuals, plus explicit fixture/publication identity for every main visual and inheritance rows for all three step assets.
 
 | Lesson | Published | Overview | Section diagrams | Step diagrams | Third-party media |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -130,7 +130,7 @@ The inventory was frozen before asset production in `docs/research/2026-07-30-ag
 | `harness-08` | 3 | 1 | 2 | 0 | 0 |
 | **Total** | **24** | **8** | **16** | **1 with three states** | **0** |
 
-All assets use `original-synthesis`, `permission: null`, the credit `Agent Learner 原创教学图解`, and the verification date `2026-07-30`. No external image, screenshot, source figure, paper figure, or video frame is redistributed or adapted. State labels and the two small quantitative examples are frozen in `tests/fixtures/agent-harness-visual-fixtures.js`; the tests verify that fixture labels and values are actually present in the corresponding primary SVG. Every SVG has one title, one description, matching registry dimensions, local-only references, and no active content.
+All assets use `original-synthesis`, `permission: null`, the credit `Agent Learner 原创教学图解`, and the verification date `2026-07-30`. No external image, screenshot, source figure, paper figure, or video frame is redistributed or adapted. Assessed outcomes, cognitive questions, storyboards, state labels, step labels, and the two small quantitative examples are frozen in `tests/fixtures/agent-harness-visual-fixtures.js`; the tests require exact inventory parity and find the labels and values in parsed visible SVG text nodes for both primary and step assets. Every SVG has one title, one description, matching registry dimensions, local-only references, and no active content.
 
 Each visual has exactly one note placement. Its source IDs must resolve through the global resource registry, belong to the owning lesson, carry an evidence card, and appear in the exact owner section. The direct module registry is merged into `src/data/visuals/index.js`; the shared duplicate-ID guard remains fail-closed. This is an evidence-based deviation from the initial “defer shared index integration” plan: real UI and global ownership tests demonstrated that unregistered placements render diagnostics and cannot be considered published.
 
@@ -141,10 +141,10 @@ The following commands were run from the isolated reconstruction worktree root o
 ### Focused, shared, full, and privacy contracts
 
 ```sh
-node --test tests/agent-harness-data.test.js tests/agent-harness-primary-references.test.js tests/agent-harness-visual-data.test.js
+node --test tests/agent-harness-data.test.js tests/agent-harness-primary-references.test.js tests/agent-harness-visual-data.test.js tests/readme-visual-publication.test.js
 ```
 
-Exit `0`: `25` tests, `25` pass, `0` fail/skipped. This includes the MCP section/source/platform/version contract and the inventory role/outcome/step-inheritance contract.
+Exit `0`: `27` tests, `27` pass, `0` fail/skipped. This includes the scoped source-impact/Markdown parity contract, exact 24-main-plus-three-step inventory contract, parsed visible-label contract, and data-derived README publication contract.
 
 ```sh
 node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js
@@ -156,7 +156,7 @@ Exit `0`: `110` tests, `110` pass, `0` fail/skipped.
 npm test
 ```
 
-Exit `0`: `523` tests, `523` pass, `0` fail/skipped.
+Exit `0`: `525` tests, `525` pass, `0` fail/skipped.
 
 ```sh
 node --test tests/primary-references.test.js
@@ -176,7 +176,7 @@ Exit `0`: no syntax diagnostics.
 find src tests scripts -type f \( -name '*.js' -o -name '*.mjs' \) | wc -l
 ```
 
-Exit `0`; exact trimmed output `123`, establishing the checked JavaScript/module file count.
+Exit `0`; exact trimmed output `125`, establishing the checked JavaScript/module file count.
 
 ### Harness SVG XML and static-security gates
 

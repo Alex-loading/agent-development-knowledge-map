@@ -309,6 +309,7 @@ export function parseStrictSvg(svg, label) {
       } else {
         assert.doesNotMatch(characterData, /\]\]>/, `${label}: 正文禁止 CDATA 终止序列 ]]>`);
         for (const node of stack) node.text += characterData;
+        stack.at(-1).ownText += characterData;
       }
       cursor = end;
       continue;
@@ -356,6 +357,7 @@ export function parseStrictSvg(svg, label) {
         name: elementName,
         attributes,
         children: [],
+        ownText: '',
         text: '',
       };
       elements.push(node);

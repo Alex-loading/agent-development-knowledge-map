@@ -10,15 +10,24 @@ import {
   renderKnowledgeVisual,
   validateRenderableVisual,
 } from '../src/ui/knowledge-visual.js';
-import { agentHarnessVisualFixtures } from './fixtures/agent-harness-visual-fixtures.js';
+import {
+  agentHarnessVisualFixtures,
+  agentHarnessVisualInventoryFixtures,
+} from './fixtures/agent-harness-visual-fixtures.js';
 import {
   FakeDocument,
   FakeEvent,
   findButton,
   installFakeDom,
 } from './helpers/fake-dom.js';
-import { assertSafeStaticSvg } from './helpers/static-svg.js';
+import { assertSafeStaticSvg, parseStrictSvg } from './helpers/static-svg.js';
 import { validateKnowledgeVisualOwnership } from './helpers/visual-registry.js';
+import {
+  readMarkdownTable,
+  splitMarkdownTableRow,
+  unwrapCodeSpanList,
+  unwrapSingleCodeSpan,
+} from './helpers/markdown-table.js';
 
 const EXPECTED_OWNER = Object.freeze({
   'visual-harness-01-control-system': ['harness-01', 'decision-and-control-planes'],
@@ -47,26 +56,22 @@ const EXPECTED_OWNER = Object.freeze({
   'visual-harness-08-handoff-evidence': ['harness-08', 'build-a-verifiable-handoff-bundle'],
 });
 
-function unwrapCode(value) {
-  return value.replace(/^`|`$/g, '');
-}
-
 async function readInventory() {
   const markdown = await readFile(
     new URL('../docs/research/2026-07-30-agent-harness-visual-inventory.md', import.meta.url),
     'utf8',
   );
-  const lines = markdown.split('\n');
-  const headerIndex = lines.findIndex((line) => (
-    line === '| visualId | role | owner lesson / section | assessed outcomes | cognitive question and form | sourceIds | storyboard and fixture contract | permission decision | status |'
-  ));
-  assert.ok(headerIndex >= 0, 'inventory must publish the traceability column contract');
-
-  const rows = [];
-  for (const line of lines.slice(headerIndex + 2)) {
-    if (!line.startsWith('| `visual-harness-')) break;
-    const cells = line.slice(1, -1).split('|').map((cell) => cell.trim());
-    assert.equal(cells.length, 9, line);
+  const rows = readMarkdownTable(markdown, [
+    'visualId',
+    'role',
+    'owner lesson / section',
+    'assessed outcomes',
+    'cognitive question and form',
+    'sourceIds',
+    'storyboard and fixture contract',
+    'permission decision',
+    'status',
+  ]).map((cells, index) => {
     const [
       visualId,
       role,
@@ -80,23 +85,58 @@ async function readInventory() {
     ] = cells;
     const ownerMatch = owner.match(/^`(harness-\d{2}) \/ ([a-z0-9-]+)`$/);
     assert.ok(ownerMatch, `${visualId}: owner cell must name a real lesson and section`);
-    rows.push({
-      visualId: unwrapCode(visualId),
-      role: unwrapCode(role),
+    const parsedAssessedOutcomes = unwrapCodeSpanList(
+      assessedOutcomes,
+      `inventory row ${index} outcomes`,
+    );
+    const parsedSourceIds = unwrapCodeSpanList(
+      sourceIds,
+      `inventory row ${index} sources`,
+    );
+    for (const outcomeId of parsedAssessedOutcomes) {
+      assert.match(outcomeId, /^(?:quiz|iq)-harness-\d{2}-\d+$/);
+    }
+    for (const sourceId of parsedSourceIds) {
+      assert.match(sourceId, /^res-harness-[a-z0-9-]+$/);
+    }
+    return {
+      visualId: unwrapSingleCodeSpan(visualId, `inventory row ${index} visual`),
+      role: unwrapSingleCodeSpan(role, `inventory row ${index} role`),
       lessonId: ownerMatch[1],
       sectionId: ownerMatch[2],
-      assessedOutcomes: [...assessedOutcomes.matchAll(
-        /`((?:quiz|iq)-harness-\d{2}-\d+)`/g,
-      )].map((match) => match[1]),
+      assessedOutcomes: parsedAssessedOutcomes,
+      sourceIds: parsedSourceIds,
       cognitiveQuestion,
-      sourceIds,
       storyboard,
       permissionDecision,
       status,
-    });
-  }
+    };
+  });
 
-  return { markdown, rows };
+  const publicationRows = readMarkdownTable(markdown, [
+    'visualId',
+    'fixtureId',
+    'publicationStatus',
+  ]).map((cells, index) => ({
+    visualId: unwrapSingleCodeSpan(cells[0], `publication row ${index} visual`),
+    fixtureId: unwrapSingleCodeSpan(cells[1], `publication row ${index} fixture`),
+    publicationStatus: unwrapSingleCodeSpan(cells[2], `publication row ${index} status`),
+  }));
+
+  return { markdown, rows, publicationRows };
+}
+
+function visibleSvgText(parsed) {
+  const chunks = [];
+  function visit(node, hiddenByAncestor = false) {
+    const hidden = hiddenByAncestor || node.attributes.get('aria-hidden') === 'true';
+    if (!hidden && (node.name === 'text' || node.name === 'tspan')) {
+      chunks.push(node.ownText);
+    }
+    for (const child of node.children) visit(child, hidden);
+  }
+  visit(parsed.root);
+  return chunks.join(' ').replace(/\s+/g, ' ').trim();
 }
 
 function assertDeepFrozen(value, label, seen = new WeakSet()) {
@@ -148,16 +188,38 @@ test('registers every Harness visual globally without duplicate IDs', () => {
   }
 });
 
-test('inventory traces every registry visual to its role, real owner and assessed outcomes', async () => {
-  const { markdown, rows } = await readInventory();
+test('inventory fully traces every published registry visual and all step assets', async () => {
+  const { markdown, rows, publicationRows } = await readInventory();
   const rowsByVisualId = new Map(rows.map((row) => [row.visualId, row]));
+  const publicationByVisualId = new Map(
+    publicationRows.map((row) => [row.visualId, row]),
+  );
   const assessmentIds = new Set([
     ...agentHarness.lessons.flatMap(({ quiz }) => quiz.map(({ id }) => id)),
     ...agentHarness.interviewQuestions.map(({ id }) => id),
   ]);
+  const resourcesById = new Map(
+    agentHarness.resources.map((resource) => [resource.id, resource]),
+  );
+  const fixturesByVisualId = new Map(
+    agentHarnessVisualFixtures.map((fixture) => [fixture.visualId, fixture]),
+  );
+  const inventoryFixturesByVisualId = new Map(
+    agentHarnessVisualInventoryFixtures.map((fixture) => [fixture.visualId, fixture]),
+  );
+
+  assert.deepEqual(
+    splitMarkdownTableRow('| escaped \\| pipe | `literal` |'),
+    ['escaped | pipe', '`literal`'],
+    'inventory parser must preserve escaped cell delimiters',
+  );
 
   assert.equal(rows.length, agentHarnessVisuals.length);
   assert.equal(rowsByVisualId.size, rows.length, 'inventory visual IDs must be unique');
+  assert.equal(publicationRows.length, agentHarnessVisuals.length);
+  assert.equal(publicationByVisualId.size, publicationRows.length);
+  assert.equal(agentHarnessVisualInventoryFixtures.length, agentHarnessVisuals.length);
+  assert.equal(inventoryFixturesByVisualId.size, agentHarnessVisualInventoryFixtures.length);
 
   for (const visual of agentHarnessVisuals) {
     const row = rowsByVisualId.get(visual.id);
@@ -173,21 +235,86 @@ test('inventory traces every registry visual to its role, real owner and assesse
       lesson.knowledgeNote.sections.some(({ id }) => id === row.sectionId),
       `${visual.id}: inventory section does not exist`,
     );
+    const section = lesson.knowledgeNote.sections.find(({ id }) => id === row.sectionId);
     assert.ok(row.assessedOutcomes.length > 0, `${visual.id}: assessed outcome is required`);
     for (const outcomeId of row.assessedOutcomes) {
       assert.ok(assessmentIds.has(outcomeId), `${visual.id}: unknown outcome ${outcomeId}`);
       assert.ok(outcomeId.includes(row.lessonId), `${visual.id}: cross-lesson outcome ${outcomeId}`);
     }
+    assert.deepEqual(row.sourceIds, visual.sourceIds, `${visual.id}: inventory source order drift`);
+    for (const sourceId of row.sourceIds) {
+      assert.ok(resourcesById.has(sourceId), `${visual.id}: unknown inventory source ${sourceId}`);
+      assert.ok(lesson.resourceIds.includes(sourceId),
+        `${visual.id}: ${sourceId} is outside ${lesson.id}`);
+      assert.ok(section.sourceIds.includes(sourceId),
+        `${visual.id}: ${sourceId} is outside ${section.id}`);
+    }
+    const inventoryFixture = inventoryFixturesByVisualId.get(visual.id);
+    assert.ok(inventoryFixture, `${visual.id}: missing inventory text fixture`);
+    assert.deepEqual(
+      row.assessedOutcomes,
+      inventoryFixture.assessedOutcomes,
+      `${visual.id}: assessed outcome drift`,
+    );
+    assert.equal(
+      row.cognitiveQuestion,
+      inventoryFixture.cognitiveQuestion,
+      `${visual.id}: cognitive question/form drift`,
+    );
+    assert.equal(
+      row.storyboard,
+      inventoryFixture.storyboard,
+      `${visual.id}: storyboard/fixture contract drift`,
+    );
+    assert.equal(fixturesByVisualId.get(visual.id)?.id, visual.fixtureId, visual.id);
+    assert.equal(visual.provenance, 'original-synthesis');
+    assert.equal(visual.permission, null);
+    assert.equal(
+      row.permissionDecision,
+      'Original synthesis; no third-party media selected.',
+      `${visual.id}: permission decision drift`,
+    );
+    assert.equal(row.status, 'verified', `${visual.id}: production verification status drift`);
+    assert.deepEqual(
+      publicationByVisualId.get(visual.id),
+      {
+        visualId: visual.id,
+        fixtureId: visual.fixtureId,
+        publicationStatus: 'published',
+      },
+      `${visual.id}: fixture/publication truth drift`,
+    );
+    assert.ok(knowledgeVisuals.includes(visual), `${visual.id}: published status requires shared index`);
   }
 
-  for (const stepNumber of [1, 2, 3]) {
-    assert.match(
-      markdown,
-      new RegExp(
-        `harness-01-tool-transcript-step-${stepNumber}\\.svg[^\\n]+`
-          + 'inherits `visual-harness-01-tool-transcript` outcomes',
-      ),
-      `step ${stepNumber}: must state inherited parent outcomes`,
+  const stepRows = readMarkdownTable(markdown, [
+    'step asset',
+    'parent visualId',
+    'inherited assessed outcomes',
+    'expected visible labels',
+  ]).map((cells, index) => ({
+    assetPath: unwrapSingleCodeSpan(cells[0], `step row ${index} asset`),
+    parentVisualId: unwrapSingleCodeSpan(cells[1], `step row ${index} parent`),
+    assessedOutcomes: unwrapCodeSpanList(cells[2], `step row ${index} outcomes`),
+    visibleLabels: unwrapCodeSpanList(cells[3], `step row ${index} labels`),
+  }));
+  const registrySteps = agentHarnessVisuals.flatMap((visual) => (
+    (visual.steps ?? []).map((step) => ({ visual, step }))
+  ));
+  assert.equal(stepRows.length, registrySteps.length);
+  for (const { visual, step } of registrySteps) {
+    const row = stepRows.find(({ assetPath }) => assetPath === step.assetPath);
+    assert.ok(row, `${step.assetPath}: missing step inventory row`);
+    assert.equal(row.parentVisualId, visual.id, step.assetPath);
+    assert.deepEqual(
+      row.assessedOutcomes,
+      rowsByVisualId.get(visual.id).assessedOutcomes,
+      `${step.assetPath}: inherited outcomes drift`,
+    );
+    assert.deepEqual(
+      row.visibleLabels,
+      fixturesByVisualId.get(visual.id).stepLabels[step.assetPath],
+      `${step.assetPath}: visible fixture labels drift`,
     );
   }
 });
@@ -224,7 +351,15 @@ test('owns every visual exactly once inside its lesson and source-bearing sectio
   }
 });
 
-test('renders only strict local SVG and derives visible state labels from frozen fixtures', async () => {
+test('renders only strict local SVG and finds fixture labels in visible text nodes', async () => {
+  const visibilityProbe = parseStrictSvg(
+    '<svg xmlns="http://www.w3.org/2000/svg">'
+      + '<text>VISIBLE<tspan aria-hidden="true">HIDDEN</tspan></text>'
+      + '</svg>',
+    'visible fixture text probe',
+  );
+  assert.equal(visibleSvgText(visibilityProbe), 'VISIBLE');
+
   const fixturesByVisualId = new Map(
     agentHarnessVisualFixtures.map((fixture) => [fixture.visualId, fixture]),
   );
@@ -238,19 +373,38 @@ test('renders only strict local SVG and derives visible state labels from frozen
       visual.assetPath,
       ...(visual.steps?.map(({ assetPath }) => assetPath) ?? []),
     ];
+    const parsedByPath = new Map();
     for (const assetPath of paths) {
       const svg = await readFile(new URL(`../${assetPath}`, import.meta.url), 'utf8');
-      assertSafeStaticSvg(svg, visual, assetPath);
+      parsedByPath.set(assetPath, assertSafeStaticSvg(svg, visual, assetPath));
     }
-    const primarySvg = await readFile(
-      new URL(`../${visual.assetPath}`, import.meta.url),
-      'utf8',
-    );
+    const primaryVisibleText = visibleSvgText(parsedByPath.get(visual.assetPath));
     for (const label of fixture.labels) {
-      assert.ok(primarySvg.includes(label), `${visual.id}: missing fixture label ${label}`);
+      assert.ok(
+        primaryVisibleText.includes(label),
+        `${visual.id}: missing visible fixture label ${label}`,
+      );
     }
     for (const value of fixture.values) {
-      assert.ok(primarySvg.includes(String(value)), `${visual.id}: missing fixture value ${value}`);
+      assert.ok(
+        primaryVisibleText.includes(String(value)),
+        `${visual.id}: missing visible fixture value ${value}`,
+      );
+    }
+    const expectedStepPaths = visual.steps?.map(({ assetPath }) => assetPath) ?? [];
+    assert.deepEqual(
+      Object.keys(fixture.stepLabels ?? {}),
+      expectedStepPaths,
+      `${visual.id}: step fixture path drift`,
+    );
+    for (const assetPath of expectedStepPaths) {
+      const stepVisibleText = visibleSvgText(parsedByPath.get(assetPath));
+      for (const label of fixture.stepLabels[assetPath]) {
+        assert.ok(
+          stepVisibleText.includes(label),
+          `${assetPath}: missing visible step label ${label}`,
+        );
+      }
     }
   }
 });
@@ -258,6 +412,10 @@ test('renders only strict local SVG and derives visible state labels from frozen
 test('freezes the registry, step definitions, placements and fixture truth recursively', () => {
   assertDeepFrozen(agentHarnessVisuals, 'agentHarnessVisuals');
   assertDeepFrozen(agentHarnessVisualFixtures, 'agentHarnessVisualFixtures');
+  assertDeepFrozen(
+    agentHarnessVisualInventoryFixtures,
+    'agentHarnessVisualInventoryFixtures',
+  );
   for (const lesson of agentHarness.lessons) {
     assertDeepFrozen(lesson.knowledgeNote, `${lesson.id}.knowledgeNote`);
   }

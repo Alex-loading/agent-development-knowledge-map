@@ -38,6 +38,9 @@ function createEvidence(value) {
   ) {
     throw new TypeError('evidence.coverage must contain non-empty strings');
   }
+  const learningUse = value.learningUse === undefined
+    ? undefined
+    : requireNonEmptyString(value.learningUse, 'evidence.learningUse');
   requireNonEmptyString(value.limitations, 'evidence.limitations');
   if (!isValidCalendarDate(value.verifiedAt)) {
     throw new TypeError('evidence.verifiedAt must be a real YYYY-MM-DD date');
@@ -45,6 +48,7 @@ function createEvidence(value) {
   return Object.freeze({
     authority: value.authority,
     role: value.role,
+    ...(learningUse === undefined ? {} : { learningUse }),
     coverage: Object.freeze([...value.coverage]),
     limitations: value.limitations,
     verifiedAt: value.verifiedAt,

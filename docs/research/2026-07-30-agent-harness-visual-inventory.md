@@ -35,7 +35,54 @@ All state labels and quantitative values are frozen in `tests/fixtures/agent-har
 | `visual-harness-08-progressive-disclosure` | `process` | `harness-08 / persist-and-release-long-approvals` | `quiz-harness-08-1`, `iq-harness-08-2` | Install.md、Skill 与 Hook 怎样按需加载并强制边界？渐进披露图。 | `res-harness-openai-hitl`, `res-harness-primary-feishu-agent-install-md`, `res-harness-primary-javaguide-agent-skills`, `res-harness-primary-feishu-beyond-model` | Compact catalog → Install contract → selected Skill → lifecycle Hook → approval checkpoint; irrelevant detail remains unloaded. Fixture freezes layers. | Original synthesis; no third-party media selected. | verified |
 | `visual-harness-08-handoff-evidence` | `mechanism` | `harness-08 / build-a-verifiable-handoff-bundle` | `quiz-harness-08-2`, `iq-harness-08-3` | 陌生接管者如何从 bundle 验证状态与产物？证据包图。 | `res-harness-nist-tool-use`, `res-harness-primary-feishu-context-offloading`, `res-harness-primary-feishu-company-brain`, `res-harness-primary-javaguide-context-engineering` | Bundle links goal, state, event cursor, approvals, side-effect ledger, artifact manifest, hashes and next action; takeover verifies each reference. Fixture freezes fields. | Original synthesis; no third-party media selected. | verified |
 
-The step-state assets `harness-01-tool-transcript-step-1.svg`, `harness-01-tool-transcript-step-2.svg`, and `harness-01-tool-transcript-step-3.svg` each inherits `visual-harness-01-tool-transcript` outcomes (`iq-harness-01-1`, `iq-harness-01-3`); they are renderer states of that one registry visual, not independent published visuals.
+## Fixture and publication identity
+
+The table below is the exact fixture/publication contract for every main registry record. `published` means the same object identity is present in `src/data/visuals/index.js`, not merely that an SVG exists on disk.
+
+| visualId | fixtureId | publicationStatus |
+| --- | --- | --- |
+| `visual-harness-01-control-system` | `fixture-harness-01-control-system` | `published` |
+| `visual-harness-01-tool-transcript` | `fixture-harness-01-tool-transcript` | `published` |
+| `visual-harness-01-stop-guard` | `fixture-harness-01-stop-guard` | `published` |
+| `visual-harness-02-state-journal` | `fixture-harness-02-state-journal` | `published` |
+| `visual-harness-02-checkpoint-gap` | `fixture-harness-02-checkpoint-gap` | `published` |
+| `visual-harness-02-versioned-resume` | `fixture-harness-02-versioned-resume` | `published` |
+| `visual-harness-03-tool-governance` | `fixture-harness-03-tool-governance` | `published` |
+| `visual-harness-03-control-gates` | `fixture-harness-03-control-gates` | `published` |
+| `visual-harness-03-approval-resume` | `fixture-harness-03-approval-resume` | `published` |
+| `visual-harness-04-sandbox-boundary` | `fixture-harness-04-sandbox-boundary` | `published` |
+| `visual-harness-04-isolation-stack` | `fixture-harness-04-isolation-stack` | `published` |
+| `visual-harness-04-vfs-session` | `fixture-harness-04-vfs-session` | `published` |
+| `visual-harness-05-bounded-run` | `fixture-harness-05-bounded-run` | `published` |
+| `visual-harness-05-deadline-cancel` | `fixture-harness-05-deadline-cancel` | `published` |
+| `visual-harness-05-retry-budget` | `fixture-harness-05-retry-budget` | `published` |
+| `visual-harness-06-idempotent-recovery` | `fixture-harness-06-idempotent-recovery` | `published` |
+| `visual-harness-06-side-effect-journal` | `fixture-harness-06-side-effect-journal` | `published` |
+| `visual-harness-06-evidence-decision` | `fixture-harness-06-evidence-decision` | `published` |
+| `visual-harness-07-orchestration-map` | `fixture-harness-07-orchestration-map` | `published` |
+| `visual-harness-07-queue-lease` | `fixture-harness-07-queue-lease` | `published` |
+| `visual-harness-07-backpressure` | `fixture-harness-07-backpressure` | `published` |
+| `visual-harness-08-long-horizon-handoff` | `fixture-harness-08-long-horizon-handoff` | `published` |
+| `visual-harness-08-progressive-disclosure` | `fixture-harness-08-progressive-disclosure` | `published` |
+| `visual-harness-08-handoff-evidence` | `fixture-harness-08-handoff-evidence` | `published` |
+
+## Step-state inheritance
+
+These three SVG files are renderer states of one parent registry visual, not independent published visuals. They inherit the parent outcomes and use explicit visible-text fixture labels.
+
+| step asset | parent visualId | inherited assessed outcomes | expected visible labels |
+| --- | --- | --- | --- |
+| `assets/visuals/agent-harness/harness-01-tool-transcript-step-1.svg` | `visual-harness-01-tool-transcript` | `iq-harness-01-1`, `iq-harness-01-3` | `STEP 1 · PROPOSAL`, `RUN run-42 · ATTEMPT 2 · STEP 3 · CALL call-9`, `MODEL PROPOSAL` |
+| `assets/visuals/agent-harness/harness-01-tool-transcript-step-2.svg` | `visual-harness-01-tool-transcript` | `iq-harness-01-1`, `iq-harness-01-3` | `STEP 2 · EXECUTION`, `RUN run-42 · ATTEMPT 2 · STEP 3 · CALL call-9 · SESSION sbx-7`, `HOST EXECUTION` |
+| `assets/visuals/agent-harness/harness-01-tool-transcript-step-3.svg` | `visual-harness-01-tool-transcript` | `iq-harness-01-1`, `iq-harness-01-3` | `STEP 3 · OBSERVATION`, `RUN run-42 · ATTEMPT 2 · STEP 3 · CALL call-9 · SESSION sbx-7`, `OBSERVATION`, `Harness uses the observation to continue, wait or stop` |
+
+## Non-selected media candidates
+
+This declaration makes a media-only non-use decision distinguishable from disposition of the source narrative.
+
+| mediaCandidateId | lessonId | resourceId | decisionId | status |
+| --- | --- | --- | --- | --- |
+| `feishu-react-loop-source-image` | `harness-01` | `res-harness-primary-feishu-react-loop` | `impact-harness-01-react-loop-media` | `rejected-media-only` |
 
 ## Coverage and production gate
 
