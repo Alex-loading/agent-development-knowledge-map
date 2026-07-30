@@ -90,6 +90,7 @@ async function readInventory() {
     'role',
     'owner lesson / section',
     'assessed outcomes',
+    'assessed coverage',
     'assessed outcome criteria',
     'cognitive question and form',
     'sourceIds',
@@ -105,12 +106,13 @@ async function readInventory() {
       lessonId: ownerMatch[1],
       sectionId: ownerMatch[2],
       assessedOutcomes: unwrapCodeSpanList(cells[3], `inventory ${index} outcomes`),
-      outcomeCriteria: cells[4],
-      cognitiveQuestion: cells[5],
-      sourceIds: unwrapCodeSpanList(cells[6], `inventory ${index} sources`),
-      storyboard: cells[7],
-      permissionDecision: cells[8],
-      status: cells[9],
+      assessedCoverage: unwrapCodeSpanList(cells[4], `inventory ${index} coverage`),
+      outcomeCriteria: cells[5],
+      cognitiveQuestion: cells[6],
+      sourceIds: unwrapCodeSpanList(cells[7], `inventory ${index} sources`),
+      storyboard: cells[8],
+      permissionDecision: cells[9],
+      status: cells[10],
     };
   });
   const publicationRows = readMarkdownTable(markdown, [
@@ -176,6 +178,130 @@ test('registers every Context visual globally with object identity and no duplic
   }
 });
 
+test('maps every visual to assessments and an owning section with intersecting semantic outcomes', () => {
+  const registry = contextRagMemory.outcomeRegistry;
+  assert.ok(registry, 'Context outcome registry');
+  assert.equal(Object.keys(registry.assessments).length, 40);
+  assert.equal(Object.keys(registry.sections).length, 24);
+  assert.equal(Object.keys(registry.visuals).length, 24);
+
+  const inventoryById = new Map(
+    contextRagMemoryVisualInventoryFixtures.map((fixture) => [
+      fixture.visualId,
+      fixture,
+    ]),
+  );
+  for (const visual of contextRagMemoryVisuals) {
+    const [lessonId, sectionId] = EXPECTED_OWNER[visual.id];
+    const sectionKey = `${lessonId}/${sectionId}`;
+    const visualOutcomes = registry.visuals[visual.id];
+    const sectionOutcomes = registry.sections[sectionKey];
+    const inventory = inventoryById.get(visual.id);
+    assert.deepEqual(visual.assessedCoverage, visualOutcomes, `${visual.id}: visual outcomes`);
+    assert.deepEqual(
+      inventory.assessedCoverage,
+      visualOutcomes,
+      `${visual.id}: inventory outcomes`,
+    );
+    assert.ok(
+      visualOutcomes.some((outcome) => sectionOutcomes.includes(outcome)),
+      `${visual.id}: owning section must teach an assessed visual outcome`,
+    );
+    for (const assessmentId of inventory.assessedOutcomes) {
+      const assessment = registry.assessments[assessmentId];
+      assert.ok(assessment, `${visual.id}: ${assessmentId} semantic registry`);
+      assert.equal(assessment.lessonId, lessonId, `${assessmentId}: lesson`);
+      assert.ok(
+        assessment.outcomeTags.some((outcome) => visualOutcomes.includes(outcome)),
+        `${visual.id}: ${assessmentId} must assess the visual concept`,
+      );
+    }
+  }
+
+  const lesson05 = contextRagMemory.lessons.find(({ id }) => id === 'context-05');
+  const lesson08 = contextRagMemory.lessons.find(({ id }) => id === 'context-08');
+  const annQuiz = lesson05.quiz.find(({ id }) => id === 'quiz-context-05-2');
+  const annInterview = contextRagMemory.interviewQuestions.find(
+    ({ id }) => id === 'iq-context-05-3',
+  );
+  const graphQuiz = lesson08.quiz.find(({ id }) => id === 'quiz-context-08-2');
+  const graphInterview = contextRagMemory.interviewQuestions.find(
+    ({ id }) => id === 'iq-context-08-2',
+  );
+  assert.match(
+    `${annQuiz.prompt} ${annQuiz.explanation} ${annInterview.question} ${annInterview.shortAnswer}`,
+    /ANN[\s\S]*recall[\s\S]*p95 latency[\s\S]*(?:内存|memory)[\s\S]*(?:更新|update)/i,
+  );
+  assert.match(
+    `${graphQuiz.prompt} ${graphQuiz.explanation} ${graphInterview.question} ${graphInterview.shortAnswer}`,
+    /GraphRAG[\s\S]*(?:关系|全局)[\s\S]*(?:增量|incremental)[\s\S]*(?:全量|rebuild)/i,
+  );
+  assert.match(
+    [
+      lesson05.objectives,
+      lesson05.exercise.steps,
+      lesson05.exercise.deliverable,
+      lesson05.completionCriteria,
+    ].flat().join(' '),
+    /query rewrite/i,
+  );
+  assert.match(
+    [
+      lesson08.objectives,
+      lesson08.exercise.brief,
+      lesson08.exercise.steps,
+      lesson08.exercise.deliverable,
+      lesson08.completionCriteria,
+      contextRagMemory.interviewQuestions.find(
+        ({ id }) => id === 'iq-context-08-3',
+      ).shortAnswer,
+    ].flat().join(' '),
+    /RAG[\s\S]*fine-tuning[\s\S]*(?:长期记忆|memory)/i,
+  );
+});
+
+test('teaches and assesses relevance decay separately from expiry, supersession, and deletion', () => {
+  const lesson = contextRagMemory.lessons.find(({ id }) => id === 'context-07');
+  const noteSection = lesson.knowledgeNote.sections.find(
+    ({ id }) => id === 'expire-supersede-and-delete',
+  );
+  const noteText = [
+    ...noteSection.paragraphs,
+    ...noteSection.keyPoints,
+    lesson.exercise.brief,
+    ...lesson.exercise.steps,
+    lesson.exercise.deliverable,
+    ...lesson.completionCriteria,
+  ].join(' ');
+  assert.match(noteText, /relevance decay/i);
+  assert.match(noteText, /排序.*(?:TTL|expiry)|(?:TTL|expiry).*排序/i);
+  assert.match(noteText, /1\.00\s*→\s*0\.65\s*→\s*0\.20/);
+  assert.match(noteText, /教学.*(?:fixture|合成)|(?:fixture|合成).*教学/i);
+  assert.match(noteText, /不是.*(?:通用|普适)|(?:通用|普适).*不是/);
+
+  const decayQuiz = lesson.quiz.find(({ id }) => id === 'quiz-context-07-2');
+  const decayInterview = contextRagMemory.interviewQuestions.find(
+    ({ id }) => id === 'iq-context-07-3',
+  );
+  assert.match(`${decayQuiz.prompt} ${decayQuiz.explanation}`, /decay|衰减/i);
+  assert.match(`${decayQuiz.prompt} ${decayQuiz.explanation}`, /TTL|过期/i);
+  assert.match(
+    [
+      decayInterview.question,
+      decayInterview.shortAnswer,
+      ...decayInterview.deepDive,
+    ].join(' '),
+    /decay|衰减/i,
+  );
+
+  const visual = contextRagMemoryVisuals.find(
+    ({ id }) => id === 'visual-context-07-decay-delete',
+  );
+  assert.ok(visual.sourceIds.includes('res-context-memorybank'));
+  assert.match(`${visual.longDescription} ${visual.caption}`, /synthetic|合成/i);
+  assert.match(`${visual.longDescription} ${visual.caption}`, /不是.*(?:通用|普适)|(?:通用|普适).*不是/i);
+});
+
 test('keeps visual inventory, assessment criteria, fixture and publication truth in exact parity', async () => {
   const { rows, publicationRows, stepRows } = await readInventory();
   const rowsById = new Map(rows.map((row) => [row.visualId, row]));
@@ -222,6 +348,11 @@ test('keeps visual inventory, assessment criteria, fixture and publication truth
       row.assessedOutcomes,
       inventoryFixture.assessedOutcomes,
       `${visual.id}: outcomes`,
+    );
+    assert.deepEqual(
+      row.assessedCoverage,
+      visual.assessedCoverage,
+      `${visual.id}: assessed coverage`,
     );
     assert.equal(row.outcomeCriteria, inventoryFixture.outcomeCriteria, visual.id);
     assert.equal(row.cognitiveQuestion, inventoryFixture.cognitiveQuestion, visual.id);

@@ -51,8 +51,8 @@ const lines = [
   '',
   '飞书与 JavaGuide 页面中的插图没有经过可再分发许可核验，因此没有复制、截图、描摹或改编任何第三方媒体。页面正文只作为课程叙事来源；全部视觉从已核验关系和课程 fixture 原创重绘。',
   '',
-  '| visualId | role | owner lesson / section | assessed outcomes | assessed outcome criteria | cognitive question and form | sourceIds | storyboard and fixture contract | permission decision | status |',
-  '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+  '| visualId | role | owner lesson / section | assessed outcomes | assessed coverage | assessed outcome criteria | cognitive question and form | sourceIds | storyboard and fixture contract | permission decision | status |',
+  '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
 ];
 
 for (const visual of contextRagMemoryVisuals) {
@@ -63,6 +63,7 @@ for (const visual of contextRagMemoryVisuals) {
     code(visual.role),
     code(`${placement.lessonId} / ${placement.sectionId}`),
     codeList(fixture.assessedOutcomes),
+    codeList(visual.assessedCoverage),
     fixture.outcomeCriteria,
     fixture.cognitiveQuestion,
     codeList(visual.sourceIds),

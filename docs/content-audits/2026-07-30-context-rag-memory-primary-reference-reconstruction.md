@@ -38,7 +38,7 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 
 ## Source contribution and semantic weighting
 
-`60 / 30 / 10` 是对十个课程决策单元的人工语义归因，不是 URL 数量，也不是把相同来源重复计票：
+`60 / 30 / 10` 是对十个课程决策单元的人工语义归因。它**不是 citation count，不是 source/URL count，也不是 word count**，更不会把同一来源在多课出现重复计票。本轮实际账本是 10 个决策单元中的 `6 / 3 / 1`；没有把资源槽位的 `12 / 6 / 2` 或其他引用次数伪装成贡献率：
 
 | Contribution class | Decision units | Share | Concrete contribution |
 | --- | ---: | ---: | --- |
@@ -46,7 +46,7 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 | official or academic verification | 3 | 30% | 校验产品与数据边界、检索研究与融合数学、citation 与 evaluation 边界 |
 | existing curriculum and experiment synthesis | 1 | 10% | 把既有八课、三项实验、quiz、面试题和 progress 契约重新接回统一的可操作链路 |
 
-该权重表达“什么改变了课程结构”，并不表达来源可信度的线性分数。Primary narrative 决定解释顺序；official/academic 材料负责收紧机制、数字和产品主张；既有课程负责保持学习路径、练习与兼容契约。
+该权重表达“什么改变了课程结构”，并不表达来源可信度的线性分数。Primary narrative 决定解释顺序；official/academic 材料负责收紧机制、数字和产品主张；既有课程负责保持学习路径、练习与兼容契约。资源、段落或 citation slot 数只能作为覆盖检查的次级指标，不能替代这份人工决策单元账本。
 
 ## Corrections and evidence boundaries
 
@@ -56,6 +56,7 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 - “Dense 必然胜过 sparse”被改成按查询切片评测 sparse、dense、hybrid、ANN 与 RRF。
 - “召回成功或带引用就已 grounded”被改成候选、重排、去重、多样性、证据包、claim-to-span 核验的分层流程。
 - “聊天历史就是长期记忆”被改成具有准入、主体、scope、TTL、supersession 和 deletion propagation 的生命周期对象。
+- “记忆变旧就是过期或删除”被改成 relevance decay 排序、TTL expiry、supersession、deletion 四个独立动作；`1.00 → 0.65 → 0.20` 明确为合成教学 fixture，不是通用记忆规律。
 - “GraphRAG 替代向量检索”被改成关系密集或全局问题上的可选候选生成分支。
 
 仍然具有时间或实现波动的内容包括：模型窗口与产品 compaction 行为、供应商 retention/delete 语义、parser 与向量库能力、embedding/reranker benchmark、GraphRAG 成本收益以及 UI 产品行为。课程没有把这些内容写成永久协议；部署前必须重新查阅目标产品官方文档并在目标语料、查询和权限模型上实测。
@@ -68,10 +69,10 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 | `context-02` | 预算方程 → required/output reserve → stable priority → 两类 overflow → compaction boundary → router | 普通超限与 required 超限必须分开 |
 | `context-03` | transcript/state/summary → canonical schema → lossy summary → sliding/retrieval → supersession → deliverable | 流畅摘要不等于完整事实 |
 | `context-04` | source/retrieval/citation units → chunk strategy → derived artifacts → version/ACL/validity → spans → corpus case | index 必须能从受治理 source 重建 |
-| `context-05` | sparse/dense complement → query slices → RRF → filter/threshold/top-k → rewrite → trace | 方法选择必须来自真实查询切片 |
+| `context-05` | sparse/dense complement → query slices → RRF → ANN recall/latency/memory/update → filter/threshold/top-k → rewrite → trace | 检索方法和 ANN 参数必须在相同查询、语料与硬件上联合评测 |
 | `context-06` | candidates → rerank → semantic dedup → diversity → evidence/citation manifest → quality dimensions → full case | 候选与引用都不是支持关系本身 |
-| `context-07` | history/memory boundary → admission → event ledger → bounded recall → expire/supersede/delete → lifecycle lab → policy audit | salience、consent 与 confidence 是不同维度 |
-| `context-08` | five objects → source/index contract → retrieve/pack → state/memory projection → citation verification → layered diagnosis → capstone | GraphRAG 是可选分支，最终主张仍回到有效 source span |
+| `context-07` | history/memory boundary → admission → event ledger → bounded recall → relevance decay → expire/supersede/delete → lifecycle lab → policy audit | decay 只改变排序，TTL、supersession 与 deletion 改变状态或使用许可 |
+| `context-08` | five objects/RAG-fine-tuning-memory roles → GraphRAG routing → incremental/full rebuild → retrieve/pack → projections → citation → diagnosis → capstone | GraphRAG 是可选分支，更新和最终主张仍回到有效 source span |
 
 ## Note quality rubric
 
@@ -94,14 +95,14 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 
 | Lesson | Objectives and quizzes | Interviews | Exercise and acceptance |
 | --- | --- | --- | --- |
-| `context-01` | `five-information-objects`、`projection-pipeline`；`context-01-1` 映射五类对象，`context-01-2` 映射投影 | `iq-context-01-1` → `five-information-objects`；`iq-context-01-2` → `projection-pipeline`；`iq-context-01-3` → `projection-pipeline` + `context-manifest` | “绘制五层信息地图” → `classification-worked-example`；交付五层分类表与 context manifest |
+| `context-01` | `five-information-objects`、`projection-pipeline`、`scope-lifecycle-ownership`；`context-01-1` → object/checkpoint boundary，`context-01-2` → offloading/recoverability | `iq-context-01-1` → five objects；`iq-context-01-2` → context engineering/projection；`iq-context-01-3` → projection/ingestion/provenance | “绘制五层信息地图” → `classification-worked-example`；交付分类表、manifest 与可验证外置回取记录 |
 | `context-02` | `context-engineering-budget`、`required-and-output-reserve`、`priority-and-stable-order`、`two-overflow-modes`；`context-02-1` → budget，`context-02-2` → required reserve | `iq-context-02-1` → budget；`iq-context-02-2` → `long-context-and-compaction`；`iq-context-02-3` → long-context + overflow | “组装预算有界的上下文”与 `context-router-worked-example`；`context-router` 验收预算守恒和排除原因 |
 | `context-03` | `three-conversation-representations`、`canonical-state-schema`、`supersession-and-conflict`；`context-03-1` → representations/summary，`context-03-2` → supersession | `iq-context-03-1` → representations；`iq-context-03-2` → `summary-is-lossy` + `sliding-summary-retrieval`；`iq-context-03-3` → supersession | “压缩一段含纠正的长会话”与 `compression-deliverable`；验收 state、lossy summary、source map |
-| `context-04` | `chunk-by-structure-and-answer-needs`、`separate-source-retrieval-and-citation-units`、`propagate-version-permission-and-validity`；`context-04-1` → index/corpus，`context-04-2` → chunk | `iq-context-04-1` → chunk；`iq-context-04-2` → version/validity；`iq-context-04-3` → three units | “为异构文档设计 chunk schema”与 `build-and-diagnose-a-versioned-corpus`；验收 schema、examples、invalidating flow |
-| `context-05` | `start-with-complementary-retrieval-signals`、`fuse-ranks-without-mixing-score-scales`、`order-filter-threshold-and-top-k-explicitly`、`rewrite-queries-with-an-auditable-contract`；`context-05-1` → sparse，`context-05-2` → rewrite | `iq-context-05-1` → method selection；`iq-context-05-2` → filter/top-k；`iq-context-05-3` → rewrite | “运行混合检索诊断”与 `run-a-hybrid-retrieval-trace`；`hybrid-retrieval` 验收可回放 trace 和选择说明 |
-| `context-06` | `turn-recalled-items-into-evidence-candidates`、rerank、dedup、diversity、evidence/citation；`context-06-1` → candidates，`context-06-2` → citations | `iq-context-06-1` → reranker；`iq-context-06-2` → dedup/diversity；`iq-context-06-3` → citation correctness | “打包可引用证据”与 `evaluate-with-ragas-and-diagnose-the-full-case`；验收 packet、exclusion list、claim-to-citation map |
-| `context-07` | `separate-memory-from-history`、`choose-write-path-and-admission`、ledger、recall、expire/delete；`context-07-1` → no automatic memory，`context-07-2` → correction | `iq-context-07-1` → separation/admission；`iq-context-07-2` → memory types；`iq-context-07-3` → expire/delete | “模拟个人助理记忆生命周期”与 `walk-the-memory-lifecycle-lab`、`deliver-and-audit-memory-policy`；`memory-lifecycle` 验收 event log、effective table、projection |
-| `context-08` | `separate-five-system-objects`、source/index contract、projections、citations、diagnosis；`context-08-1` → diagnosis，`context-08-2` → memory vs RAG | `iq-context-08-1` → diagnosis；`iq-context-08-2` → RAG/fine-tuning/memory；`iq-context-08-3` → architecture | “设计并诊断政策助理”与 `deliver-policy-assistant-capstone`；验收 architecture、fault tree、executable checklist |
+| `context-04` | chunk、three units、ingestion、version/ACL；`context-04-1` → index/corpus，`context-04-2` → overlap/version | `iq-context-04-1` → chunk；`iq-context-04-2` → version/validity；`iq-context-04-3` → seven-stage ingestion + source/retrieval/citation units | “为异构文档设计 chunk schema”与 `build-and-diagnose-a-versioned-corpus`；验收 schema、examples、invalidating flow |
+| `context-05` | hybrid、RRF、ANN tradeoff、filter 与 rewrite；`context-05-1` → sparse，`context-05-2` → ANN joint metrics | `iq-context-05-1` → method selection + RRF calculation；`iq-context-05-2` → filter/top-k；`iq-context-05-3` → ANN recall/p95/memory/update | `hybrid-retrieval` 同时验收 ANN 联合权衡、可回放 trace 与 query rewrite 风险；被替换的 rewrite 结果保留在 objective、section、exercise 和 completion criterion |
+| `context-06` | candidates、rerank、dedup/diversity、evidence provenance/citation；`context-06-1` → candidates，`context-06-2` → citation grounding | `iq-context-06-1` → candidate/rerank；`iq-context-06-2` → dedup/diversity；`iq-context-06-3` → observation/call/hash/source/span/claim | “打包可引用证据”验收 packet、排除清单和 claim-to-citation map |
+| `context-07` | memory lifecycle、admission、decay/expiry/supersession/deletion；`context-07-1` → salience vs governance，`context-07-2` → decay vs TTL | `iq-context-07-1` → lifecycle/admission；`iq-context-07-2` → memory types；`iq-context-07-3` → decay/expiry/supersession/deletion | `memory-lifecycle` 验收含 decay score 的 event/effective table 与 projection；纠正、过期、删除覆盖保留在 objective、interview、exercise 和 completion criterion |
+| `context-08` | integrated roles、GraphRAG/update、diagnosis；`context-08-1` → diagnosis，`context-08-2` → GraphRAG routing + rebuild | `iq-context-08-1` → diagnosis；`iq-context-08-2` → GraphRAG/update；`iq-context-08-3` → architecture + RAG/fine-tuning/memory roles | Capstone 验收职责矩阵、GraphRAG/update 边界、architecture、fault tree、checklist；被替换的 RAG/fine-tuning/memory 结果保留在 objective、note、exercise、`iq-context-08-3` 与 completion criterion |
 
 ## Visual publication and quality
 
@@ -122,7 +123,7 @@ Feishu bindings使用 `expert` authority，并把正文限定为观察、工程�
 
 Responsive rendering 只记 8 分：静态 UI/CSS 契约覆盖 320px 与 390px 降级规则，SVG 使用可缩放 viewBox，但实时 browser backend 不可用，无法增加人工截图证据。Fallback 由 figcaption、alt/aria 文本、sourceIds 和 step inheritance 提供。
 
-可见数值真值包括：8192 token budget；compaction 从 1200 到 420、保留 3 项并丢失 2 项；RRF `k=60` 与 `0.0325`；ANN recall/latency 对照；candidate/rerank/packing 数量；memory decay；七层诊断。严格 SVG 测试从 `text`/`tspan` 节点读取这些值，不接受把值藏在注释或 metadata。
+可见数值真值包括：8192 token budget；compaction 从 1200 到 420、保留 3 项并丢失 2 项；RRF `k=60` 与 `0.0325`；ANN recall/latency 对照；candidate/rerank/packing 数量；合成 memory relevance `1.00 → 0.65 → 0.20`；七层诊断。ANN 与 decay 数值都是冻结教学 fixture，不是产品 benchmark 或普适规律。严格 SVG 测试从 `text`/`tspan` 节点读取这些值，不接受把值藏在注释或 metadata。
 
 ## Rights and media decisions
 
@@ -137,30 +138,150 @@ Primary references 中的截图、插图和视频帧没有经过可验证的再�
 - source/note 契约首次运行：38 项中 33 通过、5 失败；实现 frozen primary binding、impact audit 和重建正文后 38/38 通过。
 - visual 契约首次运行：因 Context visual registry 尚不存在而失败；实现 24 个主视觉、3 个 step state、placement 与 inventory 后 7/7 通过。
 - README publication 契约首次运行：旧发布计数不匹配；更新发布事实后通过。
+- outcome semantic 契约首次运行：`Context outcome registry` 断言失败；实现 40 个稳定 assessment、24 个 owner section 与 24 个 visual coverage 后通过。
+- decay 契约首次运行：`expire-supersede-and-delete` 没有 `relevance decay`；补充 note、assessment、exercise/completion、source 与 synthetic fixture 边界后通过。
+- inventory coverage 列首次运行：Markdown header 与更新后的可见标签缺失；重新生成 inventory/SVG 后通过。
 
-最终命令与结果：
+以下命令均从仓库 worktree 根目录逐字执行；结果包含精确 exit 与汇总。
 
-| Gate | Result |
-| --- | --- |
-| `node --test tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/readme-visual-publication.test.js` | 37 passed，0 failed/skipped |
-| `node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js` | 110 passed，0 failed/skipped |
-| `node --test tests/storage.test.js tests/progress.test.js tests/ui-interactions.test.js` | 61 passed，0 failed/skipped |
-| `npm run check:primary-references` | generated artifacts current |
-| `npm test` | 539 passed，0 failed/skipped |
-| `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;` | exit 0；131 个 JS/MJS 文件无语法诊断 |
-| `find assets/visuals/context-rag-memory -name '*.svg' -print0 \| xargs -0 -n1 xmllint --noout` | exit 0；27 个 SVG 均为合法 XML |
-| `node --test tests/context-rag-memory-visual-data.test.js tests/static-svg.test.js` | 14 passed，0 failed/skipped |
-| `node --test tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/readme-visual-publication.test.js` | 96 passed，0 failed/skipped |
-| marker scan 与 remote-image hotlink scan | 无命中 |
-| `git check-ignore .research-cache/primary-references/manifest.json` | manifest 被 ignore |
-| `git ls-files .research-cache` | 无 tracked cache |
-| `git diff --check` | 无 whitespace error |
+Focused Context gate：
 
-原模块计划命令引用了不存在的 `tests/knowledge-notes.test.js`，所以该命令按原样返回找不到文件；替换为仓库实际存在的 `context-rag-memory-data.test.js`、`knowledge-visual-contract.test.js` 与 `knowledge-visual-ui.test.js` 后，模块组合门禁为 96/96 通过。替换只修正测试路径，不降低断言范围。
+```sh
+node --test tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/readme-visual-publication.test.js
+```
+
+结果：exit 0；39 tests、39 pass、0 fail、0 skipped。
+
+Shared visual/UI/static gate：
+
+```sh
+node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js
+```
+
+结果：exit 0；110 tests、110 pass、0 fail、0 skipped。
+
+Privacy/progress/UI gate：
+
+```sh
+node --test tests/storage.test.js tests/progress.test.js tests/ui-interactions.test.js
+```
+
+结果：exit 0；61 tests、61 pass、0 fail、0 skipped。
+
+Frozen primary-reference generated-artifact gate：
+
+```sh
+npm run check:primary-references
+```
+
+结果：exit 0；`Primary reference generated artifacts are current.`
+
+Full regression：
+
+```sh
+npm test
+```
+
+结果：exit 0；541 tests、541 pass、0 fail、0 skipped。
+
+JS/MJS syntax 与文件计数：
+
+```sh
+find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;
+find src tests scripts -type f \( -name '*.js' -o -name '*.mjs' \) | wc -l
+```
+
+结果：两条命令均 exit 0；第一条无诊断，第二条输出 `132`。
+
+Context SVG XML 与资产计数：
+
+```sh
+find assets/visuals/context-rag-memory -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
+find assets/visuals/context-rag-memory -name '*.svg' | wc -l
+```
+
+结果：两条命令均 exit 0；第一条无诊断，第二条输出 `27`。
+
+Visual semantic、strict SVG 与 static-security gate：
+
+```sh
+node --test tests/context-rag-memory-visual-data.test.js tests/static-svg.test.js
+```
+
+结果：exit 0；16 tests、16 pass、0 fail、0 skipped。
+
+Marker scan（exit 1 在 `rg` 中表示零命中）：
+
+```sh
+rg -n 'TODO|TBD|placeholder|待补|未完成' src/data/context-rag-memory.js src/data/context-rag-memory-outcomes.js src/data/context-rag-memory-notes src/data/visuals/context-rag-memory-visuals.js tests/context-rag-memory-primary-references.test.js tests/context-rag-memory-visual-data.test.js tests/context-rag-memory-data.test.js tests/fixtures/context-rag-memory-visual-fixtures.js scripts/generate-context-rag-memory-visuals.mjs scripts/generate-context-rag-memory-visual-inventory.mjs docs/research/2026-07-30-context-rag-memory-visual-inventory.md README.md
+```
+
+结果：exit 1；stdout/stderr 均无输出，即零命中。
+
+Remote-image hotlink scan（exit 1 在 `rg` 中表示零命中）：
+
+```sh
+rg -n "https?://[^[:space:]\"')]+\.(png|jpe?g|gif|webp|svg)([?#][^[:space:]\"')]+)?" assets/visuals/context-rag-memory src/data/visuals/context-rag-memory-visuals.js
+```
+
+结果：exit 1；stdout/stderr 均无输出，即零命中。
+
+Research-cache policy：
+
+```sh
+git ls-files .research-cache
+git check-ignore .research-cache/primary-references/manifest.json
+```
+
+结果：两条命令均 exit 0；第一条无输出，第二条输出 `.research-cache/primary-references/manifest.json`。
+
+Post-commit base-to-HEAD whitespace gate：
+
+```sh
+git diff --check e0f2e5b0b22d05fa2df9a474593e41d7928f339f..HEAD
+```
+
+结果：exit 0；无输出。
+
+Post-commit branch 与 clean-tree gate：
+
+```sh
+git branch --show-current
+git status --short
+```
+
+结果：两条命令均 exit 0；第一条输出 `feat/primary-reference-reconstruction`，第二条无输出。
+
+原模块计划命令引用了不存在的 `tests/knowledge-notes.test.js`，所以该命令按原样返回找不到文件；替换为仓库实际存在的 `context-rag-memory-data.test.js`、`knowledge-visual-contract.test.js` 与 `knowledge-visual-ui.test.js`。替换只修正测试路径，不降低断言范围。
 
 ## Local server and browser evidence
 
-`npm run serve` 成功在 `127.0.0.1:4173` 提供站点；HTTP smoke 对 `/`、`/styles/app.css`、`/src/app.js`、`/assets/visuals/context-rag-memory/context-03-compaction-loss.svg` 均返回 200。
+本地 server start/curl/stop 使用同一个可复制 shell block：
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/context-rag-memory-http.log 2>&1 &
+CONTEXT_HTTP_PID=$!
+sleep 1
+curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/
+curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/styles/app.css
+curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/src/app.js
+curl --silent --show-error --output /dev/null --write-out '%{url_effective} %{http_code}\n' http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-decay-delete.svg
+kill "$CONTEXT_HTTP_PID"
+wait "$CONTEXT_HTTP_PID"
+CONTEXT_STOP_EXIT=$?
+test "$CONTEXT_STOP_EXIT" -eq 143
+echo "server-stop exit=0 (wait=$CONTEXT_STOP_EXIT)"
+```
+
+整个 block 最终 exit 0，精确输出为：
+
+```text
+http://127.0.0.1:4173/ 200
+http://127.0.0.1:4173/styles/app.css 200
+http://127.0.0.1:4173/src/app.js 200
+http://127.0.0.1:4173/assets/visuals/context-rag-memory/context-07-decay-delete.svg 200
+server-stop exit=0 (wait=143)
+```
 
 随后按 Browser skill 建立自动化连接，但 `getForUrl` 返回 `No browser is available`，`browsers.list()` 返回空数组。因运行环境没有可用的 in-app browser，未生成 1440px、390px 或 320px 截图，也不声称完成键盘或人工 viewport sweep。响应式结论仅来自已通过的 DOM、CSS、SVG 和 UI 自动化契约。
 

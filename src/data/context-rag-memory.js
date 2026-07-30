@@ -1,4 +1,5 @@
 import { contextRagMemoryNotes } from './context-rag-memory-notes.js';
+import { contextRagMemoryOutcomeRegistry } from './context-rag-memory-outcomes.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-23';
@@ -461,12 +462,12 @@ const lessons = [
       'res-context-primary-feishu-prompt-memory',
       'res-context-primary-feishu-beyond-model',
     ],
-    exercise: { title: '绘制五层信息地图', brief: '把一组系统指令、消息、文档、运行游标和用户偏好放入正确层次。', steps: ['逐项标记作用域、所有者、生命周期、来源和能否直接进入本轮 prompt', '为可投影项写选择条件，为不可投影项写明确原因和替代引用方式'], deliverable: '一张五层分类表和一份本轮 context manifest。' },
+    exercise: { title: '绘制五层信息地图', brief: '把一组系统指令、消息、文档、运行游标和用户偏好放入正确层次。', steps: ['逐项标记作用域、所有者、生命周期、来源和能否直接进入本轮 prompt', '为可投影项写选择条件；为外置 transcript、工具产物和文档写稳定引用、权限、哈希、回取与 unavailable 处理'], deliverable: '一张五层分类表、一份本轮 context manifest 和一条可验证的外置回取记录。' },
     quizzes: [
       quiz('context-01-1', '哪一项最准确描述 checkpoint？', ['跨会话用户偏好库', '特定 run 的控制位置与恢复提交点', '本轮全部检索证据'], 1, 'Checkpoint 服务运行恢复，不等于长期记忆，也不会自动进入 prompt context。'),
-      quiz('context-01-2', 'Corpus 中的原始文档何时进入模型上下文？', ['持久化后自动进入', '经过检索、选择和证据投影后', '只要创建了索引就进入'], 1, 'Corpus 是后端知识源，只有被选择的证据投影才进入本次模型调用。'),
+      quiz('context-01-2', '把 transcript 或工具产物外置后，怎样才算可安全恢复？', ['只记一个临时文件名', '保留稳定引用、内容哈希、权限检查与 unavailable 失败状态', '默认它会永久存在并自动进入 prompt'], 1, 'Offloading 只降低活动窗口占用；恢复仍要验证引用、内容身份、权限与不可用分支。'),
     ],
-    completionCriteria: ['能用作用域与生命周期准确区分五类信息对象', '能解释每个上下文条目的来源、投影方式和排除原因'],
+    completionCriteria: ['能用作用域与生命周期准确区分五类信息对象', '能解释每个上下文条目的来源、投影、排除原因和外置细节的受控回取边界'],
   }),
   lesson({
     order: 2,
@@ -553,10 +554,10 @@ const lessons = [
     order: 5,
     title: 'Sparse、Dense 与 Hybrid Retrieval',
     summary: '比较词法、语义与混合召回，在过滤、阈值和 top-k 之间建立可解释的候选生成流程。',
-    objectives: ['根据查询和语料特征选择 sparse、dense 或 hybrid retrieval', '用 metadata filter、threshold、top-k 和 query rewrite 控制候选'],
-    concepts: ['Sparse retrieval', 'Dense retrieval', 'Hybrid retrieval', 'Metadata filter', 'Query rewrite'],
+    objectives: ['根据查询和语料特征选择 sparse、dense 或 hybrid retrieval', '联合评测 ANN recall、尾延迟、内存、更新成本，并用 filter、threshold、top-k 和 query rewrite 控制候选'],
+    concepts: ['Sparse retrieval', 'Dense retrieval', 'Hybrid retrieval', 'ANN tradeoff', 'Metadata filter', 'Query rewrite'],
     explanations: [
-      { heading: '召回器的优势来自不同信号', body: 'Sparse retrieval 对产品编号、专有名词和原词匹配透明有效；dense retrieval 擅长语义改写，却可能错过稀有精确词。dense 不一定优于 sparse，领域漂移、语言和 embedding 选择都会改变结果；hybrid 可用 RRF 等方法融合不同排序而不假定原始分数同尺度。', keyPoints: ['方法选择应由查询类型与离线评测支持', '混合检索保留互补信号但仍需稳定的融合规则'] },
+      { heading: '召回器的优势来自不同信号', body: 'Sparse retrieval 对产品编号、专有名词和原词匹配透明有效；dense retrieval 擅长语义改写，却可能错过稀有精确词。dense 不一定优于 sparse，领域漂移、语言和 embedding 选择都会改变结果；hybrid 可用 RRF 等方法融合不同排序而不假定原始分数同尺度。Dense 通道采用 ANN 时还要在同一目标查询集和硬件上联合报告 recall、p95 latency、内存与更新成本，不能只调高搜索深度后宣布“效果更好”。', keyPoints: ['方法选择应由查询类型与离线评测支持', '混合检索保留互补信号但仍需稳定的融合规则', 'ANN 配置要同时验收召回、尾延迟、内存和更新路径'] },
       { heading: '过滤与改写都会改变可召回集合', body: 'Metadata filter 应在排序前限制权限、版本、语言和时间范围；threshold 控制最低相关性，top-k 控制候选数量。Query rewrite 能补全缩写或拆分意图，也可能引入用户未表达的假设，所以必须记录原查询、改写结果和各阶段候选，区分语料不存在、漏召、误过滤和排序靠后。', keyPoints: ['无结果不只意味着 corpus 没有答案', '改写与过滤应可回放，避免把召回错误藏在最终列表中'] },
     ],
     resourceIds: [
@@ -571,12 +572,12 @@ const lessons = [
       'res-context-primary-javaguide-vector-store',
       'res-context-primary-javaguide-rag-optimization',
     ],
-    exercise: { title: '运行混合检索诊断', brief: '在固定小语料中比较 sparse、dense 和 hybrid，并定位候选消失的阶段。', steps: ['应用版本、部门和语言过滤，记录 sparse/dense 分数、融合名次、threshold 与 top-k', '改写查询并比较 trace，分别标记不存在、未召回、被过滤和排序靠后的原因'], deliverable: '一份可回放 retrieval trace 和三种方法的选择说明。', experiment: 'hybrid-retrieval' },
+    exercise: { title: '运行混合检索诊断', brief: '在固定小语料和硬件上比较 sparse、dense、hybrid 与三组 ANN 配置，并定位候选消失的阶段。', steps: ['应用版本、部门和语言过滤，记录 sparse/dense 分数、RRF 名次、threshold、top-k，以及 ANN recall@10、p95 latency、内存和更新成本', '保留原查询并执行受控 query rewrite，比较每次 trace，分别标记不存在、未召回、被过滤、排序靠后和改写偏移'], deliverable: '一份可回放 retrieval trace、一张 ANN 联合权衡表和包含 query rewrite 风险的选择说明。', experiment: 'hybrid-retrieval' },
     quizzes: [
       quiz('context-05-1', '包含精确产品编号的查询通常先重视哪种信号？', ['Sparse 词法匹配', '随机向量', '只用生成模型猜测'], 0, '精确编号和稀有词通常适合词法召回，但仍应通过真实数据验证。'),
-      quiz('context-05-2', 'Query rewrite 的主要风险是什么？', ['查询会自动加密', '改写可能加入原意之外的假设并造成错召', '必然让 top-k 变大'], 1, '改写能提升可召回性，也可能偏离用户意图，因此需要保留原查询和 trace。'),
+      quiz('context-05-2', '比较 ANN 配置时为什么不能只看 recall@10？', ['更高 recall 会自动降低全部成本', '还要在同一查询集与硬件上联合检查 p95 latency、内存和更新成本', 'ANN 不需要任何真实查询评测'], 1, '搜索更深可能提高召回，也会改变尾延迟、资源占用和更新路径；课程数字只是合成 fixture，生产配置必须复测。'),
     ],
-    completionCriteria: ['能按查询特征解释 sparse、dense 与 hybrid 的选择', '能通过阶段 trace 定位过滤、阈值、排序和改写问题'],
+    completionCriteria: ['能按查询特征解释 sparse、dense 与 hybrid 的选择并计算 RRF 名次贡献', '能用同一评测切片联合比较 ANN recall、p95 latency、内存和更新成本，并通过 trace 定位过滤、阈值、排序与 query rewrite 问题'],
   }),
   lesson({
     order: 6,
@@ -611,12 +612,12 @@ const lessons = [
   lesson({
     order: 7,
     title: '长期记忆的写入、召回与遗忘',
-    summary: '为跨会话信息建立准入、作用域、来源、冲突、过期和删除策略，而不是自动永久保存聊天。',
-    objectives: ['设计长期记忆 admission policy 与作用域隔离规则', '处理重复、纠正、过期、删除和召回后的上下文投影'],
-    concepts: ['Semantic memory', 'Episodic memory', 'Procedural memory', 'Admission policy', 'TTL', 'Supersession'],
+    summary: '为跨会话信息建立准入、作用域、来源、相关性衰减、冲突、过期和删除策略，而不是自动永久保存聊天。',
+    objectives: ['设计长期记忆 admission policy 与作用域隔离规则', '区分 relevance decay、TTL expiry、supersession、deletion，并处理召回后的上下文投影'],
+    concepts: ['Semantic memory', 'Episodic memory', 'Procedural memory', 'Admission policy', 'Relevance decay', 'TTL', 'Supersession'],
     explanations: [
       { heading: '记忆类型是应用建模标签', body: 'Semantic/profile memory 表达相对稳定的事实或偏好，episodic memory 表达一次经历及其时间，procedural memory 表达可复用流程。它们是应用层分类，不证明模型内部拥有相同机制。写入前应判断用户意图、稳定性、敏感性、主体、scope、来源和置信度，不能把每条聊天自动保存为永久记忆。', keyPoints: ['显式保存请求与系统推断应采用不同准入门槛', '敏感、一次性或低置信度信息通常应拒绝或缩短 TTL'] },
-      { heading: '长期记忆必须拥有完整生命周期', body: '长期记忆必须可更新、可过期、可删除：重复写入应 no-op，用户纠正生成 supersedes 关系，TTL 到期停止召回，删除后本轮与后续投影都不可出现。召回还要校验 subject、scope、有效期、来源与相关性，并让当前显式输入优先于旧记忆，避免陈旧偏好覆盖用户新要求。', keyPoints: ['召回的是经策略筛选的投影，不是整库记忆', '纠正、过期和删除都要留下受控的生命周期结果与原因'] },
+      { heading: '长期记忆必须拥有完整生命周期', body: '长期记忆必须可更新、可过期、可删除。Relevance decay 只是让仍有效但逐渐陈旧的记录在排序中降权，不会自动令其失效；TTL expiry 到点后停止召回；supersession 让已接受的新值取代旧值；deletion 则按主体或政策要求阻断使用。重复写入应 no-op，召回还要校验 subject、scope、有效期、来源与相关性，并让当前显式输入优先于旧记忆。', keyPoints: ['召回的是经策略筛选的投影，不是整库记忆', 'Decay 改变相关性排序，TTL、supersession 和 deletion 分别改变有效状态或使用许可', '纠正、过期和删除都要留下受控的生命周期结果与原因'] },
     ],
     resourceIds: [
       'res-context-langchain-memory',
@@ -630,18 +631,18 @@ const lessons = [
       'res-context-primary-feishu-company-brain',
       'res-context-primary-feishu-agentfs',
     ],
-    exercise: { title: '模拟个人助理记忆生命周期', brief: '为显式偏好、一次性行程、敏感字段、重复观察和用户纠正决定写入与召回。', steps: ['按 admission policy 执行 reject、store、no-op 或 supersede，并记录 provenance、confidence、scope 和 TTL', '推进时间、执行删除并从不同 subject/scope 召回，检查 expired、deleted 与越权记录不会投影'], deliverable: '一份记忆事件日志、有效记录表和本轮 memory projection。', experiment: 'memory-lifecycle' },
+    exercise: { title: '模拟个人助理记忆生命周期', brief: '为显式偏好、一次性行程、敏感字段、重复观察和用户纠正决定写入、衰减、失效与召回。', steps: ['按 admission policy 执行 reject、store、no-op 或 supersede，并记录 provenance、confidence、scope 和 TTL', '推进时间，分别应用合成 relevance decay、TTL expiry 与 delete，再从不同 subject/scope 召回；核对 decay 只影响有效候选排序，而 expired、superseded、deleted 与越权记录不会投影'], deliverable: '一份记忆事件日志、含 decay score 与生命周期状态的有效记录表，以及本轮 memory projection。', experiment: 'memory-lifecycle' },
     quizzes: [
-      quiz('context-07-1', '哪类聊天内容应该自动永久写入长期记忆？', ['所有消息', '没有任何类别应无条件自动永久写入', '每次工具输出'], 1, '长期记忆写入需要明确的准入、作用域、敏感性与生命周期策略。'),
-      quiz('context-07-2', '用户纠正已保存偏好时应怎样处理？', ['忽略新值', '新记录 supersede 旧值并阻止旧值继续召回', '同时随机召回新旧值'], 1, '纠正关系保留来源历史，同时保证当前有效投影只使用新值。'),
+      quiz('context-07-1', '一条候选记忆 salience 很高时，哪种处理正确？', ['直接永久保存并跳过用户同意', '仍先检查 consent、sensitivity、subject、scope 与 confidence，再输出带原因的准入动作', '把 salience 当成事实置信度'], 1, 'Salience 只帮助安排候选审查和相关性优先级，不能替代 consent、权限、敏感性或 confidence。'),
+      quiz('context-07-2', 'Relevance decay 与 TTL expiry 的关键区别是什么？', ['Decay 让仍有效记录降权，TTL 到期则停止有效召回', '两者都会立刻物理擦除所有备份', 'Decay 会自动创建 superseding 新值'], 0, 'Relevance decay 调整有效候选的排序分数；TTL expiry 改变可召回状态，supersession 与 deletion 又是另外两类生命周期动作。'),
     ],
-    completionCriteria: ['能为不同信息给出可解释的记忆准入与作用域决定', '能证明更新、过期、删除和跨主体隔离在召回时生效'],
+    completionCriteria: ['能为不同信息给出可解释的记忆准入与作用域决定', '能用 trace 区分 relevance decay、TTL expiry、supersession、deletion，并证明失效、删除和跨主体隔离在召回时生效'],
   }),
   lesson({
     order: 8,
     title: 'RAG 与记忆综合设计及故障定位',
     summary: '把状态、语料、检索、证据和记忆串成可追溯架构，并沿数据流定位回答错误所在层。',
-    objectives: ['设计来源清楚、预算有界且记忆有生命周期的综合架构', '沿 source 到 answer 的链路定位缺失、陈旧、冲突与不忠实故障'],
+    objectives: ['设计来源清楚、预算有界且记忆有生命周期的综合架构，并区分 RAG、fine-tuning 与长期记忆职责', '按查询类型选择 GraphRAG 分支、按变更类型选择增量更新或全量重建，并沿 source 到 answer 定位故障'],
     concepts: ['Layered diagnosis', 'Data provenance', 'Staleness', 'Retrieval evaluation', 'Generation faithfulness'],
     explanations: [
       { heading: '综合架构保持层间契约', body: '源文档经摄取、版本化、chunk 和索引生成候选，再经过滤、融合、重排、去重和打包形成 evidence packet；会话状态与长期记忆分别投影后，与指令和当前请求共同进入 prompt context。每一箭头都记录输入版本、输出 ID、预算、排除原因和 sourceRef。', keyPoints: ['状态、RAG 与记忆通过投影汇合但不混成同一存储', '端到端追踪要能从答案回到 evidence span 与源版本'] },
@@ -663,12 +664,12 @@ const lessons = [
       'res-context-primary-feishu-company-brain',
       'res-context-primary-javaguide-rag',
     ],
-    exercise: { title: '设计并诊断政策助理', brief: '为企业政策助理画出上下文、RAG 与记忆架构，并诊断一组错误回答。', steps: ['定义 source、chunk、candidate、evidence packet、state、memory projection、prompt 和 citation 的接口', '针对未摄取、旧版本、漏召、误过滤、打包丢失、错误记忆和不忠实生成逐层给出证据与修复'], deliverable: '一张综合架构图、一份分层故障树和可执行验收清单。' },
+    exercise: { title: '设计并诊断政策助理', brief: '为企业政策助理画出上下文、RAG、fine-tuning 与记忆职责，并诊断一组错误回答。', steps: ['定义 source、chunk、candidate、GraphRAG 分支、evidence packet、state、memory projection、prompt 和 citation 的接口，并给动态政策、稳定行为与个人偏好分配职责', '针对内容变化与 parser/schema 变化分别演练增量更新和全量重建，再对未摄取、旧版本、漏召、误过滤、打包丢失、错误记忆和不忠实生成逐层给出证据与修复'], deliverable: '一张含职责矩阵和 GraphRAG/update 边界的综合架构图、一份分层故障树和可执行验收清单。' },
     quizzes: [
       quiz('context-08-1', 'RAG 回答错误时首先应怎样诊断？', ['立刻扩大所有 top-k', '沿 source 到 answer 分层检查信息在哪一步失真或消失', '直接改成长期记忆'], 1, '分层 trace 能区分摄取、检索、打包、记忆冲突和生成忠实性问题。'),
-      quiz('context-08-2', '什么时候更适合长期记忆而不是 RAG corpus？', ['保存某用户可治理的跨会话偏好', '保存所有公共产品手册', '替代模型行为训练'], 0, '主体相关、经准入且可更新删除的跨会话信息适合长期记忆。'),
+      quiz('context-08-2', '何时更适合启用 GraphRAG 并触发全量重建？', ['精确条款查询且正文未变时', '跨实体全局问题，且 parser、chunk schema 或图 schema 已变化时', '只要 top-k 小于十就自动启用并重建'], 1, 'GraphRAG 面向关系密集或全局问题；内容局部变化可增量更新，而 parser、chunk/graph schema 变化通常需要全量重建并重新核验 source span。'),
     ],
-    completionCriteria: ['能交付层次清楚且所有投影均可回源的综合架构', '能用分层证据区分检索、打包、记忆与生成故障'],
+    completionCriteria: ['能交付层次清楚、区分 RAG/fine-tuning/memory 且所有投影均可回源的综合架构', '能解释 GraphRAG 路由与增量/全量更新边界，并用分层证据区分检索、打包、记忆与生成故障'],
   }),
 ];
 
@@ -710,19 +711,19 @@ const interviewSpecs = [
   interviewSpec('iq-context-03-3', 'context-03', '用户修改了先前事实，状态如何更新？', '把新事实写成当前有效值，用 supersedes 关联旧事实，保留双方来源与时间，并让后续摘要和记忆投影停止使用旧值。', ['冲突不能靠覆盖写隐藏，诊断仍需要历史证据。', '显式当前输入应优先于旧状态或长期记忆。'], '删除旧消息导致无法解释状态为什么变化。', '多个来源同时声称最新值时如何决胜？', '高', '进阶', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-04-1', 'context-04', '如何设计 chunking？', '按文档结构和回答所需语义选择边界与大小，适度 overlap，并让每个 chunk 继承标题、版本、权限、语言和 source span。', ['过小会丢上下文，过大会降低定位精度并浪费预算。', 'Retrieval unit 与 citation unit 可不同，但必须可映射。'], '只按固定字符数切分且不保留标题和版本。', '表格、代码和 FAQ 各自适合怎样的边界？', '高', '进阶', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-04-2', 'context-04', 'Corpus 如何处理版本和失效？', '源文档保留稳定 ID 与版本，chunk 继承有效期和状态；发布新版本时旧版停止进入默认检索，但仍可按审计策略回溯。', ['索引重建必须与源版本和权限变更协调。', '删除或撤权要传播到 chunk、缓存与服务索引。'], '只更新数据库正文却保留旧向量继续召回。', '索引更新失败时怎样防止新旧版本混答？', '高', '进阶', ['Agent 开发', '后端工程']),
-  interviewSpec('iq-context-04-3', 'context-04', 'source document、retrieval unit、citation unit 有何不同？', 'Source document 是治理与版本载体，retrieval unit 是候选召回粒度，citation unit 是能精确支持主张的原文范围。', ['三者可以一对多，关键是保留稳定映射。', 'Citation unit 通常需要比检索 chunk 更精确地定位 span。'], '把一个向量记录同时当作完整源文档和精确引用。', '合并相邻 chunk 后引用范围应如何保存？', '中', '基础', ['Agent 开发', 'AI 应用']),
-  interviewSpec('iq-context-05-1', 'context-05', 'Sparse、dense、hybrid retrieval 怎么选？', '精确词和编号偏 sparse，语义改写可用 dense，异构查询常用 hybrid；最终选择应以真实语料和查询集评测。', ['Dense 不一定优于 sparse，领域与语言会改变表现。', 'Hybrid 融合需要处理分数尺度或使用基于名次的方法。'], '默认把 dense 当作所有查询的最优方案。', '怎样构建覆盖编号、同义改写和多语言的评测集？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-04-3', 'context-04', '源文档怎样经过摄取管线成为可搜索且可引用的索引？', '依次执行 acquire、parse、normalize、chunk、metadata、embed、index，并在每阶段传递 documentId、version、ACL、hash 与 source span；source document、retrieval unit、citation unit 保持不同身份但可稳定映射。', ['每个派生阶段应保存输入输出 ID、版本和失败状态，使 index 可重建而 source 身份不丢失。', 'Retrieval unit 服务候选召回，citation unit 通常用更精确的原文范围支持主张。'], '把向量记录同时当作完整源文档、全部摄取过程和精确引用。', '哪个阶段最容易丢失表格 span，怎样用契约检测？', '中', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-05-1', 'context-05', 'Sparse、dense、hybrid retrieval 怎么选，RRF 怎样避免混加分数尺度？', '精确词和编号偏 sparse，语义改写可用 dense，异构查询可 hybrid；RRF 用各通道的 1/(k+rank) 名次贡献融合，不直接相加 BM25 与 cosine 原始分数，最终选择仍由真实查询集评测。', ['Dense 不一定优于 sparse，领域与语言会改变表现。', '应能用给定 k 和两路名次计算融合分数，同时说明 RRF 不等于语义 reranker。'], '默认把 dense 当作所有查询的最优方案，或直接相加不同通道原始分数。', '当 k=60 时，怎样计算同一文档在两路排名中的 RRF 贡献？', '高', '基础', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-05-2', 'context-05', 'top-k、threshold 和 metadata filter 如何配合？', '先用 metadata filter 限制合法候选，再按相关性 threshold 去除弱匹配，最后用 top-k 控制进入后续阶段的数量。', ['次序变化会让结果语义不同，应在 trace 中记录。', 'Top-k 不是最终上下文数量，后面还有重排与预算打包。'], '无结果时只盲目提高 top-k，不检查过滤和阈值。', '权限 filter 与版本 filter 应在哪一层强制？', '高', '进阶', ['Agent 开发', '后端工程']),
-  interviewSpec('iq-context-05-3', 'context-05', 'Query rewrite 有什么价值和风险？', '改写可补全缩写、拆分复合问题和生成同义表达，但也可能加入未表达假设、偏离意图或放大敏感信息。', ['保留原查询、改写版本和每次候选便于比较。', '高风险检索可要求约束模板或用户确认。'], '认为改写后的查询必然比原查询更准确。', '怎样评估 rewrite 提升了召回却损害了精度？', '中', '深挖', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-05-3', 'context-05', '怎样选择 ANN 配置而不只追求更高 recall？', '在同一查询切片、语料版本和硬件上联合比较 recall@k、p95 latency、内存与更新成本，再按服务目标选择配置；更深搜索不是免费的通用最优。', ['报告应注明索引类型、构建参数、查询参数、硬件、数据规模与更新时间。', '课程图中的三组数字是合成 fixture，不是供应商 benchmark，生产决策必须复测。'], '只看平均延迟或 recall 单项，就把教学 fixture 外推为生产最优配置。', '如何设计同时约束 recall@10 和 p95 latency 的验收切片？', '中', '深挖', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-06-1', 'context-06', '为什么需要 reranker？', '首阶段检索以高召回和低成本产生候选，reranker 用更强的查询—文档交互信号改善有限候选的最终顺序。', ['Reranker 不能找回首阶段完全漏掉的文档。', '重排质量与延迟、候选数和领域数据有关。'], '认为 reranker 能修复不存在于候选集的事实。', '候选数扩大时如何权衡 rerank 成本与召回？', '高', '基础', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-06-2', 'context-06', '为什么需要去重和多样性？', '重叠 chunk 和同文档旧版本会重复占用预算；去重与多样性选择让有限证据覆盖更多独立来源、方面和冲突观点。', ['去重键应包含 document、version 和 span 语义。', '多样性不能牺牲关键高相关证据，需要明确目标。'], '认为 top-ranked 列表天然没有重复且覆盖全面。', '相邻片段既重复又互补时怎样合并？', '中', '进阶', ['Agent 开发', 'AI 应用']),
-  interviewSpec('iq-context-06-3', 'context-06', 'RAG 中有引用为什么仍会答错？', '引用只给出回源线索；检索内容可能过期或无关，模型也可能曲解证据、把一个引用挂到不被支持的 claim 上或遗漏反例。', ['需分别检查检索相关性、citation correctness、completeness 和生成忠实性。', '格式正确的链接不等于语义支持关系成立。'], '看到引用标记就把答案视为已验证事实。', '如何逐句建立 claim-to-span 核对表？', '高', '深挖', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-06-3', 'context-06', '怎样证明 evidence packet 中的工具结果真实可回源，且引用支持答案主张？', '宿主保存真实 observation、callId 与结果 hash，packet 再绑定 sourceId/version/span 和 citationId；最后逐 claim 检查所指 span 的支持、完整性与冲突，不能把模型生成的工具 transcript 或链接存在当作证明。', ['结构 provenance 证明证据身份和调用链，citation correctness/completeness 与 generation faithfulness 仍要分别核验。', '检索内容可能过期、无关或被模型曲解，因此答案带引用仍可能错误。'], '看到工具输出文本或引用标记就把答案视为已验证事实。', '如何为一个数字建立 observation-to-call-to-span-to-claim 核对表？', '高', '深挖', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-07-1', 'context-07', '什么是长期记忆，什么时候写？', '长期记忆是跨会话、绑定主体和作用域、经准入策略保存并可治理的信息；稳定且未来有用的显式偏好比一次闲聊更适合写入。', ['写入判断考虑意图、稳定性、敏感性、来源、置信度和 TTL。', '不是每条 transcript 都应自动成为永久记忆。'], '把完整聊天历史等同于长期记忆库。', '一次性行程与长期饮食禁忌应分别怎样处理？', '高', '基础', ['Agent 开发', 'AI 应用']),
   interviewSpec('iq-context-07-2', 'context-07', 'Semantic、episodic、procedural memory 怎么理解？', 'Semantic/profile 表达相对稳定事实，episodic 表达带时间的经历，procedural 表达可复用流程；它们是应用建模标签。', ['同一信息可因产品目的落入不同类别，需写清使用规则。', '这些标签不证明底层模型具有人类式记忆机制。'], '把论文分类名当作模型内部能力的确定事实。', '用户偏好和一次成功工作流分别属于哪类？', '中', '进阶', ['Agent 开发', 'AI 应用']),
-  interviewSpec('iq-context-07-3', 'context-07', '如何处理冲突、过期和删除？', '新值用 supersedes 关联旧值，TTL 或有效期控制召回，删除事件立即阻止投影，并把传播范围覆盖索引、缓存与服务层。', ['当前显式输入应优先于可能陈旧或冲突的长期记忆投影。', '删除语义要说明逻辑不可召回与物理备份清理的边界。'], '覆盖写或软删除后仍让旧记录参与召回。', '怎样证明删除后旧偏好不再出现在 prompt？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-07-3', 'context-07', '如何区分 relevance decay、TTL expiry、supersession 和 deletion？', 'Decay 只降低仍有效记录的相关性排序；TTL 到点后停止有效召回；supersession 用新值取代旧值并保留来源链；deletion 按主体或政策要求阻断使用并传播到索引、缓存与投影。', ['当前显式输入应优先于逐渐降权或冲突的长期记忆投影，decay 不能替代纠正。', '删除语义要说明逻辑不可召回与物理备份清理的边界；四类动作都要有独立 trace。'], '把衰减分数降到零等同于完成删除，或让过期记录继续参与随机召回。', '怎样证明某条记录只是降权、已经过期、被新值取代或被删除？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
   interviewSpec('iq-context-08-1', 'context-08', 'RAG 答错时如何诊断？', '沿 source、chunk、candidate、filter、rank、evidence packet、prompt、memory 和 answer 逐层找出信息消失、过期、冲突或被曲解的位置。', ['每层需要稳定 ID、版本和排除原因才能反证。', '不要用一个端到端分数掩盖检索与生成的不同故障。'], '一遇到错误就改 prompt 或无界扩大 top-k。', '给出语料中存在但未出现在答案里的排查顺序。', '高', '进阶', ['Agent 开发', 'AI 应用', '后端工程']),
-  interviewSpec('iq-context-08-2', 'context-08', 'RAG、fine-tuning 和长期记忆如何选？', '动态外部知识优先 RAG，稳定行为模式可考虑 fine-tuning，主体相关且需跨会话治理的信息适合长期记忆；三者可组合。', ['选择取决于变化频率、可追溯性、主体作用域和更新成本。', 'Fine-tuning 不适合作为频繁更新事实的唯一数据库。'], '认为三者互斥，或用训练参数保存所有最新事实。', '企业政策与个人偏好应如何分别建模？', '高', '基础', ['Agent 开发', 'AI 应用']),
-  interviewSpec('iq-context-08-3', 'context-08', '请设计上下文、RAG 与记忆架构。', '设计应分离会话状态、版本化 corpus、检索管线和长期记忆，通过有来源、预算有界的投影汇入 prompt，并保留端到端 trace。', ['说明写入、更新、过期、删除、权限、引用和失败降级。', '验收要分别覆盖召回、证据支持、生成忠实性和记忆生命周期。'], '只画向量数据库到模型的一条线，没有状态、版本或治理。', '当旧记忆与最新政策证据冲突时如何决胜并记录？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
+  interviewSpec('iq-context-08-2', 'context-08', 'GraphRAG 何时作为检索分支，知识更新何时增量处理或全量重建？', '精确条款或局部语义查询通常先走 sparse/dense/hybrid，跨实体关系或全局聚合问题才考虑 GraphRAG；正文局部变化可增量更新受影响单元，parser、chunk、embedding 或 graph schema 变化需要全量重建。', ['两条分支都必须继承 ACL、sourceVersion、delete propagation 与 source span，并进入共同证据核验。', 'GraphRAG 收益依赖图构建和查询分布，不是向量检索的自动替代品。'], '把 GraphRAG 当成所有查询的默认替代品，或在 schema 变化后只更新一个旧向量。', '怎样用 query slice 和版本覆盖核对证明路由与重建选择正确？', '高', '基础', ['Agent 开发', 'AI 应用']),
+  interviewSpec('iq-context-08-3', 'context-08', '请设计上下文、RAG 与记忆架构，并说明 RAG、fine-tuning、长期记忆的职责。', '设计应把动态可引用知识交给版本化 RAG，把稳定行为模式留给 fine-tuning，把主体相关且可治理的信息交给长期记忆；会话 state、这些投影与证据按预算汇入 prompt，并保留端到端 trace。', ['说明 source/index 更新、记忆写入/过期/删除、权限、引用和失败降级。', '验收要分别覆盖职责分配、召回、证据支持、生成忠实性和记忆生命周期。'], '只画向量数据库到模型的一条线，或用训练参数保存频繁变化的政策事实。', '当旧记忆与最新政策证据冲突时如何决胜并记录？', '高', '深挖', ['Agent 开发', 'AI 应用', '后端工程']),
 ];
 
 export function createContextInterviewQuestion(spec) {
@@ -952,4 +953,5 @@ export const contextRagMemory = deepFreeze({
   interviewQuestions,
   sourceImpactClaims,
   sourceImpactAudit,
+  outcomeRegistry: contextRagMemoryOutcomeRegistry,
 });

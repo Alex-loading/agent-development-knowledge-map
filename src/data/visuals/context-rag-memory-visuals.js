@@ -1,3 +1,4 @@
+import { contextRagMemoryOutcomeRegistry } from '../context-rag-memory-outcomes.js';
 import { deepFreezeVisual } from './visual-contract.js';
 
 const VERIFIED_AT = '2026-07-30';
@@ -21,6 +22,7 @@ function visual({
     kind,
     role,
     tags,
+    assessedCoverage: contextRagMemoryOutcomeRegistry.visuals[id],
     title,
     alt,
     longDescription,
@@ -267,11 +269,11 @@ export const contextRagMemoryVisuals = deepFreezeVisual([
     id: 'visual-context-07-decay-delete',
     role: 'process',
     tags: ['failure-mode', 'boundary'],
-    title: 'TTL 衰减、supersession 与删除传播',
-    alt: '记忆 relevance 从 1.00 随时间降到 0.20，TTL 到期停止召回；纠正和删除分别传播到 store、index、cache 与 projection。',
-    longDescription: '图用时间轴区分 decay 排序、TTL expiry、supersession 和 delete。删除传播清单分别标出主存储、索引、缓存和投影完成状态，并明确不等于模型参数反学习或备份物理擦除。',
-    caption: '过期、更正和删除是不同状态；它们都必须阻止旧记录进入新投影。',
-    sourceIds: ['res-context-openai-data', 'res-context-primary-javaguide-memory'],
+    title: 'Relevance decay、TTL、supersession 与删除传播',
+    alt: '合成教学 fixture 让记忆 relevance 从 1.00 降到 0.65 再到 0.20；TTL 到期停止召回，纠正和删除分别传播到 store、index、cache 与 projection。',
+    longDescription: '图用时间轴区分 relevance decay 排序、TTL expiry、supersession 和 delete。1.00、0.65、0.20 是 synthetic classroom fixture，不是通用曲线或产品阈值；删除传播清单分别标出主存储、索引、缓存和投影完成状态，并明确不等于模型参数反学习或备份物理擦除。',
+    caption: '合成衰减分数只演示有效候选降权，不是普适事实；TTL、supersession 与 deletion 才分别改变有效状态或使用许可。',
+    sourceIds: ['res-context-memorybank', 'res-context-openai-data', 'res-context-primary-javaguide-memory'],
   }),
   visual({
     id: 'visual-context-08-integrated-flow',

@@ -97,13 +97,15 @@ const sections = Object.freeze([
   }),
   Object.freeze({
     id: 'expire-supersede-and-delete',
-    title: '分别证明过期、更正与删除生效',
+    title: '分别证明衰减、过期、更正与删除生效',
     paragraphs: Object.freeze([
+      'Relevance decay（相关性衰减）是召回排序策略：记录仍为 active 且仍可被治理门接受，但随着观察变旧或任务相关性下降，它的排序分数可以降低。它不等于 salience 准入分数，也不改变 consent、confidence 或记录状态；更不能代替用户纠正、TTL expiry 或 deletion。图中的 1.00 → 0.65 → 0.20 是合成教学 fixture，用来让同一条记录的降权可见，不是研究或产品给出的通用衰减曲线、阈值或时间常数。生产系统必须按任务、时间敏感性和真实召回评测选择函数，并在 trace 中同时保存原始相关性、age/decay factor、final score 与 policyVersion。',
       'TTL 到期表示记录从该时刻起不再有效召回，它与 supersession 和 delete 是不同原因。Supersession 表示有一个被接受的新值取代旧值，旧记录保留来源链但不再投影；delete 表示主体或策略要求停止使用该记录，即使没有替代值也必须立即阻断本轮及后续 projection。服务应给出 expired、superseded、deleted 等机器可读排除原因，并让索引、缓存和派生投影共享同一失效版本，避免主库状态已变而旁路仍返回旧值。',
       '“已删除”必须写清承诺层级。应用层可以证明外部 memory store 中的记录被标记或移除、检索索引与缓存完成失效、之后的 recall 和 prompt manifest 不再包含该 memoryId；这不等于模型参数已经反学习曾见内容，也不自动证明离线备份已物理擦除。备份保留期、恢复副本、日志脱敏和灾备删除应由另一个明确政策说明，不能用一次 API delete 的成功响应概括。',
       '同样，单次跨 subject/scope 召回没有返回记录，只证明这一调用路径的过滤结果，不足以证明整个租户隔离体系。租户隔离还需要身份解析、授权策略、存储分区、索引命名空间、缓存键、日志访问和运维权限的联合验证。完成标准应收紧为：在指定接口、策略版本与测试范围内，旧记录不再投影且越权查询无信息泄漏；不能把课堂模拟提升为真实隐私存储、备份擦除或全系统隔离证明。',
     ]),
     keyPoints: Object.freeze([
+      'Relevance decay 只改变仍有效记录的排序；1.00 → 0.65 → 0.20 是合成教学 fixture，不是普适事实。',
       'Expired、superseded 与 deleted 是三种不同失效原因，都必须阻断召回并留下可审计结果。',
       '外部 store 删除不等于模型参数反学习，也不自动证明备份已物理擦除。',
       '一次主体过滤测试不是租户隔离证明，隔离还涉及授权、分区、索引、缓存、日志与运维边界。',
@@ -119,6 +121,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-openai-data',
       'res-context-langchain-memory',
+      'res-context-memorybank',
       'res-context-longmemeval',
       'res-context-primary-javaguide-memory',
       'res-context-primary-feishu-company-brain',
@@ -212,7 +215,8 @@ export const context07Note = Object.freeze({
     '事件账本用 store、reject、no-op、supersede、expire 与 delete 保存每次决定及原因。',
     '召回先做主体、作用域、状态和有效期过滤，再按相关性与预算形成最小 memory projection。',
     '当前显式输入高于旧记忆投影，个人偏好也不能覆盖公共政策证据与系统约束。',
-    '过期、被取代和删除必须分别记录，并确保索引、缓存和投影不再返回失效记录。',
+    'Relevance decay 只降低仍有效记录的排序；TTL 过期、被取代和删除必须分别记录，并确保索引、缓存和投影不再返回失效记录。',
+    '1.00 → 0.65 → 0.20 是合成教学 fixture，不是通用记忆规律或产品阈值。',
     '外部 store 删除不证明参数反学习或备份擦除，单次过滤测试也不证明完整租户隔离。',
     'Memory Lifecycle 扩展轨迹实际产生 reject、store、no-op、expire、supersede 和 delete，并支持 subject/scope 反证。',
     '完成练习需要记忆事件日志、有效记录表、带排除原因的投影和分层删除传播清单。',

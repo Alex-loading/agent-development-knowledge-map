@@ -1,3 +1,4 @@
+import { contextRagMemoryOutcomeRegistry } from '../../src/data/context-rag-memory-outcomes.js';
 import { deepFreezeVisual } from '../../src/data/visuals/visual-contract.js';
 
 function fixture(visualId, labels, values = [], stepLabels = undefined) {
@@ -197,7 +198,7 @@ export const contextRagMemoryVisualFixtures = deepFreezeVisual([
     'REJECT · STORE · NO-OP · SUPERSEDE',
   ], [0.4, 0.7, 0.88]),
   fixture('visual-context-07-decay-delete', [
-    'relevance 1.00',
+    'SYNTHETIC FIXTURE · relevance 1.00',
     'relevance 0.65',
     'relevance 0.20',
     'TTL EXPIRED',
@@ -244,6 +245,7 @@ function inventory(
   return {
     visualId,
     assessedOutcomes,
+    assessedCoverage: contextRagMemoryOutcomeRegistry.visuals[visualId],
     outcomeCriteria,
     cognitiveQuestion,
     storyboard,
@@ -253,24 +255,24 @@ function inventory(
 export const contextRagMemoryVisualInventoryFixtures = deepFreezeVisual([
   inventory('visual-context-01-object-map', ['quiz-context-01-1', 'iq-context-01-1'], '能按 owner、scope、lifecycle 与投影条件区分五类对象。', '五类信息为何不能都叫 memory？关系总览图。', '五个对象围绕 prompt；只允许有来源投影进入窗口。'),
   inventory('visual-context-01-projection-lifecycle', ['iq-context-01-3'], '能从 prompt item 反向追踪到状态事件或源版本，并解释排除原因。', '后端对象怎样变成本轮输入？投影流程图。', '对象依次通过有效性、权限、相关性与预算门，产出 included 和 excluded。'),
-  inventory('visual-context-01-offloading-boundary', ['quiz-context-01-2', 'iq-context-01-2'], '能说明外置细节的引用、权限、回取和 unavailable 失败边界。', '哪些内容留在活动上下文，哪些可外置？边界图。', '活动上下文只留最小集与恢复指针；外部状态经 read boundary 回取。'),
-  inventory('visual-context-02-token-budget', ['quiz-context-02-1', 'iq-context-02-1'], '能用守恒式核对输入分桶与输出预留，而不把 fixture 比例当通用值。', '8192 token 怎样分给六类内容？预算条图。', '展示六桶预算、used 和 remaining；所有数字来自冻结 fixture。'),
+  inventory('visual-context-01-offloading-boundary', ['quiz-context-01-2'], '能说明外置细节的引用、权限、回取和 unavailable 失败边界。', '哪些内容留在活动上下文，哪些可外置？边界图。', '活动上下文只留最小集与恢复指针；外部状态经 read boundary 回取。'),
+  inventory('visual-context-02-token-budget', ['iq-context-02-1'], '能用守恒式核对输入分桶与输出预留，而不把 fixture 比例当通用值。', '8192 token 怎样分给六类内容？预算条图。', '展示六桶预算、used 和 remaining；所有数字来自冻结 fixture。'),
   inventory('visual-context-02-overflow-strategies', ['iq-context-02-2'], '能比较 selection、compression、offloading、reset 的损失与恢复条件。', '超限时四类策略各牺牲什么？比较图。', '四列固定展示保留对象、损失、恢复入口和适用条件。'),
-  inventory('visual-context-02-injection-loss-guard', ['quiz-context-02-2', 'iq-context-02-3'], '能在 required 超限、提示注入或压缩缺失高风险字段时选择显式失败或回取。', '组装器何时 include、exclude、fail 或回取？决策树。', '来源边界、requiredCost 与细节核验依次产生四类结果。'),
+  inventory('visual-context-02-injection-loss-guard', ['quiz-context-02-2'], '能在 required 超限、提示注入或压缩缺失高风险字段时选择显式失败或回取。', '组装器何时 include、exclude、fail 或回取？决策树。', '来源边界、requiredCost 与细节核验依次产生四类结果。'),
   inventory('visual-context-03-event-state-summary', ['quiz-context-03-1', 'iq-context-03-1'], '能区分事件证据、当前规范状态和有损摘要的职责。', 'Transcript、state、summary 如何派生又不互相冒充？三层图。', '事件经 reducer 生成 state，并另行派生带指针的 loss summary。'),
   inventory('visual-context-03-compaction-loss', ['iq-context-03-2'], '能量化压缩前后信息损失，并用 source pointer 核验数字、否定与工具状态。', '压缩删掉了什么，怎样恢复核验？三步累积图。', '1200→420，保留 3 项、丢失 2 项，最后回取原文或标 unavailable。'),
   inventory('visual-context-03-recoverability-chain', ['quiz-context-03-2', 'iq-context-03-3'], '能用 supersession 保留新旧事实来源且只投影当前值。', '一次用户纠正怎样贯穿 event、state 和 summary？机制链。', 'e17 旧事实经 e24 纠正生成新事实，当前投影排除旧值。'),
   inventory('visual-context-04-ingestion-pipeline', ['iq-context-04-3'], '能列出摄取七阶段并保持 documentId、version、ACL、hash 与 span。', '原件怎样成为可搜索且可引用的派生索引？管线总览。', 'acquire 到 index 七阶段逐步传递身份、治理元数据和失败状态。'),
-  inventory('visual-context-04-chunk-strategies', ['quiz-context-04-1', 'iq-context-04-1'], '能按召回、重复、上下文与引用定位比较四种切分策略。', '同一文档用四种 chunking 会发生什么？比较图。', '固定、结构、语义和父子块用同一问题与指标并列比较。'),
+  inventory('visual-context-04-chunk-strategies', ['iq-context-04-1'], '能按召回、重复、上下文与引用定位比较四种切分策略。', '同一文档用四种 chunking 会发生什么？比较图。', '固定、结构、语义和父子块用同一问题与指标并列比较。'),
   inventory('visual-context-04-version-acl-delete', ['quiz-context-04-2', 'iq-context-04-2'], '能证明新版本发布与旧版本撤权传播到 chunk、index、cache 和 alias。', '正文更新为何还不是索引更新？传播流程图。', 'v3 发布与 v2 撤权同步传播，任一尚未同步节点阻止 publish。'),
   inventory('visual-context-05-hybrid-signals', ['quiz-context-05-1', 'iq-context-05-1'], '能说明编号查询与语义改写为何需要互补候选通道。', 'Sparse 和 dense 分别看见查询的哪部分？总览图。', 'ZX-17 走词法，energy-saver 描述走语义，两路保留身份后融合。'),
   inventory('visual-context-05-rrf-fusion', ['iq-context-05-1'], '能按 k=60 计算名次贡献，且不混加不同尺度的原始分数。', '两路名次怎样用 RRF 合并？计算机制图。', '显示 sparse/dense rank、倒数贡献和 doc-B 的 0.0325 总分。'),
   inventory('visual-context-05-ann-tradeoff', ['quiz-context-05-2', 'iq-context-05-3'], '能共同比较 ANN recall、p95 latency、内存与更新成本。', '更深 ANN 搜索带来哪些联动代价？比较表。', '三种冻结配置并列，数字只作为课程 fixture，不作产品 benchmark。'),
   inventory('visual-context-06-candidate-evidence-pipeline', ['quiz-context-06-1', 'iq-context-06-1'], '能解释候选在哪一层被过滤、重排、去重或预算排除。', '20 个候选怎样变成 4 条证据？漏斗总览。', '20→14→8→6→4，每层保留数量与排除原因。'),
-  inventory('visual-context-06-rerank-dedup-diversity', ['iq-context-06-2'], '能区分 rerank、版本去重和方面多样性的不同作用。', '排序变化后为何仍需去重和多样性？前后流程图。', '并列 before/after rank，排除旧版重叠并保留金额、例外、审批。'),
+  inventory('visual-context-06-rerank-dedup-diversity', ['iq-context-06-1', 'iq-context-06-2'], '能区分 rerank、版本去重和方面多样性的不同作用。', '排序变化后为何仍需去重和多样性？前后流程图。', '并列 before/after rank，排除旧版重叠并保留金额、例外、审批。'),
   inventory('visual-context-06-provenance-packing', ['quiz-context-06-2', 'iq-context-06-3'], '能把 citationId 映射到真实 observation、callId、hash、source version 与 span。', '证据包怎样同时保留工具真相和引用来源？机制图。', '1500 token 包内连接 observation、调用身份、哈希、版本、span 与 citation。'),
   inventory('visual-context-07-memory-lifecycle', ['quiz-context-07-1', 'iq-context-07-1'], '能把候选准入、active ledger、bounded recall 与三类失效串成生命周期。', '长期记忆从哪里来，又怎样停止召回？总览图。', 'candidate 经过 admission 写入 active，经 projection 使用后可 supersede、expire 或 delete。'),
-  inventory('visual-context-07-admission-conflict', ['quiz-context-07-1', 'iq-context-07-2'], '能把 salience 与 consent、confidence、sensitivity 和 scope 分开裁决。', '什么候选可以 store、reject、no-op 或 supersede？决策树。', '先过治理门，再用 confidence 和 salience 排序，输出带 reasonCode 的动作。'),
+  inventory('visual-context-07-admission-conflict', ['quiz-context-07-1', 'iq-context-07-1'], '能把 salience 与 consent、confidence、sensitivity 和 scope 分开裁决。', '什么候选可以 store、reject、no-op 或 supersede？决策树。', '先过治理门，再用 confidence 和 salience 排序，输出带 reasonCode 的动作。'),
   inventory('visual-context-07-decay-delete', ['quiz-context-07-2', 'iq-context-07-3'], '能区分 relevance decay、TTL、supersession、delete 及其传播承诺。', '记忆变旧、过期、更正和删除有什么不同？时间线。', '1.00→0.65→0.20 衰减，并分别展示 TTL 和删除传播。'),
   inventory('visual-context-08-integrated-flow', ['iq-context-08-3'], '能画出 source 到 answer 的 owners、versions、projections 与反向 citation。', 'RAG、state 与 memory 怎样汇合而不混存？综合总览。', 'source 经检索和证据进入 prompt；state/memory 独立投影，claim 回到 span。'),
   inventory('visual-context-08-graphrag-update-boundary', ['quiz-context-08-2', 'iq-context-08-2'], '能按查询类型选择 GraphRAG 分支，并按变更类型选择增量更新或全量重建。', 'GraphRAG 何时用，更新何时重建？边界比较图。', 'lookup 与 relationship query 分流；内容变化与 schema 变化选择不同更新路径。'),
