@@ -136,22 +136,135 @@ Each visual has exactly one note placement. Its source IDs must resolve through 
 
 ## Verification evidence
 
-The following commands were run from the isolated reconstruction worktree on 2026-07-31. Counts are command results, not estimates.
+The following commands were run from the isolated reconstruction worktree root on 2026-07-31. Each fenced block is the literal copy-pasteable command; counts are command results, not estimates.
 
-| Check and exact command | Exit | Exact result |
-| --- | ---: | --- |
-| Focused Harness contracts: `node --test tests/agent-harness-data.test.js tests/agent-harness-primary-references.test.js tests/agent-harness-visual-data.test.js` | `0` | `25` tests, `25` pass, `0` fail/skipped. This includes the MCP section/source/platform/version contract and the inventory role/outcome/step-inheritance contract. |
-| Shared visual/UI/static contracts: `node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js` | `0` | `110` tests, `110` pass, `0` fail/skipped. |
-| Full repository regression: `npm test` | `0` | `523` tests, `523` pass, `0` fail/skipped. |
-| JavaScript syntax: `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;` | `0` | All `123` discovered JavaScript/module files passed; no diagnostics. |
-| Strict SVG parse: `find assets/visuals/agent-harness -name '*.svg' -print0 \| xargs -0 -n1 xmllint --noout` | `0` | All `27` Harness SVG files parsed; no diagnostics. |
-| Release-marker scan: `rg -n -i 'T[O]DO\|T[B]D\|p[l]aceholder\|待[补]\|未[完成](?:内容\|章节\|素材\|图\|项)\|similar[[:space:]]+to'` over the module, notes, visual registry, audit, and inventory | `1` | No unresolved release-marker matches. The scoped `未完成…` form deliberately excludes legitimate lesson prose about an unfinished run or side effect. |
-| Remote raster/SVG hotlink scan: `rg -n "https?://[^\"'[:space:]]+\.(svg\|png\|jpe?g\|webp)"` over module data, notes, visual registry, and Harness assets | `1` | No matches. |
-| Primary-reference privacy/cache contracts: `node --test tests/primary-references.test.js` | `0` | `36` tests, `36` pass, `0` fail/skipped. |
-| Cache ignore proof: `git check-ignore .research-cache/primary-references/manifest.json` | `0` | Exact output: `.research-cache/primary-references/manifest.json`. |
-| Cache tracking proof: `git ls-files .research-cache` | `0` | No output; no cache file is tracked. |
-| Patch integrity: `git diff --check` | `0` | No whitespace-error output. |
-| Local route/assets smoke: `printf '%s\n' http://127.0.0.1:4173/ http://127.0.0.1:4173/styles/app.css http://127.0.0.1:4173/src/app.js \| xargs -n1 curl -sS -o /dev/null -w '%{url_effective} %{http_code}\n'` | `0` | Exact status lines: `/ 200`, `/styles/app.css 200`, `/src/app.js 200`. |
+### Focused, shared, full, and privacy contracts
+
+```sh
+node --test tests/agent-harness-data.test.js tests/agent-harness-primary-references.test.js tests/agent-harness-visual-data.test.js
+```
+
+Exit `0`: `25` tests, `25` pass, `0` fail/skipped. This includes the MCP section/source/platform/version contract and the inventory role/outcome/step-inheritance contract.
+
+```sh
+node --test tests/knowledge-visual-contract.test.js tests/knowledge-visual-ui.test.js tests/static-svg.test.js tests/guided-ui.test.js tests/visual-registry-ownership.test.js tests/static-app.test.js
+```
+
+Exit `0`: `110` tests, `110` pass, `0` fail/skipped.
+
+```sh
+npm test
+```
+
+Exit `0`: `523` tests, `523` pass, `0` fail/skipped.
+
+```sh
+node --test tests/primary-references.test.js
+```
+
+Exit `0`: `36` tests, `36` pass, `0` fail/skipped.
+
+### JavaScript syntax
+
+```sh
+find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;
+```
+
+Exit `0`: no syntax diagnostics.
+
+```sh
+find src tests scripts -type f \( -name '*.js' -o -name '*.mjs' \) | wc -l
+```
+
+Exit `0`; exact trimmed output `123`, establishing the checked JavaScript/module file count.
+
+### Harness SVG XML and static-security gates
+
+```sh
+find assets/visuals/agent-harness -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
+```
+
+Exit `0`: no XML diagnostics.
+
+```sh
+find assets/visuals/agent-harness -name '*.svg' | wc -l
+```
+
+Exit `0`; exact trimmed output `27`, establishing the Harness SVG count covered by the XML command.
+
+```sh
+node --test tests/agent-harness-visual-data.test.js tests/static-svg.test.js
+```
+
+Exit `0`: `14` tests, `14` pass, `0` fail/skipped. The Harness visual-data test resolves and applies `assertSafeStaticSvg` to every primary and step asset path, while the static-SVG suite exercises active-content, remote-reference, malformed-XML, IDREF, ARIA, and character-data rejection.
+
+### Release-marker and remote-hotlink scans
+
+```sh
+rg -n -i 'T[O]DO|T[B]D|p[l]aceholder|待[补]|未[完成](?:内容|章节|素材|图|项)|similar[[:space:]]+to' src/data/agent-harness.js src/data/agent-harness-notes src/data/visuals/agent-harness-visuals.js docs/content-audits/2026-07-30-agent-harness-primary-reference-reconstruction.md docs/research/2026-07-30-agent-harness-visual-inventory.md
+```
+
+Exit `1`, no output: `rg` found no unresolved release-marker match. The scoped `未完成…` form deliberately excludes legitimate lesson prose about an unfinished run or side effect.
+
+```sh
+rg -n "https?://[^\"'[:space:]]+\.(svg|png|jpe?g|webp)" src/data/agent-harness.js src/data/agent-harness-notes src/data/visuals/agent-harness-visuals.js assets/visuals/agent-harness
+```
+
+Exit `1`, no output: `rg` found no remote raster/SVG hotlink.
+
+### Private-cache, full-range diff, branch, and worktree state
+
+```sh
+git check-ignore .research-cache/primary-references/manifest.json
+```
+
+Exit `0`; exact output `.research-cache/primary-references/manifest.json`.
+
+```sh
+git ls-files .research-cache
+```
+
+Exit `0`, no output: no private-cache file is tracked.
+
+```sh
+git diff --check 772dffbf968876289cd2c25b18c5216c06c54284..HEAD
+```
+
+Exit `0`, no output: the complete baseline-to-current-HEAD reconstruction range has no whitespace errors.
+
+```sh
+git branch --show-current
+```
+
+Exit `0`; exact output `feat/primary-reference-reconstruction`.
+
+```sh
+git status --short
+```
+
+Exit `0`, no output: the committed worktree is clean.
+
+### Local route and asset smoke
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1
+```
+
+The server emitted `Serving HTTP on 127.0.0.1 port 4173 (http://127.0.0.1:4173/) ...`.
+
+```sh
+printf '%s\n' http://127.0.0.1:4173/ http://127.0.0.1:4173/styles/app.css http://127.0.0.1:4173/src/app.js | xargs -n1 curl -sS -o /dev/null -w '%{url_effective} %{http_code}\n'
+```
+
+Exit `0`; exact output:
+
+```text
+http://127.0.0.1:4173/ 200
+http://127.0.0.1:4173/styles/app.css 200
+http://127.0.0.1:4173/src/app.js 200
+```
+
+Sending `Ctrl-C` to the server emitted `Keyboard interrupt received, exiting.` and the server process completed with exit `0`.
 
 ## Browser check record
 
