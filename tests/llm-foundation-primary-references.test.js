@@ -112,9 +112,17 @@ const expectedAssessmentOutcomes = Object.freeze({
   'quiz-llm-08-1': ['injection-defense', 'model-application-boundary'],
   'quiz-llm-08-2': ['eval-funnel'],
   'iq-llm-01-1': ['field-map', 'model-boundary'],
-  'iq-llm-01-2': ['training-inference-boundary'],
+  'iq-llm-01-2': [
+    'training-inference-boundary',
+    'autoregressive-generation',
+  ],
   'iq-llm-01-3': ['application-diagnosis'],
-  'iq-llm-02-1': ['training-cycle', 'backpropagation', 'optimizer'],
+  'iq-llm-02-1': [
+    'training-cycle',
+    'backpropagation',
+    'optimizer',
+    'learning-rate',
+  ],
   'iq-llm-02-2': ['activation'],
   'iq-llm-02-3': ['generalization'],
   'iq-llm-03-1': ['tokenization'],
@@ -126,7 +134,11 @@ const expectedAssessmentOutcomes = Object.freeze({
   'iq-llm-05-1': ['training-stages', 'preference-boundary'],
   'iq-llm-05-2': ['method-selection', 'rag-finetuning'],
   'iq-llm-05-3': ['lora'],
-  'iq-llm-06-1': ['logit-softmax', 'temperature-top-p'],
+  'iq-llm-06-1': [
+    'logit-softmax',
+    'temperature-top-p',
+    'sampling-loop',
+  ],
   'iq-llm-06-2': ['kv-cache', 'latency-cost'],
   'iq-llm-06-3': ['latency-cost'],
   'iq-llm-07-1': [
@@ -427,6 +439,117 @@ test('publishes real assessment concept tags and closes visual learning outcomes
       const visualTags = llmFoundation.outcomeRegistry.visuals[visualId];
       assert.ok(visualTags?.length > 0, visualId);
     }
+  }
+});
+
+test('closes assessment and visual outcomes in both directions with exact semantic edges', () => {
+  const assessments = [
+    ...llmFoundation.lessons.flatMap((lesson) => lesson.quiz.map((assessment) => ({
+      ...assessment,
+      lessonId: lesson.id,
+    }))),
+    ...llmFoundation.interviewQuestions,
+  ];
+  const assessmentIds = assessments.map(({ id }) => id);
+  const assessmentById = new Map(
+    assessments.map((assessment) => [assessment.id, assessment]),
+  );
+  const coverage = llmFoundation.outcomeRegistry.assessmentVisualCoverage;
+  const visualOutcomes = llmFoundation.outcomeRegistry.visuals;
+  const visualLessonById = new Map();
+  const assessmentText = (assessmentId) => {
+    const assessment = assessmentById.get(assessmentId);
+    return [
+      assessment.question,
+      assessment.shortAnswer,
+      ...(assessment.deepDive ?? []),
+      ...(assessment.followUps ?? []),
+    ].join('\n');
+  };
+
+  for (const lesson of llmFoundation.lessons) {
+    const visualIds = [
+      lesson.knowledgeNote.overviewVisualId,
+      ...lesson.knowledgeNote.sections.flatMap(
+        ({ visuals = [] }) => visuals.map(({ visualId }) => visualId),
+      ),
+    ];
+    for (const visualId of visualIds) {
+      assert.equal(
+        visualLessonById.has(visualId),
+        false,
+        `${visualId}: visual placement is duplicated across lessons`,
+      );
+      visualLessonById.set(visualId, lesson.id);
+    }
+  }
+
+  assert.equal(new Set(assessmentIds).size, assessmentIds.length);
+  assert.deepEqual(
+    Object.keys(coverage).sort(),
+    [...assessmentIds].sort(),
+    'coverage must contain every real assessment and no ghost assessment',
+  );
+  assert.deepEqual(
+    Object.keys(llmFoundation.outcomeRegistry.assessments).sort(),
+    [...assessmentIds].sort(),
+    'assessment registry must contain every real assessment and no ghost assessment',
+  );
+  assert.deepEqual(
+    [...visualLessonById.keys()].sort(),
+    Object.keys(visualOutcomes).sort(),
+    'visual outcome registry must contain every placed visual and no ghost visual',
+  );
+  assert.match(
+    assessmentText('iq-llm-01-2'),
+    /自回归.*逐 token|逐 token.*自回归/s,
+    'autoregressive-generation must be stated by the assessment, not only tagged',
+  );
+  assert.match(
+    assessmentText('iq-llm-02-1'),
+    /学习率.*过小.*过大|过小.*学习率.*过大/s,
+    'learning-rate must be stated by the assessment, not only tagged',
+  );
+  assert.match(
+    assessmentText('iq-llm-06-1'),
+    /logits.*temperature.*softmax.*top-p.*采样.*追加.*停止/s,
+    'sampling-loop must be stated end to end by the assessment, not only tagged',
+  );
+
+  const assessmentIdsByVisual = new Map(
+    Object.keys(visualOutcomes).map((visualId) => [visualId, []]),
+  );
+  for (const [assessmentId, visualIds] of Object.entries(coverage)) {
+    const assessment = assessmentById.get(assessmentId);
+    assert.ok(assessment, `${assessmentId}: coverage names a ghost assessment`);
+    assert.equal(
+      new Set(visualIds).size,
+      visualIds.length,
+      `${assessmentId}: coverage repeats a visual`,
+    );
+    assert.ok(visualIds.length > 0, `${assessmentId}: has no visual coverage`);
+
+    for (const visualId of visualIds) {
+      const visualTags = visualOutcomes[visualId];
+      assert.ok(visualTags, `${assessmentId}: names ghost visual ${visualId}`);
+      assert.equal(
+        visualLessonById.get(visualId),
+        assessment.lessonId,
+        `${assessmentId} -> ${visualId}: crosses lesson ownership`,
+      );
+      assert.ok(
+        assessment.conceptTags.some((tag) => visualTags.includes(tag)),
+        `${assessmentId} -> ${visualId}: has no exact outcome-tag intersection`,
+      );
+      assessmentIdsByVisual.get(visualId).push(assessmentId);
+    }
+  }
+
+  for (const [visualId, coveringAssessmentIds] of assessmentIdsByVisual) {
+    assert.ok(
+      coveringAssessmentIds.length > 0,
+      `${visualId}: no same-lesson assessment explicitly covers this visual`,
+    );
   }
 });
 

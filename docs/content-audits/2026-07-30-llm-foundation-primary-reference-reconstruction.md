@@ -8,7 +8,7 @@
 - 权威核验：Attention 与 Transformer 公式继续由原论文和可核验教材支撑；API、安全、评测与产品行为继续由官方资料或目标系统实测约束。
 - 内容形态：八篇笔记仍是递进知识文章，一级来源进入真实 section 的 `sourceIds`，不是尾部链接列表。
 - 视觉形态：40 张主视觉和 12 张分步 SVG 全部保留为原创重绘，没有下载或复制第三方图表，没有热链或 data URI。
-- 学习闭环：40 个 assessment 与 40 个主视觉分别使用精确 outcome allow-set；`assessmentVisualCoverage` 逐题声明真正承担对应概念的视觉，禁止用任意相交 tag 伪造覆盖。
+- 学习闭环：40 个 assessment 与 40 个主视觉分别使用精确 outcome allow-set；`assessmentVisualCoverage` 逐题声明真正承担对应概念的视觉，并保证 40 / 40 主视觉都能反向追溯到至少一道同课 assessment。映射不存在重复或幽灵 ID，每条 assessment→visual 边都必须有精确 outcome tag 交集，禁止用多个无关视觉的 tag 并集伪造覆盖。
 
 ## 来源影响决策
 
@@ -117,7 +117,7 @@
 
 ## 质量评分
 
-正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 使用逐题精确 conceptTags，并由显式视觉覆盖表闭环。
+正文评分采用五项：知识完整性 20、因果结构 20、来源作用域 20、误区和边界 20、练习与测评闭环 20。结果为 **93 / 100**：八课均覆盖指定主干；所有一级来源进入真实 section；飞书观察均声明非通用事实；quiz 和 interview 使用逐题精确 conceptTags，并由显式视觉覆盖表双向闭环。反向复审补强了 `iq-llm-01-2` 的训练闭环与自回归逐 token 生成、`iq-llm-02-1` 的学习率轨迹、`iq-llm-06-1` 的完整 sampling loop 题意，没有仅为通过 registry 而挂载宽泛 tag。
 
 视觉评分采用六项，每项 10 分：语义正确 10、叙事一致 10、caption/labels/alt/longDescription 一致 9、来源与许可 10、静态安全 10、几何与可读性 9，合计 **58 / 60**，每类均不低于 8。扣分只反映静态检查不能替代真实浏览器在所有字体和缩放组合下的人工验收，不代表发现已知碰撞。
 
@@ -125,9 +125,9 @@
 
 以下均为本工作树中的实际命令结果，不以预期值替代运行证据：
 
-- 一级来源、稳定身份、八课概念主干、测评 outcome 与 Markdown 审计契约：5 / 5 通过。
-- LLM visual、inventory、visible semantics、geometry、静态安全与 ownership 聚焦套件：157 / 157 通过。
-- 全量 `npm test`：565 / 565 通过。
+- 一级来源、稳定身份、八课概念主干、双向测评 outcome 与 Markdown 审计契约：6 / 6 通过。
+- LLM visual、inventory、visible semantics、geometry、静态安全与 ownership 聚焦套件：161 / 161 通过。
+- 全量 `npm test`：566 / 566 通过。
 - 52 个本地 SVG 经 `xmllint --noout`：52 / 52 通过；主动内容与 hotlink 定向扫描无命中。
 - 变更文件 marker 与隐私定向扫描无命中；`git ls-files .research-cache` 为空。
 - 模块、八篇 note 和变更测试经 `node --check` 通过；`npm run check:primary-references` 与 `npm run check:context-visuals` 均为 current；`git diff --check` 无输出。
