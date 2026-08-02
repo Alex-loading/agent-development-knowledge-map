@@ -5,6 +5,7 @@ import {
   agentMechanismVisualOutcomes,
 } from './agent-mechanism-outcomes.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
+import { agentMechanismVisuals } from './visuals/agent-mechanism-visuals.js';
 
 const VERIFIED_AT = '2026-07-22';
 
@@ -587,58 +588,90 @@ const sourceImpactClaims = [
   {
     id: 'agent-is-bounded-decision-authority',
     lessonId: 'agent-01',
+    sectionId: 'control-authority-spectrum',
     text: '决策位置区分 model、app、workflow 与 Agent：model 生成候选，app 和 workflow 固定控制路径，Agent 只在宿主授予的有界权限内依据 state、action 与 feedback 选路。',
     sourceIds: ['res-agent-primary-javaguide-agent-basis', 'res-agent-primary-feishu-beyond-model'],
     semanticKeys: ['agency-boundary'],
+    outcomeTags: ['agency-boundary'],
+    assessmentIds: ['quiz-agent-01-1', 'iq-agent-01-1'],
+    visualIds: ['visual-agent-01-boundary-spectrum'],
   },
   {
     id: 'task-plan-is-not-durable-state',
     lessonId: 'agent-02',
+    sectionId: 'request-to-task-contract',
     text: '自然语言计划是可修订建议，不是耐久事实源；状态机约束合法迁移，append-only event log 保存 action、observation 与状态差异，success predicate 和 termination 决定 continue 或 stop。',
     sourceIds: ['res-agent-primary-javaguide-prompt', 'res-agent-primary-feishu-react-loop'],
     semanticKeys: ['task-state'],
+    outcomeTags: ['durable-state'],
+    assessmentIds: ['iq-agent-02-3'],
+    visualIds: ['visual-agent-02-state-event-log'],
   },
   {
     id: 'tool-call-is-not-execution-proof',
     lessonId: 'agent-03',
+    sectionId: 'tool-declaration-contract',
     text: '可信工具链包含 definition、schema、discovery、selection、auth、execution 与 observation；模型输出 tool call 只产生候选，真实执行、权限和结果由宿主日志证明。',
     sourceIds: ['res-agent-primary-javaguide-mcp', 'res-agent-primary-feishu-tool-truth'],
     semanticKeys: ['tool-truth'],
+    outcomeTags: ['tool-truth'],
+    assessmentIds: ['quiz-agent-03-2', 'iq-agent-03-2', 'iq-agent-03-3'],
+    visualIds: ['visual-agent-03-tool-protocol', 'visual-agent-03-skills-mcp-boundary'],
   },
   {
     id: 'react-does-not-require-private-cot',
     lessonId: 'agent-04',
+    sectionId: 'react-boundary-and-observable-logging',
     text: 'ReAct 保留 reason、action、observation 的控制顺序，但审计记录使用决策摘要、证据引用和结构化动作，不要求保存或泄露 private CoT。',
     sourceIds: ['res-agent-primary-feishu-react-loop', 'res-agent-react-paper'],
     semanticKeys: ['react-loop'],
+    outcomeTags: ['react-cycle', 'private-reasoning-boundary'],
+    assessmentIds: ['iq-agent-04-2'],
+    visualIds: ['visual-agent-04-react-cycle'],
   },
   {
     id: 'planning-mode-follows-uncertainty',
     lessonId: 'agent-05',
+    sectionId: 'choose-planning-by-task-structure',
     text: '在 direct、plan-then-act、replan 与 workflow graph 之间选择，取决于依赖何时可知、观察是否改变路径以及不确定性；orchestration 再处理并行、委派与汇合核验。',
     sourceIds: ['res-agent-primary-javaguide-workflow-loop', 'res-agent-primary-feishu-react-orchestration'],
     semanticKeys: ['orchestration'],
+    outcomeTags: ['orchestration'],
+    assessmentIds: ['iq-agent-05-2'],
+    visualIds: ['visual-agent-05-orchestration-graph'],
   },
   {
     id: 'reflection-is-not-proof',
     lessonId: 'agent-06',
+    sectionId: 'external-validation-stack',
     text: '纠错阶梯区分 retry、replan、reflection 与 external validation：reflection 只能形成下一次修订假设，不是 proof，测试、规则、环境状态或人工反馈才提供独立证据。',
     sourceIds: ['res-agent-primary-javaguide-loop-engineering', 'res-agent-critic', 'res-agent-no-self-correct'],
     semanticKeys: ['external-validation'],
+    outcomeTags: ['external-validation'],
+    assessmentIds: ['quiz-agent-06-2', 'iq-agent-06-2'],
+    visualIds: ['visual-agent-06-correction-ladder'],
   },
   {
     id: 'context-compression-must-preserve-provenance',
     lessonId: 'agent-07',
+    sectionId: 'information-carriers-and-lifecycles',
     text: 'transcript、scratchpad、plan state、retrieved evidence 与 long-term memory 分属不同对象；预算、压缩和 offload 必须保留 provenance、版本、有效期与原文回取入口。',
     sourceIds: ['res-agent-primary-javaguide-context', 'res-agent-primary-feishu-prompt-memory'],
     semanticKeys: ['context-provenance'],
+    outcomeTags: ['context-provenance'],
+    assessmentIds: ['quiz-agent-07-2', 'iq-agent-07-2', 'iq-agent-07-3'],
+    visualIds: ['visual-agent-07-provenance-budget'],
   },
   {
     id: 'end-to-end-agent-needs-pressure-matrix',
     lessonId: 'agent-08',
+    sectionId: 'capstone-architecture-and-trust-boundaries',
     text: '端到端 single-Agent 在发布前必须用压力矩阵覆盖 tool failure、ambiguous success、stale context、unauthorized action、loop、version drift 与 evaluation，并证明受控出口。',
     sourceIds: ['res-agent-primary-javaguide-agent-basis', 'res-agent-primary-feishu-agent-version'],
     semanticKeys: ['pressure-test'],
+    outcomeTags: ['pressure-test'],
+    assessmentIds: ['iq-agent-08-1', 'iq-agent-08-3'],
+    visualIds: ['visual-agent-08-pressure-matrix'],
   },
 ];
 
@@ -648,28 +681,50 @@ export function resolveAgentSourceImpactTarget(targetId) {
   }
   const claim = sourceImpactClaims.find(({ id }) => id === targetId.slice(6));
   if (!claim) throw new RangeError(`Unknown Agent source-impact target: ${targetId}`);
-  return Object.freeze({
+  const lesson = lessons.find(({ id }) => id === claim.lessonId);
+  const section = lesson?.knowledgeNote.sections.find(({ id }) => id === claim.sectionId);
+  if (!section) throw new RangeError(`Unknown Agent source-impact section: ${claim.sectionId}`);
+  const assessments = claim.assessmentIds.map((id) => {
+    const outcome = outcomeRegistry.assessments[id];
+    if (!outcome) throw new RangeError(`Unknown Agent source-impact assessment: ${id}`);
+    return { id, ...outcome };
+  });
+  const visuals = claim.visualIds.map((id) => {
+    const visual = agentMechanismVisuals.find((entry) => entry.id === id);
+    const outcomeTags = outcomeRegistry.visuals[id];
+    if (!visual || !outcomeTags) {
+      throw new RangeError(`Unknown Agent source-impact visual: ${id}`);
+    }
+    return { id, lessonId: visual.lessonId, outcomeTags };
+  });
+  return deepFreeze({
     type: 'claim',
     lessonId: claim.lessonId,
-    resourceIds: claim.sourceIds,
+    resourceIds: section.sourceIds,
     semanticKeys: claim.semanticKeys,
     value: claim,
+    section,
+    outcomes: {
+      tags: claim.outcomeTags,
+      assessments,
+      visuals,
+    },
   });
 }
 
 const sourceImpactSpecs = [
-  ['impact-agent-01-boundary', 'agent-01', 'res-agent-primary-feishu-beyond-model', 'agent-is-bounded-decision-authority', 'agency-boundary', 'corrected', 'Agent 自治被重写为决策位置与有界权限，而不是模型获得任意执行权。'],
-  ['impact-agent-02-task-state', 'agent-02', 'res-agent-primary-javaguide-prompt', 'task-plan-is-not-durable-state', 'task-state', 'deepened', '把 Agent 计划深化为任务契约、状态机、事件日志和显式终止的组合。'],
-  ['impact-agent-03-tool-truth', 'agent-03', 'res-agent-primary-feishu-tool-truth', 'tool-call-is-not-execution-proof', 'tool-truth', 'corrected', '修正工具调用文本等于真实执行的误区，以宿主 observation 和日志为准。'],
-  ['impact-agent-04-react', 'agent-04', 'res-agent-primary-feishu-react-loop', 'react-does-not-require-private-cot', 'react-loop', 'corrected', '保留 ReAct 的行动结构，同时拒绝把 private CoT 当作必需审计产物。'],
-  ['impact-agent-05-orchestration', 'agent-05', 'res-agent-primary-feishu-react-orchestration', 'planning-mode-follows-uncertainty', 'orchestration', 'adopted', '以不确定性和依赖关系组织 Agent 规划、重规划与编排模式。'],
-  ['impact-agent-06-validation', 'agent-06', 'res-agent-primary-javaguide-loop-engineering', 'reflection-is-not-proof', 'external-validation', 'corrected', '把 Agent 反思降级为修订候选，并以外部验证关闭证据环。'],
-  ['impact-agent-07-provenance', 'agent-07', 'res-agent-primary-feishu-prompt-memory', 'context-compression-must-preserve-provenance', 'context-provenance', 'deepened', '把 Agent 上下文压缩深化为保留来源、版本、有效期与回取入口的投影。'],
-  ['impact-agent-08-pressure', 'agent-08', 'res-agent-primary-feishu-agent-version', 'end-to-end-agent-needs-pressure-matrix', 'pressure-test', 'adopted', '为单 Agent 端到端设计加入工具失败、成功歧义、漂移与越权压力测试。'],
+  ['impact-agent-01-boundary', 'agent-01', 'res-agent-primary-feishu-beyond-model', 'agent-is-bounded-decision-authority', 'control-authority-spectrum', 'agency-boundary', 'corrected', 'Agent 自治被重写为决策位置与有界权限，而不是模型获得任意执行权。'],
+  ['impact-agent-02-task-state', 'agent-02', 'res-agent-primary-javaguide-prompt', 'task-plan-is-not-durable-state', 'request-to-task-contract', 'task-state', 'deepened', '把 Agent 计划深化为任务契约、状态机、事件日志和显式终止的组合。'],
+  ['impact-agent-03-tool-truth', 'agent-03', 'res-agent-primary-feishu-tool-truth', 'tool-call-is-not-execution-proof', 'tool-declaration-contract', 'tool-truth', 'corrected', '修正工具调用文本等于真实执行的误区，以宿主 observation 和日志为准。'],
+  ['impact-agent-04-react', 'agent-04', 'res-agent-primary-feishu-react-loop', 'react-does-not-require-private-cot', 'react-boundary-and-observable-logging', 'react-loop', 'corrected', '保留 ReAct 的行动结构，同时拒绝把 private CoT 当作必需审计产物。'],
+  ['impact-agent-05-orchestration', 'agent-05', 'res-agent-primary-feishu-react-orchestration', 'planning-mode-follows-uncertainty', 'choose-planning-by-task-structure', 'orchestration', 'adopted', '以不确定性和依赖关系组织 Agent 规划、重规划与编排模式。'],
+  ['impact-agent-06-validation', 'agent-06', 'res-agent-primary-javaguide-loop-engineering', 'reflection-is-not-proof', 'external-validation-stack', 'external-validation', 'corrected', '把 Agent 反思降级为修订候选，并以外部验证关闭证据环。'],
+  ['impact-agent-07-provenance', 'agent-07', 'res-agent-primary-feishu-prompt-memory', 'context-compression-must-preserve-provenance', 'information-carriers-and-lifecycles', 'context-provenance', 'deepened', '把 Agent 上下文压缩深化为保留来源、版本、有效期与回取入口的投影。'],
+  ['impact-agent-08-pressure', 'agent-08', 'res-agent-primary-feishu-agent-version', 'end-to-end-agent-needs-pressure-matrix', 'capstone-architecture-and-trust-boundaries', 'pressure-test', 'adopted', '为单 Agent 端到端设计加入工具失败、成功歧义、漂移与越权压力测试。'],
 ];
 
 const sourceImpactAudit = sourceImpactSpecs.map(([
-  decisionId, lessonId, resourceId, claimId, semanticKey, contribution, summary,
+  decisionId, lessonId, resourceId, claimId, sectionId, semanticKey, contribution, summary,
 ]) => ({
   decisionId,
   lessonId,
@@ -677,6 +732,7 @@ const sourceImpactAudit = sourceImpactSpecs.map(([
   scope: 'claim',
   targetType: 'claim',
   targetId: `claim:${claimId}`,
+  sectionId,
   semanticKey,
   contribution,
   summary,

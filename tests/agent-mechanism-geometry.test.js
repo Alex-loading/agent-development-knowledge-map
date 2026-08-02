@@ -66,6 +66,30 @@ function segmentIntersectsInterior([[x1, y1], [x2, y2]], rectangle) {
     && Math.min(x1, x2) < rectangle.right;
 }
 
+function collinearOverlap(first, second) {
+  const [[firstX1, firstY1], [firstX2, firstY2]] = first;
+  const [[secondX1, secondY1], [secondX2, secondY2]] = second;
+  const firstHorizontal = firstY1 === firstY2;
+  const secondHorizontal = secondY1 === secondY2;
+  if (firstHorizontal && secondHorizontal && firstY1 === secondY1) {
+    return Math.min(Math.max(firstX1, firstX2), Math.max(secondX1, secondX2))
+      - Math.max(Math.min(firstX1, firstX2), Math.min(secondX1, secondX2)) > 0;
+  }
+  const firstVertical = firstX1 === firstX2;
+  const secondVertical = secondX1 === secondX2;
+  if (firstVertical && secondVertical && firstX1 === secondX1) {
+    return Math.min(Math.max(firstY1, firstY2), Math.max(secondY1, secondY2))
+      - Math.max(Math.min(firstY1, firstY2), Math.min(secondY1, secondY2)) > 0;
+  }
+  return false;
+}
+
+const reservedTextRegions = [
+  { id: 'title', left: 54, right: 1146, top: 65, bottom: 108 },
+  { id: 'subtitle', left: 54, right: 1146, top: 116, bottom: 142 },
+  { id: 'caption-and-footer', left: 54, right: 1146, top: 584, bottom: 624 },
+];
+
 function assertDeepFrozen(value, seen = new Set()) {
   if (value === null || typeof value !== 'object' || seen.has(value)) return;
   seen.add(value);
@@ -197,6 +221,79 @@ test('rendered graph routes avoid non-endpoint nodes and edge labels do not coll
       for (const other of labelRectangles.slice(index + 1)) {
         assert.equal(overlaps(label, other), false, `${scene.id}/${label.id} overlaps ${other.id}`);
       }
+    }
+  }
+});
+
+test('production edge labels stay outside title, subtitle, caption, and footer reserves', () => {
+  for (const visual of agentMechanismVisuals) {
+    const scene = getAgentMechanismScene(visual.id);
+    if (!scene.nodes) continue;
+    const parsed = parseStrictSvg(renderAgentMechanismSvg(visual, scene), visual.id);
+    const labelRectangles = elements(
+      parsed,
+      (node) => node.attributes.has('data-edge-label'),
+    ).map((group) => {
+      const rectangle = group.children.find(({ name }) => name === 'rect');
+      return {
+        id: group.attributes.get('data-edge-label'),
+        left: numeric(rectangle, 'x'),
+        right: numeric(rectangle, 'x') + numeric(rectangle, 'width'),
+        top: numeric(rectangle, 'y'),
+        bottom: numeric(rectangle, 'y') + numeric(rectangle, 'height'),
+      };
+    });
+    for (const label of labelRectangles) {
+      for (const reserved of reservedTextRegions) {
+        assert.equal(
+          overlaps(label, reserved),
+          false,
+          `${scene.id}/${label.id} overlaps ${reserved.id}`,
+        );
+      }
+    }
+  }
+});
+
+test('production edges share endpoints but never reuse collinear segments', () => {
+  for (const visual of agentMechanismVisuals) {
+    const scene = getAgentMechanismScene(visual.id);
+    if (!scene.nodes) continue;
+    for (const [edgeIndex, edge] of scene.edges.entries()) {
+      for (const other of scene.edges.slice(edgeIndex + 1)) {
+        for (const firstSegment of segments({ attributes: new Map([[
+          'points', edge.points.map((point) => point.join(',')).join(' '),
+        ]]) })) {
+          for (const secondSegment of segments({ attributes: new Map([[
+            'points', other.points.map((point) => point.join(',')).join(' '),
+          ]]) })) {
+            assert.equal(
+              collinearOverlap(firstSegment, secondSegment),
+              false,
+              `${scene.id}/${edge.id} overlaps ${other.id}`,
+            );
+          }
+        }
+      }
+    }
+  }
+});
+
+test('orchestration fork label clears the subtitle and end-to-end feedback clears forward flow', () => {
+  const orchestration = getAgentMechanismScene('visual-agent-05-orchestration-graph');
+  const forkLabel = orchestration.edges.find(({ id }) => id === 'decompose-a').labelAt;
+  assert.ok(forkLabel[1] - 13 >= reservedTextRegions[1].bottom);
+
+  const endToEnd = getAgentMechanismScene('visual-agent-08-end-to-end');
+  const forward = endToEnd.edges.find(({ id }) => id === 'tools-validator');
+  const feedback = endToEnd.edges.find(({ id }) => id === 'validator-loop');
+  for (const firstSegment of segments({ attributes: new Map([[
+    'points', forward.points.map((point) => point.join(',')).join(' '),
+  ]]) })) {
+    for (const secondSegment of segments({ attributes: new Map([[
+      'points', feedback.points.map((point) => point.join(',')).join(' '),
+    ]]) })) {
+      assert.equal(collinearOverlap(firstSegment, secondSegment), false);
     }
   }
 });

@@ -53,6 +53,23 @@ function assessmentText(assessment) {
   ].filter(Boolean).join(' ');
 }
 
+function sourceImpactSectionText(section) {
+  return [section.title, ...section.paragraphs, ...section.keyPoints].join(' ');
+}
+
+function satisfiesSourceImpactContract(decision, resolved, contract) {
+  return resolved.lessonId === decision.lessonId
+    && resolved.section.id === decision.sectionId
+    && resolved.section.sourceIds.includes(decision.resourceId)
+    && contract.targetPatterns.some(
+      (pattern) => pattern.test(JSON.stringify(resolved.value)),
+    )
+    && contract.sectionPatterns.some(
+      (pattern) => pattern.test(sourceImpactSectionText(resolved.section)),
+    )
+    && contract.summaryPatterns.some((pattern) => pattern.test(decision.summary));
+}
+
 function assertContracts(assessments, contracts) {
   assert.deepEqual(new Set(assessments.map(({ id }) => id)), new Set(Object.keys(contracts)));
   for (const assessment of assessments) {
@@ -190,7 +207,7 @@ test('source impact decisions strictly own independently anchored targets and su
     assert.ok(approved.has(decision.contribution), decision.decisionId);
     for (const field of [
       'lessonId', 'resourceId', 'targetId', 'targetType',
-      'scope', 'semanticKey', 'contribution',
+      'scope', 'sectionId', 'semanticKey', 'contribution',
     ]) {
       assert.equal(decision[field], contract[field], `${decision.decisionId}:${field}`);
     }
@@ -204,33 +221,94 @@ test('source impact decisions strictly own independently anchored targets and su
     assert.equal(resolved.lessonId, decision.lessonId);
     assert.ok(resolved.resourceIds.includes(decision.resourceId));
     assert.ok(resolved.semanticKeys.includes(decision.semanticKey));
+    assert.equal(resolved.section.id, decision.sectionId);
+    assert.equal(resolved.section.id, contract.sectionId);
+    assert.ok(resolved.section.sourceIds.includes(decision.resourceId));
     assert.ok(
       contract.targetPatterns.some((pattern) => pattern.test(JSON.stringify(resolved.value))),
       decision.targetId,
     );
     assert.ok(
+      contract.sectionPatterns.some((pattern) => pattern.test(sourceImpactSectionText(resolved.section))),
+      `${decision.decisionId}:section`,
+    );
+    assert.ok(
       contract.summaryPatterns.some((pattern) => pattern.test(decision.summary)),
       `${decision.decisionId}:summary`,
     );
+    assert.deepEqual(resolved.outcomes.tags, contract.outcomeTags);
+    assert.deepEqual(
+      resolved.outcomes.assessments.map(({ id }) => id),
+      contract.assessmentIds,
+    );
+    assert.deepEqual(
+      resolved.outcomes.visuals.map(({ id }) => id),
+      contract.visualIds,
+    );
+    for (const assessment of resolved.outcomes.assessments) {
+      assert.ok(
+        assessment.outcomeTags.some((tag) => contract.outcomeTags.includes(tag)),
+        `${decision.decisionId}:${assessment.id}`,
+      );
+    }
+    for (const visual of resolved.outcomes.visuals) {
+      assert.ok(
+        visual.outcomeTags.some((tag) => contract.outcomeTags.includes(tag)),
+        `${decision.decisionId}:${visual.id}`,
+      );
+    }
   }
   assert.throws(() => resolveAgentSourceImpactTarget('claim:not-real'), /Unknown/);
 });
 
-test('unrelated HTTP and ETag mutations fail both source-impact semantic contracts', () => {
+test('target, summary, real section text, and section ownership mutations all fail', () => {
   for (const decision of agentMechanism.sourceImpactAudit) {
     const contract = agentSourceImpactDecisionEvidence[decision.decisionId];
     const resolved = resolveAgentSourceImpactTarget(decision.targetId);
     const targetMutation = { ...resolved.value, text: irrelevantImpactMutation };
     const summaryMutation = { ...decision, summary: irrelevantImpactMutation };
+    const sectionTextMutation = {
+      ...resolved.section,
+      title: irrelevantImpactMutation,
+      paragraphs: [irrelevantImpactMutation],
+      keyPoints: [irrelevantImpactMutation],
+    };
+    const sectionSourceMutation = {
+      ...resolved.section,
+      sourceIds: resolved.section.sourceIds.filter((id) => id !== decision.resourceId),
+    };
+    assert.equal(satisfiesSourceImpactContract(decision, resolved, contract), true);
     assert.equal(
-      contract.targetPatterns.some((pattern) => pattern.test(JSON.stringify(targetMutation))),
+      satisfiesSourceImpactContract(
+        decision,
+        { ...resolved, value: targetMutation },
+        contract,
+      ),
       false,
       `${decision.decisionId}: target mutation`,
     );
     assert.equal(
-      contract.summaryPatterns.some((pattern) => pattern.test(summaryMutation.summary)),
+      satisfiesSourceImpactContract(summaryMutation, resolved, contract),
       false,
       `${decision.decisionId}: summary mutation`,
+    );
+    assert.equal(
+      satisfiesSourceImpactContract(
+        decision,
+        { ...resolved, section: sectionTextMutation },
+        contract,
+      ),
+      false,
+      `${decision.decisionId}: section text mutation`,
+    );
+    assert.equal(
+      satisfiesSourceImpactContract(
+        decision,
+        { ...resolved, section: sectionSourceMutation },
+        contract,
+      ),
+      false,
+      `${decision.decisionId}: section source mutation`,
     );
   }
 });

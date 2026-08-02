@@ -45,38 +45,3 @@ export const agentAssessmentTextEvidence = Object.freeze({
   'iq-agent-08-2': { 'end-to-end-agent': evidence(/框架.*状态.*工具.*验证/s) },
   'iq-agent-08-3': { 'pressure-test': evidence(/Harness.*RAG.*MCP.*多 Agent/s) },
 });
-
-export const agentSourceImpactTextEvidence = Object.freeze({
-  'claim:agent-is-bounded-decision-authority': {
-    semanticKey: 'agency-boundary',
-    patterns: evidence(/决策位置.*model.*app.*workflow.*Agent.*有界权限/is),
-  },
-  'claim:task-plan-is-not-durable-state': {
-    semanticKey: 'task-state',
-    patterns: evidence(/自然语言计划.*状态机.*event log.*(?:termination|终止)/s),
-  },
-  'claim:tool-call-is-not-execution-proof': {
-    semanticKey: 'tool-truth',
-    patterns: evidence(/definition.*schema.*auth.*execution.*observation/is),
-  },
-  'claim:react-does-not-require-private-cot': {
-    semanticKey: 'react-loop',
-    patterns: evidence(/ReAct.*reason.*action.*observation.*private.*CoT/is),
-  },
-  'claim:planning-mode-follows-uncertainty': {
-    semanticKey: 'orchestration',
-    patterns: evidence(/direct.*plan-then-act.*replan.*workflow graph.*不确定性/is),
-  },
-  'claim:reflection-is-not-proof': {
-    semanticKey: 'external-validation',
-    patterns: evidence(/retry.*replan.*reflection.*external validation.*proof/is),
-  },
-  'claim:context-compression-must-preserve-provenance': {
-    semanticKey: 'context-provenance',
-    patterns: evidence(/transcript.*scratchpad.*retrieved evidence.*压缩.*provenance/is),
-  },
-  'claim:end-to-end-agent-needs-pressure-matrix': {
-    semanticKey: 'pressure-test',
-    patterns: evidence(/tool failure.*ambiguous success.*stale context.*unauthorized action.*drift/is),
-  },
-});
