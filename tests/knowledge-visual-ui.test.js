@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { llmFoundation } from '../src/data/llm-foundation.js';
+import { courseRegistry } from '../src/data/courses.js';
 import { knowledgeVisualsById } from '../src/data/visuals/index.js';
 import { renderKnowledgeNote } from '../src/ui/knowledge-note.js';
 import { renderKnowledgeVisual } from '../src/ui/knowledge-visual.js';
@@ -1151,4 +1152,46 @@ test('uses the default prototype-safe registry for the real llm-01 overview', (t
     'assets/visuals/llm-foundation/llm-01-field-map.svg',
   );
   assert.equal(note.children[2].className, 'knowledge-note__toc');
+});
+
+test('renders a real evidence-rich lesson and its complete visual set from every module', (t) => {
+  const document = new FakeDocument();
+  t.after(installFakeDom(document));
+  const representativeLessonIds = {
+    'llm-foundation': 'llm-01',
+    'agent-mechanism': 'agent-01',
+    'agent-harness': 'harness-01',
+    'context-rag-memory': 'context-01',
+    'backend-engineering': 'backend-01',
+  };
+
+  for (const [moduleId, lessonId] of Object.entries(representativeLessonIds)) {
+    const course = courseRegistry[moduleId];
+    const lesson = course.lessons.find(({ id }) => id === lessonId);
+    const note = renderKnowledgeNote(course, lesson);
+    const declaredVisualIds = [
+      lesson.knowledgeNote.overviewVisualId,
+      ...lesson.knowledgeNote.sections.flatMap(({ visuals = [] }) => (
+        visuals.map(({ visualId }) => visualId)
+      )),
+    ];
+
+    assert.equal(
+      note.querySelectorAll('.knowledge-visual').length,
+      declaredVisualIds.length,
+      `${moduleId}/${lessonId}`,
+    );
+    assert.equal(note.querySelectorAll('[data-visual-diagnostic="true"]').length, 0);
+    assert.equal(
+      note.querySelectorAll('.knowledge-note__sources').length,
+      lesson.knowledgeNote.sections.length,
+      `${moduleId}/${lessonId}: source cards`,
+    );
+    assert.equal(
+      note.querySelectorAll('.knowledge-note__sources a').length > 0,
+      true,
+      `${moduleId}/${lessonId}: evidence links`,
+    );
+    assert.equal(note.querySelectorAll('img').length, declaredVisualIds.length);
+  }
 });

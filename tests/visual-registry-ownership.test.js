@@ -73,6 +73,65 @@ test('every published visual has exactly one evidence-owned placement across cou
   assert.equal(result.placements.length, knowledgeVisuals.length);
 });
 
+test('five-module visual ownership, permission, asset and step-state identities are globally unique', async () => {
+  const result = await validateKnowledgeVisualOwnership({
+    courseRegistry,
+    knowledgeVisuals,
+    assetExists: async (assetPath) => {
+      await access(assetPath);
+      return true;
+    },
+  });
+  assert.deepEqual(result.errors, []);
+
+  const ownerByVisualId = new Map(result.placements.map((placement) => [
+    placement.visualId,
+    placement,
+  ]));
+  const minimumByModule = new Map([
+    ['llm-foundation', 5],
+    ['agent-mechanism', 2],
+    ['agent-harness', 3],
+    ['context-rag-memory', 3],
+    ['backend-engineering', 2],
+  ]);
+  for (const course of Object.values(courseRegistry)) {
+    for (const lesson of course.lessons) {
+      const count = result.placements.filter(({ courseId, lessonId }) => (
+        courseId === course.id && lessonId === lesson.id
+      )).length;
+      assert.ok(count >= minimumByModule.get(course.id), `${course.id}/${lesson.id}: ${count}`);
+    }
+  }
+
+  const assetPaths = [];
+  const stepIds = [];
+  for (const visual of knowledgeVisuals) {
+    const owner = ownerByVisualId.get(visual.id);
+    assert.ok(owner, visual.id);
+    assert.equal(
+      visual.sourceIds.every((sourceId) => owner.ownerSection.sourceIds.includes(sourceId)),
+      true,
+      `${visual.id}: sources must be section-owned`,
+    );
+    assetPaths.push(visual.assetPath);
+    for (const step of visual.steps ?? []) {
+      assetPaths.push(step.assetPath);
+      stepIds.push(step.id);
+    }
+    if (visual.provenance === 'original-synthesis') {
+      assert.equal(visual.permission, null, visual.id);
+    } else {
+      assert.equal(visual.permission?.allowsRedistribution, true, visual.id);
+      if (visual.provenance === 'licensed-adaptation') {
+        assert.equal(visual.permission?.allowsModification, true, visual.id);
+      }
+    }
+  }
+  assert.equal(new Set(assetPaths).size, assetPaths.length, 'asset paths must be globally unique');
+  assert.equal(new Set(stepIds).size, stepIds.length, 'step state IDs must be globally unique');
+});
+
 test('rejects orphan visuals that have no note placement', async () => {
   const data = fixture();
   data.knowledgeVisuals.push({

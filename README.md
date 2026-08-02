@@ -22,6 +22,8 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 **视觉教学已发布五个模块**：LLM 基础八课共接入 40 张主视觉，每课 1 张总览图与 4 张段落视觉；Agent 机制八课共接入 16 张主视觉，对应 16 个 SVG 文件；Agent Harness 八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；上下文、RAG 与记忆八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；AI 后端工程八课共接入 16 张主视觉与 16 个 typed production scenes，对应 16 个 SVG 文件，每课 1 张总览与 1 张段落视觉。五个模块都通过统一 visual registry 解析本地静态资产、证据归属、替代文本、长描述、图注与分步状态。
 
+全站合计 40 节课、234 份课程资源、120 张主视觉与 18 个分步状态（138 个本地 SVG）。两家指定一级资料冻结为 50 个 canonical source（Feishu Harness 101 为 16 个、JavaGuide AI 为 34 个），再由 81 个全局唯一课程 resource binding 接入五个模块；完整计数、60/30/10 语义贡献分类、概念边界与发布前证据见 [`docs/content-audits/2026-07-30-primary-reference-integration-release.md`](docs/content-audits/2026-07-30-primary-reference-integration-release.md)。
+
 ## 功能导览
 
 站点有六个一级视图：
@@ -428,8 +430,14 @@ LLM 基础八课建立了第一版模板，Agent 机制完成了首次跨模块�
 
 ```bash
 npm test
+npm run check:primary-references
+npm run check:context-visuals
+npm run check:agent-visuals
+npm run check:backend-visuals
+npm run check:release-content
 git diff --check
-find src tests -name '*.js' -exec node --check {} \;
+find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;
+find assets/visuals -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
 ```
 
 发布前还应：

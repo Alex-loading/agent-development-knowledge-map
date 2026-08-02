@@ -10,6 +10,8 @@ import {
   summarizeProgress,
   toggleReviewQueue,
 } from '../src/core/progress.js';
+import { createProgressStore } from '../src/core/storage.js';
+import { courseRegistry } from '../src/data/courses.js';
 
 test('createDefaultProgress returns the initial LLM foundation state', () => {
   assert.deepEqual(createDefaultProgress('llm-foundation'), {
@@ -175,4 +177,40 @@ test('resetModuleProgress returns the exact clean module state', () => {
     resetModuleProgress(dirty, 'llm-foundation', 'llm-02'),
     createDefaultProgress('llm-foundation', 'llm-02'),
   );
+});
+
+test('loads the existing v1 progress key and preserves all forty stable lesson IDs', () => {
+  const allLessonIds = Object.values(courseRegistry).flatMap(({ lessons }) => (
+    lessons.map(({ id }) => id)
+  ));
+  const persisted = {
+    ...createDefaultProgress('context-rag-memory', 'context-04'),
+    completedLessonIds: allLessonIds,
+    quizResults: {},
+    interviewStatusById: {},
+  };
+  const reads = [];
+  const storage = {
+    getItem(key) {
+      reads.push(key);
+      return JSON.stringify(persisted);
+    },
+    setItem() {},
+    removeItem() {},
+  };
+
+  const loaded = createProgressStore(storage).load();
+  assert.deepEqual(reads, ['agent-learner:progress:v1']);
+  assert.deepEqual(loaded.completedLessonIds, allLessonIds);
+  assert.equal(loaded.currentModuleId, 'context-rag-memory');
+  assert.equal(loaded.currentLessonId, 'context-04');
+
+  for (const course of Object.values(courseRegistry)) {
+    assert.deepEqual(summarizeProgress(loaded, course.lessons, []), {
+      lessonsCompleted: 8,
+      lessonPercent: 100,
+      interviewsMastered: 0,
+      interviewPercent: 0,
+    });
+  }
 });
