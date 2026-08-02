@@ -54,9 +54,65 @@ function rectangleForNode(parsed, nodeId) {
 }
 
 function polylineSegments(node) {
-  const points = node.attributes.get('points').trim().split(/\s+/)
-    .map((pair) => pair.split(',').map(Number));
+  const points = polylinePoints(node);
   return points.slice(1).map((point, index) => [points[index], point]);
+}
+
+function polylinePoints(node) {
+  return node.attributes.get('points').trim().split(/\s+/)
+    .map((pair) => pair.split(',').map(Number));
+}
+
+function assertSegmentLeavesRectangleAtOuterBoundary(segment, rectangle, label) {
+  const [[x1, y1], [x2, y2]] = segment;
+  assert.notDeepEqual(segment[0], segment[1], `${label}: zero-length departure`);
+  if (x1 === x2) {
+    assert.ok(x1 >= rectangle.left && x1 <= rectangle.right, `${label}: departure x span`);
+    assert.equal(
+      y1,
+      y2 > y1 ? rectangle.bottom : rectangle.top,
+      `${label}: vertical departure must start at the outward boundary`,
+    );
+  } else {
+    assert.equal(y1, y2, `${label}: departure must be orthogonal`);
+    assert.ok(y1 >= rectangle.top && y1 <= rectangle.bottom, `${label}: departure y span`);
+    assert.equal(
+      x1,
+      x2 > x1 ? rectangle.right : rectangle.left,
+      `${label}: horizontal departure must start at the outward boundary`,
+    );
+  }
+  assert.equal(
+    segmentIntersectsRectangleInterior(segment, rectangle),
+    false,
+    `${label}: departure re-enters endpoint interior after the shared start point`,
+  );
+}
+
+function assertSegmentEntersRectangleAtOuterBoundary(segment, rectangle, label) {
+  const [[x1, y1], [x2, y2]] = segment;
+  assert.notDeepEqual(segment[0], segment[1], `${label}: zero-length arrival`);
+  if (x1 === x2) {
+    assert.ok(x2 >= rectangle.left && x2 <= rectangle.right, `${label}: arrival x span`);
+    assert.equal(
+      y2,
+      y2 > y1 ? rectangle.top : rectangle.bottom,
+      `${label}: vertical arrival must end at the outward boundary`,
+    );
+  } else {
+    assert.equal(y1, y2, `${label}: arrival must be orthogonal`);
+    assert.ok(y2 >= rectangle.top && y2 <= rectangle.bottom, `${label}: arrival y span`);
+    assert.equal(
+      x2,
+      x2 > x1 ? rectangle.left : rectangle.right,
+      `${label}: horizontal arrival must end at the outward boundary`,
+    );
+  }
+  assert.equal(
+    segmentIntersectsRectangleInterior(segment, rectangle),
+    false,
+    `${label}: arrival crosses endpoint interior before the shared end point`,
+  );
 }
 
 function segmentIntersectsRectangleInterior([[x1, y1], [x2, y2]], rectangle) {
@@ -193,6 +249,67 @@ test('routes every flow edge around non-endpoint node boxes', () => {
       }
     }
   }
+});
+
+test('routes every flow edge through the correct outer boundaries of both endpoints', () => {
+  for (const visual of contextRagMemoryVisuals) {
+    const scene = contextRagMemoryScenesById.get(visual.id).scene;
+    if (scene.type !== 'flow') continue;
+    const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+    for (const edge of scene.edges) {
+      const polyline = elements(
+        parsed,
+        (node) => node.attributes.get('data-edge') === edge.id,
+      )[0];
+      const points = polylinePoints(polyline);
+      assert.ok(points.length >= 2, `${visual.id}:${edge.id}: points`);
+      assertSegmentLeavesRectangleAtOuterBoundary(
+        [points[0], points[1]],
+        rectangleForNode(parsed, edge.from),
+        `${visual.id}:${edge.id}:from ${edge.from}`,
+      );
+      assertSegmentEntersRectangleAtOuterBoundary(
+        [points.at(-2), points.at(-1)],
+        rectangleForNode(parsed, edge.to),
+        `${visual.id}:${edge.id}:to ${edge.to}`,
+      );
+    }
+  }
+});
+
+test('routes a reversed same-row flow through the left and right outer boundaries', () => {
+  const visual = {
+    id: 'visual-context-horizontal-direction-fixture',
+    title: 'Horizontal direction fixture',
+    caption: 'Exercises the leftward endpoint contract.',
+    role: 'process',
+  };
+  const scene = {
+    type: 'flow',
+    nodes: [
+      { id: 'left', label: 'LEFT' },
+      { id: 'right', label: 'RIGHT' },
+    ],
+    edges: [
+      { id: 'right-left', from: 'right', to: 'left' },
+    ],
+  };
+  const parsed = parseStrictSvg(renderContextRagMemorySvg(visual, scene), visual.id);
+  const edge = elements(
+    parsed,
+    (node) => node.attributes.get('data-edge') === 'right-left',
+  )[0];
+  const points = polylinePoints(edge);
+  assertSegmentLeavesRectangleAtOuterBoundary(
+    [points[0], points[1]],
+    rectangleForNode(parsed, 'right'),
+    `${visual.id}:right-left:from right`,
+  );
+  assertSegmentEntersRectangleAtOuterBoundary(
+    [points.at(-2), points.at(-1)],
+    rectangleForNode(parsed, 'left'),
+    `${visual.id}:right-left:to left`,
+  );
 });
 
 test('places flow edge labels in unobstructed bounded boxes', () => {

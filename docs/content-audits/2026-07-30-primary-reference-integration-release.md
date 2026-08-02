@@ -19,7 +19,7 @@
 | `backend-engineering` | 8 | 48 | 154 | 49 | 12 | 35 | 8 | 16 | 24 | 16 | 0 | 16 |
 | **total** | **40** | **257** | **827** | **234** | **81** | **117** | **47** | **80** | **120** | **120** | **18** | **138** |
 
-`verificationResources` 是模块内 authority 为 official 或 academic 的 resource 数，不是跨模块去重后的文献数。`localAssets` 是 120 个主 SVG 加 18 个 step state SVG；所有 138 个路径全局唯一。当前资产清单通过对 `find assets/visuals -type f | sort | shasum -a 256` 的逐行输出再计算 SHA-256，得到 `d6d5f29fbc077c241fa3bb5ac0bce15ab656a1a2277b6600c57e0a9fb57a2db4`。
+`verificationResources` 是模块内 authority 为 official 或 academic 的 resource 数，不是跨模块去重后的文献数。`localAssets` 是 120 个主 SVG 加 18 个 step state SVG；所有 138 个路径全局唯一。当前资产清单通过对 `find assets/visuals -type f | sort | shasum -a 256` 的逐行输出再计算 SHA-256，得到 `7fddda5ab8e82132daf12348e6349bac14a3697bd351e1024c30ae81fecb2c09`。
 
 ## 人工语义贡献分类（60/30/10）
 
@@ -65,13 +65,13 @@
 
 本轮工作树的发布前结果：
 
-- `npm test -- --test-reporter=dot` exit 0；随后 TAP 汇总确认 628 tests、628 pass、0 fail、0 skipped/cancelled/todo。
+- `npm test` exit 0；TAP 汇总确认 630 tests、630 pass、0 fail、0 skipped/cancelled/todo。
 - `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`：168 个文件全部 exit 0。
 - `find assets/visuals -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout`：138 / 138 exit 0。
 - `check:primary-references`、`check:context-visuals`（27 assets + inventory）、`check:agent-visuals`（16 assets）、`check:backend-visuals`（16 assets）全部报告 current。一级资料检查在私有 manifest 存在时重建安全产物；在干净发布克隆中则以 committed safe snapshot、人工 annotation 与 inventory 做闭环一致性验证，不能替代重新抓取上游资料。
 - `check:release-content` 用结构化 marker 规则扫描 production course data 与全部 content audit；对应策略测试 2 / 2，通过实际扫描。宽泛匹配所有“未完成”会误报“请求已接纳但处理尚未完成”等领域语义，因此不把原始 `rg` 的语义命中伪装成 authoring debt。
 - remote image hotlink 扫描与 SVG `script` / `foreignObject` / DTD / entity / inline handler 扫描均 exit 1 且无输出；secret/token/private-key 模式扫描无输出；`git ls-files .research-cache` 无输出；`git diff --check` exit 0。
-- exact inventory 为 5 modules、40 lessons、234 resources、120 main visuals、18 step states、138 local SVG；asset manifest SHA-256 为 `d6d5f29fbc077c241fa3bb5ac0bce15ab656a1a2277b6600c57e0a9fb57a2db4`。
+- exact inventory 为 5 modules、40 lessons、234 resources、120 main visuals、18 step states、138 local SVG；asset manifest SHA-256 为 `7fddda5ab8e82132daf12348e6349bac14a3697bd351e1024c30ae81fecb2c09`。
 
 源工作树和提交后的 fresh clone 都执行同一发布门禁；任何失败都回到所属模块修复，不能以本文中的预期替代真实输出。
 
@@ -88,6 +88,7 @@
 - 缺图降级使用明确恢复的文件级故障注入：临时移出尚未发布的 `backend-04-overview.svg`，以新 document URL 加载对应课程。该 image 变为 `naturalWidth=0` 且 hidden，fallback 可见，同时 note、17 个 source link、quiz、caption 和 long description 保留；随后立即恢复原文件，并复核 HTTP 200。
 - 样式表在真实页面暴露 `(prefers-reduced-motion: reduce)` rule，并对 visual image、controls、step buttons 禁用 animation/transition，同时全局把 motion duration 压到 0.01ms。当前浏览器 OS 偏好为 false，而且此 IAB 只提供 viewport/visibility capability、没有 media emulation，所以不伪称已经切换系统偏好；该分支由 CSS 解析与自动测试覆盖。
 - 浏览器的 Playwright/CUA `press` 接口在已聚焦 native button 上没有产生默认 click，无法把这次运行描述成端到端键盘激活；这属于验收后端限制。产品使用原生 `<button>`，自动 UI 测试覆盖 Previous/Next/Reset、disabled、status focus 和实例隔离；真实浏览器已验证鼠标路径、焦点转移与可见 ring。该限制保留给发布负责人在 Preview 做一次物理键盘抽查。
+- 最终几何审查后定向重载 `visual-context-08-integrated-flow`：反向 citation 边由 `ANSWER + CITATION` 的上边界离开，经两行节点之间的安全 lane，从 `SOURCE` 的下边界进入；浏览器 DOM 路径为 `1000,348 1000,297 200,297 200,246`，完整截图确认边、标签与节点无重叠。新增通用门禁对全部 Context flow 的首末 segment 同时验证上下、左右出入方向和端点 interior 穿越。
 
 ## 部署契约与远端补录字段
 

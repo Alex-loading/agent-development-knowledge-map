@@ -131,10 +131,20 @@ function renderFlow(scene, prefix, markerId) {
       middleY = routeAbove ? from.y - 24 : from.y + from.height + 42;
       points = `${startX},${startY} ${startX},${middleY} ${endX},${middleY} ${endX},${endY}`;
     } else {
-      startX = sameRow ? from.x + from.width : from.x + from.width / 2;
-      startY = sameRow ? from.y + from.height / 2 : from.y + from.height;
-      endX = sameRow ? to.x : to.x + to.width / 2;
-      endY = sameRow ? to.y + to.height / 2 : to.y;
+      const movesRight = to.x > from.x;
+      const movesDown = to.y > from.y;
+      startX = sameRow
+        ? movesRight ? from.x + from.width : from.x
+        : from.x + from.width / 2;
+      startY = sameRow
+        ? from.y + from.height / 2
+        : movesDown ? from.y + from.height : from.y;
+      endX = sameRow
+        ? movesRight ? to.x : to.x + to.width
+        : to.x + to.width / 2;
+      endY = sameRow
+        ? to.y + to.height / 2
+        : movesDown ? to.y : to.y + to.height;
       middleY = sameRow
         ? startY
         : Math.min(560, Math.max(140, (startY + endY) / 2));
