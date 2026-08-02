@@ -32,6 +32,25 @@ import { assertSafeStaticSvg, parseStrictSvg } from './helpers/static-svg.js';
 const fixturesById = new Map(Object.values(backendEngineeringVisualFixtures)
   .map((fixture) => [fixture.visualId, fixture]));
 
+function foreignEdgeLabelIntersections(scene, edgeLabelRectangles) {
+  const collisions = [];
+  for (const edge of scene.edges) {
+    for (const [segmentIndex, segment] of segmentsFromPoints(edge.points).entries()) {
+      for (const [labelId, rectangle] of edgeLabelRectangles) {
+        if (labelId === edge.id) continue;
+        if (segmentIntersectsInterior(segment, rectangle)) {
+          collisions.push(`${scene.id}:${edge.id}[${segmentIndex}] intersects label ${labelId}`);
+        }
+      }
+    }
+  }
+  return collisions;
+}
+
+function assertNoForeignEdgeLabelIntersections(scene, edgeLabelRectangles) {
+  assert.deepEqual(foreignEdgeLabelIntersections(scene, edgeLabelRectangles), []);
+}
+
 test('builds 16 deterministic strict static SVG artifacts from production scenes', async () => {
   const artifacts = buildBackendEngineeringVisualArtifacts();
   assert.equal(artifacts.size, 16);
@@ -195,6 +214,51 @@ test('rendered edges avoid non-endpoint nodes and preserve every fixture edge la
       assert.ok(renderedLabels.has(edge.id), `${scene.id}:${truth.label}:rendered truth`);
     }
   }
+});
+
+test('every rendered edge segment avoids every foreign edge-label bbox across all 16 scenes', () => {
+  let checkedPairs = 0;
+  const collisions = [];
+  for (const visual of backendEngineeringVisuals) {
+    const scene = getBackendEngineeringScene(visual.id);
+    const parsed = parseStrictSvg(renderBackendEngineeringSvg(visual, scene), visual.id);
+    const edgeLabelRectangles = groupRectangles(parsed, 'data-edge-label');
+    checkedPairs += scene.edges.reduce((sum, edge) => (
+      sum + segmentsFromPoints(edge.points).length
+        * Math.max(0, edgeLabelRectangles.size - Number(edgeLabelRectangles.has(edge.id)))
+    ), 0);
+    collisions.push(...foreignEdgeLabelIntersections(scene, edgeLabelRectangles));
+  }
+  assert.ok(checkedPairs > 0, 'foreign edge-label intersection gate must exercise real pairs');
+  assert.deepEqual(collisions, []);
+});
+
+test('foreign edge-label gate rejects a real label moved onto another production route', () => {
+  const visual = backendEngineeringVisuals.find(({ id }) => id === 'visual-backend-01-overview');
+  const scene = getBackendEngineeringScene(visual.id);
+  const parsed = parseStrictSvg(renderBackendEngineeringSvg(visual, scene), visual.id);
+  const edgeLabelRectangles = groupRectangles(parsed, 'data-edge-label');
+  assert.ok(scene.edges.length > 1 && edgeLabelRectangles.size > 1, 'mutation needs real edges and labels');
+
+  const route = scene.edges.find(({ id }) => id === 'request');
+  const foreignLabelId = 'inference';
+  assert.ok(route && edgeLabelRectangles.has(foreignLabelId), 'mutation targets must exist');
+  const [[startX, routeY], [endX]] = route.points;
+  const centerX = (startX + endX) / 2;
+  const original = edgeLabelRectangles.get(foreignLabelId);
+  const mutated = new Map(edgeLabelRectangles);
+  mutated.set(foreignLabelId, {
+    ...original,
+    left: centerX - 30,
+    right: centerX + 30,
+    top: routeY - 10,
+    bottom: routeY + 10,
+  });
+
+  assert.throws(
+    () => assertNoForeignEdgeLabelIntersections(scene, mutated),
+    /request\[0\] intersects label inference/,
+  );
 });
 
 test('all edge collinear overlaps and undeclared orthogonal crossings are zero', () => {

@@ -84,7 +84,7 @@
 | visual-backend-08-overview | diagnosis matrix | original |
 | visual-backend-08-detail | deployment topology | original |
 
-Scene 分布为 sequence、protocol、timeline、split、envelope、decision、state-machine、layers、cache、ledger、delivery、signal-flow、observability、deployment 各 1，matrix 2；共 15 种 renderer、16 个唯一 topology、100 个语义 node、79 条正交非零 edge、75 个 edge label 与 52 个值单元。每种 type 都改变实际拓扑和绘制结构，而不是给同一种 card 模板换标题。画布固定 1200×675，标题、副标题、正文 node、edge label、数值、图注与 footer 分别使用独立保留区。正文最小字号 14px、图注 15px、副标题 17px、标题 30px；16 份独立 fixture 逐图验证 type-specific structure、分支、边、标签、状态与数值，mutation oracle 会拒绝 topology、跨模块、结构、分支、边和标签漂移。严格几何测试确认 node-node、text-text、text-node、edge-label-node、edge-node、edge-edge overlap/crossing、截断与保留区碰撞均为 0，并检查 16 个生成物 byte parity。
+Scene 分布为 sequence、protocol、timeline、split、envelope、decision、state-machine、layers、cache、ledger、delivery、signal-flow、observability、deployment 各 1，matrix 2；共 15 种 renderer、16 个唯一 topology、100 个语义 node、79 条正交非零 edge、75 个 edge label 与 52 个值单元。每种 type 都改变实际拓扑和绘制结构，而不是给同一种 card 模板换标题。画布固定 1200×675，标题、副标题、正文 node、edge label、数值、图注与 footer 分别使用独立保留区。正文最小字号 14px、图注 15px、副标题 17px、标题 30px；16 份独立 fixture 逐图验证 type-specific structure、分支、边、标签、状态与数值，mutation oracle 会拒绝 topology、跨模块、结构、分支、边和标签漂移。严格几何测试确认 node-node、text-text、text-node、edge-label-node、foreign-edge-label、edge-node、edge-edge overlap/crossing、截断与保留区碰撞均为 0；真实 label mutation 会被 foreign-edge-label 门禁拒绝，并检查 16 个生成物 byte parity。
 
 ## 评分
 
@@ -103,6 +103,6 @@ Scene 分布为 sequence、protocol、timeline、split、envelope、decision、s
 
 ## 验证与限制
 
-已执行 backend primary/data/visual/artifact/audit tests、612 项全量 Node test、JS/MJS syntax、16 SVG xmllint、generator `--check`、marker/hotlink/active/privacy/cache 扫描与 `git diff --check`。hostile title/description/caption 通过 shared static SVG gate；缺失目录测试确认 `--check` 非写入并一次报告全部 16 个 missing artifact。
+已执行 backend primary/data/visual/artifact/audit tests、614 项全量 Node test、JS/MJS syntax、16 SVG xmllint、generator `--check`、marker/hotlink/active/privacy/cache 扫描与 `git diff --check`。hostile title/description/caption 通过 shared static SVG gate；缺失目录测试确认 `--check` 非写入并一次报告全部 16 个 missing artifact。
 
 本地 HTTP smoke 已确认 `/`、`/styles/app.css`、`/src/app.js` 与 backend SVG 返回 200 和正确 MIME；关键 API、SSE、状态机、容量、投递、可观测、部署与矩阵图的实际渲染检查已执行（render executed）。跨浏览器矩阵仍留给最终跨模块集成阶段。

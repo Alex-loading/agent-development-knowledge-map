@@ -41,7 +41,7 @@
       <rect x="616.5" y="371" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
       <text x="667" y="390" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">PERMANENT</text>
     </g>
-<polyline data-edge="cancel" data-from="queued" data-to="cancelled" data-kind="terminal" points="345,185 345,160 1120,160 1120,441 1090,441" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<polyline data-edge="cancel" data-from="queued" data-to="cancelled" data-kind="terminal" points="345,185 345,182 1120,182 1120,441 1090,441" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
 <g data-edge-label="cancel">
       <rect x="984.5" y="316" width="131" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
       <text x="1050" y="335" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">cancel intent</text>
