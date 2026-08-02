@@ -24,18 +24,18 @@
 
 ## Source-impact 决策台账
 
-| decision | lesson | target | decision | 课程影响 |
-|---|---|---|---|---|
-| `impact-agent-01-boundary` | agent-01 | `claim:agent-is-bounded-decision-authority` | corrected | Agent 自治改写为决策位置与有界权限。 |
-| `impact-agent-02-task-state` | agent-02 | `claim:task-plan-is-not-durable-state` | deepened | 计划、状态机、event log 与 termination 分层。 |
-| `impact-agent-03-tool-truth` | agent-03 | `claim:tool-call-is-not-execution-proof` | corrected | tool call 候选与宿主 observation 分离。 |
-| `impact-agent-04-react` | agent-04 | `claim:react-does-not-require-private-cot` | corrected | 保留行动结构，不发布 private CoT。 |
-| `impact-agent-05-orchestration` | agent-05 | `claim:planning-mode-follows-uncertainty` | adopted | 按不确定性与依赖选择规划和编排。 |
-| `impact-agent-06-validation` | agent-06 | `claim:reflection-is-not-proof` | corrected | reflection 是修订候选，external validation 才是证据。 |
-| `impact-agent-07-provenance` | agent-07 | `claim:context-compression-must-preserve-provenance` | deepened | 压缩、外置和记忆投影保留 provenance。 |
-| `impact-agent-08-pressure` | agent-08 | `claim:end-to-end-agent-needs-pressure-matrix` | adopted | 发布前覆盖失败、歧义、越权、陈旧与漂移。 |
+| decisionId | lessonId | resourceId | scope | targetType | targetId | semanticKey | contribution | summary | rationale |
+|---|---|---|---|---|---|---|---|---|---|
+| impact-agent-01-boundary | agent-01 | res-agent-primary-feishu-beyond-model | claim | claim | claim:agent-is-bounded-decision-authority | agency-boundary | corrected | Agent 自治被重写为决策位置与有界权限，而不是模型获得任意执行权。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-02-task-state | agent-02 | res-agent-primary-javaguide-prompt | claim | claim | claim:task-plan-is-not-durable-state | task-state | deepened | 把 Agent 计划深化为任务契约、状态机、事件日志和显式终止的组合。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-03-tool-truth | agent-03 | res-agent-primary-feishu-tool-truth | claim | claim | claim:tool-call-is-not-execution-proof | tool-truth | corrected | 修正工具调用文本等于真实执行的误区，以宿主 observation 和日志为准。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-04-react | agent-04 | res-agent-primary-feishu-react-loop | claim | claim | claim:react-does-not-require-private-cot | react-loop | corrected | 保留 ReAct 的行动结构，同时拒绝把 private CoT 当作必需审计产物。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-05-orchestration | agent-05 | res-agent-primary-feishu-react-orchestration | claim | claim | claim:planning-mode-follows-uncertainty | orchestration | adopted | 以不确定性和依赖关系组织 Agent 规划、重规划与编排模式。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-06-validation | agent-06 | res-agent-primary-javaguide-loop-engineering | claim | claim | claim:reflection-is-not-proof | external-validation | corrected | 把 Agent 反思降级为修订候选，并以外部验证关闭证据环。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-07-provenance | agent-07 | res-agent-primary-feishu-prompt-memory | claim | claim | claim:context-compression-must-preserve-provenance | context-provenance | deepened | 把 Agent 上下文压缩深化为保留来源、版本、有效期与回取入口的投影。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
+| impact-agent-08-pressure | agent-08 | res-agent-primary-feishu-agent-version | claim | claim | claim:end-to-end-agent-needs-pressure-matrix | pressure-test | adopted | 为单 Agent 端到端设计加入工具失败、成功歧义、漂移与越权压力测试。 | 一级资料承担课程主干与实现观察；产品、协议、安全与效果行为继续由官方资料、原始论文或本地测试核验。 |
 
-所有 contribution 只使用 approved 五态：adopted、corrected、deepened、rejected、duplicate。resolver 返回真实 claim 对象；独立 fixture 以 regex anchor 检查正文，semanticKey 本身不能自证。HTTP 无关文本 mutation 会失败。
+所有 contribution 只使用 approved 五态：adopted、corrected、deepened、rejected、duplicate。resolver 返回真实 claim 对象；独立 fixture 以 regex anchor 检查正文，semanticKey 本身不能自证。Mutation 测试分别将真实 target 正文与 summary 替换为无关的 HTTP cache / ETag / If-None-Match / 304 描述，两条独立语义契约都必须拒绝该变更。
 
 ## 视觉逐资产决策
 
@@ -67,6 +67,10 @@
 - 首次完整回归：`npm test`，**577 / 577**，0 fail。
 - 收尾完整回归：`npm test`，**580 / 580**，0 fail（加入审计 parity、几何与 hostile XML policy 测试后）。
 - 一级资料机制主干补强后的最终完整回归：`npm test`，**581 / 581**，0 fail；8 节正文均显式覆盖任务契约、工具责任链、循环、规划、纠错、上下文与端到端压力矩阵。
-- 生成物：`node scripts/generate-agent-mechanism-visuals.mjs --check`，16 / 16 current，非写模式。
-- 安全：共享 strict SVG parser、xmllint、active/remote-content scan、hostile XML renderer probe、全局 visual ownership 和 asset uniqueness 全部执行。
+- 本次规格整改的 Agent 聚焦回归：primary reference、source-impact audit、visual semantics 与 geometry 共 **16 / 16**，0 fail。
+- 本次规格整改后的最终完整回归：`npm test`，**586 / 586**，0 fail、0 skipped。
+- 生成物：Agent 16 份 SVG、一级资料共享产物、Context 27 份 SVG 及其 inventory 的 `--check` 均为 current，全部为非写模式。
+- 类型视觉：`spectrum 1, loop 2, decision 2, state-machine 2, protocol 1, layers 2, planning-graph 1, dag 1, ladder 1, flow 1, control-loop 1, matrix 1`；测试确认 feedback/ReAct 回边、bounded loop 四出口、orchestration fork + join 与 6×4 pressure matrix。
+- 安全与静态校验：16 / 16 SVG 通过 `xmllint`；9 份变更 JS 通过 `node --check`；strict SVG parser、hostile XML renderer probe、全局 visual ownership 和 asset uniqueness 全部执行。release marker、remote-image hotlink、active/remote SVG reference 和敏感凭据定向扫描均零命中。
+- 隐私与缓存：`git ls-files .research-cache` 无输出；`.research-cache/primary-references/manifest.json` 仍由 Git ignore 策略覆盖，未发布原始正文缓存。`git diff --check` 无输出。
 - 浏览器边界：本切片只完成数据、静态资产、共享 UI 合约与 HTTP smoke；没有声称真实浏览器或设备矩阵验收。

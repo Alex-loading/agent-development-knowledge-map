@@ -1,48 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
-  <title id="title">不泄露私有思维链的 ReAct 行动循环</title>
-  <desc id="description">图保留 ReAct 的 reason、action、observation 顺序，但把 reason 表达为决策摘要、依据引用与可公开检查，明确系统无需存储或展示模型私有 chain-of-thought。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-agent-04-react-cycle-title visual-agent-04-react-cycle-description">
+  <title id="visual-agent-04-react-cycle-title">不泄露私有思维链的 ReAct 行动循环</title>
+  <desc id="visual-agent-04-react-cycle-description">图保留 ReAct 的 reason、action、observation 顺序，但把 reason 表达为决策摘要、依据引用与可公开检查，明确系统无需存储或展示模型私有 chain-of-thought。</desc>
+  <defs>
+    <marker id="visual-agent-04-react-cycle-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/>
+    </marker>
+  </defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="105" font-size="34" font-weight="750" fill="#F5FBFF">可公开审计的 ReAct 循环</text>
-  <text x="64" y="150" font-size="19" fill="#B8CBD8">记录决策摘要与证据，不要求泄露 private chain-of-thought。</text>
-  <g data-edge="visual-agent-04-react-cycle-edge-1">
-      <path d="M 260 322 L 333 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 327 314 L 345 322 L 327 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="264.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="302.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">提出</text>
-    </g>
-<g data-edge="visual-agent-04-react-cycle-edge-2">
-      <path d="M 545 322 L 618 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 612 314 L 630 322 L 612 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="549.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="587.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">执行</text>
-    </g>
-<g data-edge="visual-agent-04-react-cycle-edge-3">
-      <path d="M 830 322 L 903 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 897 314 L 915 322 L 897 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="834.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="872.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">吸收</text>
-    </g>
-  <g data-node="visual-agent-04-react-cycle-node-1">
-      <rect x="60" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="160" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">REASON</text>
-<text x="160" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">决策摘要</text>
-    </g>
-<g data-node="visual-agent-04-react-cycle-node-2">
-      <rect x="345" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="445" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">ACTION</text>
-<text x="445" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">结构化候选</text>
-    </g>
-<g data-node="visual-agent-04-react-cycle-node-3">
-      <rect x="630" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="730" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">OBSERVATION</text>
-<text x="730" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">环境证据</text>
-    </g>
-<g data-node="visual-agent-04-react-cycle-node-4">
-      <rect x="915" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="1015" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">STATE</text>
-<text x="1015" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">受证据更新</text>
-    </g>
-  <text x="64" y="590" font-size="18" fill="#7FA1B5">审计需要动作依据和证据链，不需要把 private CoT 当作运行日志。</text>
-  <text x="1136" y="610" text-anchor="end" font-size="16" fill="#5F8195">Agent Learner · 2026-07-30</text>
+  <text x="64" y="98" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="750" fill="#F5FBFF" text-anchor="start">可公开审计的 ReAct 循环</text>
+  <text x="64" y="137" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500" fill="#B8CBD8" text-anchor="start">记录决策摘要与证据，不要求泄露 private chain-of-thought。</text>
+  <g data-kind="loop"><polyline data-edge="reason-action" data-from="reason" data-to="action" data-kind="forward" points="270,284 330,284" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-04-react-cycle-arrow)"/><g data-edge-label="reason-action"><rect x="260" y="192" width="80" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="300" y="209" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">PROPOSE</text></g><polyline data-edge="action-observation" data-from="action" data-to="observation" data-kind="forward" points="540,284 600,284" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-04-react-cycle-arrow)"/><g data-edge-label="action-observation"><rect x="526" y="192" width="88" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="570" y="209" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">HOST ACT</text></g><polyline data-edge="observation-state" data-from="observation" data-to="state" data-kind="forward" points="810,284 870,284" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-04-react-cycle-arrow)"/><g data-edge-label="observation-state"><rect x="804" y="192" width="72" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="840" y="209" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">ABSORB</text></g><polyline data-edge="state-reason" data-from="state" data-to="reason" data-kind="feedback" points="975,328 975,480 165,480 165,328" fill="none" stroke="#F5C36A" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-04-react-cycle-arrow)"/><g data-edge-label="state-reason"><rect x="518" y="467" width="104" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="570" y="484" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#F5D28C" text-anchor="middle">NEXT CYCLE</text></g><g data-node="reason" data-kind="stage"><rect x="60" y="240" width="210" height="88" rx="20" fill="#173B55" stroke="#75E3D6" stroke-width="2"/><text x="165" y="277.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">REASON</text><text x="165" y="302.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">可公开决策摘要</text></g><g data-node="action" data-kind="stage"><rect x="330" y="240" width="210" height="88" rx="20" fill="#173B55" stroke="#75E3D6" stroke-width="2"/><text x="435" y="277.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">ACTION</text><text x="435" y="302.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">结构化候选</text></g><g data-node="observation" data-kind="evidence"><rect x="600" y="240" width="210" height="88" rx="20" fill="#24482F" stroke="#9FE5B0" stroke-width="2"/><text x="705" y="277.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">OBSERVATION</text><text x="705" y="302.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">环境证据</text></g><g data-node="state" data-kind="controlled"><rect x="870" y="240" width="210" height="88" rx="20" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/><text x="975" y="277.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">STATE</text><text x="975" y="302.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">受证据更新</text></g></g>
+  <text x="64" y="606" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="500" fill="#91AABA" text-anchor="start">审计需要动作依据和证据链，不需要把 private CoT 当作运行日志。</text>
+  <text x="1136" y="614" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">LOOP · directed-react-feedback</text>
 </svg>

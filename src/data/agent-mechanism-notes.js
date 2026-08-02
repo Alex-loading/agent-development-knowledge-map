@@ -36,13 +36,13 @@ const visualPlans = Object.freeze({
     overviewSourceIds: ['res-agent-primary-javaguide-prompt', 'res-agent-primary-feishu-react-loop'],
     sectionId: 'state-transcript-event-log',
     visualId: 'visual-agent-02-state-event-log',
-    sourceIds: ['res-agent-primary-javaguide-workflow-loop'],
+    sourceIds: ['res-agent-primary-feishu-loop-engineering'],
     synthesisSectionId: 'request-to-task-contract',
     synthesisParagraph: '可执行任务契约要把 intent 逐层翻译成 objective、constraints、success criteria、task state 与 termination，而不是只润色一句提示词。自然语言计划适合表达弹性意图，状态机适合约束确定分支，耐久 event log 负责保存事实与恢复依据；三者分别回答“想做什么、允许怎样推进、发生过什么”。',
     synthesisSourceIds: [
       'res-agent-primary-javaguide-prompt',
-      'res-agent-primary-javaguide-workflow-loop',
       'res-agent-primary-feishu-react-loop',
+      'res-agent-primary-feishu-loop-engineering',
     ],
   },
   'agent-03': {
@@ -130,7 +130,7 @@ const visualPlans = Object.freeze({
     visualId: 'visual-agent-08-pressure-matrix',
     sourceIds: ['res-agent-primary-feishu-agent-version', 'res-agent-primary-feishu-react-orchestration', 'res-agent-agentbench'],
     synthesisSectionId: 'capstone-architecture-and-trust-boundaries',
-    synthesisParagraph: '毕业项目应先做一个 single-Agent 端到端闭环，再用压力矩阵验证机制，而不是用角色数量掩盖缺陷。至少注入 tool failure、ambiguous success、stale context、unauthorized action、无限 loop、版本 drift 与 evaluation 失真，并要求每条终态都有任务契约、事件证据和可回放决策。',
+    synthesisParagraph: '毕业项目应先做一个 single-Agent 端到端闭环，明确 Agent 选择与 Harness 运行边界，再用压力矩阵验证机制，而不是用角色数量掩盖缺陷。至少注入 tool failure、ambiguous success、stale context、unauthorized action、无限 loop、版本 drift 与 evaluation 失真，并要求每条终态都有任务契约、事件证据和可回放决策。',
     synthesisSourceIds: [
       'res-agent-primary-javaguide-agent-basis',
       'res-agent-primary-javaguide-harness',

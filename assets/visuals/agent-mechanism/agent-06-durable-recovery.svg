@@ -1,48 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
-  <title id="title">故障分类、Checkpoint、Reconciliation 与恢复</title>
-  <desc id="description">图说明超时后不能直接重试：宿主先持久化动作标识和状态，查询外部结果对账，然后吸收已发生结果、允许幂等重试或交接未知结果。耐久恢复能力属于 Harness。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-agent-06-durable-recovery-title visual-agent-06-durable-recovery-description">
+  <title id="visual-agent-06-durable-recovery-title">故障分类、Checkpoint、Reconciliation 与恢复</title>
+  <desc id="visual-agent-06-durable-recovery-description">图说明超时后不能直接重试：宿主先持久化动作标识和状态，查询外部结果对账，然后吸收已发生结果、允许幂等重试或交接未知结果。耐久恢复能力属于 Harness。</desc>
+  <defs>
+    <marker id="visual-agent-06-durable-recovery-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/>
+    </marker>
+  </defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="105" font-size="34" font-weight="750" fill="#F5FBFF">耐久恢复属于 Harness</text>
-  <text x="64" y="150" font-size="19" fill="#B8CBD8">未知副作用先 reconciliation，不能盲目重试。</text>
-  <g data-edge="visual-agent-06-durable-recovery-edge-1">
-      <path d="M 260 322 L 333 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 327 314 L 345 322 L 327 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="264.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="302.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">记录</text>
-    </g>
-<g data-edge="visual-agent-06-durable-recovery-edge-2">
-      <path d="M 545 322 L 618 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 612 314 L 630 322 L 612 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="549.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="587.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">核验</text>
-    </g>
-<g data-edge="visual-agent-06-durable-recovery-edge-3">
-      <path d="M 830 322 L 903 322" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <path d="M 897 314 L 915 322 L 897 330" fill="none" stroke="#57D6C7" stroke-width="4"/>
-      <rect x="834.5" y="274" width="76" height="30" rx="15" fill="#10283A"/>
-      <text x="872.5" y="295" text-anchor="middle" font-size="16" fill="#8EECE1">恢复</text>
-    </g>
-  <g data-node="visual-agent-06-durable-recovery-node-1">
-      <rect x="60" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="160" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">FAILURE</text>
-<text x="160" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">分类</text>
-    </g>
-<g data-node="visual-agent-06-durable-recovery-node-2">
-      <rect x="345" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="445" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">CHECKPOINT</text>
-<text x="445" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">持久状态</text>
-    </g>
-<g data-node="visual-agent-06-durable-recovery-node-3">
-      <rect x="630" y="270" width="200" height="104" rx="22" fill="#173B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="730" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">RECONCILE</text>
-<text x="730" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">副作用对账</text>
-    </g>
-<g data-node="visual-agent-06-durable-recovery-node-4">
-      <rect x="915" y="270" width="200" height="104" rx="22" fill="#1E4B55" stroke="#75E3D6" stroke-width="2"/>
-      <text x="1015" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#F5FBFF">RESUME / HANDOFF</text>
-<text x="1015" y="328" text-anchor="middle" font-size="16" font-weight="500" fill="#F5FBFF">受控出口</text>
-    </g>
-  <text x="64" y="590" font-size="18" fill="#7FA1B5">Agent 选择恢复策略；Harness 保存并恢复可证明的运行状态。</text>
-  <text x="1136" y="610" text-anchor="end" font-size="16" fill="#5F8195">Agent Learner · 2026-07-30</text>
+  <text x="64" y="98" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="750" fill="#F5FBFF" text-anchor="start">耐久恢复属于 Harness</text>
+  <text x="64" y="137" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500" fill="#B8CBD8" text-anchor="start">未知副作用先 reconciliation，不能盲目重试。</text>
+  <g data-kind="state-machine"><polyline data-edge="failure-checkpoint" data-from="failure" data-to="checkpoint" data-kind="forward" points="240,304 320,304" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-06-durable-recovery-arrow)"/><g data-edge-label="failure-checkpoint"><rect x="240" y="247" width="80" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="280" y="264" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">PERSIST</text></g><polyline data-edge="checkpoint-reconcile" data-from="checkpoint" data-to="reconcile" data-kind="forward" points="530,304 610,304" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-06-durable-recovery-arrow)"/><g data-edge-label="checkpoint-reconcile"><rect x="534" y="247" width="72" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="570" y="264" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">QUERY</text></g><polyline data-edge="reconcile-resume" data-from="reconcile" data-to="resume" data-kind="forward" points="830,304 875,304 875,209 930,209" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-06-durable-recovery-arrow)"/><g data-edge-label="reconcile-resume"><rect x="839" y="232" width="72" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="875" y="249" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">KNOWN</text></g><polyline data-edge="reconcile-blocked" data-from="reconcile" data-to="blocked" data-kind="forward" points="830,304 880,304 880,329 930,329" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-06-durable-recovery-arrow)"/><g data-edge-label="reconcile-blocked"><rect x="840" y="342" width="80" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="880" y="359" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">UNKNOWN</text></g><polyline data-edge="blocked-handoff" data-from="blocked" data-to="handoff" data-kind="forward" points="1025,368 1025,410" fill="none" stroke="#57D6C7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-agent-06-durable-recovery-arrow)"/><g data-edge-label="blocked-handoff"><rect x="1056" y="377" width="88" height="24" rx="12" fill="#10283A" stroke="#31556B" stroke-width="1"/><text x="1100" y="394" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#8EECE1" text-anchor="middle">ESCALATE</text></g><g data-node="failure" data-kind="stage"><rect x="50" y="260" width="190" height="88" rx="20" fill="#173B55" stroke="#75E3D6" stroke-width="2"/><text x="145" y="297.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">FAILURE</text><text x="145" y="322.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">超时 / 崩溃</text></g><g data-node="checkpoint" data-kind="host"><rect x="320" y="260" width="210" height="88" rx="20" fill="#3D315B" stroke="#B8A7F8" stroke-width="2"/><text x="425" y="297.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">CHECKPOINT</text><text x="425" y="322.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">动作 ID + 状态</text></g><g data-node="reconcile" data-kind="evidence"><rect x="610" y="260" width="220" height="88" rx="20" fill="#24482F" stroke="#9FE5B0" stroke-width="2"/><text x="720" y="297.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">RECONCILE</text><text x="720" y="322.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">查询副作用证据</text></g><g data-node="resume" data-kind="outcome"><rect x="930" y="170" width="190" height="78" rx="20" fill="#1E5141" stroke="#88E0B7" stroke-width="2"/><text x="1025" y="202.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">RESUME</text><text x="1025" y="227.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">已发生 / 幂等</text></g><g data-node="blocked" data-kind="blocked"><rect x="930" y="290" width="190" height="78" rx="20" fill="#562E35" stroke="#F2A6B2" stroke-width="2"/><text x="1025" y="322.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">BLOCKED</text><text x="1025" y="347.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">结果仍未知</text></g><g data-node="handoff" data-kind="controlled"><rect x="930" y="410" width="190" height="78" rx="20" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/><text x="1025" y="442.5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">HANDOFF</text><text x="1025" y="467.5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="550" fill="#F5FBFF" text-anchor="middle">人工处置</text></g></g>
+  <text x="64" y="606" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="500" fill="#91AABA" text-anchor="start">Agent 选择恢复策略；Harness 保存并恢复可证明的运行状态。</text>
+  <text x="1136" y="614" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">STATE-MACHINE · reconciliation-recovery</text>
 </svg>

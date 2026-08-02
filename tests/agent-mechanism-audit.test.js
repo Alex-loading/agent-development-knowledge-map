@@ -10,12 +10,50 @@ const auditUrl = new URL(
   import.meta.url,
 );
 
+function parseSourceImpactRows(markdown) {
+  const header = '| decisionId | lessonId | resourceId | scope | targetType | targetId | semanticKey | contribution | summary | rationale |';
+  const start = markdown.indexOf(header);
+  assert.notEqual(start, -1, 'source-impact parity header');
+  const rows = [];
+  for (const line of markdown.slice(start).split('\n').slice(2)) {
+    if (!line.startsWith('|')) break;
+    const [
+      decisionId, lessonId, resourceId, scope, targetType,
+      targetId, semanticKey, contribution, summary, rationale,
+    ] = line.split('|').slice(1, -1).map((value) => value.trim());
+    rows.push({
+      decisionId,
+      lessonId,
+      resourceId,
+      scope,
+      targetType,
+      targetId,
+      semanticKey,
+      contribution,
+      summary,
+      rationale,
+    });
+  }
+  return rows;
+}
+
 test('Agent reconstruction audit traces every source decision and visual asset exactly once', async () => {
   const audit = await readFile(auditUrl, 'utf8');
-  for (const { decisionId, targetId } of agentMechanism.sourceImpactAudit) {
-    assert.equal(audit.split(`\`${decisionId}\``).length - 1, 1, decisionId);
-    assert.ok(audit.includes(`\`${targetId}\``), targetId);
-  }
+  assert.deepEqual(parseSourceImpactRows(audit), agentMechanism.sourceImpactAudit.map(({
+    decisionId, lessonId, resourceId, scope, targetType,
+    targetId, semanticKey, contribution, summary, rationale,
+  }) => ({
+    decisionId,
+    lessonId,
+    resourceId,
+    scope,
+    targetType,
+    targetId,
+    semanticKey,
+    contribution,
+    summary,
+    rationale,
+  })));
   for (const { id, assetPath } of agentMechanismVisuals) {
     assert.equal(audit.split(`\`${id}\``).length - 1, 1, id);
     assert.ok(audit.includes(`\`${assetPath}\``), assetPath);
@@ -27,5 +65,5 @@ test('Agent reconstruction audit traces every source decision and visual asset e
   }
   assert.match(audit, /第三方图表[^。\n]*拒绝直接复制/);
   assert.match(audit, /官方来源[^。\n]*(?:核验|交叉验证)/);
-  assert.match(audit, /577\s*\/\s*577/);
+  assert.match(audit, /586\s*\/\s*586/);
 });

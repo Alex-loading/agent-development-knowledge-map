@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 
 import { agentMechanism } from '../src/data/agent-mechanism.js';
+import { getAgentMechanismScene } from '../src/data/visuals/agent-mechanism-scenes.js';
 import { agentMechanismVisuals } from '../src/data/visuals/agent-mechanism-visuals.js';
 import { knowledgeVisuals } from '../src/data/visuals/index.js';
 import { validateVisualAsset } from '../src/data/visuals/visual-contract.js';
@@ -32,9 +33,47 @@ test('publishes two original, local and accessible Agent visuals per lesson', as
   }
 });
 
+test('critical Agent visuals align topology, tags, and assessed outcomes', () => {
+  const contracts = {
+    'visual-agent-01-action-feedback-loop': {
+      topology: 'directed-action-feedback',
+      tag: 'process',
+      outcome: 'agent-core',
+    },
+    'visual-agent-04-bounded-loop': {
+      topology: 'bounded-loop-exits',
+      tag: 'failure-mode',
+      outcome: 'loop-control',
+    },
+    'visual-agent-05-orchestration-graph': {
+      topology: 'parallel-fork-join',
+      tag: 'relationship',
+      outcome: 'orchestration',
+    },
+    'visual-agent-06-correction-ladder': {
+      topology: 'retry-replan-reflect-validate',
+      tag: 'failure-mode',
+      outcome: 'external-validation',
+    },
+    'visual-agent-08-pressure-matrix': {
+      topology: 'failure-control-exit-matrix',
+      tag: 'failure-mode',
+      outcome: 'pressure-test',
+    },
+  };
+  for (const [visualId, contract] of Object.entries(contracts)) {
+    const visual = agentMechanismVisuals.find(({ id }) => id === visualId);
+    const scene = getAgentMechanismScene(visualId);
+    assert.equal(scene.topology, contract.topology, visualId);
+    assert.ok(visual.tags.includes(contract.tag), `${visualId}: ${contract.tag}`);
+    assert.ok(visual.assessedCoverage.includes(contract.outcome), `${visualId}: ${contract.outcome}`);
+  }
+});
+
 test('Agent SVG files are strict local static artifacts', async () => {
   for (const visual of agentMechanismVisuals) {
     const svg = await readFile(new URL(`../${visual.assetPath}`, import.meta.url), 'utf8');
+    const scene = getAgentMechanismScene(visual.id);
     assert.match(svg, /^<svg\b/);
     assert.match(svg, /viewBox="0 0 1200 675"/);
     assert.doesNotMatch(
@@ -42,7 +81,14 @@ test('Agent SVG files are strict local static artifacts', async () => {
       /<script|foreignObject|onload=|javascript:|data:|https?:\/\//i,
     );
     assert.doesNotMatch(svg, /font-size="(?:[0-9]|1[0-3])"/);
-    assert.match(svg, /data-node=/);
-    assert.match(svg, /data-edge=/);
+    if (scene.type === 'matrix') {
+      assert.match(svg, /data-kind="matrix"/);
+      assert.match(svg, /data-row=/);
+      assert.match(svg, /data-column=/);
+      assert.doesNotMatch(svg, /data-node=/);
+    } else {
+      assert.match(svg, /data-node=/);
+      assert.match(svg, /data-edge=/);
+    }
   }
 });

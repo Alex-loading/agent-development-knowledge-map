@@ -64,7 +64,7 @@ export const agentMechanismVisuals = deepFreezeVisual([
     alt: '可修订自然语言计划受到状态机约束，状态变化追加到事件日志，并可据此恢复运行。',
     longDescription: '图分开计划建议、控制状态与耐久记录：计划可在新观察后变化，状态机限定合法迁移，append-only event log 保存每次动作和状态差异并支持恢复。',
     caption: '把聊天计划当唯一状态，会同时失去合法迁移约束和故障后的重放证据。',
-    sourceIds: ['res-agent-primary-javaguide-workflow-loop', 'res-agent-coala'],
+    sourceIds: ['res-agent-primary-feishu-loop-engineering', 'res-agent-coala'],
   }),
   visual({
     id: 'visual-agent-03-tool-protocol', role: 'overview',

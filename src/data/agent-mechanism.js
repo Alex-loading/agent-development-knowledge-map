@@ -282,7 +282,7 @@ const lessons = [
       { heading: '从请求到任务契约', body: '自然语言请求往往缺少范围、截止时间、权限、输出格式或成功标准。Agent 应先建立 task contract：写清目标、必须满足的硬约束、可权衡的软偏好、允许的动作、所需产物和预算；再把缺失信息列为未知项，逐项决定查询工具、向用户澄清、采用可撤销假设，还是因风险过高而 blocked，不能把猜测悄悄当成事实。', keyPoints: ['硬约束违反即失败，软偏好允许有证据的权衡', '未知项要有处理策略和来源，而不是被聊天语气掩盖'] },
       { heading: '状态与完成证据', body: '工作状态是驱动下一步决策的结构化快照，例如已确认事实、约束、待办、产物引用、失败次数和剩余预算；聊天历史只是交互记录，既冗长又可能包含过期意见。Agent 判断完成时应检查可观察证据是否满足 task contract，例如文件确已生成、测试确已通过或远端状态确已更新，而不能仅凭模型说“完成了”；证据不足就继续、澄清、阻塞或交接。', keyPoints: ['状态应可更新、可检查，并保留事实来源', '完成是外部或可计算谓词，不是自然语言自我声明'] },
     ],
-    resourceIds: ['res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-coala', 'res-agent-hello-agents', 'res-agent-primary-javaguide-prompt', 'res-agent-primary-javaguide-workflow-loop', 'res-agent-primary-feishu-react-loop'],
+    resourceIds: ['res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-coala', 'res-agent-hello-agents', 'res-agent-primary-javaguide-prompt', 'res-agent-primary-feishu-react-loop', 'res-agent-primary-feishu-loop-engineering'],
     exercise: { title: '重写模糊差旅请求', brief: '把“帮我安排下周去上海的行程，便宜一点”改写成 Agent 可执行且可停止的任务状态。', steps: ['列出目标、硬约束、软偏好、已知事实、假设和至少四个未知项', '为每个未知项选择查询、澄清、临时假设或阻塞，并为候选行程定义可观察完成证据'], deliverable: '一份带字段说明、未知项处理策略和完成谓词的 task contract。' },
     quiz: [
       quiz('quiz-agent-02-1', '面对缺少日期和预算的差旅请求，最合理的第一步是什么？', ['直接购买最便宜机票', '把缺失信息写成未知项并按风险决定澄清或查询', '假设所有日期都可以', '只保留原始聊天'], 1, '结构化未知项能避免把猜测当事实，并让系统根据风险选择查询、澄清或阻塞。'),
@@ -320,7 +320,7 @@ const lessons = [
       { heading: '最小循环是控制程序', body: '一个最小 Agent loop 每轮读取目标与当前状态，先检查是否已有完成证据、是否 blocked、预算是否耗尽，再让模型选择受允许的动作；宿主校验并执行动作，把 observation 追加到事件日志并更新工作状态，然后进入下一轮。done、blocked、failed、budget-exhausted 和 handoff 都应成为显式返回值，max turns、时间或成本预算用于阻止无限执行。', keyPoints: ['终止检查与动作执行同样属于循环核心', '状态只能依据动作结果更新，不能先假定成功'] },
       { heading: 'ReAct 让推理与环境反馈交错', body: '普通 chain-of-thought 描述模型内部生成的推理文本，并不要求系统执行动作或取得新证据；ReAct 则把任务相关的推理摘要、结构化 action 和环境 observation 交错组织，让下一步能根据真实反馈调整。产品日志应记录可观察决策摘要、工具参数和结果，而不是索取或暴露隐藏推理。若状态不变却重复同一调用，通常说明缺少进展检测、错误分类或停止预算。', keyPoints: ['ReAct 的关键是行动后吸收 observation，不是展示长篇思维过程', '重复动作、状态无进展和预算耗尽都应触发停止或恢复策略'] },
     ],
-    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili', 'res-agent-primary-javaguide-loop-engineering', 'res-agent-primary-feishu-react-loop', 'res-agent-primary-feishu-autonomous-evolution', 'res-agent-primary-feishu-loop-engineering'],
+    resourceIds: ['res-agent-react-paper', 'res-agent-lilian-weng', 'res-agent-openai-guide', 'res-agent-anthropic-effective', 'res-agent-agentbench', 'res-agent-berkeley-course', 'res-agent-datawhale-bili', 'res-agent-primary-javaguide-loop-engineering', 'res-agent-primary-feishu-react-loop', 'res-agent-primary-feishu-autonomous-evolution'],
     exercise: { title: '控制循环决策台', brief: '手写伪代码并用交互实验检查完成、阻塞、继续和预算耗尽四类循环结果。', steps: ['实现读取状态、终止检查、模型决策、工具校验执行、观察回填与状态更新的顺序', '切换 goalSatisfied、blocked、steps 与 max steps，核对优先级并加入重复动作检测'], deliverable: '一段带 done、blocked、failed、budget-exhausted 和 handoff 出口的循环伪代码。', experiment: 'agent-loop' },
     quiz: [
       quiz('quiz-agent-04-1', '最小 Agent loop 中，工具执行后必须先做什么再进入下一轮？', ['删除原始目标', '把结果记录为 observation 并更新状态', '自动扩大预算', '重新加载模型参数'], 1, '环境结果必须先进入事件日志和工作状态，下一轮决策才能建立在新证据上。'),
@@ -675,6 +675,7 @@ const sourceImpactAudit = sourceImpactSpecs.map(([
   lessonId,
   resourceId,
   scope: 'claim',
+  targetType: 'claim',
   targetId: `claim:${claimId}`,
   semanticKey,
   contribution,

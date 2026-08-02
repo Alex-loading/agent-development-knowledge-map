@@ -9,8 +9,14 @@ import { getPrimaryReference } from '../src/data/primary-references.js';
 import { agentMechanismVisuals } from '../src/data/visuals/agent-mechanism-visuals.js';
 import {
   agentAssessmentTextEvidence,
-  agentSourceImpactTextEvidence,
 } from './fixtures/agent-mechanism-semantic-evidence.js';
+import {
+  agentPrimarySectionEvidence,
+} from './fixtures/agent-mechanism-primary-section-evidence.js';
+import {
+  agentSourceImpactDecisionEvidence,
+  irrelevantImpactMutation,
+} from './fixtures/agent-mechanism-source-impact-evidence.js';
 
 const legacyIds = [
   'res-agent-anthropic-effective', 'res-agent-openai-guide',
@@ -30,9 +36,9 @@ const legacyIds = [
 
 const primaryIntent = {
   'agent-01': ['primary-javaguide-agent-basis', 'primary-feishu-beyond-model', 'primary-feishu-react-loop'],
-  'agent-02': ['primary-javaguide-prompt-engineering', 'primary-javaguide-workflow-graph-loop', 'primary-feishu-react-loop'],
+  'agent-02': ['primary-javaguide-prompt-engineering', 'primary-feishu-react-loop', 'primary-feishu-loop-engineering-intro'],
   'agent-03': ['primary-javaguide-agent-skills', 'primary-javaguide-mcp', 'primary-feishu-tool-truth'],
-  'agent-04': ['primary-javaguide-loop-engineering', 'primary-feishu-react-loop', 'primary-feishu-autonomous-evolution', 'primary-feishu-loop-engineering-intro'],
+  'agent-04': ['primary-javaguide-loop-engineering', 'primary-feishu-react-loop', 'primary-feishu-autonomous-evolution'],
   'agent-05': ['primary-javaguide-workflow-graph-loop', 'primary-feishu-react-orchestration', 'primary-feishu-dynamic-workflow'],
   'agent-06': ['primary-javaguide-loop-engineering', 'primary-feishu-agent-version-drifting', 'primary-feishu-dynamic-workflow'],
   'agent-07': ['primary-javaguide-context-engineering', 'primary-javaguide-agent-memory', 'primary-feishu-claude-ai-memory'],
@@ -83,6 +89,28 @@ test('binds both primary families to every required lesson intent', () => {
       assert.ok(resource.id.startsWith('res-agent-primary-'));
       assert.equal(resource.title, getPrimaryReference(resource.canonicalSourceId).title);
       assert.ok(Object.isFrozen(resource));
+    }
+  }
+});
+
+test('every lesson-bound primary source owns a semantically anchored note section', () => {
+  for (const lesson of agentMechanism.lessons) {
+    const primaryIds = lesson.resourceIds.filter((id) => id.startsWith('res-agent-primary-'));
+    const contracts = agentPrimarySectionEvidence[lesson.id];
+    assert.deepEqual(new Set(primaryIds), new Set(Object.keys(contracts)), lesson.id);
+    for (const resourceId of primaryIds) {
+      const owners = lesson.knowledgeNote.sections.filter(
+        ({ sourceIds }) => sourceIds.includes(resourceId),
+      );
+      assert.ok(owners.length > 0, `${lesson.id}: ${resourceId} is not cited by note text`);
+      assert.ok(
+        owners.some((section) => contracts[resourceId].test([
+          section.title,
+          ...section.paragraphs,
+          ...section.keyPoints,
+        ].join(' '))),
+        `${lesson.id}: ${resourceId} has no independent semantic anchor`,
+      );
     }
   }
 });
@@ -149,19 +177,60 @@ test('assessment and visual outcomes cover each other bidirectionally', () => {
   }
 });
 
-test('source impact targets resolve real semantic text and use only approved decisions', () => {
+test('source impact decisions strictly own independently anchored targets and summaries', () => {
   const approved = new Set(['adopted', 'corrected', 'deepened', 'rejected', 'duplicate']);
+  const lessons = new Map(agentMechanism.lessons.map((lesson) => [lesson.id, lesson]));
+  const resources = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
   assert.deepEqual(
-    new Set(agentMechanism.sourceImpactAudit.map(({ targetId }) => targetId)),
-    new Set(Object.keys(agentSourceImpactTextEvidence)),
+    new Set(agentMechanism.sourceImpactAudit.map(({ decisionId }) => decisionId)),
+    new Set(Object.keys(agentSourceImpactDecisionEvidence)),
   );
   for (const decision of agentMechanism.sourceImpactAudit) {
+    const contract = agentSourceImpactDecisionEvidence[decision.decisionId];
     assert.ok(approved.has(decision.contribution), decision.decisionId);
+    for (const field of [
+      'lessonId', 'resourceId', 'targetId', 'targetType',
+      'scope', 'semanticKey', 'contribution',
+    ]) {
+      assert.equal(decision[field], contract[field], `${decision.decisionId}:${field}`);
+    }
+    assert.ok(resources.has(decision.resourceId), decision.resourceId);
+    assert.ok(
+      lessons.get(decision.lessonId).resourceIds.includes(decision.resourceId),
+      `${decision.decisionId}: resource owner`,
+    );
     const resolved = resolveAgentSourceImpactTarget(decision.targetId);
-    const contract = agentSourceImpactTextEvidence[decision.targetId];
-    assert.equal(decision.semanticKey, contract.semanticKey);
-    assert.ok(contract.patterns.some((pattern) => pattern.test(JSON.stringify(resolved.value))), decision.targetId);
-    assert.match(decision.summary, /Agent|工具|计划|上下文|压力|反思|ReAct|状态|自治/);
+    assert.equal(resolved.type, decision.targetType);
+    assert.equal(resolved.lessonId, decision.lessonId);
+    assert.ok(resolved.resourceIds.includes(decision.resourceId));
+    assert.ok(resolved.semanticKeys.includes(decision.semanticKey));
+    assert.ok(
+      contract.targetPatterns.some((pattern) => pattern.test(JSON.stringify(resolved.value))),
+      decision.targetId,
+    );
+    assert.ok(
+      contract.summaryPatterns.some((pattern) => pattern.test(decision.summary)),
+      `${decision.decisionId}:summary`,
+    );
   }
   assert.throws(() => resolveAgentSourceImpactTarget('claim:not-real'), /Unknown/);
+});
+
+test('unrelated HTTP and ETag mutations fail both source-impact semantic contracts', () => {
+  for (const decision of agentMechanism.sourceImpactAudit) {
+    const contract = agentSourceImpactDecisionEvidence[decision.decisionId];
+    const resolved = resolveAgentSourceImpactTarget(decision.targetId);
+    const targetMutation = { ...resolved.value, text: irrelevantImpactMutation };
+    const summaryMutation = { ...decision, summary: irrelevantImpactMutation };
+    assert.equal(
+      contract.targetPatterns.some((pattern) => pattern.test(JSON.stringify(targetMutation))),
+      false,
+      `${decision.decisionId}: target mutation`,
+    );
+    assert.equal(
+      contract.summaryPatterns.some((pattern) => pattern.test(summaryMutation.summary)),
+      false,
+      `${decision.decisionId}: summary mutation`,
+    );
+  }
 });
