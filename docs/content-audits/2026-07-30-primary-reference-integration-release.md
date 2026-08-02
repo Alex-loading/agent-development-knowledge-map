@@ -65,15 +65,15 @@
 
 本轮工作树的发布前结果：
 
-- `npm test -- --test-reporter=dot` exit 0；随后 TAP 汇总确认 627 tests、627 pass、0 fail、0 skipped/cancelled/todo。
+- `npm test -- --test-reporter=dot` exit 0；随后 TAP 汇总确认 628 tests、628 pass、0 fail、0 skipped/cancelled/todo。
 - `find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;`：168 个文件全部 exit 0。
 - `find assets/visuals -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout`：138 / 138 exit 0。
-- `check:primary-references`、`check:context-visuals`（27 assets + inventory）、`check:agent-visuals`（16 assets）、`check:backend-visuals`（16 assets）全部报告 current。
+- `check:primary-references`、`check:context-visuals`（27 assets + inventory）、`check:agent-visuals`（16 assets）、`check:backend-visuals`（16 assets）全部报告 current。一级资料检查在私有 manifest 存在时重建安全产物；在干净发布克隆中则以 committed safe snapshot、人工 annotation 与 inventory 做闭环一致性验证，不能替代重新抓取上游资料。
 - `check:release-content` 用结构化 marker 规则扫描 production course data 与全部 content audit；对应策略测试 2 / 2，通过实际扫描。宽泛匹配所有“未完成”会误报“请求已接纳但处理尚未完成”等领域语义，因此不把原始 `rg` 的语义命中伪装成 authoring debt。
 - remote image hotlink 扫描与 SVG `script` / `foreignObject` / DTD / entity / inline handler 扫描均 exit 1 且无输出；secret/token/private-key 模式扫描无输出；`git ls-files .research-cache` 无输出；`git diff --check` exit 0。
 - exact inventory 为 5 modules、40 lessons、234 resources、120 main visuals、18 step states、138 local SVG；asset manifest SHA-256 为 `d6d5f29fbc077c241fa3bb5ac0bce15ab656a1a2277b6600c57e0a9fb57a2db4`。
 
-源工作树和提交后的 fresh clone 结果在本审计最终提交后复验；任何失败都回到所属模块修复，不能以本文中的预期替代真实输出。
+源工作树和提交后的 fresh clone 都执行同一发布门禁；任何失败都回到所属模块修复，不能以本文中的预期替代真实输出。
 
 ## 真实浏览器矩阵
 

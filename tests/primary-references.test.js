@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -1404,6 +1405,33 @@ test('safe generated snapshot and inventory are deterministic and detect drift',
   ]) {
     assert.doesNotMatch(serialized, new RegExp(`"${privateField}"`));
   }
+});
+
+test('release check validates committed primary artifacts without the ignored private cache', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'primary-reference-release-check-'));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
+  const fixturePaths = [
+    'package.json',
+    'scripts/generate-primary-reference-artifacts.mjs',
+    'scripts/primary-reference-annotations.mjs',
+    'src/data/primary-reference-snapshot.generated.js',
+    'docs/research/2026-07-30-primary-reference-inventory.md',
+  ];
+  for (const path of fixturePaths) {
+    const destination = join(fixtureRoot, path);
+    await mkdir(resolve(destination, '..'), { recursive: true });
+    await cp(join(repositoryRoot, path), destination);
+  }
+
+  assert.equal(
+    execFileSync(
+      process.execPath,
+      ['scripts/generate-primary-reference-artifacts.mjs', '--check'],
+      { cwd: fixtureRoot, encoding: 'utf8' },
+    ),
+    'Primary reference generated artifacts are current.\n',
+  );
 });
 
 test('curated annotations are independent, complete, unique and source-covered', () => {

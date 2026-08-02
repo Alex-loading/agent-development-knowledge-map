@@ -6,6 +6,7 @@ import {
   PRIMARY_REFERENCE_IDENTITY_RULES,
   primaryReferenceAnnotations,
 } from './primary-reference-annotations.mjs';
+import { primaryReferenceSnapshot } from '../src/data/primary-reference-snapshot.generated.js';
 
 const REPOSITORY_ROOT = new URL('../', import.meta.url);
 const MANIFEST_URL = new URL(
@@ -292,20 +293,43 @@ export function assertGeneratedArtifactCurrent(actual, expected, label) {
   }
 }
 
+function manifestFromCommittedSnapshot(records) {
+  return {
+    retrievedAt: null,
+    feishu: {
+      documents: records.filter(({ sourceFamily }) => sourceFamily === 'feishu-harness-101'),
+    },
+    javaGuide: {
+      articles: records.filter(({ sourceFamily }) => sourceFamily === 'javaguide-ai'),
+    },
+  };
+}
+
+async function recordsForRun({ checkOnly }) {
+  try {
+    const manifest = JSON.parse(await readFile(MANIFEST_URL, 'utf8'));
+    return createSafePrimaryReferenceSnapshot(
+      manifest,
+      primaryReferenceAnnotations,
+    );
+  } catch (error) {
+    if (!checkOnly || error?.code !== 'ENOENT') throw error;
+    return createSafePrimaryReferenceSnapshot(
+      manifestFromCommittedSnapshot(primaryReferenceSnapshot),
+      primaryReferenceAnnotations,
+    );
+  }
+}
+
 async function run() {
   const checkOnly = process.argv.includes('--check');
   if (process.argv.some((argument) => !['--check'].includes(argument) && argument !== process.argv[0] && argument !== process.argv[1])) {
     throw new Error('Usage: node scripts/generate-primary-reference-artifacts.mjs [--check]');
   }
-  const [manifestText, inventoryMarkdown] = await Promise.all([
-    readFile(MANIFEST_URL, 'utf8'),
+  const [records, inventoryMarkdown] = await Promise.all([
+    recordsForRun({ checkOnly }),
     readFile(INVENTORY_URL, 'utf8'),
   ]);
-  const manifest = JSON.parse(manifestText);
-  const records = createSafePrimaryReferenceSnapshot(
-    manifest,
-    primaryReferenceAnnotations,
-  );
   const snapshotOutput = renderSafePrimaryReferenceSnapshot(records);
   const inventoryOutput = replaceInventoryTable(
     inventoryMarkdown,
