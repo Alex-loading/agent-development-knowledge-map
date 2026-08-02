@@ -3,9 +3,9 @@ const sections = Object.freeze([
     id: 'build-a-hierarchical-run-budget',
     title: '先把运行资源写成分层预算账本',
     paragraphs: Object.freeze([
-      '上一课用 sandbox 硬上限约束代码能消耗的 CPU、内存和墙钟时间，本课把视角拉回整个 Agent run：Run budget（运行预算）是在任务开始前分配、执行中扣减、结束时对账的一组资源上限。课程账本至少区分 run、attempt、step 三层，并分别记录 modelCalls、toolCalls、tokens、cost、wallTime、retryAttempts 与 concurrencySlots。run 是业务任务总额度；attempt 是一次执行尝试可用的子额度；step 再为一个模型或工具边界预留资源。只设循环步数会漏掉“单步调用十分钟或花掉大部分费用”的风险。',
+      '飞书 Loop Engineering 先校准两个容易被误用的词。Open loop（开环）按预设输入和步骤前进，不依赖运行中反馈改变控制；closed loop（闭环）读取观察、验证或误差信号后调整下一步。两者是控制结构，不是可靠性排名：一个有严格 schema、预算和验收的固定 pipeline 可能比一个不断自我反思却没有停止条件的闭环更可靠；闭环适合环境反馈重要的任务，但也扩大迭代、成本和漂移风险。JavaGuide 的历史对照同样提醒，Loop Engineering 重组了既有控制与可靠性机制，而不是自动产生新保证。',
       '父子预算必须守恒，而不是每个子任务重新获得一份完整上限。父 run 分派两个并行子任务时，先从可用余额中保守预留各自的 token、费用、工具次数和墙钟窗口；子任务完成后只归还未承诺且未消耗的余额，已经发出的远端请求仍记作在途成本。每次 attempt 重启也继承 run 的剩余预算，不能因为 worker 更换就把 retry 次数和 deadline 清零。预算扣减与状态事件同边界持久化，才能在恢复后拒绝“账面还有、实际已花”的重复调用。',
-      '预算不能全部花在主路径上。接近阈值时应进入收尾区，停止创建非必要子任务和新重试，保留生成 checkpoint、简短 summary、诊断证据或 handoff 所需的 token、工具次数和墙钟额度。若剩余量不足以安全完成写操作，就在动作前 blocked 或失败，而不是先发请求再发现无法记录结果。分层字段、预留与归还规则是本课程的 Harness 工程模板；SRE 的 retry budget、deadline 与过载经验提供设计依据，但具体比例和阈值必须由本系统负载验证。',
+      '无论开环还是闭环，都必须由 Harness 设置 Run budget：run、attempt、step 三层分别记录 modelCalls、toolCalls、tokens、cost、wallTime、retryAttempts 与 concurrencySlots。接近阈值时进入收尾区，停止创建非必要子任务和新重试，保留 checkpoint、summary、诊断、取消确认或 handoff 的额度。长程任务尤其要把总 deadline、阶段验收、人工 stop point 和可恢复产物放进预算；剩余量不足以安全完成写操作时应在动作前 blocked，而不是先发请求再发现无法记录结果。',
     ]),
     keyPoints: Object.freeze([
       'Run、attempt、step 分层共享模型、工具、token、费用、墙钟、重试和并发预算。',
@@ -20,6 +20,9 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-feishu-autonomous-evolution',
+      'res-harness-primary-javaguide-loop-engineering',
     ]),
   }),
   Object.freeze({
@@ -35,10 +38,14 @@ const sections = Object.freeze([
       'Cancellation 传播停止意图，rollback 是单独的业务语义，timeout 也不代表远端已经停止。',
       '取消后的晚到结果仍要记录和对账，但不得非法改写终态或触发重复副作用。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-05-deadline-cancel', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
       'res-harness-langgraph-fault-tolerance',
+      'res-harness-primary-feishu-loop-engineering-intro',
     ]),
   }),
   Object.freeze({
@@ -58,6 +65,7 @@ const sections = Object.freeze([
       'res-harness-temporal-retry',
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
+      'res-harness-primary-feishu-loop-engineering-intro',
     ]),
   }),
   Object.freeze({
@@ -78,11 +86,15 @@ const sections = Object.freeze([
       title: '框架默认不是课程默认',
       body: '本课统一要求显式有限重试与可审计预算，但必须保留 Temporal、LangGraph 当前版本语义的差异，并在目标系统验证 AWS/SRE 参数。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-05-retry-budget', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-temporal-retry',
       'res-harness-langgraph-fault-tolerance',
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
+      'res-harness-primary-javaguide-loop-engineering',
     ]),
   }),
   Object.freeze({
@@ -102,6 +114,7 @@ const sections = Object.freeze([
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
       'res-harness-temporal-retry',
+      'res-harness-primary-feishu-autonomous-evolution',
     ]),
   }),
   Object.freeze({
@@ -110,7 +123,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '课程练习从一条三步 run 开始：检索资料、模型生成摘要、写入工单。预算账本为 run 记录 absolute deadline、总 token、cost、modelCalls、toolCalls、retryAttempts 与收尾预留；为每个 attempt 和 step 记录预留、已用、在途和归还量。父 run 分配检索与生成子预算，写入步骤只有在保留 checkpoint 和 handoff 额度后仍有足够余额时才可开始。不要填一组假装通用的固定数字，交付物应说明每个阈值怎样由服务目标、步骤成本和破坏面得到。',
       '错误决策表至少演练七类输入：检索网络抖动选择有限重试；429 按 Retry-After 和 deadline 排程；模型参数错误先修正；认证或授权失败进入 blocked；工单业务冲突重新读取；写入 timeout 作为 unknown 先查询；明确永久错误进入 failed。每一行同时写错误类别、动作语义、剩余 attempts、retry budget、幂等或查询能力、下一动作和终态理由，才能证明“为什么重试或不重试”，而不只是背选项。',
-      '取消传播时序从用户发出 cancellation token 开始：Runner 停止新 step，通知检索、模型、工具与子任务，记录各自确认；deadline 到达时冻结新预算并保留收尾额度；对晚到只读结果只保存证据，对晚到写入成功转入对账；最后生成 checkpoint、summary 或 handoff。用这条轨迹回答两道测验和三道访谈追问：timeout 后为何先查状态，哪类错误不能原样重试，三种时间控制如何区分，HTTP 500 的读写策略为何不同，父子并行预算如何预留与归还。完成标准是能逐点标出 timeout、deadline、cancel、补偿，并用分类与预算证明每个决策。',
+      '取消传播时序从用户发出 cancellation token 开始：Runner 停止新 step，通知检索、模型、工具与子任务，记录各自确认；deadline 到达时冻结新预算并保留收尾额度；对晚到只读结果只保存证据，对晚到写入成功转入对账；最后生成 checkpoint、summary 或 handoff。对运行数小时的 closed loop，再加入阶段 validation、连续无进展计数、重复动作检测、人工 stop point 和最大子任务数；对固定 open-loop pipeline，则验证每个预设边是否仍适用于当前输入，出现未知条件就 blocked 或升级到经批准的闭环，而不是盲走到底。',
     ]),
     keyPoints: Object.freeze([
       '交付物包含分层预算账本、错误决策表和 cancellation token 传播时序。',
@@ -122,6 +135,8 @@ const sections = Object.freeze([
       'res-harness-langgraph-fault-tolerance',
       'res-harness-aws-timeouts',
       'res-harness-sre-cascading',
+      'res-harness-primary-feishu-loop-engineering-intro',
+      'res-harness-primary-feishu-autonomous-evolution',
     ]),
   }),
 ]);
@@ -155,7 +170,9 @@ const misconceptions = Object.freeze([
 
 export const harness05Note = Object.freeze({
   readingMinutes: 38,
-  introduction: '一个 Agent run 同时消耗时间、模型次数、token、费用、工具调用和下游容量；当错误出现时，“再试一次”还会继续消耗这些资源，并可能重复外部副作用。上一课的 sandbox 解决执行进程能用多少硬资源，本课进一步建立跨 run、attempt、step、model 和 tool 的预算账本，区分 attempt timeout、absolute run deadline、cancellation 与 rollback，再把 transient、throttle、bad input、权限失败、业务冲突和 unknown outcome 映射成不同动作。你将学习有限 attempts、capped exponential backoff、jitter、Retry-After、retry budget 和多层放大控制，并用检索、模型生成与写入三类步骤完成预算账本、错误决策表和取消传播时序。所有框架默认与厂商经验都会保留适用边界：可重试的错误从来不自动意味着动作可以安全重放。',
+  introduction: '一个 Agent run 同时消耗时间、模型次数、token、费用、工具调用和下游容量。飞书 Loop Engineering 与自治演进提供控制结构主线，JavaGuide 用历史与术语边界交叉检查，Temporal、LangGraph、AWS 与 Google SRE 负责版本和工程事实校验。本课先把 open loop 与 closed loop 定义为是否根据运行反馈调整控制，而不是可靠性高低；再为二者共同加入预算、validation、stop condition、timeout、bounded retry、cancellation 和 long-horizon stop point。你将用检索、模型生成与写入三类步骤交付预算账本、错误决策表与取消时序，并始终保留一句边界：错误可重试不等于动作可安全重放，循环能继续也不等于值得继续。',
+  overviewVisualId: 'visual-harness-05-bounded-run',
+  overviewVisualSectionId: 'build-a-hierarchical-run-budget',
   sections,
   misconceptions,
   recap: Object.freeze([

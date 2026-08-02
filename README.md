@@ -8,11 +8,11 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 当前有五个完整模块：
 
-- **LLM 基础模块已完成**：8 节课程、28 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
-- **Agent 机制模块已完成**：8 节课程、29 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
-- **Agent Harness 模块已完成**：8 节课程、29 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖宿主 Runner、状态与事件、工具治理、隔离、预算、可靠恢复、并发调度和人工接力。
-- **上下文、RAG 与记忆模块已完成**：8 节课程、29 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖上下文生命周期、预算分配、会话压缩、语料与索引、混合检索、证据打包和长期记忆治理。
-- **AI 后端工程模块已完成**：8 节课程、37 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖 API 契约、流式取消、准入控制、异步队列、权威存储、缓存正确性、幂等投递、服务生命周期、可观测性与部署扩容。
+- **LLM 基础模块已完成**：8 节课程、41 份资源（含完整保留的 28 份既有资源与 13 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
+- **Agent 机制模块已完成**：8 节课程、47 份资源（含完整保留的 29 份既有资源与 18 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
+- **Agent Harness 模块已完成**：8 节课程、53 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖宿主 Runner、状态与事件、工具治理、隔离、预算、可靠恢复、并发调度和人工接力。
+- **上下文、RAG 与记忆模块已完成**：8 节课程、44 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖上下文生命周期、预算分配、会话压缩、语料与索引、混合检索、证据打包和长期记忆治理。
+- **AI 后端工程模块已完成**：8 节课程、49 份资源（含完整保留的 37 份既有资源与 12 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖 API 契约、流式取消、准入控制、异步队列、权威存储、缓存正确性、幂等投递、服务生命周期、可观测性与部署扩容。
 
 五个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余三个目录模块仍未开放，范围见“模块路线图与边界”。
 
@@ -20,7 +20,9 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 
 五个模块仍保留原有 `explanations` 作为兼容 fallback；正常课程详情优先渲染经过来源审计的 `knowledgeNote`。
 
-**视觉教学当前只完成 LLM 基础试点**：八课共接入 40 张主视觉，每课 1 张总览图与 4 张段落视觉。它们通过统一 visual registry 解析本地静态资产、证据归属、替代文本、长描述、图注与分步状态；其他四个已开放模块仍是知识笔记主教材，不能据此视为已经完成视觉化迁移。
+**视觉教学已发布五个模块**：LLM 基础八课共接入 40 张主视觉，每课 1 张总览图与 4 张段落视觉；Agent 机制八课共接入 16 张主视觉，对应 16 个 SVG 文件；Agent Harness 八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；上下文、RAG 与记忆八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；AI 后端工程八课共接入 16 张主视觉与 16 个 typed production scenes，对应 16 个 SVG 文件，每课 1 张总览与 1 张段落视觉。五个模块都通过统一 visual registry 解析本地静态资产、证据归属、替代文本、长描述、图注与分步状态。
+
+全站合计 40 节课、234 份课程资源、120 张主视觉与 18 个分步状态（138 个本地 SVG）。两家指定一级资料冻结为 50 个 canonical source（Feishu Harness 101 为 16 个、JavaGuide AI 为 34 个），再由 81 个全局唯一课程 resource binding 接入五个模块；完整计数、60/30/10 语义贡献分类、概念边界与发布前证据见 [`docs/content-audits/2026-07-30-primary-reference-integration-release.md`](docs/content-audits/2026-07-30-primary-reference-integration-release.md)。
 
 ## 功能导览
 
@@ -207,7 +209,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 - `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
 - `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js`、`src/data/context-rag-memory.js` 与 `src/data/backend-engineering.js` 分别保存五个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。五个模块的八课长文分别保存在 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/`、`src/data/agent-harness-notes/`、`src/data/context-rag-memory-notes/` 与 `src/data/backend-engineering-notes/`。`src/data/llm-foundation-notes.js` 是 LLM 聚合入口，`src/data/agent-mechanism-notes.js` 是 Agent 聚合入口，`src/data/agent-harness-notes.js` 是 Harness 聚合入口，`src/data/context-rag-memory-notes.js` 是 Context/RAG/Memory 聚合入口，`src/data/backend-engineering-notes.js` 是 AI 后端聚合入口；五者负责精确接线与递归冻结。
-- `src/data/visuals/` 保存共享 visual registry 与视觉数据契约；当前只注册 LLM 基础 40 张主视觉。知识笔记用稳定 `visualId` 声明总览或段落插入位置，registry 统一管理本地资产、来源、许可和可访问描述，通用 UI 不按课程 ID 特判。
+- `src/data/visuals/` 保存共享 visual registry 与视觉数据契约；当前注册 LLM 基础 40 张、Agent 机制 16 张、Agent Harness 24 张、上下文/RAG/记忆 24 张以及 AI 后端工程 16 张主视觉。知识笔记用稳定 `visualId` 声明总览或段落插入位置，registry 统一管理本地资产、来源、许可和可访问描述，通用 UI 不按课程 ID 特判。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，`src/core/context-rag-memory.js` 负责上下文组装、混合检索/证据打包与记忆生命周期，`src/core/backend-engineering.js` 负责流式生命周期、服务准入和任务投递账本，四者均不查询 DOM。
 - `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js`、`src/ui/harness-experiments.js`、`src/ui/context-experiments.js` 与 `src/ui/backend-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
@@ -428,8 +430,14 @@ LLM 基础八课建立了第一版模板，Agent 机制完成了首次跨模块�
 
 ```bash
 npm test
+npm run check:primary-references
+npm run check:context-visuals
+npm run check:agent-visuals
+npm run check:backend-visuals
+npm run check:release-content
 git diff --check
-find src tests -name '*.js' -exec node --check {} \;
+find src tests scripts \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;
+find assets/visuals -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
 ```
 
 发布前还应：

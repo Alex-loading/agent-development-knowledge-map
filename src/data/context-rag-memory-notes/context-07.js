@@ -6,6 +6,7 @@ const sections = Object.freeze([
       '长期记忆不是“保存过的聊天”这一宽泛集合，而是跨会话、绑定明确主体与作用域、经过准入并能被更新和删除的信息。Transcript 保存原始消息事件，会话 state 保存当前任务仍然有效的事实与约束，checkpoint 保存一次 run 的恢复位置；只有一部分未来仍有用、允许跨会话使用的内容才可能进入长期记忆。这个区分决定了所有者、保留期限与读取条件：一次对话结束并不意味着其中每句话都获得永久存在和自动投影的资格。',
       'Semantic/profile、episodic、procedural 是应用建模标签。Semantic/profile 用来标记相对稳定的事实或偏好，例如用户明确要求以后默认使用中文；episodic 用来标记带时间与情境的一次经历，例如某次行程或某轮任务采用过哪份资料；procedural 用来标记可复用的流程，例如经审核后保存的一套工作步骤。同一事实会因产品目的而采用不同标签，标签也不证明底层模型具有人类式的语义、情景或程序记忆机制。',
       '设计时先问“下一次什么任务、以谁的身份、在什么 scope 下需要它”，再决定是否建模为长期记忆。一次性行程通常更像有明确有效期的 episode，长期饮食禁忌可能是 profile，但后者仍需用户意图、敏感性与用途审查。若无法说明未来用途、主体、来源和失效方式，正确动作通常是留在 transcript 或当前 state，而不是为了“个性化”先永久保存。',
+      '还要把个人记忆与共享 corpus 分开：公共政策、产品手册和团队知识由文档 owner、版本与访问控制治理，不应复制成某个用户的长期记忆；个人记忆只保存经准入、绑定主体并有明确未来用途的跨会话信息。类似 AgentFS 的虚拟文件系统可以承载文件、事件或 provenance，但存储布局本身不定义 semantic、episodic 或 procedural 语义，也不替代准入、作用域和删除策略。',
     ]),
     keyPoints: Object.freeze([
       '长期记忆是经治理的跨会话信息，不等于 transcript、会话 state 或 checkpoint。',
@@ -21,6 +22,9 @@ const sections = Object.freeze([
       'res-context-coala',
       'res-context-langchain-memory',
       'res-context-memgpt',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
     ]),
   }),
   Object.freeze({
@@ -30,16 +34,22 @@ const sections = Object.freeze([
       '写入有两条常见路径。Hot-path（热路径）是在当前交互中同步决策，例如用户点击“记住”或明确说“以后都用双语”；它需要低延迟，但仍要先完成权限、敏感性、scope 与重复检查。Background（后台路径）是在会话后从候选事件中整理潜在记忆，可做更充分的归并和质量检查，却不能因为不打断用户就降低授权门槛。后台模型提出的是 candidate，不是已批准事实；没有清楚的同意与用途时应 reject 或等待确认。',
       'Admission policy（准入策略）应输出可审计动作，而不是一个模糊概率。输入至少包含 eventId、subject、scope、key/value、显式保存意图、sourceRef/provenance、confidence、sensitivity、observedAt 和建议 TTL；策略再返回 store、reject、no-op 或 supersede 及 reasonCode。Explicit-save 可以证明保存意图，却不能绕过禁止敏感字段、租户边界或不合法用途；系统从行为推断出的 observe 则应采用更高置信度与更短保留期，低置信或敏感观察优先拒绝。',
       'Confidence 表示当前来源对候选内容的支持程度，不等于事实永远正确，也不等于用户同意长期保存。Scope 表示允许在哪个产品、工作区或用途读取，不能用一个含糊的“全局”覆盖所有上下文。Provenance 记录内容来自哪条显式输入、工具结果或已审核事件，使后续纠正能解释旧值为何存在。TTL 则规定何时停止有效召回；永久不是默认值，尤其是一次性、易变或敏感信息。',
+      'Salience 只是“这条候选对未来任务是否可能有用”的工作负载相关排序信号，可以帮助后台路径决定先审查哪些 candidate；它不能替代用户同意、敏感性政策或 confidence，也不能把一条有趣但越权的信息变成可保存事实。准入 trace 应分别记录 salience、consent evidence、confidence 和最终 reasonCode，避免一个综合分数吞掉治理边界。',
     ]),
     keyPoints: Object.freeze([
       'Hot-path 与 background 路径都必须经过同一类授权、敏感性和作用域门槛。',
       '准入输出 store、reject、no-op 或 supersede，并保存明确 reasonCode。',
       'Explicit-save、confidence、scope、provenance 与 TTL 分别回答不同治理问题，不能互相替代。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-07-admission-conflict', afterParagraph: 3 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-langchain-memory',
       'res-context-memorybank',
       'res-context-coala',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -59,6 +69,8 @@ const sections = Object.freeze([
       'res-context-memorybank',
       'res-context-longmemeval',
       'res-context-langchain-memory',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-agentfs',
     ]),
   }),
   Object.freeze({
@@ -78,17 +90,22 @@ const sections = Object.freeze([
       'res-context-langchain-memory',
       'res-context-longmemeval',
       'res-context-coala',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
     ]),
   }),
   Object.freeze({
     id: 'expire-supersede-and-delete',
-    title: '分别证明过期、更正与删除生效',
+    title: '分别证明衰减、过期、更正与删除生效',
     paragraphs: Object.freeze([
+      'Relevance decay（相关性衰减）是召回排序策略：记录仍为 active 且仍可被治理门接受，但随着观察变旧或任务相关性下降，它的排序分数可以降低。它不等于 salience 准入分数，也不改变 consent、confidence 或记录状态；更不能代替用户纠正、TTL expiry 或 deletion。图中的 1.00 → 0.65 → 0.20 是合成教学 fixture，用来让同一条记录的降权可见，不是研究或产品给出的通用衰减曲线、阈值或时间常数。生产系统必须按任务、时间敏感性和真实召回评测选择函数，并在 trace 中同时保存原始相关性、age/decay factor、final score 与 policyVersion。',
       'TTL 到期表示记录从该时刻起不再有效召回，它与 supersession 和 delete 是不同原因。Supersession 表示有一个被接受的新值取代旧值，旧记录保留来源链但不再投影；delete 表示主体或策略要求停止使用该记录，即使没有替代值也必须立即阻断本轮及后续 projection。服务应给出 expired、superseded、deleted 等机器可读排除原因，并让索引、缓存和派生投影共享同一失效版本，避免主库状态已变而旁路仍返回旧值。',
       '“已删除”必须写清承诺层级。应用层可以证明外部 memory store 中的记录被标记或移除、检索索引与缓存完成失效、之后的 recall 和 prompt manifest 不再包含该 memoryId；这不等于模型参数已经反学习曾见内容，也不自动证明离线备份已物理擦除。备份保留期、恢复副本、日志脱敏和灾备删除应由另一个明确政策说明，不能用一次 API delete 的成功响应概括。',
       '同样，单次跨 subject/scope 召回没有返回记录，只证明这一调用路径的过滤结果，不足以证明整个租户隔离体系。租户隔离还需要身份解析、授权策略、存储分区、索引命名空间、缓存键、日志访问和运维权限的联合验证。完成标准应收紧为：在指定接口、策略版本与测试范围内，旧记录不再投影且越权查询无信息泄漏；不能把课堂模拟提升为真实隐私存储、备份擦除或全系统隔离证明。',
     ]),
     keyPoints: Object.freeze([
+      'Relevance decay 只改变仍有效记录的排序；1.00 → 0.65 → 0.20 是合成教学 fixture，不是普适事实。',
       'Expired、superseded 与 deleted 是三种不同失效原因，都必须阻断召回并留下可审计结果。',
       '外部 store 删除不等于模型参数反学习，也不自动证明备份已物理擦除。',
       '一次主体过滤测试不是租户隔离证明，隔离还涉及授权、分区、索引、缓存、日志与运维边界。',
@@ -98,10 +115,17 @@ const sections = Object.freeze([
       title: '删除承诺必须可验证',
       body: '可以声称指定服务不再召回某条 memoryId，不能据此声称模型参数、所有备份和所有租户通道都已清除。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-07-decay-delete', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-openai-data',
       'res-context-langchain-memory',
+      'res-context-memorybank',
       'res-context-longmemeval',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
     ]),
   }),
   Object.freeze({
@@ -122,6 +146,7 @@ const sections = Object.freeze([
       'res-context-langchain-memory',
       'res-context-memorybank',
       'res-context-longmemeval',
+      'res-context-primary-javaguide-memory',
     ]),
   }),
   Object.freeze({
@@ -142,6 +167,9 @@ const sections = Object.freeze([
       'res-context-openai-data',
       'res-context-langchain-memory',
       'res-context-memorybank',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-company-brain',
+      'res-context-primary-feishu-agentfs',
     ]),
   }),
 ]);
@@ -175,6 +203,8 @@ const misconceptions = Object.freeze([
 
 export const context07Note = Object.freeze({
   readingMinutes: 42,
+  overviewVisualId: 'visual-context-07-memory-lifecycle',
+  overviewVisualSectionId: 'separate-memory-from-history',
   introduction: '前六课已经把会话状态和外部证据压缩为有来源、预算有界的本轮上下文，但跨会话个性化还引入另一类问题：什么值得保存、谁可以读取、何时失效，以及用户纠正或删除后怎样证明旧值没有再进入 prompt。本章先把长期记忆与 transcript、state、checkpoint 分开，再把 semantic/profile、episodic、procedural 限定为应用建模标签。随后对比 hot-path 与 background 写入，建立包含 explicit-save、confidence、scope、provenance、TTL 的 admission policy，以事件账本实现 reject、store、no-op、supersede、expire 和 delete，并把召回收紧为按主体、作用域、状态与预算生成的 memory projection。最后完整走过 Memory Lifecycle 实验，用事件日志和排除原因验证生命周期，同时明确外部 store 删除不等于参数反学习、备份擦除或完整租户隔离证明。',
   sections,
   misconceptions,
@@ -185,7 +215,8 @@ export const context07Note = Object.freeze({
     '事件账本用 store、reject、no-op、supersede、expire 与 delete 保存每次决定及原因。',
     '召回先做主体、作用域、状态和有效期过滤，再按相关性与预算形成最小 memory projection。',
     '当前显式输入高于旧记忆投影，个人偏好也不能覆盖公共政策证据与系统约束。',
-    '过期、被取代和删除必须分别记录，并确保索引、缓存和投影不再返回失效记录。',
+    'Relevance decay 只降低仍有效记录的排序；TTL 过期、被取代和删除必须分别记录，并确保索引、缓存和投影不再返回失效记录。',
+    '1.00 → 0.65 → 0.20 是合成教学 fixture，不是通用记忆规律或产品阈值。',
     '外部 store 删除不证明参数反学习或备份擦除，单次过滤测试也不证明完整租户隔离。',
     'Memory Lifecycle 扩展轨迹实际产生 reject、store、no-op、expire、supersede 和 delete，并支持 subject/scope 反证。',
     '完成练习需要记忆事件日志、有效记录表、带排除原因的投影和分层删除传播清单。',

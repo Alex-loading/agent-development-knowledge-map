@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-08-detail-title visual-backend-08-detail-description">
+  <title id="visual-backend-08-detail-title">无状态 API 与有状态 Worker 发布拓扑</title>
+  <desc id="visual-backend-08-detail-description">API、队列、worker、provider 与区域数据边界独立扩缩，并沿同一证据链诊断。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
+  <defs><marker id="visual-backend-08-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">无状态 API 与有状态 Worker 发布拓扑</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">API、队列、worker、provider 与区域数据边界独立扩缩并沿证据链诊断。</text>
+  <g data-kind="deployment"><rect data-region="stateless-zone" x="45" y="175" width="410" height="300" rx="22" fill="#0B2233" stroke="#31556B" stroke-width="2" stroke-dasharray="9 7"/>
+<rect data-region="stateful-zone" x="475" y="175" width="680" height="300" rx="22" fill="#0B2233" stroke="#31556B" stroke-width="2" stroke-dasharray="9 7"/><polyline data-edge="api-enqueue" data-from="stateless-api" data-to="queue" data-kind="flow" points="225,311 280,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-detail-arrow)"/>
+<g data-edge-label="api-enqueue">
+      <rect x="197" y="224" width="110" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="252" y="243" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">202 / jobId</text>
+    </g>
+<polyline data-edge="queue-lease" data-from="queue" data-to="stateful-worker" data-kind="flow" points="440,311 495,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-detail-arrow)"/>
+<g data-edge-label="queue-lease">
+      <rect x="434" y="224" width="66" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="467" y="243" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">LEASE</text>
+    </g>
+<polyline data-edge="worker-provider" data-from="stateful-worker" data-to="provider" data-kind="flow" points="685,311 740,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-detail-arrow)"/>
+<g data-edge-label="worker-provider">
+      <rect x="666" y="224" width="92" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="712" y="243" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">deadline</text>
+    </g>
+<polyline data-edge="worker-data" data-from="stateful-worker" data-to="regional-data" data-kind="flow" points="590,352 590,410 1055,410 1055,352" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-detail-arrow)"/>
+<g data-edge-label="worker-data">
+      <rect x="742" y="378" width="166" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="825" y="397" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">regional boundary</text>
+    </g>
+<polyline data-edge="provider-failover" data-from="provider" data-to="stateful-worker" data-kind="failover" points="825,270 825,155 590,155 590,270" fill="none" stroke="#F5CA72" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-detail-arrow)"/>
+<g data-edge-label="provider-failover">
+      <rect x="661" y="159" width="92" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="707" y="178" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F5CA72" text-anchor="middle">FAILOVER</text>
+    </g><g data-node="stateless-api" data-kind="service">
+    <rect x="55" y="270" width="170" height="82" rx="14" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="140" y="308" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STATELESS API</text>
+<text x="140" y="327" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">CANARY 5%</text>
+  </g>
+<g data-node="queue" data-kind="queue">
+    <rect x="280" y="270" width="160" height="82" rx="14" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="360" y="308" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">QUEUE</text>
+<text x="360" y="327" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">schema v42</text>
+  </g>
+<g data-node="stateful-worker" data-kind="worker">
+    <rect x="495" y="270" width="190" height="82" rx="14" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="590" y="308" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STATEFUL WORKER</text>
+<text x="590" y="327" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">LEASE · ROLLBACK</text>
+  </g>
+<g data-node="provider" data-kind="external">
+    <rect x="740" y="270" width="170" height="82" rx="14" fill="#553240" stroke="#F2A6B2" stroke-width="2"/>
+    <text x="825" y="308" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">PROVIDER</text>
+<text x="825" y="327" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">FAILOVER</text>
+  </g>
+<g data-node="regional-data" data-kind="authority">
+    <rect x="965" y="270" width="180" height="82" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1055" y="308" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">REGIONAL DATA</text>
+<text x="1055" y="327" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">regional boundary</text>
+  </g></g>
+  <g data-value="deploy-canary">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">canary 5%</text>
+  </g>
+<g data-value="deploy-schema">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">schema v42</text>
+  </g>
+<g data-value="deploy-rollback">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">rollback v41</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">overloaded、slow、wrong、unsafe 需要不同处置。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">DEPLOYMENT · stateless-api</text>
+</svg>

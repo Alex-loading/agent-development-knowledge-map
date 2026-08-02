@@ -5,7 +5,7 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '学习大语言模型时，第一步不是记住一串缩写，而是先判断每个词在回答什么问题。人工智能（AI）描述的是让机器完成感知、预测、决策或生成等任务的宽泛目标；它既包含从数据学习的方法，也包含搜索、规划、规则推理等不依赖训练神经网络的方法。因此，AI 不能与聊天机器人、神经网络或某一家模型画等号。',
       '机器学习和深度学习属于“如何实现能力”的方法轴：机器学习让系统从数据中学习规律，深度学习则主要用多层神经网络学习表示。生成式 AI 属于“系统产出什么”的能力轴，关注产生文本、图像等新内容；大语言模型（LLM）是面向语言建模的一类大型模型，现代 LLM 通常用深度学习实现。两条轴可以交叉，却不该被压成一条没有分叉的包含链。',
-      '画关系图时，可以先写“AI”这个大范围，在其中标出机器学习和深度学习的方法关系；再单独画一条生成能力轴，把语言生成对应到 LLM，并在旁边注明视觉、语音等深度学习系统并不都是 LLM。这样既能回答“LLM 通常是基于深度学习的生成模型”这道判断题，也能在面试追问时说明：AI 还有非学习方法，深度学习也远不只处理语言。',
+      '画关系图时，可以先写“AI”这个大范围，在其中标出机器学习和深度学习的方法关系；再单独画一条生成能力轴，把语言生成对应到 LLM，并在旁边注明视觉、语音等深度学习系统并不都是 LLM。工程地图还要把模型、应用与 Agent runtime 分层：LLM 提供候选能力，应用组织业务输入与验证，Agent runtime 再编排上下文、工具和控制。这样既能回答“LLM 通常是基于深度学习的生成模型”这道判断题，也能在面试追问时说明：AI 还有非学习方法，深度学习也远不只处理语言。',
     ]),
     keyPoints: Object.freeze([
       'AI 是能力目标的宽泛集合，不等于机器学习、深度学习或聊天产品。',
@@ -16,7 +16,7 @@ const sections = Object.freeze([
       title: '不要背一条错误的箭头链',
       body: '“AI→机器学习→深度学习”可表达方法上的包含关系，但“生成式 AI→LLM”描述的是能力与模型类别；两组关系应在图中交叉说明。',
     }),
-    sourceIds: Object.freeze(['res-ms-ai', 'res-ms-genai', 'res-hf-llm']),
+    sourceIds: Object.freeze(['res-ms-ai', 'res-ms-genai', 'res-hf-llm', 'res-llm-primary-javaguide-ai']),
   }),
   Object.freeze({
     id: 'minimal-learning-loop',
@@ -39,7 +39,7 @@ const sections = Object.freeze([
     id: 'from-generation-to-llm',
     title: '从生成模型到大语言模型',
     paragraphs: Object.freeze([
-      '判别式任务通常要在给定候选中输出标签或分数，例如判断一封邮件属于哪个类别；生成式任务则要产生新的内容。语言模型把生成问题写成“在已有文本条件下，下一个语言单位有多可能”。这种目标不会让模型内置一个事实数据库，而是让它学习文本中可用于预测的模式，所以流畅、相关与事实正确是需要分别评测的性质。',
+      '判别式任务通常要在给定候选中输出标签或分数，例如判断一封邮件属于哪个类别；生成式任务则要产生新的内容。语言模型把生成问题写成 next-token prediction（下一 token 预测）：在已有文本条件下，下一个语言单位有多可能。这种目标不会让模型内置一个答案数据库，而是让它学习文本中可用于预测的模式，所以流畅、相关与事实正确是需要分别评测的性质。',
       '文本进入现代 LLM 前会先被 tokenizer 切成 token，并映射成数字 ID。token 是模型词表中的处理单位，可能是词、子词、标点、汉字或字节片段，不能简单理解为自然语言中的一个词。自回归生成会根据当前全部可见 token 计算下一个 token 的概率分布，选出结果后把它追加到上下文，再重复同一过程，直到满足停止条件。',
       '“大语言模型”中的“大”提示了模型、数据和计算规模，但规模本身不是严格能力保证。对 Agent 开发者更有用的边界是：LLM 接收上下文并生成语言或结构化候选，它擅长从模式中归纳、转换和起草，却可能受训练数据偏差、上下文长度、资源限制和概率生成影响。不要因为输出像解释，就推断模型拥有人的理解，也不要用未经核验的参数量给模型能力排序。',
     ]),
@@ -50,7 +50,7 @@ const sections = Object.freeze([
     visuals: Object.freeze([
       Object.freeze({ visualId: 'visual-llm-01-autoregressive-generation', afterParagraph: 1 }),
     ]),
-    sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai']),
+    sourceIds: Object.freeze(['res-ms-genai', 'res-hf-llm', 'res-ms-ai', 'res-llm-primary-javaguide-ai', 'res-llm-primary-javaguide-core-concepts']),
   }),
   Object.freeze({
     id: 'training-versus-inference',

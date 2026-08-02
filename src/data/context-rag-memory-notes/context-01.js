@@ -3,9 +3,9 @@ const sections = Object.freeze([
     id: 'five-information-objects',
     title: '先把五类信息对象分开',
     paragraphs: Object.freeze([
-      '学习 Agent 状态、检索和记忆之后，一个常见错觉是“只要信息被系统保存，模型就能随时看见”。本章先拆掉这个错觉。本课程把信息分成 prompt context、conversation state、retrieval corpus、checkpoint 与 long-term memory 五类。这个五层划分是课程为了工程分析建立的应用模型，不是某篇论文、某个 SDK 或行业组织发布的统一标准；它的价值在于迫使设计者回答作用域、生命周期、所有者和投影方式，而不是用“记忆”一词掩盖差异。',
-      'Prompt context 是一次模型调用真正可见的输入，包括本轮指令、当前请求以及被选中的状态、证据和记忆投影。Conversation state 是当前会话仍然有效的消息、事实、约束和未决项，它可以比单次输入更完整。Retrieval corpus 是跨调用保存并可检索的源文档集合；模型不会因为文档已经入库或建立向量索引就自动读取它。三者的关键差别不是数据库类型，而是“信息是否已被选择进入这一次调用”。',
-      'Checkpoint 保存特定 run 的控制位置和恢复所需信息，例如已完成步骤、游标或待处理动作；它服务运行恢复，不等于用户长期记忆，也不应默认进入 prompt。Long-term memory 则保存跨会话且经过准入策略的信息，例如用户明确要求保留的稳定偏好。它同样只是后端记录，召回后还要校验主体、作用域、时效和相关性，才能形成本轮投影。因而“持久化”只能说明保存寿命，不能说明用途，更不能说明模型可见性。',
+      '第一条边界在模型训练之前就已经出现。Training knowledge 是模型参数在训练阶段吸收的统计模式，应用通常不能为一次请求精确追溯或即时改写；runtime context 则是一次调用真正可见、由宿主在运行时组装的输入。JavaGuide 用 prompt 与 context 的区别建立入口，Harness 101 的“模型之外”进一步提醒：检索、状态、权限和恢复由宿主负责。两者都不意味着参数知识、运行输入或外部存储天然可信。',
+      '运行时还要分开 transcript、working state、external memory 与 durable corpus。Transcript 是消息和工具事件的历史证据；working state 是从这些事件归并出的当前约束、事实和未决项；external memory 是按主体和生命周期写入、以后可召回的记录；durable corpus 是版本化、可检索的源文档集合。它们可以落在同一种数据库里，却不能因此共用准入、更新、删除和投影规则。',
+      '本课程把 runtime context、conversation state、retrieval corpus、checkpoint 与 long-term memory 作为五类工程对象。Checkpoint 保存特定 run 的控制位置与恢复证据，不等于用户长期记忆；corpus、state 和 memory 也不会因为已经持久化就自动进入模型。这个五层划分是课程应用模型，不是某个 SDK 或行业标准；它的用途是迫使设计者标出作用域、生命周期、所有者、来源与可见条件。',
     ]),
     keyPoints: Object.freeze([
       '五层是课程应用模型，用作用域、生命周期、所有者和投影关系澄清职责，不是外部来源的统一标准。',
@@ -20,6 +20,9 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-beyond-model',
+      'res-context-primary-feishu-prompt-memory',
     ]),
   }),
   Object.freeze({
@@ -28,23 +31,28 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       '面对一条信息时，先不要问“放哪个数据库”，而要连续问四个问题。第一，它属于哪一个主体和范围：当前调用、当前会话、某次 run、某个用户，还是共享语料？第二，它在什么时候产生，又在什么时候失效？第三，谁有权更新、纠正或删除？第四，模型在什么条件下需要看见它？这四问把存储实现推迟到语义边界之后，能避免把运行游标、公共手册和用户偏好混进同一个所谓 memory store。',
       '例如系统指令“不得泄露密钥”是每次调用都需要的 required context；用户在本轮说“只看中文资料”先进入 conversation state，并在本轮投影；员工手册属于 corpus，只有相关版本和段落经过检索后才投影；某工具已经执行到第三步属于 checkpoint，恢复控制器需要它，但回答用户通常不需要；用户明确要求跨会话保留的称呼偏好才可能进入长期记忆。即使这些对象都保存在同一数据库中，语义层仍然必须分开。',
-      '生命周期还决定错误的严重程度。把旧 corpus 版本投影进来会产生陈旧证据；把已被纠正的 state 当当前事实会制造冲突；把 checkpoint 文本塞给模型可能暴露内部控制信息；把一次性敏感内容永久记忆则扩大隐私风险。相反，过早删除 transcript 或旧版本也会破坏审计。正确做法不是追求单一保留时长，而是让每层拥有明确的有效状态、失效传播和可回取路径。',
+      '生命周期还决定错误的严重程度。把旧 corpus 版本投影进来会产生陈旧证据；把已被纠正的 state 当当前事实会制造冲突；把 checkpoint 文本塞给模型可能暴露内部控制信息；把一次性敏感内容永久记忆则扩大隐私风险。Context offloading 只把可恢复细节移到外部状态并在活动上下文留下引用，不自动赋予持久化、权限隔离或安全保证。正确做法是让每层拥有明确的有效状态、失效传播、回取路径和宿主控制。',
     ]),
     keyPoints: Object.freeze([
       '先定义主体、范围、寿命、更新权和可见条件，再选择存储介质。',
       '同一数据库可以承载不同对象，但不能因此抹平它们的语义与治理边界。',
       '失效、纠正、删除和审计要求随信息层不同而变化。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-01-offloading-boundary', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
   Object.freeze({
     id: 'projection-pipeline',
     title: '理解从后端对象到本轮输入的投影',
     paragraphs: Object.freeze([
-      'Projection（投影）是从较完整的后端对象中选择本轮需要的最小表示，再把它放入 prompt context 的过程。它不是简单拼接。对 conversation state，投影可能只取当前有效约束、最近事实和未决承诺；对 corpus，投影通常经过解析、版本选择、chunk、索引、查询召回、过滤、重排和预算打包；对长期记忆，投影还要检查主体、作用域、有效期与当前请求是否相关。原始 corpus 和 raw checkpoint 默认不投影，因为它们的用途与风险都不同。',
+      'Projection（投影）是从较完整的后端对象中选择本轮需要的最小表示，再把它放入 prompt context 的过程。它不是简单拼接，更不是把 prompt stuffing 误叫 context engineering。对 conversation state，投影只取当前有效约束、最近事实和未决承诺；对 corpus，投影经过版本选择、检索、过滤、重排和预算打包；对长期记忆，还要检查主体、作用域、有效期与相关性。原始 corpus、raw transcript 和 checkpoint 默认不整体投影。',
       '每次投影至少应保留可追溯关系。一个检索 chunk 需要能指向 documentId、version 和 source span；一个状态事实需要能指向产生或纠正它的消息；一条长期记忆需要有主体、准入原因和有效状态。这样，模型回答中的数字出错时，工程师可以沿着 prompt 条目回到选择结果，再回到源版本，而不是只看最终拼接字符串猜测问题发生在哪一层。',
       '投影也包含明确排除。过期、被 supersede、权限不匹配或与任务无关的信息应记录 excluded reason；raw corpus 和 checkpoint 被排除时，应说明 not-projectable，而不是让它们悄悄消失。显式排除看似增加日志量，实则让“模型为什么没看到某条信息”成为可回答问题。上下文工程因此不仅管理 included 项，也管理没有进入输入的候选及其原因。',
     ]),
@@ -53,9 +61,14 @@ const sections = Object.freeze([
       '每个投影项都要保留到后端对象、源版本或来源事件的追踪关系。',
       'Excluded reason 与 included manifest 同等重要，它们共同支持诊断。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-01-projection-lifecycle', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
   Object.freeze({
@@ -79,6 +92,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-lost-middle',
       'res-context-anthropic-engineering',
+      'res-context-primary-javaguide-context',
     ]),
   }),
   Object.freeze({
@@ -97,6 +111,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
   Object.freeze({
@@ -121,6 +137,8 @@ const sections = Object.freeze([
       'res-context-anthropic-engineering',
       'res-context-lost-middle',
       'res-context-practical-guide',
+      'res-context-primary-javaguide-context',
+      'res-context-primary-feishu-context-offloading',
     ]),
   }),
 ]);
@@ -150,6 +168,8 @@ const misconceptions = Object.freeze([
 
 export const context01Note = Object.freeze({
   readingMinutes: 35,
+  overviewVisualId: 'visual-context-01-object-map',
+  overviewVisualSectionId: 'five-information-objects',
   introduction: '你已经接触过 prompt、会话历史、向量库和 Agent 状态，但若把它们统称为“模型记忆”，系统就无法解释某条信息为何被保存、为何本轮可见、又为何在纠正或恢复后失效。本章建立一套明确标注为课程模型的五层信息地图：prompt context、conversation state、retrieval corpus、checkpoint 与 long-term memory。我们将用作用域和生命周期区分它们，用 projection 解释后端对象如何进入一次调用，再结合长上下文位置效应、context manifest 与 Context Router 教学流程，把“信息很多”转化为“来源清楚、选择有因、排除可查”的工程设计。',
   sections,
   misconceptions,

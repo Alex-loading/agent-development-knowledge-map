@@ -1,0 +1,72 @@
+export const backendSourceImpactDecisionEvidence = Object.freeze({
+  'impact-backend-01-tool-truth': {
+    lessonId: 'backend-01', sectionId: 'service-boundary',
+    resourceId: 'res-backend-primary-feishu-tool-truth', semanticKey: 'api-boundary',
+    targetPatterns: [/tool call.*候选|候选.*tool call/is],
+    sectionPatterns: [/provider.*tools.*storage/is, /observation/],
+    summaryPatterns: [/候选.*执行.*证据/s],
+    visualIds: ['visual-backend-01-overview'],
+  },
+  'impact-backend-02-stream-contract': {
+    lessonId: 'backend-02', sectionId: 'streaming-model',
+    resourceId: 'res-backend-primary-javaguide-llm-api', semanticKey: 'stream-lifecycle',
+    targetPatterns: [/同步 JSON.*SSE.*异步轮询/is],
+    sectionPatterns: [/disconnect.*cancel.*partial.*resume/is],
+    summaryPatterns: [/流式.*恢复.*状态/s],
+    visualIds: ['visual-backend-02-overview'],
+  },
+  'impact-backend-03-capacity': {
+    lessonId: 'backend-03', sectionId: 'admission-control',
+    resourceId: 'res-backend-primary-javaguide-gateway', semanticKey: 'capacity-envelope',
+    targetPatterns: [/shared capacity envelope/is],
+    sectionPatterns: [/concurrency.*queue.*deadline.*provider/is],
+    summaryPatterns: [/重试.*容量.*预算/s],
+    visualIds: ['visual-backend-03-overview'],
+  },
+  'impact-backend-04-replay': {
+    lessonId: 'backend-04', sectionId: 'job-contract',
+    resourceId: 'res-backend-primary-feishu-dynamic-workflow', semanticKey: 'job-state',
+    targetPatterns: [/replayable control.*external effect/is],
+    sectionPatterns: [/checkpoint.*DLQ.*reconcile/is],
+    summaryPatterns: [/控制.*重放.*副作用.*对账/s],
+    visualIds: ['visual-backend-04-overview'],
+  },
+  'impact-backend-05-ownership': {
+    lessonId: 'backend-05', sectionId: 'source-of-truth',
+    resourceId: 'res-backend-primary-feishu-company-brain', semanticKey: 'data-ownership',
+    targetPatterns: [/authorization-aware retrieval.*safe share/is],
+    sectionPatterns: [/PostgreSQL.*object storage.*vector store.*Redis/is],
+    summaryPatterns: [/知识.*权限.*缓存.*共享/s],
+    visualIds: ['visual-backend-05-overview'],
+  },
+  'impact-backend-06-exactly-once': {
+    lessonId: 'backend-06', sectionId: 'delivery-semantics',
+    resourceId: 'res-backend-primary-feishu-tool-truth', semanticKey: 'exactly-once-boundary',
+    targetPatterns: [/exactly-once.*business invariant/is],
+    sectionPatterns: [/outbox.*inbox.*dedupe.*lease.*reconcile/is],
+    summaryPatterns: [/exactly-once.*业务不变量.*证据/s],
+    visualIds: ['visual-backend-06-detail'],
+  },
+  'impact-backend-07-evaluation': {
+    lessonId: 'backend-07', sectionId: 'observability-model',
+    resourceId: 'res-backend-primary-javaguide-evaluation', semanticKey: 'observability',
+    targetPatterns: [/evaluation event.*high-cardinality metric/is],
+    sectionPatterns: [/log.*trace.*metric.*eval/is],
+    summaryPatterns: [/评测.*版本.*高基数/s],
+    visualIds: ['visual-backend-07-detail'],
+  },
+  'impact-backend-08-diagnosis': {
+    lessonId: 'backend-08', sectionId: 'scaling-units',
+    resourceId: 'res-backend-primary-javaguide-gateway', semanticKey: 'failure-diagnosis',
+    targetPatterns: [/overloaded.*slow.*wrong.*unsafe/is],
+    sectionPatterns: [/canary.*rollback.*failover.*regional boundary/is],
+    summaryPatterns: [/过载.*延迟.*质量.*安全/s],
+    visualIds: ['visual-backend-08-detail'],
+  },
+});
+
+export const irrelevantBackendImpactMutation = Object.freeze({
+  text: 'CSS grid、浏览器字体和静态颜色主题。',
+  sectionText: 'CSS grid、浏览器字体和静态颜色主题。',
+  summary: 'CSS grid、浏览器字体和静态颜色主题。',
+});

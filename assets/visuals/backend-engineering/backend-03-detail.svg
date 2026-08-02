@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-03-detail-title visual-backend-03-detail-description">
+  <title id="visual-backend-03-detail-title">准入控制的四个确定出口</title>
+  <desc id="visual-backend-03-detail-description">剩余 deadline、队列年龄、租户权重和依赖健康共同决定接受、排队、降级或拒绝。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
+  <defs><marker id="visual-backend-03-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">准入控制的四个确定出口</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">剩余 deadline、队列年龄、租户权重与依赖健康共同决定出口。</text>
+  <g data-kind="decision"><polyline data-edge="to-accept" data-from="request" data-to="accept" data-kind="flow" points="490,335 490,375 150,375 150,415" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-03-detail-arrow)"/>
+<g data-edge-label="to-accept">
+      <rect x="254" y="341" width="92" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="300" y="360" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">CAPACITY</text>
+    </g>
+<polyline data-edge="to-queue" data-from="request" data-to="queue" data-kind="flow" points="540,355 540,395 410,395 410,415" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-03-detail-arrow)"/>
+<g data-edge-label="to-queue">
+      <rect x="521" y="361" width="58" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="550" y="380" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">WAIT</text>
+    </g>
+<polyline data-edge="to-degrade" data-from="request" data-to="degrade" data-kind="flow" points="610,355 610,395 750,395 750,415" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-03-detail-arrow)"/>
+<g data-edge-label="to-degrade">
+      <rect x="634" y="361" width="92" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="680" y="380" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">FALLBACK</text>
+    </g>
+<polyline data-edge="to-reject" data-from="request" data-to="reject" data-kind="reject" points="675,295 1120,295 1120,448 1090,448" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-03-detail-arrow)"/>
+<g data-edge-label="to-reject">
+      <rect x="804" y="263" width="92" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="850" y="282" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">OVERLOAD</text>
+    </g><g data-node="request" data-kind="decision">
+      <rect x="475" y="235" width="200" height="120" rx="16" fill="none" stroke="none" stroke-width="0"/>
+      <polygon points="575,235 675,295 575,355 475,295" fill="#443716" stroke="#F5CA72" stroke-width="3"/>
+      <text x="575" y="292" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">REQUEST</text>
+<text x="575" y="311" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">budget + health</text>
+    </g>
+<g data-node="accept" data-kind="outcome">
+    <rect x="70" y="415" width="160" height="66" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="150" y="445" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">ACCEPT</text>
+<text x="150" y="464" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">slot available</text>
+  </g>
+<g data-node="queue" data-kind="outcome">
+    <rect x="330" y="415" width="160" height="66" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="410" y="445" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">BOUNDED QUEUE</text>
+<text x="410" y="464" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">bounded wait</text>
+  </g>
+<g data-node="degrade" data-kind="warning">
+    <rect x="670" y="415" width="160" height="66" rx="14" fill="#553240" stroke="#F2A6B2" stroke-width="2"/>
+    <text x="750" y="445" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">DEGRADE</text>
+<text x="750" y="464" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">smaller model</text>
+  </g>
+<g data-node="reject" data-kind="terminal">
+    <rect x="930" y="415" width="160" height="66" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1010" y="445" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">REJECT</text>
+<text x="1010" y="464" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">429 / 503</text>
+  </g></g>
+  <g data-value="age">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">queue age 1.1 s</text>
+  </g>
+<g data-value="retry-after">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">Retry-After 2 s</text>
+  </g>
+<g data-value="weight">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">tenant weight 3</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">重试不创造容量，所有尝试共用一个预算。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">DECISION · admission-control</text>
+</svg>

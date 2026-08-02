@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-02-overview-title visual-backend-02-overview-description">
+  <title id="visual-backend-02-overview-title">Typed SSE 可恢复生命周期</title>
+  <desc id="visual-backend-02-overview-description">同步、流式与异步路径共享状态机，断线、取消和恢复分别取证。 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。</desc>
+  <defs><marker id="visual-backend-02-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">Typed SSE 的可恢复生命周期</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">传输事件沿时间轴前进；断线、取消意图与业务终态分别取证。</text>
+  <g data-kind="timeline"><line x1="60" y1="300" x2="1120" y2="300" stroke="#31556B" stroke-width="6" stroke-linecap="round"/><polyline data-edge="created-delta" data-from="created" data-to="delta" data-kind="flow" points="175,300 230,300" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="created-delta">
+      <rect x="162.5" y="218" width="79" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="202" y="237" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">event 1</text>
+    </g>
+<polyline data-edge="delta-heartbeat" data-from="delta" data-to="heartbeat" data-kind="flow" points="360,300 415,300" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="delta-heartbeat">
+      <rect x="358" y="218" width="58" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="387" y="237" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">idle</text>
+    </g>
+<polyline data-edge="heartbeat-disconnect" data-from="heartbeat" data-to="disconnect" data-kind="flow" points="545,300 600,300" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="heartbeat-disconnect">
+      <rect x="530.5" y="218" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="572" y="237" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">network</text>
+    </g>
+<polyline data-edge="disconnect-resume" data-from="disconnect" data-to="delta" data-kind="recovery" points="665,265 665,190 295,190 295,265" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="disconnect-resume">
+      <rect x="403" y="156" width="154" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="480" y="175" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">RESUME CURSOR 17</text>
+    </g>
+<polyline data-edge="disconnect-cancel" data-from="disconnect" data-to="cancel" data-kind="flow" points="730,300 785,300" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="disconnect-cancel">
+      <rect x="719.5" y="218" width="75" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="757" y="237" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">CANCEL</text>
+    </g>
+<polyline data-edge="delta-terminal" data-from="delta" data-to="terminal" data-kind="terminal" points="295,335 295,455 1035,455 1035,335" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-overview-arrow)"/>
+<g data-edge-label="delta-terminal">
+      <rect x="767" y="423" width="166" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="850" y="442" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">EXPLICIT TERMINAL</text>
+    </g><g data-node="created" data-kind="event">
+    <rect x="45" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="110" cy="300" r="31" fill="#24375F" stroke="#9FB7FF" stroke-width="3"/>
+    <text x="110" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">CREATED</text>
+    <text x="110" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">STREAMING</text>
+  </g>
+<g data-node="delta" data-kind="event">
+    <rect x="230" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="295" cy="300" r="31" fill="#24375F" stroke="#9FB7FF" stroke-width="3"/>
+    <text x="295" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">DELTA #1</text>
+    <text x="295" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">seq 1</text>
+  </g>
+<g data-node="heartbeat" data-kind="event">
+    <rect x="415" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="480" cy="300" r="31" fill="#24375F" stroke="#9FB7FF" stroke-width="3"/>
+    <text x="480" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">HEARTBEAT</text>
+    <text x="480" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">keepalive</text>
+  </g>
+<g data-node="disconnect" data-kind="warning">
+    <rect x="600" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="665" cy="300" r="31" fill="#553240" stroke="#F2A6B2" stroke-width="3"/>
+    <text x="665" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">DISCONNECT</text>
+    <text x="665" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">DISCONNECTED</text>
+  </g>
+<g data-node="cancel" data-kind="warning">
+    <rect x="785" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="850" cy="300" r="31" fill="#553240" stroke="#F2A6B2" stroke-width="3"/>
+    <text x="850" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">CANCEL REQUEST</text>
+    <text x="850" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">CANCELLED</text>
+  </g>
+<g data-node="terminal" data-kind="terminal">
+    <rect x="970" y="265" width="130" height="70" rx="35" fill="none" stroke="none" stroke-width="0"/>
+    <circle cx="1035" cy="300" r="31" fill="#174B4A" stroke="#8EECE1" stroke-width="3"/>
+    <text x="1035" y="297" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="760" fill="#F5FBFF" text-anchor="middle">TERMINAL</text>
+    <text x="1035" y="317" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">COMPLETED</text>
+  </g></g>
+  <g data-value="ttft">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TTFT 420 ms</text>
+  </g>
+<g data-value="buffer">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">BUFFER 0 B</text>
+  </g>
+<g data-value="cursor">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">LAST EVENT 17</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">连接进度不是业务完成；恢复需要持久游标。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">TIMELINE · typed-sse</text>
+</svg>

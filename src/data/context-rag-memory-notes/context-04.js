@@ -4,7 +4,7 @@ const sections = Object.freeze([
     title: '先分开源文档、检索单元与引用单元',
     paragraphs: Object.freeze([
       '上一课把 transcript、canonical state 与摘要分开，是为了避免有损表示冒充原始证据；进入 RAG 后也要做同样的对象分离。Source document（源文档）是治理、版本与权限的载体，例如一份完整员工手册；retrieval unit（检索单元）是搜索系统返回候选的粒度，通常是 chunk；citation unit（引用单元）则是能精确支持答案中某条主张的原文范围。三者可以一对多，却不能因为都存进同一个向量库就被视为同一对象。',
-      '原始 RAG 研究把外部非参数知识与生成模型结合，DPR 展示了查询和段落分别编码后进行稠密召回的机制；这些来源能支撑“知识先成为可检索候选，再进入生成”的基本链路，却没有规定企业文档必须采用某套字段。本课因此把 documentId、version、permission、validFrom、validTo 与 source span 定义为练习中的工程合同：它们用于证明候选来自哪个有效源版本，而不是宣称这是论文或某个框架的通用 schema。',
+      '摄取管线必须逐阶段留下身份：acquire 取得原件与访问范围，parse 提取文本和结构，normalize 统一编码但保留变换记录，chunk 生成检索单元，metadata 绑定版本、ACL 和 span，embed 产生表示，index 建立可搜索派生结构。JavaGuide 的 RAG 基础与文档处理文章给出这条主干，原始 RAG 与 DPR 论文核验检索进入生成的研究边界；任何阶段失败都不能由下游向量库自动补救。',
       '一个向量记录若同时冒充三种单元，会造成两类典型错误。第一，更新整份手册时无法判断哪些旧 chunk 应失效；第二，答案只引用一个很大的 chunk，读者仍不知道其中哪一句支持主张。正确做法是让 retrieval unit 保留到 source document 的稳定映射，再让 citation unit 指向更精确的页码、段落、字符或结构路径。这样召回粒度可以为搜索优化，引用粒度仍能为审计优化。',
       '对象分离还决定测试方式。Source document 测版本、所有者和权限是否正确；retrieval unit 测查询能否召回及候选是否重复；citation unit 测给定 claim 能否落到精确原文。若把三类测试压成“向量库返回结果”，即使端到端回答偶然正确，也无法发现是源版本错误、切分丢义还是引用范围过宽。',
     ]),
@@ -21,6 +21,9 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-rag-paper',
       'res-context-dpr',
+      'res-context-openai-embeddings',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-document-processing',
     ]),
   }),
   Object.freeze({
@@ -28,7 +31,7 @@ const sections = Object.freeze([
     title: '按结构与回答需要设计切分',
     paragraphs: Object.freeze([
       'Chunking（切分）要解决的是“一个候选包含多少足以判断相关性的语义”。过小的片段可能只留下代词、结论或表格单元而丢掉标题与条件；过大的片段则把多个主题混在一起，降低定位精度并占用更多上下文预算。适度 overlap 可以保留跨边界语义，但重叠过多会产生近重复候选，使同一来源反复占据 top-k。因而 chunk 大小、边界和 overlap 是相互制约的实验变量，不是越大或越多越安全。',
-      '结构优先意味着不同文档采用不同起点。FAQ 可以把“问题＋完整答案”作为检索单元；政策文档可沿标题层级、条款与例外条件切分，同时继承上级标题；表格要保留表头、行列语义和单位，不能把单元格孤立成无上下文数字；代码则优先围绕函数、类或逻辑块，并把文件路径与符号名放入元数据。LangChain 的教学仓库和 Datawhale 课程可帮助观察索引流程，但它们是示例与交叉核验，不能替代目标语料实验。',
+      '四类常见策略回答不同问题。Fixed chunk 按字符或 token 提供可复现实验基线；structural chunk 沿标题、FAQ、表格或代码边界切分；semantic chunk 依据语义转折选择边界，但结果依赖模型与阈值；parent-child chunk 用小子块召回、再恢复含标题和上下文的父块。没有一种策略普遍最优，选择必须同时比较召回、重复、引用定位、父块恢复成本与目标问题。',
       '固定字符数或固定 token 数只应作为可复现实验的基线。例如在同一份评测集上建立“固定长度、无结构”和“结构感知、有限 overlap”两套索引，比较召回、重复率、引用定位和上下文成本；这里的任何具体 chunk_size 都只是该轮实验配置，不是来自来源的普适推荐。若结构切分反而漏掉跨段定义，应调整父标题继承、相邻窗口或父子单元映射，而不是把所有文档永久改成一个更大的固定值。',
       '切分失败要回到具体边界诊断：FAQ 命中问题却丢失答案，说明问答对被拆开；表格返回数字却没有单位，说明表头继承失败；代码只返回调用处而没有函数定义，说明 retrieval unit 与任务所需语义不匹配；政策引用遗漏例外，说明条款与限制条件被切断。不同症状需要不同结构修复，不能统一用更大 overlap 掩盖。',
     ]),
@@ -37,10 +40,14 @@ const sections = Object.freeze([
       'FAQ、政策、表格和代码需要不同边界，且都要保存解释片段所需的标题或结构上下文。',
       '固定 chunk 大小只能充当受控实验设置，不能写成跨语料最佳实践。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-04-chunk-strategies', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-rag-scratch',
       'res-context-llm-universe',
       'res-context-dpr',
+      'res-context-primary-javaguide-document-processing',
     ]),
   }),
   Object.freeze({
@@ -61,6 +68,8 @@ const sections = Object.freeze([
       'res-context-openai-embeddings',
       'res-context-openai-retrieval',
       'res-context-dpr',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-document-processing',
     ]),
   }),
   Object.freeze({
@@ -76,9 +85,14 @@ const sections = Object.freeze([
       '新版发布要协调新索引就绪与旧版退出，避免混答或知识空窗。',
       '撤权和失效需通过不同主体的实际检索与 trace 验证，不能只看控制台状态。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-04-version-acl-delete', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-openai-retrieval',
       'res-context-rag-paper',
+      'res-context-primary-javaguide-document-processing',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
   Object.freeze({
@@ -97,6 +111,7 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-rag-paper',
       'res-context-openai-retrieval',
+      'res-context-primary-javaguide-document-processing',
     ]),
   }),
   Object.freeze({
@@ -124,6 +139,9 @@ const sections = Object.freeze([
       'res-context-rag-paper',
       'res-context-rag-scratch',
       'res-context-llm-universe',
+      'res-context-primary-javaguide-rag',
+      'res-context-primary-javaguide-document-processing',
+      'res-context-primary-feishu-company-brain',
     ]),
   }),
 ]);
@@ -153,6 +171,8 @@ const misconceptions = Object.freeze([
 
 export const context04Note = Object.freeze({
   readingMinutes: 41,
+  overviewVisualId: 'visual-context-04-ingestion-pipeline',
+  overviewVisualSectionId: 'separate-source-retrieval-and-citation-units',
   introduction: '前三课已经说明模型本轮看到的是经过选择的上下文投影，而不是后台全部状态。本章把这条原则延伸到 RAG 摄取端：从一份受版本、权限和有效期治理的 source document 出发，区分用于搜索的 retrieval unit 与用于证明主张的 citation unit；再把结构切分、embedding 和 index 放回它们应有的位置。你将用 FAQ、产品手册和制度文档完成一套 chunk schema，比较结构感知与固定大小实验，保留 document、version、permission、validity 和 source span，并演练索引更新失败、旧版残留和权限撤销。目标不是记住一个 chunk_size，而是能解释每个检索单元怎样生成、为何有效、谁能看到，以及如何回到原文。',
   sections,
   misconceptions,

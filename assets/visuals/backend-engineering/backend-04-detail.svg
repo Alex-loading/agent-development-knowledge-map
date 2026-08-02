@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-04-detail-title visual-backend-04-detail-description">
+  <title id="visual-backend-04-detail-title">可重放控制与外部副作用矩阵</title>
+  <desc id="visual-backend-04-detail-description">journal 与 checkpoint 支撑控制面重放；外部 effect 必须依赖证据查询、对账或死信恢复。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
+  <defs><marker id="visual-backend-04-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">可重放控制与外部副作用矩阵</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">journal/checkpoint 可重放控制决定；外部 effect 必须另行取证与对账。</text>
+  <g data-kind="matrix"><g data-node="journal" data-kind="cell">
+    <rect x="70" y="200" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="180" y="232" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">JOURNAL</text>
+<text x="180" y="251" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">CONTROL PLANE</text>
+  </g>
+<g data-node="checkpoint" data-kind="cell">
+    <rect x="340" y="200" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="450" y="232" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CHECKPOINT</text>
+<text x="450" y="251" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">cursor 184</text>
+  </g>
+<g data-node="replay" data-kind="cell">
+    <rect x="70" y="380" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="180" y="412" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">REPLAY CONTROL</text>
+<text x="180" y="431" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">REPLAYABLE</text>
+  </g>
+<g data-node="effect" data-kind="cell">
+    <rect x="650" y="200" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="760" y="232" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">EXTERNAL EFFECT</text>
+<text x="760" y="251" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">NOT REPLAYABLE</text>
+  </g>
+<g data-node="reconcile" data-kind="cell">
+    <rect x="920" y="200" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="1030" y="232" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">RECONCILE</text>
+<text x="1030" y="251" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">proof receipt_9</text>
+  </g>
+<g data-node="dlq" data-kind="cell">
+    <rect x="920" y="380" width="220" height="70" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="1030" y="412" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">DLQ</text>
+<text x="1030" y="431" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">manual recovery</text>
+  </g><polyline data-edge="journal-checkpoint" data-from="journal" data-to="checkpoint" data-kind="flow" points="290,235 340,235" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-detail-arrow)"/>
+<g data-edge-label="journal-checkpoint">
+      <rect x="277.5" y="161" width="75" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="315" y="180" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">APPEND</text>
+    </g>
+<polyline data-edge="checkpoint-replay" data-from="checkpoint" data-to="replay" data-kind="flow" points="450,270 450,330 180,330 180,380" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-detail-arrow)"/>
+<g data-edge-label="checkpoint-replay">
+      <rect x="260.5" y="298" width="109" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="315" y="317" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">REPLAYABLE</text>
+    </g>
+<polyline data-edge="checkpoint-effect" data-from="checkpoint" data-to="effect" data-kind="flow" points="560,235 650,235" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-detail-arrow)"/>
+<g data-edge-label="checkpoint-effect">
+      <rect x="535" y="161" width="140" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="605" y="180" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">NOT REPLAYABLE</text>
+    </g>
+<polyline data-edge="effect-reconcile" data-from="effect" data-to="reconcile" data-kind="flow" points="870,235 920,235" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-detail-arrow)"/>
+<g data-edge-label="effect-reconcile">
+      <rect x="838" y="161" width="114" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="895" y="180" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">QUERY PROOF</text>
+    </g>
+<polyline data-edge="reconcile-dlq" data-from="reconcile" data-to="dlq" data-kind="terminal" points="1030,270 1030,380" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-detail-arrow)"/>
+<g data-edge-label="reconcile-dlq">
+      <rect x="1046" y="311" width="88" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="1090" y="330" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">NO PROOF</text>
+    </g></g>
+  <g data-value="journal-value">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">cursor 184</text>
+  </g>
+<g data-value="effect-value">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">effect mail:42</text>
+  </g>
+<g data-value="proof-value">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">proof receipt_9</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">控制决策可重放，外部副作用必须对账。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">MATRIX · replayable-control</text>
+</svg>

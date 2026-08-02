@@ -56,7 +56,7 @@ export const llm08Note = {
         '按语言、长度、风险、权限和证据冲突切片，分别衡量任务质量、grounding、格式、安全、成本与延迟。',
       ],
       visuals: [{ visualId: 'visual-llm-08-eval-funnel', afterParagraph: 2 }],
-      sourceIds: ['res-openai-evals', 'res-openai-cookbook', 'res-ms-genai', 'res-hf-agents'],
+      sourceIds: ['res-openai-evals', 'res-openai-cookbook', 'res-ms-genai', 'res-hf-agents', 'res-llm-primary-javaguide-evaluation', 'res-llm-primary-feishu-version-drifting'],
     },
     {
       id: 'graders-and-judge-calibration',
@@ -111,7 +111,7 @@ export const llm08Note = {
         '先守安全硬门槛，再按切片比较质量、成本与尾延迟的 Pareto 权衡；路由和缓存也需验证隐私与失效边界。',
       ],
       visuals: [{ visualId: 'visual-llm-08-release-pareto', afterParagraph: 3 }],
-      sourceIds: ['res-owasp-prompt-injection', 'res-hf-agents', 'res-ms-genai', 'res-anthropic-agents'],
+      sourceIds: ['res-owasp-prompt-injection', 'res-hf-agents', 'res-ms-genai', 'res-anthropic-agents', 'res-llm-primary-feishu-beyond-model'],
     },
     {
       id: 'refund-release-checklist',

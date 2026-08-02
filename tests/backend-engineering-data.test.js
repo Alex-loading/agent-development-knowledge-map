@@ -139,11 +139,18 @@ test('AI backend engineering exposes eight ordered lessons, sixteen quizzes and 
   }
 });
 
-test('the course publishes exactly 37 verified resources with complete evidence cards', () => {
-  assert.equal(backendEngineering.resources.length, 37);
-  assert.deepEqual(backendEngineering.resources.map(({ url }) => url), resourceUrls);
+test('the course preserves 37 verified legacy resources and adds canonical primary bindings', () => {
+  const legacyResources = backendEngineering.resources.filter(
+    ({ id }) => !id.startsWith('res-backend-primary-'),
+  );
+  const primaryResources = backendEngineering.resources.filter(
+    ({ id }) => id.startsWith('res-backend-primary-'),
+  );
+  assert.equal(legacyResources.length, 37);
+  assert.equal(primaryResources.length, 12);
+  assert.deepEqual(legacyResources.map(({ url }) => url), resourceUrls);
 
-  for (const resource of backendEngineering.resources) {
+  for (const resource of legacyResources) {
     assert.match(resource.id, /^res-backend-/);
     assert.equal(new URL(resource.url).protocol, 'https:', resource.id);
     assert.equal(resource.verifiedAt, VERIFIED_AT, resource.id);
@@ -171,6 +178,15 @@ test('the course publishes exactly 37 verified resources with complete evidence 
     assert.ok(evidence.coverage.every((item) => item.trim().length >= 8), resource.id);
     assert.ok(evidence.limitations.length >= 25, resource.id);
     assert.equal(evidence.verifiedAt, VERIFIED_AT, resource.id);
+  }
+
+  for (const resource of primaryResources) {
+    assert.match(resource.id, /^res-backend-primary-/);
+    assert.match(resource.canonicalSourceId, /^primary-/);
+    assert.ok(['javaguide-ai', 'feishu-harness-101'].includes(resource.sourceFamily));
+    assert.equal(resource.verifiedAt, '2026-07-30');
+    assert.equal(resource.evidence.authority, 'community');
+    assert.match(resource.evidence.limitations, /官方文档|原始论文|本地实验/);
   }
 
   const byId = new Map(backendEngineering.resources.map((resource) => [resource.id, resource]));
@@ -261,8 +277,8 @@ test('lesson references resolve resources and interviews in both directions with
       referencedInterviewIds.push(id);
     }
   }
-  assert.deepEqual(usedResourceIds, resourceIds, '37 项资源都应被至少一课使用');
-  assert.deepEqual(noteUsedResourceIds, resourceIds, '37 项资源都应被至少一篇笔记直接使用');
+  assert.deepEqual(usedResourceIds, resourceIds, '所有资源都应被至少一课使用');
+  assert.deepEqual(noteUsedResourceIds, resourceIds, '所有资源都应被至少一篇笔记直接使用');
   assert.equal(new Set(referencedInterviewIds).size, 24);
 
   for (const question of backendEngineering.interviewQuestions) {

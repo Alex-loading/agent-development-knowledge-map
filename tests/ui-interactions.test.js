@@ -111,7 +111,7 @@ function distinctInterviewProfiles(courses) {
   });
 }
 
-test('resource library combines real filters, renders empty state and resets to all 28 resources', (t) => {
+test('resource library combines real filters, renders empty state and resets to every resource', (t) => {
   const document = new FakeDocument();
   t.after(installFakeDom(document));
   const root = document.createElement('div');
@@ -127,13 +127,13 @@ test('resource library combines real filters, renders empty state and resets to 
   });
 
   render();
-  assert.equal(root.querySelectorAll('.resource-row').length, 28);
+  assert.equal(root.querySelectorAll('.resource-row').length, llmFoundation.resources.length);
 
   dispatchChange(root.querySelector('#resource-filter-platform'), 'GitHub');
   const githubRows = root.querySelectorAll('.resource-row');
   assert.ok(githubRows.length > 0);
   assert.ok(githubRows.every((row) => row.dataset.platform === 'GitHub'));
-  assert.ok(root.textContent.includes(`${githubRows.length} / 28`));
+  assert.ok(root.textContent.includes(`${githubRows.length} / ${llmFoundation.resources.length}`));
 
   dispatchChange(root.querySelector('#resource-filter-language'), '中文');
   dispatchChange(root.querySelector('#resource-filter-platform'), 'YouTube');
@@ -141,7 +141,7 @@ test('resource library combines real filters, renders empty state and resets to 
   assert.ok(root.textContent.includes('没有符合当前筛选条件的资料'));
 
   findButton(root, '重置筛选').click();
-  assert.equal(root.querySelectorAll('.resource-row').length, 28);
+  assert.equal(root.querySelectorAll('.resource-row').length, llmFoundation.resources.length);
   assert.ok(root.textContent.includes('启用筛选 0 项'));
 });
 

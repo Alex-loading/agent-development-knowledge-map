@@ -10,6 +10,14 @@ import { backendEngineering } from '../src/data/backend-engineering.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
 
+const stableModuleLessonIds = Object.freeze({
+  'llm-foundation': Array.from({ length: 8 }, (_, index) => `llm-${String(index + 1).padStart(2, '0')}`),
+  'agent-mechanism': Array.from({ length: 8 }, (_, index) => `agent-${String(index + 1).padStart(2, '0')}`),
+  'agent-harness': Array.from({ length: 8 }, (_, index) => `harness-${String(index + 1).padStart(2, '0')}`),
+  'context-rag-memory': Array.from({ length: 8 }, (_, index) => `context-${String(index + 1).padStart(2, '0')}`),
+  'backend-engineering': Array.from({ length: 8 }, (_, index) => `backend-${String(index + 1).padStart(2, '0')}`),
+});
+
 function assertRegistryIdsAreUnique(selectIds, label) {
   const idsByCourse = Object.values(courseRegistry).map(selectIds);
   const ids = idsByCourse.flat();
@@ -72,6 +80,32 @@ test('route resolver opens registered dashboards and lessons from the production
     view: 'lesson',
     lessonId: 'backend-01',
   });
+});
+
+test('all forty stable lesson routes resolve without aliases or redirects', () => {
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(courseRegistry).map(([moduleId, course]) => [
+      moduleId,
+      course.lessons.map(({ id }) => id),
+    ])),
+    stableModuleLessonIds,
+  );
+
+  for (const [moduleId, lessonIds] of Object.entries(stableModuleLessonIds)) {
+    assert.deepEqual(resolveRoute(`#${moduleId}/dashboard`), {
+      hash: `#${moduleId}/dashboard`,
+      moduleId,
+      view: 'dashboard',
+    });
+    for (const lessonId of lessonIds) {
+      assert.deepEqual(resolveRoute(`#${moduleId}/lesson/${lessonId}`), {
+        hash: `#${moduleId}/lesson/${lessonId}`,
+        moduleId,
+        view: 'lesson',
+        lessonId,
+      });
+    }
+  }
 });
 
 test('route resolver keeps a canonical fallback for invalid Agent lessons', () => {

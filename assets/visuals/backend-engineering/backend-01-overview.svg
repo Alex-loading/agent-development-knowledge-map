@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-01-overview-title visual-backend-01-overview-description">
+  <title id="visual-backend-01-overview-title">AI API 五层责任边界</title>
+  <desc id="visual-backend-01-overview-description">客户端、AI API、模型供应商、工具与存储之间的职责和可信证据边界。 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。</desc>
+  <defs><marker id="visual-backend-01-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">AI API 的五层责任边界</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">消息越过宿主边界时，身份、版本、能力与证据必须显式传递。</text>
+  <g data-kind="sequence"><g data-node="client" data-kind="actor">
+    <rect x="58" y="178" width="156" height="48" rx="12" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="136" y="209" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CLIENT</text>
+    <line x1="136" y1="226" x2="136" y2="478" stroke="#31556B" stroke-width="2" stroke-dasharray="7 7"/>
+  </g>
+<g data-node="api" data-kind="actor">
+    <rect x="290" y="178" width="156" height="48" rx="12" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="368" y="209" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">AI API</text>
+    <line x1="368" y1="226" x2="368" y2="478" stroke="#31556B" stroke-width="2" stroke-dasharray="7 7"/>
+  </g>
+<g data-node="provider" data-kind="actor">
+    <rect x="522" y="178" width="156" height="48" rx="12" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="600" y="209" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">PROVIDER</text>
+    <line x1="600" y1="226" x2="600" y2="478" stroke="#31556B" stroke-width="2" stroke-dasharray="7 7"/>
+  </g>
+<g data-node="tools" data-kind="actor">
+    <rect x="754" y="178" width="156" height="48" rx="12" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="832" y="209" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">TOOLS</text>
+    <line x1="832" y1="226" x2="832" y2="478" stroke="#31556B" stroke-width="2" stroke-dasharray="7 7"/>
+  </g>
+<g data-node="storage" data-kind="actor">
+    <rect x="986" y="178" width="156" height="48" rx="12" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="1064" y="209" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STORAGE</text>
+    <line x1="1064" y1="226" x2="1064" y2="478" stroke="#31556B" stroke-width="2" stroke-dasharray="7 7"/>
+  </g><polyline data-edge="request" data-from="client" data-to="api" data-kind="request" points="136,270 368,270" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-overview-arrow)"/>
+<g data-edge-label="request">
+      <rect x="210.5" y="236" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="252" y="255" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">REQUEST</text>
+    </g>
+<polyline data-edge="inference" data-from="api" data-to="provider" data-kind="flow" points="368,320 600,320" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-overview-arrow)"/>
+<g data-edge-label="inference">
+      <rect x="433.5" y="286" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="484" y="305" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">INFERENCE</text>
+    </g>
+<polyline data-edge="authorized-call" data-from="api" data-to="tools" data-kind="flow" points="368,370 832,370" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-overview-arrow)"/>
+<g data-edge-label="authorized-call">
+      <rect x="525.5" y="336" width="149" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="600" y="355" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">AUTHORIZED CALL</text>
+    </g>
+<polyline data-edge="persist-evidence" data-from="api" data-to="storage" data-kind="commit" points="368,420 1064,420" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-overview-arrow)"/>
+<g data-edge-label="persist-evidence">
+      <rect x="637.5" y="386" width="157" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="716" y="405" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">PERSIST EVIDENCE</text>
+    </g></g>
+  <g data-value="request-value">
+    <rect x="64" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="189" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">requestId req_42</text>
+  </g>
+<g data-value="model-value">
+    <rect x="330" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="455" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">model v7</text>
+  </g>
+<g data-value="prompt-value">
+    <rect x="596" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="721" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">prompt v12</text>
+  </g>
+<g data-value="tool-schema-value">
+    <rect x="862" y="525" width="274" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="999" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">tool schema v3</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">API 契约必须绑定身份、版本、能力与执行证据。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">SEQUENCE · client-api</text>
+</svg>

@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend08Note = deepFreeze({
   readingMinutes: 28,
   introduction: '部署不是把本地进程装进镜像，扩容也不是把副本数调大。API、worker、PostgreSQL、Redis 和模型服务分别受连接、CPU、队列、内存、显存与 token 调度约束，错误地一起复制可能让成本上升却让尾延迟更差。本课把前七课的协议与可靠性边界放进真实发布流程，通过容器、独立扩容单元、动态批处理、负载测试和故障树完成一个可评审的 AI 后端设计包。',
+  overviewVisualId: 'visual-backend-08-overview',
+  overviewVisualSectionId: 'scaling-units',
   sections: [
     {
       id: 'container-boundary',
@@ -28,9 +30,11 @@ export const backend08Note = deepFreeze({
         'API ingress 可能受连接和序列化限制，异步 worker 受任务类型和 CPU 限制，数据库受连接、锁和 I/O 限制，模型 server 受显存、scheduler 与 token 吞吐限制。把所有组件放进同一副本会让扩 API 顺便复制昂贵模型，也让模型故障拖走接入能力。部署拓扑应让不同瓶颈可分别扩容和降级。',
         'vLLM 的 API server、engine core、scheduler、KV cache 和 GPU worker 拓扑提供一个当前实现样本，帮助定位排队和内存位置；它是项目实现，不代表通用规范。不同版本、并行策略、模型和硬件会改变进程关系。架构图应标注观察到的实现版本与待验证假设，而不是把文档组件名变成永久事实。',
         '自动扩容信号要接近瓶颈。API 可看并发与 CPU，worker 可看队列年龄和可用 slot，模型可看排队请求、KV cache 压力和 token 吞吐。只按 CPU 扩 GPU 服务可能完全失效；只按队列深度又可能追赶已经超过 deadline 的任务。扩容还有加载延迟和冷缓存，准入必须在新容量 ready 前保护系统。',
+        '部署拓扑明确拆成 stateless API 与 stateful workers：autoscaling 不替代准入，canary 和 rollback 携带 model/prompt/tool 版本，migrations 保持新旧 payload 兼容，provider failover 复核质量与 capability，regional boundary 决定数据能否跨区。系统设计、网关与 AgentFS 都是实现观察；诊断分别判断 overloaded、slow、wrong、unsafe。',
       ],
       keyPoints: ['API、worker、数据层和模型层分别定位饱和资源', '项目拓扑是验证线索而非通用架构标准'],
-      sourceIds: ['res-backend-vllm-architecture', 'res-backend-vllm-server'],
+      sourceIds: ['res-backend-vllm-architecture', 'res-backend-vllm-server', 'res-backend-primary-javaguide-system-design', 'res-backend-primary-javaguide-gateway', 'res-backend-primary-feishu-agentfs'],
+      visuals: [{ visualId: 'visual-backend-08-detail', afterParagraph: 1 }],
     },
     {
       id: 'batching-tradeoff',

@@ -207,8 +207,8 @@ test('every LLM lesson has a source-grounded long-form knowledge note', () => {
   }
 });
 
-test('all 28 LLM resources provide complete evidence cards', () => {
-  assert.equal(llmFoundation.resources.length, 28, 'LLM 课程必须维护 28 份资源');
+test('all LLM resources preserve 28 legacy entries and provide complete evidence cards', () => {
+  assert.ok(llmFoundation.resources.length >= 28, 'LLM 课程必须完整保留 28 份既有资源');
   for (const resource of llmFoundation.resources) {
     assert.ok(resource.evidence, `${resource.id}: 必须提供 evidence 来源卡`);
     assert.ok(validAuthorities.has(resource.evidence.authority), `${resource.id}: evidence.authority 值无效`);
@@ -313,11 +313,11 @@ test('lesson resource and interview references resolve in both directions', () =
 
 test('resources are curated HTTPS entries with verification metadata', () => {
   assert.ok(llmFoundation.resources.length >= 18);
-  assert.ok(llmFoundation.resources.length <= 30);
+  assert.ok(llmFoundation.resources.length <= 50);
   for (const resource of llmFoundation.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assert.match(resource.verifiedAt, /^2026-07-(15|21|22)$/, `${resource.id}: verifiedAt 格式或允许日期无效`);
-    assert.ok(resource.verifiedAt <= '2026-07-22', `${resource.id}: verifiedAt 不得晚于 2026-07-22`);
+    assert.match(resource.verifiedAt, /^2026-07-(15|21|22|30)$/, `${resource.id}: verifiedAt 格式或允许日期无效`);
+    assert.ok(resource.verifiedAt <= '2026-07-30', `${resource.id}: verifiedAt 不得晚于 2026-07-30`);
     for (const field of ['source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }

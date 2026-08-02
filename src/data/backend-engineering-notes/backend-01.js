@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend01Note = deepFreeze({
   readingMinutes: 24,
   introduction: 'AI 后端的第一项工作不是挑框架，而是把“用户想得到一份结果”拆成可以被客户端、网关、服务和运维共同理解的协议。模型调用昂贵、耗时且可能失败，Agent 还会跨越多个工具与状态，因此普通 CRUD 中被忽略的边界会迅速变成重复扣费、错误重试和无法追责的问题。本课从服务边界、HTTP 语义和 OpenAPI 契约出发，建立后续流式、异步和可靠性设计都能复用的词汇。',
+  overviewVisualId: 'visual-backend-01-overview',
+  overviewVisualSectionId: 'service-boundary',
   sections: [
     {
       id: 'service-boundary',
@@ -17,9 +19,10 @@ export const backend01Note = deepFreeze({
         '研究报告服务看似只有“提交主题、返回报告”，实际至少包含身份校验、配额判断、请求持久化、Agent 编排、模型调用、工具访问、结果存储和通知。边界设计要先说明哪一层拥有业务事实，哪一层只做转发或缓存，以及一次请求离开本服务以后还有哪些副作用。若这些责任没有写清，团队会把一次 HTTP 成功误当成整个研究任务已经可靠完成。',
         '可以从不变量反推边界：同一租户不能读取他人报告；相同幂等键不能无意创建两个付费任务；已接受的任务必须能查询最终状态；模型供应商超时不能让数据库留下互相矛盾的记录。不变量比类图更有用，因为它直接说明必须在哪个持久化边界内检查条件、提交事实，并为边界外动作留下可对账的证据。',
         '接口层只应该承诺它能控制的事实。例如 202 表示服务接受了处理请求，而不是报告必然成功；201 可以表示资源已经创建，却不代表下游模型已经执行。将“接受”“开始”“完成”“失败”分成不同状态后，客户端才不会以连接是否存活猜测业务事实，后端也能为同步、流式和后台处理共用同一状态模型。',
+        '一级资料把边界具体化为 client → AI API → provider / tools / storage：服务端生成 requestId，并冻结 model version、prompt version 与 tool schema version；进入 provider 前依次完成 schema validation、error taxonomy、usage accounting 与 capability negotiation。Tool Truth 提醒我们，tool call 只是候选，只有宿主执行日志和可信 observation 才能更新存储事实。',
       ],
       keyPoints: ['用不变量和所有权定义服务边界', 'HTTP 响应只承诺当前边界已经证明的事实'],
-      sourceIds: ['res-backend-rfc9110', 'res-backend-openapi'],
+      sourceIds: ['res-backend-rfc9110', 'res-backend-openapi', 'res-backend-primary-javaguide-llm-api', 'res-backend-primary-feishu-tool-truth'],
     },
     {
       id: 'http-semantics',
@@ -36,12 +39,13 @@ export const backend01Note = deepFreeze({
       id: 'openapi-contract',
       title: 'OpenAPI 描述可检查的接口表面',
       paragraphs: [
-        'OpenAPI 将路径、operation、参数、请求体、响应、schema 和安全方案组织成机器可读文档。它的价值在于让前后端、SDK、mock、网关和契约测试共享同一份接口表面，而不是靠聊天记录同步。对 AI 服务而言，尤其要明确枚举状态、可空字段、错误结构、分页游标、幂等键和 requestId，避免自由文本承担机器协议。',
+        'OpenAPI 将路径、operation、参数、请求体、响应、schema 和安全方案组织成机器可读文档。它的价值在于让前后端、SDK、mock、网关和契约测试共享同一份接口表面，而不是靠聊天记录同步。JavaGuide 对结构化输出与 function calling 的梳理提示我们：对 AI 服务尤其要明确枚举状态、可空字段、错误结构、工具参数 schema、分页游标、幂等键和 requestId，避免自由文本承担机器协议。',
         '一份 schema 仍然可能与运行实现漂移。生成文档并不会验证数据库迁移、鉴权规则、超时、并发上限或副作用，因此 OpenAPI 不会自动保证实现兼容和可靠。团队应在 CI 中验证规范格式、生成客户端做编译检查、用契约样例命中真实服务，并把破坏性变更作为需要迁移窗口的产品决策，而不是悄悄修改字段。',
         '版本兼容要围绕调用方行为设计。增加可选字段通常比删除或改义安全，但客户端也应忽略未知响应字段；枚举增加值可能击穿穷举分支；把可选改成必填或改变默认值都可能破坏旧客户端。兼容窗口还要覆盖队列中等待的旧任务，因为它们可能由新 worker 读取旧 payload，不能只测试同版本即时 HTTP 请求。',
       ],
       keyPoints: ['规范、实现和契约测试三者需要持续对齐', '兼容性要覆盖客户端与队列中的旧载荷'],
-      sourceIds: ['res-backend-openapi'],
+      sourceIds: ['res-backend-openapi', 'res-backend-primary-javaguide-structured-output'],
+      visuals: [{ visualId: 'visual-backend-01-detail', afterParagraph: 1 }],
     },
     {
       id: 'resource-state',

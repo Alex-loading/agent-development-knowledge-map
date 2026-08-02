@@ -3,9 +3,9 @@ const sections = Object.freeze([
     id: 'separate-model-catalog-from-host-registry',
     title: '把模型目录与宿主注册表拆成两份视图',
     paragraphs: Object.freeze([
-      '上一课已经让 run 可以跨进程恢复，但一个耐久 run 只有在外部动作仍受宿主约束时才安全。本课先建立工具注册表：每条执行记录至少包含稳定 toolId、语义版本、参数 schema、返回契约、允许的 scope、风险等级、可能副作用、幂等属性、逐调用 timeout、owner 与审计策略。参数 schema 只回答输入长什么样，返回契约还要说明成功值、可识别错误和敏感字段；风险与副作用则决定授权、审批和记录强度。OpenAI Agents SDK 文档证明函数签名可生成 JSON Schema、Pydantic 可加约束、异步函数工具可设逐调用 timeout，但没有自动生成上述完整治理注册表。',
+      '飞书“工具的真相”先把工具拆成两个对象。Tool Definition 是面向模型的提案契约：名称与描述帮助发现，输入 schema 约束候选参数，安全的结果说明告诉模型会看到什么；它不包含可信身份、审批凭证或服务端执行权。宿主 Tool Registry 才保存稳定 toolId、语义版本、返回契约、scope、风险、副作用、幂等属性、timeout、owner、凭证引用与审计策略。OpenAI Agents SDK 的函数工具、JSON Schema、Pydantic 约束和逐调用 timeout 提供当前产品证据，但不会自动生成完整治理注册表。',
       '模型可见工具目录是注册表经过身份、任务与策略过滤后的最小子集，通常只暴露调用所需的名称、用途、参数 schema 与安全的结果说明。宿主执行注册表保存 owner、内部端点、凭证引用、数据分类、资源 scope、风险、副作用、幂等、timeout 和审计字段，不能因为模型“需要发现工具”就全部塞入上下文。以 read_file、send_message、issue_refund 为例，模型可以看到如何填写 path、recipient 或 orderId，却不应看到文件服务密钥、退款后台地址，也不应看到自己无权调用的管理工具。',
-      '每次候选调用都必须绑定具体工具版本。若 issue_refund@2 在审批等待期间升级为同名的 @3，哪怕字段看似兼容，旧审批也不能直接授权新实现；宿主要按保存的版本恢复，或重新生成摘要并请求审批。NIST 的工具使用资料支持按功能、访问模式、风险、可逆性、监控和自治程度分类，OWASP 也主张缩小工具功能与权限；把这些维度固化为统一 registry 字段，是本课程为可治理 Harness 提出的工程综合，并不是 NIST 标准或任一 SDK 的默认 schema。',
+      '工具进入模型前还要经过 discovery：Harness 按身份、任务、环境与策略过滤目录，必要时通过 Skill 或 MCP client 发现候选能力；模型随后做 decision，返回一个或多个 tool intent；Harness 再做结构与业务校验、authorization、approval、执行和 result 记录。MCP 位于集成边界：2025-11-25 Tools 规范要求 server 声明 tools capability，由 client 通过 tools/list 发现并以 tools/call 调用；协议把工具定义为 model-controlled，却不规定应用交互模型，因此不等于模型已获执行许可，也不替代应用授权。JavaGuide 的 MCP/Skills 比较只用于组织概念，协议消息和行为由版本化 MCP 官方规范核验。',
     ]),
     keyPoints: Object.freeze([
       '执行注册表同时记录版本化 schema、返回契约、scope、风险、副作用、幂等、timeout、owner 与审计策略。',
@@ -21,6 +21,10 @@ const sections = Object.freeze([
       'res-harness-openai-tools',
       'res-harness-nist-tool-use',
       'res-harness-owasp-agency',
+      'res-harness-primary-feishu-tool-truth',
+      'res-harness-primary-javaguide-mcp',
+      'res-harness-primary-javaguide-agent-skills',
+      'res-harness-mcp-tools-spec',
     ]),
   }),
   Object.freeze({
@@ -29,18 +33,23 @@ const sections = Object.freeze([
     paragraphs: Object.freeze([
       'Authentication 认证回答“发起者是谁”，例如登录用户、代表用户行动的服务账号，以及可验证的委托关系；Authorization 授权回答“该身份此刻能否对这个资源执行这个动作”，例如用户 A 能读项目 P 的 report.txt，却不能读项目 Q 的 secrets.env。Capability 是宿主根据身份、任务、资源范围和策略签发或计算出的可执行能力，例如只允许 read_file 访问 /reports 下只读路径、调用次数不超过十次；它应最小 scope、短期有效，并由宿主强制执行。',
       'Human approval 人工审批回答的是第四个问题：“这个已经通过认证与授权的具体高风险意图，是否得到人类同意？”审批必须是逐调用或按严格条件决定，而不是把工具永久解锁。send_message 的候选调用可绑定发件身份、收件人、规范化正文摘要与附件摘要；issue_refund 可绑定客户、订单、金额、币种和原因。即使批准者点击同意，执行端仍要验证操作者身份、服务账号委托链、订单归属和退款权限。审批补充授权，绝不能替代授权。',
-      '把三例放进同一条流水线就能看出差别：read_file 先认证调用者，再按项目与规范化路径授权，低敏只读场景可能无需人工审批；send_message 已获邮箱发送权限仍可能因外部收件人或敏感附件触发逐调用审批；issue_refund 即使服务账号可访问支付 API，也必须校验“代表哪个用户”、该用户对该订单的资源级权限、金额阈值和具体批准。OWASP 明确建议高影响动作引入用户批准，并要求下游系统对所有请求执行完整授权校验，这正说明 approval 不是权限替身。',
+      '调度还要判断 sequential 或 parallel。read_file(a) 与 read_file(b) 在授权和预算独立时可并行，结果按 callId 确定性回填；先 search 再按结果 read 必须顺序；send_message 与 issue_refund 即使由模型同轮提出，也因高风险副作用和共享业务状态按策略串行审批执行。并行只是一种 Harness 调度选择，不会共享审批、减少授权或把多个 call 合成一次副作用。OWASP 对高影响动作的用户批准和下游 complete mediation，正说明 approval 不是权限替身。',
     ]),
     keyPoints: Object.freeze([
       '认证确认身份，授权判断当前资源与动作，capability 收窄可执行能力，审批确认特定高风险意图。',
       '服务账号代表用户行动时，必须同时记录机器身份、最终用户与委托关系。',
       '任何人工批准都不能绕过执行端的资源级授权与 complete mediation。',
     ]),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-03-control-gates', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-openai-tools',
       'res-harness-openai-hitl',
       'res-harness-owasp-agency',
       'res-harness-nist-tool-use',
+      'res-harness-primary-feishu-tool-truth',
+      'res-harness-primary-feishu-claude-code-tools',
     ]),
   }),
   Object.freeze({
@@ -61,9 +70,13 @@ const sections = Object.freeze([
       title: 'Durable 不等于自动重验',
       body: 'SDK 能保存中断状态，只解决“如何回来”；“回来后还能不能执行”仍由宿主按当前身份、权限、资源、参数和策略重新判断。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-harness-03-approval-resume', afterParagraph: 1 }),
+    ]),
     sourceIds: Object.freeze([
       'res-harness-openai-hitl',
       'res-harness-langgraph-interrupts',
+      'res-harness-primary-feishu-claude-code-tools',
     ]),
   }),
   Object.freeze({
@@ -83,15 +96,16 @@ const sections = Object.freeze([
       'res-harness-openai-hitl',
       'res-harness-langgraph-interrupts',
       'res-harness-owasp-agency',
+      'res-harness-primary-feishu-tool-truth',
     ]),
   }),
   Object.freeze({
     id: 'derive-policies-for-three-tool-intents',
     title: '让读文件、发信与退款贯穿同一策略矩阵',
     paragraphs: Object.freeze([
-      'read_file@1 的参数 schema 可要求 projectId 与 relativePath，返回契约区分 content、not_found、forbidden 和 too_large；scope 是指定项目的只读目录，风险随数据分类变化，副作用为无外部写入，timeout 较短，owner 是文件平台组，审计记录规范化路径、资源版本和返回分类而不记录机密正文。模型只看到允许项目中的该工具视图。宿主仍需防路径穿越并检查真实文件对象的授权；“只读”通常降低审批需求，却不等于无需认证、授权和审计。',
+      'read_file@1 的参数 schema 可要求 projectId 与 relativePath，返回契约区分 content、not_found、forbidden 和 too_large；scope 是指定项目的只读目录，风险随数据分类变化，副作用为无外部写入，timeout 较短。模型只看到允许项目中的 Tool Definition，Harness 从 registry 解析真实适配器和权限。飞书的 Claude Code 工具清单只作为截至冻结日的 transcript 观察：工具名、参数与可用性都必须版本化，不能据此声称今天的产品清单完整不变。',
       'send_message@2 的参数 schema 包含 senderProfile、recipients、subject、body 与 attachmentIds，返回契约给出 accepted、messageId、policy_denied 与 delivery_unknown；scope 限定企业邮箱和允许域，风险由外部收件人、敏感内容与附件决定，副作用是不可轻易撤回的对外通信。幂等元数据说明使用 callId 或 deliveryKey 去重，timeout 后先查 messageId 再决定是否重试。审批绑定规范化收件人、正文与附件摘要，但实际发送前仍要重验发件权限、附件读取权限和最新外发策略。',
-      'issue_refund@3 的参数 schema 要求 orderId、customerId、amountMinor、currency 与 reasonCode，返回契约区分 refunded、already_refunded、limit_exceeded、order_changed 与 indeterminate；scope 限定支付账户、订单归属和金额阈值，风险高且产生财务副作用，幂等键绑定订单与业务请求，timeout 后必须先对账。owner 是支付平台组，审计保存用户、服务账号委托、审批证据、政策版本和远端操作 ID。恢复执行前再次读取订单与累计退款，确保批准金额、当前可退金额和最终请求完全一致。',
+      'issue_refund@3 的参数 schema 要求 orderId、customerId、amountMinor、currency 与 reasonCode，返回契约区分 refunded、already_refunded、limit_exceeded、order_changed 与 indeterminate；scope 限定支付账户、订单归属和金额阈值，风险高且产生财务副作用。把三类工具的真实 transcript 收集后，应调优定义而不是只改 prompt：错误选择说明名称/描述或目录过滤不清，参数反复失败说明 schema 和错误反馈不够精确，误并行说明依赖与 sideEffect 元数据缺失，审批频繁误触说明风险规则需拆分。任何调优都版本化并回放固定案例。',
     ]),
     keyPoints: Object.freeze([
       '同一 registry 模板要按工具具体化返回契约、资源 scope、风险、副作用、幂等、timeout、owner 与审计内容。',
@@ -102,6 +116,8 @@ const sections = Object.freeze([
       'res-harness-openai-tools',
       'res-harness-nist-tool-use',
       'res-harness-owasp-agency',
+      'res-harness-primary-feishu-claude-code-tools',
+      'res-harness-primary-feishu-tool-truth',
     ]),
   }),
   Object.freeze({
@@ -123,6 +139,8 @@ const sections = Object.freeze([
       'res-harness-langgraph-interrupts',
       'res-harness-nist-tool-use',
       'res-harness-owasp-agency',
+      'res-harness-primary-javaguide-mcp',
+      'res-harness-primary-javaguide-agent-skills',
     ]),
   }),
 ]);
@@ -156,7 +174,9 @@ const misconceptions = Object.freeze([
 
 export const harness03Note = Object.freeze({
   readingMinutes: 38,
-  introduction: '一个 Agent 提出“读文件”“发消息”或“退一笔款”时，模型输出的只是候选意图，不是执行许可。上一课解决了 run 如何保存与恢复，本课继续追问：恢复后的宿主凭什么确认工具仍是原版本、调用者仍有权、批准者看到的参数就是最终参数？你将把模型可见的能力目录与宿主执行注册表分离，用版本化 schema、返回契约、scope、风险、副作用、幂等、timeout、owner 和审计字段治理工具；再严格区分 authentication、authorization、capability 与逐调用 human approval。随后以 read_file、send_message、issue_refund 贯穿暂停、持久化、resume token、规范化参数摘要和 TOCTOU 重验，并比较 OpenAI RunState 与 LangGraph 节点重跑的真实差异。课程引用证明具体 SDK 能力和安全原则，完整 registry 与审批恢复协议则明确作为宿主侧工程综合，不冒充框架自动保证。',
+  introduction: '一个 Agent 提出“读文件”“发消息”或“退一笔款”时，模型输出的只是候选 tool intent，不是执行许可。飞书“工具的真相”和 Claude Code 工具清单提供提案—执行—结果 transcript 的教学主线，JavaGuide MCP/Skills 用来校准发现与集成边界，OpenAI、NIST、OWASP 和 LangGraph 负责验证当前产品与安全语义。你将把 Tool Definition 与宿主 Registry 分开，完整走过 discovery、decision、sequential/parallel scheduling、authorization、approval、execution 和 result feedback，再用失败 transcript 调优描述、schema、依赖与风险元数据。最后以三个工具演练暂停、持久化和 TOCTOU 重验，并明确 MCP 连接能力却不替代模型决策或 Harness 授权。',
+  overviewVisualId: 'visual-harness-03-tool-governance',
+  overviewVisualSectionId: 'separate-model-catalog-from-host-registry',
   sections,
   misconceptions,
   recap: Object.freeze([

@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend04Note = deepFreeze({
   readingMinutes: 27,
   introduction: '当研究任务超过一次交互可接受的时长，正确抽象不是“开一个后台线程”，而是把接纳、排队、领取、执行、提交和通知设计成可恢复协议。API 进程可能重启，broker 可能重投，worker 可能在任意指令后崩溃，GPU 任务还会占用大量不可抢占资源。本课用显式 job 状态、队列容量、租约与 worker 生命周期，把异步执行从框架调用提升为可以解释每个失败点的工程系统。',
+  overviewVisualId: 'visual-backend-04-overview',
+  overviewVisualSectionId: 'job-contract',
   sections: [
     {
       id: 'job-contract',
@@ -17,9 +19,11 @@ export const backend04Note = deepFreeze({
         '提交接口应在返回前持久化最小权威事实：jobId、tenant、请求指纹、状态、创建时间和幂等键。响应通常是 202 加状态查询位置，表示服务已接受处理，而不是 worker 已开始或任务必然完成。客户端之后按 jobId 查询，也可以订阅事件；无论连接是否保留，任务身份和状态都不改变。',
         '状态机需要区分 queued、leased 或 running、succeeded、failed、cancellation_requested、cancelled 等阶段，并规定合法转换与终态。进度是辅助信息，不能取代状态；worker 上报 80% 后崩溃并不表示剩余工作可安全继续。每次转换记录 actor、attempt、时间、原因和版本，迟到更新使用条件写避免覆盖新终态。',
         '托管产品的 background mode 可以展示轮询和取消的接口形态，但它是当前产品语义，不等同于自建队列的持久性保证。自己的服务必须明确状态保留期、结果访问授权、取消尽力程度和未知结果处理。不要从某个 SDK 的状态字段反推 broker、数据库和外部副作用具有同样保证。',
+        '完整控制面从 submit、bounded queue、worker lease、checkpoint 与 progress event 一直覆盖 cancel、DLQ 和 reconcile。AI 系统设计资料提供组件骨架，Dynamic Workflow 提供运行观察：replayable control 不等于 external effect；控制决策可 journal 后 replay，外部副作用必须用幂等键和 effect ledger 对账。',
       ],
       keyPoints: ['202 表示接受处理而非保证完成', '状态机和条件更新保护权威 job 事实'],
-      sourceIds: ['res-backend-openai-background', 'res-backend-celery-tasks'],
+      sourceIds: ['res-backend-openai-background', 'res-backend-celery-tasks', 'res-backend-primary-javaguide-system-design', 'res-backend-primary-feishu-dynamic-workflow'],
+      visuals: [{ visualId: 'visual-backend-04-detail', afterParagraph: 1 }],
     },
     {
       id: 'queue-capacity',

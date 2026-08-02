@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend07Note = deepFreeze({
   readingMinutes: 26,
   introduction: '一个 AI 服务能响应健康检查，不代表它已经加载模型、可以接收新流量，也不代表重启能修复当前故障。生命周期协议决定实例何时建立依赖、何时加入负载均衡、何时摘流和排空；可观测性则提供每个决定的证据。本课把 ASGI lifespan、Kubernetes startup/readiness/liveness 与请求、流、队列、worker、缓存和模型指标连接起来，目标是在发布和故障期间既不静默丢工作，也不让错误探针制造重启风暴。',
+  overviewVisualId: 'visual-backend-07-overview',
+  overviewVisualSectionId: 'lifecycle-states',
   sections: [
     {
       id: 'lifecycle-states',
@@ -17,9 +19,10 @@ export const backend07Note = deepFreeze({
         'ASGI lifespan 让服务器与应用交换 startup 和 shutdown 消息，适合初始化连接池、客户端、配置与本地资源。startup complete 表示应用初始化流程完成，却不自动说明所有远端依赖永远健康；shutdown complete 表示应用清理结束，也不证明编排器给了足够时间排空所有在途任务。',
         '实例状态可以建模为 starting、ready、draining、stopped。starting 阶段加载必要资源并拒绝业务流量；ready 才接纳请求；收到终止信号后先进入 draining，让 readiness 失败并停止领取新任务，再等待 SSE、数据库提交和 worker 到安全点。超出 drain deadline 的工作必须落入可恢复状态，而不是仅打印一条取消日志。',
         '启动失败应快速暴露具体阶段，避免服务看似运行却永远不 ready。可选依赖可以降级，关键 schema 不兼容则应阻止接流量。初始化也要幂等，因为编排器可能重启进程；不要在每次 startup 无条件创建重复外部资源或执行无法回滚的迁移。',
+        '生产 lifecycle 还要生成结构化 log、trace、metric、token/cost 与 evaluation event。Golden set 和线上灰度识别“HTTP 成功但答案 wrong/unsafe”；Dynamic Workflow 轨迹帮助恢复，Install.md 只作为可验证安装前置观察。model、prompt 与 tool version 进入日志/trace 和受控评测维度，但不能作为无界 high-cardinality metric label。',
       ],
       keyPoints: ['用明确状态控制接流、摘流和排空', 'lifespan 消息不替代编排与业务恢复协议'],
-      sourceIds: ['res-backend-asgi-lifespan', 'res-backend-kubernetes-probes'],
+      sourceIds: ['res-backend-asgi-lifespan', 'res-backend-kubernetes-probes', 'res-backend-primary-javaguide-evaluation', 'res-backend-primary-feishu-dynamic-workflow', 'res-backend-primary-feishu-install-md'],
     },
     {
       id: 'probe-semantics',
@@ -50,9 +53,11 @@ export const backend07Note = deepFreeze({
         '一次业务运行可能经历 HTTP request、SSE stream、job、message、worker attempt、cache lookup 和 model request。为它们分配 requestId、runId、jobId、messageId、attempt 和 traceId，并在边界传播关联。指标用于聚合趋势，日志保存离散状态与高基数身份，trace 展示跨服务阶段；三者通过稳定身份互相跳转。',
         'Prometheus 的通用 instrumentation 建议从 online serving 的请求、错误与延迟出发，但 AI 服务还应观察 TTFT、完整时长、活跃流、队列深度和年龄、重试、缓存命中、模型 token、batch 和资源利用。vLLM 暴露的当前 health、load 或 metrics 能作为实现参考，项目字段不等于所有模型服务的通用规范。',
         '标签必须控制基数。status、route、model_family 和 error_class 适合有限枚举，requestId、tenantId、完整模型版本或 prompt 不应直接成为 metric label。高基数不仅增加费用，还会让监控在故障高峰失效。敏感 prompt 默认不记录，只保存经过批准的摘要、长度、哈希或安全分类。',
+        '评测事件把 model、prompt、tool version 与 golden set、线上灰度结果关联，补足“HTTP 成功但答案 wrong/unsafe”的盲区。逐请求身份留在 log/trace；metric 只使用受控枚举，防止 evaluation event 变成无界 high-cardinality metric。',
       ],
       keyPoints: ['用身份链关联请求、任务、worker、缓存和模型', '聚合指标控制基数，细粒度身份进入日志和 trace'],
-      sourceIds: ['res-backend-prometheus', 'res-backend-vllm-server'],
+      sourceIds: ['res-backend-prometheus', 'res-backend-vllm-server', 'res-backend-primary-javaguide-evaluation'],
+      visuals: [{ visualId: 'visual-backend-07-detail', afterParagraph: 1 }],
     },
     {
       id: 'alerts-runbooks',

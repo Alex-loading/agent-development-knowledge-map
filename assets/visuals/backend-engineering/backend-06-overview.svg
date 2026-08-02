@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-06-overview-title visual-backend-06-overview-description">
+  <title id="visual-backend-06-overview-title">幂等投递与 Effect Ledger</title>
+  <desc id="visual-backend-06-overview-description">至少一次投递通过 outbox、inbox、去重和副作用账本恢复。 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。</desc>
+  <defs><marker id="visual-backend-06-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">至少一次投递的幂等账本</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">重复交付是协议输入；提交点、确认点与真实副作用分别留证。</text>
+  <g data-kind="ledger"><polyline data-edge="publish" data-from="outbox" data-to="broker" data-kind="flow" points="215,293 280,293" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="publish">
+      <rect x="205.5" y="206" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="247" y="225" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">publish</text>
+    </g>
+<polyline data-edge="deliver" data-from="broker" data-to="inbox" data-kind="flow" points="440,293 505,293" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="deliver">
+      <rect x="408" y="206" width="128" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="472" y="225" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">AT LEAST ONCE</text>
+    </g>
+<polyline data-edge="dedupe" data-from="inbox" data-to="effect-ledger" data-kind="flow" points="665,293 730,293" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="dedupe">
+      <rect x="622.5" y="206" width="149" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="697" y="225" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">IDEMPOTENCY KEY</text>
+    </g>
+<polyline data-edge="prove" data-from="effect-ledger" data-to="reconcile" data-kind="flow" points="900,293 965,293" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="prove">
+      <rect x="875" y="206" width="114" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="932" y="225" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">QUERY PROOF</text>
+    </g>
+<polyline data-edge="redelivery" data-from="broker" data-to="inbox" data-kind="redelivery" points="360,336 360,410 585,410 585,336" fill="none" stroke="#F5CA72" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="redelivery">
+      <rect x="417.5" y="378" width="109" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="472" y="397" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F5CA72" text-anchor="middle">REDELIVERY</text>
+    </g>
+<polyline data-edge="unknown-reconcile" data-from="inbox" data-to="reconcile" data-kind="ambiguous" points="625,336 625,450 1050,450 1050,336" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-06-overview-arrow)"/>
+<g data-edge-label="unknown-reconcile">
+      <rect x="745" y="418" width="180" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="835" y="437" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">DUPLICATE / UNKNOWN</text>
+    </g><g data-node="outbox" data-kind="record">
+    <rect x="55" y="250" width="160" height="86" rx="8" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <line x1="67" y1="304" x2="203" y2="304" stroke="#477083" stroke-width="1"/>
+    <text x="135" y="290" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">OUTBOX</text>
+<text x="135" y="309" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">intent committed</text>
+  </g>
+<g data-node="broker" data-kind="transport">
+    <rect x="280" y="250" width="160" height="86" rx="8" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <line x1="292" y1="304" x2="428" y2="304" stroke="#477083" stroke-width="1"/>
+    <text x="360" y="290" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">BROKER</text>
+<text x="360" y="309" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">at-least-once</text>
+  </g>
+<g data-node="inbox" data-kind="record">
+    <rect x="505" y="250" width="160" height="86" rx="8" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <line x1="517" y1="304" x2="653" y2="304" stroke="#477083" stroke-width="1"/>
+    <text x="585" y="290" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">INBOX</text>
+<text x="585" y="309" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">dedupe messageId</text>
+  </g>
+<g data-node="effect-ledger" data-kind="authority">
+    <rect x="730" y="250" width="170" height="86" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <line x1="742" y1="304" x2="888" y2="304" stroke="#477083" stroke-width="1"/>
+    <text x="815" y="290" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">EFFECT LEDGER</text>
+<text x="815" y="309" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">UNKNOWN OUTCOME</text>
+  </g>
+<g data-node="reconcile" data-kind="outcome">
+    <rect x="965" y="250" width="170" height="86" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <line x1="977" y1="304" x2="1123" y2="304" stroke="#477083" stroke-width="1"/>
+    <text x="1050" y="290" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">RECONCILE</text>
+<text x="1050" y="309" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">PROOF / DUPLICATE</text>
+  </g></g>
+  <g data-value="ledger-key">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">KEY report:42</text>
+  </g>
+<g data-value="ledger-attempt">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">ATTEMPT 2</text>
+  </g>
+<g data-value="ledger-outcome">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">OUTCOME AMBIGUOUS</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">unknown outcome 先取证，exactly-once 是业务不变量。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">LEDGER · idempotent-at</text>
+</svg>

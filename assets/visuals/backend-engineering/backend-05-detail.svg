@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-05-detail-title visual-backend-05-detail-description">
+  <title id="visual-backend-05-detail-title">版本化 Cache-aside 与击穿保护</title>
+  <desc id="visual-backend-05-detail-description">读取校验租户与版本，miss 经 singleflight 有界回源，写入后发布失效。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
+  <defs><marker id="visual-backend-05-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">版本化 Cache-aside 与击穿保护</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">读取先校验租户/版本；miss 由 singleflight 有界回源，写后发布失效。</text>
+  <g data-kind="cache"><polyline data-edge="read-miss" data-from="read" data-to="cache-miss" data-kind="flow" points="215,289 270,289" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="read-miss">
+      <rect x="213" y="211" width="58" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="242" y="230" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">MISS</text>
+    </g>
+<polyline data-edge="miss-singleflight" data-from="cache-miss" data-to="singleflight" data-kind="flow" points="440,289 620,289" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="miss-singleflight">
+      <rect x="501" y="211" width="58" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="530" y="230" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">MISS</text>
+    </g>
+<polyline data-edge="singleflight-postgres" data-from="singleflight" data-to="postgres" data-kind="flow" points="810,289 870,289" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="singleflight-postgres">
+      <rect x="789.5" y="211" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="840" y="230" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">COALESCED</text>
+    </g>
+<polyline data-edge="postgres-fill" data-from="postgres" data-to="fill" data-kind="flow" points="955,328 955,410" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="postgres-fill">
+      <rect x="983" y="356" width="114" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="1040" y="375" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">VERSION v12</text>
+    </g>
+<polyline data-edge="fill-read" data-from="fill" data-to="read" data-kind="feedback" points="870,442 135,442 135,328" fill="none" stroke="#F5CA72" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="fill-read">
+      <rect x="460.5" y="410" width="79" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="500" y="429" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F5CA72" text-anchor="middle">HIT v12</text>
+    </g>
+<polyline data-edge="read-hit" data-from="read" data-to="fill" data-kind="hit" points="215,300 230,300 230,385 830,385 830,432 870,432" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-detail-arrow)"/>
+<g data-edge-label="read-hit">
+      <rect x="490.5" y="353" width="79" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="530" y="372" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">HIT v12</text>
+    </g><g data-node="read" data-kind="entry">
+    <rect x="55" y="250" width="160" height="78" rx="14" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="135" y="286" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">READ v12</text>
+<text x="135" y="305" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">tenant acme · HIT</text>
+  </g>
+<g data-node="cache-miss" data-kind="cache">
+    <rect x="270" y="250" width="170" height="78" rx="28" fill="#3D315B" stroke="#B8A7F8" stroke-width="2"/>
+    <ellipse cx="355" cy="264" rx="81" ry="12" fill="none" stroke="#B8A7F8" stroke-width="2"/>
+    <text x="355" y="286" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CACHE MISS</text>
+<text x="355" y="305" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">MISS</text>
+  </g>
+<g data-node="singleflight" data-kind="gate">
+    <rect x="620" y="250" width="190" height="78" rx="14" fill="#443716" stroke="#F5CA72" stroke-width="2"/>
+    <text x="715" y="286" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SINGLEFLIGHT</text>
+<text x="715" y="305" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">one origin read</text>
+  </g>
+<g data-node="postgres" data-kind="authority">
+    <rect x="870" y="250" width="170" height="78" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="955" y="286" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">POSTGRESQL</text>
+<text x="955" y="305" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">ACL v9 · truth</text>
+  </g>
+<g data-node="fill" data-kind="event">
+    <rect x="870" y="410" width="170" height="64" rx="14" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="955" y="439" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">FILL TTL</text>
+<text x="955" y="458" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">TTL 300 s</text>
+  </g></g>
+  <g data-value="cache-tenant">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TENANT acme</text>
+  </g>
+<g data-value="cache-acl">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">ACL v9</text>
+  </g>
+<g data-value="cache-ttl">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TTL 300 s</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">缓存可以丢失，授权与业务真相不能丢失。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">CACHE · versioned-cache</text>
+</svg>

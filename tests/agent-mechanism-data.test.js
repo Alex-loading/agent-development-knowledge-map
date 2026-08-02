@@ -34,7 +34,7 @@ const agentNoteExpectations = new Map([
 ]);
 const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
 const validEvidenceRoles = new Set(['core', 'cross-check', 'extension']);
-const allowedResourceVerificationDates = new Set(['2026-07-20', '2026-07-22']);
+const allowedResourceVerificationDates = new Set(['2026-07-20', '2026-07-22', '2026-07-30']);
 
 const expectedResourceUrls = new Map([
   ['res-agent-anthropic-effective', 'https://www.anthropic.com/engineering/building-effective-agents'],
@@ -345,16 +345,23 @@ test('every quiz item has a valid answer and explanation', () => {
   }
 });
 
-test('course has exactly 29 fixed, fully described and platform-resolvable resources', () => {
-  assert.equal(agentMechanism.resources.length, 29);
+test('course preserves 29 fixed resources and appends 18 primary bindings', () => {
+  const legacyResources = agentMechanism.resources.filter(
+    ({ id }) => !id.startsWith('res-agent-primary-'),
+  );
+  const primaryResources = agentMechanism.resources.filter(
+    ({ id }) => id.startsWith('res-agent-primary-'),
+  );
+  assert.equal(legacyResources.length, 29);
+  assert.equal(primaryResources.length, 18);
   assert.deepEqual(
-    new Map(agentMechanism.resources.map(({ id, url }) => [id, url])),
+    new Map(legacyResources.map(({ id, url }) => [id, url])),
     expectedResourceUrls,
   );
 
   for (const resource of agentMechanism.resources) {
     assert.match(resource.url, /^https:\/\//, resource.id);
-    assertValidDateOnOrBefore(resource.verifiedAt, '2026-07-22', `${resource.id}: verifiedAt`);
+    assertValidDateOnOrBefore(resource.verifiedAt, '2026-07-30', `${resource.id}: verifiedAt`);
     assert.ok(allowedResourceVerificationDates.has(resource.verifiedAt),
       `${resource.id}: verifiedAt 必须属于已知真实核验日期集合`);
     for (const field of ['id', 'title', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
@@ -412,8 +419,8 @@ test('course has exactly 29 fixed, fully described and platform-resolvable resou
   assert.ok(agentMechanism.resources.some(({ type }) => type.includes('社区补充')));
 });
 
-test('all 29 Agent resources provide complete evidence cards', () => {
-  assert.equal(agentMechanism.resources.length, 29, 'Agent 课程必须维护 29 份资源');
+test('all 47 Agent resources provide complete evidence cards', () => {
+  assert.equal(agentMechanism.resources.length, 47, 'Agent 课程必须维护 29 份既有资源与 18 份一级资料绑定');
   for (const resource of agentMechanism.resources) {
     const { evidence } = resource;
     assert.ok(evidence, `${resource.id}: 必须提供 evidence 来源卡`);
@@ -428,7 +435,7 @@ test('all 29 Agent resources provide complete evidence cards', () => {
     if (evidence.verifiedAt !== undefined) {
       assertValidDateOnOrBefore(
         evidence.verifiedAt,
-        '2026-07-22',
+        '2026-07-30',
         `${resource.id}: evidence.verifiedAt`,
       );
     }

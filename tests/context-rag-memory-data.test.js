@@ -76,19 +76,19 @@ const interviewTitles = [
   '用户修改了先前事实，状态如何更新？',
   '如何设计 chunking？',
   'Corpus 如何处理版本和失效？',
-  'source document、retrieval unit、citation unit 有何不同？',
-  'Sparse、dense、hybrid retrieval 怎么选？',
+  '源文档怎样经过摄取管线成为可搜索且可引用的索引？',
+  'Sparse、dense、hybrid retrieval 怎么选，RRF 怎样避免混加分数尺度？',
   'top-k、threshold 和 metadata filter 如何配合？',
-  'Query rewrite 有什么价值和风险？',
+  '怎样选择 ANN 配置而不只追求更高 recall？',
   '为什么需要 reranker？',
   '为什么需要去重和多样性？',
-  'RAG 中有引用为什么仍会答错？',
+  '怎样证明 evidence packet 中的工具结果真实可回源，且引用支持答案主张？',
   '什么是长期记忆，什么时候写？',
   'Semantic、episodic、procedural memory 怎么理解？',
-  '如何处理冲突、过期和删除？',
+  '如何区分 relevance decay、TTL expiry、supersession 和 deletion？',
   'RAG 答错时如何诊断？',
-  'RAG、fine-tuning 和长期记忆如何选？',
-  '请设计上下文、RAG 与记忆架构。',
+  'GraphRAG 何时作为检索分支，知识更新何时增量处理或全量重建？',
+  '请设计上下文、RAG 与记忆架构，并说明 RAG、fine-tuning、长期记忆的职责。',
 ];
 
 function assertUnique(values, label) {
@@ -289,13 +289,25 @@ test('context-08 assigns an explicit owner to every source-to-citation layer', a
   }
 });
 
-test('resources are the exact 29 verified HTTPS entries with complete metadata', () => {
-  assert.equal(contextRagMemory.resources.length, 29);
-  assert.deepEqual(contextRagMemory.resources.map(({ url }) => url), resourceUrls);
+test('resources preserve the exact 29 verified entries and append 15 primary narratives', () => {
+  const legacyResources = contextRagMemory.resources.filter(
+    ({ sourceTier }) => sourceTier !== 'primary-narrative',
+  );
+  const primaryResources = contextRagMemory.resources.filter(
+    ({ sourceTier }) => sourceTier === 'primary-narrative',
+  );
+  assert.equal(contextRagMemory.resources.length, 44);
+  assert.equal(legacyResources.length, 29);
+  assert.equal(primaryResources.length, 15);
+  assert.deepEqual(legacyResources.map(({ url }) => url), resourceUrls);
   for (const resource of contextRagMemory.resources) {
     assert.match(resource.id, /^res-context-/);
     assert.equal(new URL(resource.url).protocol, 'https:', resource.id);
-    assert.equal(resource.verifiedAt, '2026-07-23', resource.id);
+    assert.equal(
+      resource.verifiedAt,
+      resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
+      resource.id,
+    );
     for (const field of ['id', 'title', 'url', 'source', 'language', 'type', 'difficulty', 'stage', 'value']) {
       assert.ok(resource[field], `${resource.id}: ${field}`);
     }
@@ -305,7 +317,7 @@ test('resources are the exact 29 verified HTTPS entries with complete metadata',
   }
 });
 
-test('all 29 Context RAG and Memory resources provide complete evidence cards', () => {
+test('all 44 Context RAG and Memory resources provide complete evidence cards', () => {
   const validAuthorities = new Set(['official', 'academic', 'expert', 'community']);
   const validRoles = new Set(['core', 'cross-check', 'extension']);
   const byId = new Map(contextRagMemory.resources.map((resource) => [resource.id, resource]));
@@ -325,7 +337,9 @@ test('all 29 Context RAG and Memory resources provide complete evidence cards', 
       && evidence.limitations.trim().length >= 15,
     `${resource.id}: evidence.limitations 至少需要 15 个字符`);
     if (evidence.verifiedAt !== undefined) {
-      assert.equal(evidence.verifiedAt, '2026-07-23',
+      assert.equal(
+        evidence.verifiedAt,
+        resource.sourceTier === 'primary-narrative' ? '2026-07-30' : '2026-07-23',
         `${resource.id}: evidence.verifiedAt 必须记录本轮正文核验日期`);
     }
   }
@@ -389,6 +403,7 @@ test('each source class states its matching evidence boundary', () => {
     ['公开课程', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
     ['公开指南', /依赖与接口版本会更新.*不承担生产质量或安全保证/],
     ['公开视频', /用于建立直觉与学习导航.*不作为.*权威证据/],
+    ['一级参考资料', /证据边界[：:].{15,}/],
   ]);
 
   for (const resource of contextRagMemory.resources) {
@@ -466,6 +481,41 @@ test('editing interview copy preserves its declared identity and ownership', () 
   assert.equal(revised.lessonId, original.lessonId);
   assert.equal(revised.question, '请重新说明五类上下文对象的边界。');
   assert.notEqual(revised.question, original.question);
+});
+
+test('creates prior-shape and tagged interviews while rejecting invalid concept tags', () => {
+  const priorShape = {
+    id: 'iq-context-compat',
+    lessonId: 'context-01',
+    question: '兼容性问题',
+    shortAnswer: '兼容性答案保留此前所有字段，同时不要求调用方补充新标签。',
+    deepDive: ['第一条深入说明用于兼容测试。', '第二条深入说明用于兼容测试。'],
+    misconceptions: ['错误理解示例。'],
+    followUps: ['后续问题示例？'],
+    frequency: '高',
+    difficulty: '基础',
+    roles: ['Agent 开发'],
+  };
+  const prior = createContextInterviewQuestion(priorShape);
+  assert.deepEqual(prior.conceptTags, []);
+  assert.ok(Object.isFrozen(prior.conceptTags));
+
+  const tagged = createContextInterviewQuestion({
+    ...priorShape,
+    conceptTags: ['projection', 'recoverability'],
+  });
+  assert.deepEqual(tagged.conceptTags, ['projection', 'recoverability']);
+  assert.ok(Object.isFrozen(tagged.conceptTags));
+
+  for (const conceptTags of [null, 'projection', [null], ['projection', '  ']]) {
+    assert.throws(
+      () => createContextInterviewQuestion({ ...priorShape, conceptTags }),
+      {
+        name: 'TypeError',
+        message: /conceptTags must be an array of non-blank strings/,
+      },
+    );
+  }
 });
 
 test('quiz identifiers are stable within and owned by their lessons', () => {

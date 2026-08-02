@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-01-detail-title visual-backend-01-detail-description">
+  <title id="visual-backend-01-detail-title">结构化契约与错误回路</title>
+  <desc id="visual-backend-01-detail-description">请求依次经过 schema、能力、执行与用量校验，并把失败收敛到稳定错误信封。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
+  <defs><marker id="visual-backend-01-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">结构化契约与错误回路</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">请求先校验能力与 schema，再允许 provider/tool 产生可提交结果。</text>
+  <g data-kind="protocol"><polyline data-edge="schema-valid" data-from="schema" data-to="capability" data-kind="flow" points="212,311 282,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-detail-arrow)"/>
+<g data-edge-label="schema-valid">
+      <rect x="214" y="231" width="66" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="247" y="250" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">VALID</text>
+    </g>
+<polyline data-edge="capability-execute" data-from="capability" data-to="execute" data-kind="flow" points="440,311 510,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-detail-arrow)"/>
+<g data-edge-label="capability-execute">
+      <rect x="424.5" y="231" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="475" y="250" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">SUPPORTED</text>
+    </g>
+<polyline data-edge="execute-usage" data-from="execute" data-to="usage" data-kind="flow" points="668,311 738,311" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-detail-arrow)"/>
+<g data-edge-label="execute-usage">
+      <rect x="661.5" y="231" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="703" y="250" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">ACCOUNT</text>
+    </g>
+<polyline data-edge="schema-invalid" data-from="schema" data-to="error" data-kind="error" points="133,352 133,430 1045,430 1045,352" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-detail-arrow)"/>
+<g data-edge-label="schema-invalid">
+      <rect x="318.5" y="398" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="360" y="417" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">INVALID</text>
+    </g>
+<polyline data-edge="capability-error" data-from="capability" data-to="error" data-kind="error" points="361,352 361,390 930,390 930,330 966,330" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-01-detail-arrow)"/>
+<g data-edge-label="capability-error">
+      <rect x="701" y="358" width="118" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="760" y="377" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">UNAVAILABLE</text>
+    </g><g data-node="schema" data-kind="request">
+    <rect x="54" y="270" width="158" height="82" rx="10" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <circle cx="76" cy="290" r="12" fill="#0D2537" stroke="#74D8F2" stroke-width="1"/>
+    <text x="133" y="314" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SCHEMA</text>
+    <text x="133" y="336" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">VALID / INVALID</text>
+  </g>
+<g data-node="capability" data-kind="gate">
+    <rect x="282" y="270" width="158" height="82" rx="10" fill="#443716" stroke="#F5CA72" stroke-width="2"/>
+    <circle cx="304" cy="290" r="12" fill="#0D2537" stroke="#74D8F2" stroke-width="1"/>
+    <text x="361" y="314" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CAPABILITY</text>
+    <text x="361" y="336" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">model / tool</text>
+  </g>
+<g data-node="execute" data-kind="service">
+    <rect x="510" y="270" width="158" height="82" rx="10" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <circle cx="532" cy="290" r="12" fill="#0D2537" stroke="#74D8F2" stroke-width="1"/>
+    <text x="589" y="314" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">EXECUTE</text>
+    <text x="589" y="336" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">provider / tool</text>
+  </g>
+<g data-node="usage" data-kind="host">
+    <rect x="738" y="270" width="158" height="82" rx="10" fill="#3D315B" stroke="#B8A7F8" stroke-width="2"/>
+    <circle cx="760" cy="290" r="12" fill="#0D2537" stroke="#74D8F2" stroke-width="1"/>
+    <text x="817" y="314" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">USAGE</text>
+    <text x="817" y="336" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">token / cost</text>
+  </g>
+<g data-node="error" data-kind="result">
+    <rect x="966" y="270" width="158" height="82" rx="10" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <circle cx="988" cy="290" r="12" fill="#0D2537" stroke="#74D8F2" stroke-width="1"/>
+    <text x="1045" y="314" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">ERROR ENVELOPE</text>
+    <text x="1045" y="336" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">code + reqId</text>
+  </g></g>
+  <g data-value="http">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">HTTP 422</text>
+  </g>
+<g data-value="code">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">code invalid_schema</text>
+  </g>
+<g data-value="usage">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">usage 3.4k tokens</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">API 契约必须绑定身份、版本、能力与执行证据。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">PROTOCOL · schema-capability</text>
+</svg>

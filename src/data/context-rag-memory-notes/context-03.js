@@ -3,7 +3,7 @@ const sections = Object.freeze([
     id: 'three-conversation-representations',
     title: '先分清 transcript、state 与 summary',
     paragraphs: Object.freeze([
-      '长会话不能只保留一串越来越长的消息，也不能只保留一段不断重写的摘要。本课程区分三种表示。Transcript 是按发生顺序保存的原始用户、助手、工具和系统事件，它回答“当时实际说了或发生了什么”。Canonical conversation state 是课程为应用设计的规范状态模型，把当前仍有效的事实、约束、未决承诺、失败和不确定项归并成可操作记录。Summary 则是为了降低阅读和 token 成本生成的有损叙述。',
+      '长会话不能只保留一串越来越长的消息，也不能只保留一段不断重写的摘要。本课程区分三种表示。Canonical events 是按发生顺序保存的用户、助手、工具和系统事实；rendered transcript 是从这些事件投影出的可读视图，可能隐藏内部字段或裁剪工具结果；canonical conversation state 则归并当前有效的事实、约束、未决承诺、失败和不确定项。Summary 是为了降低阅读和 token 成本生成的有损叙述。',
       '“Canonical”在这里不表示行业标准、数据库绝对真相或某个框架的官方对象；它只表示应用在明确规则下选出的当前有效表示。原始 transcript 可能同时包含旧地址和新地址，canonical state 应指出哪一个当前有效、为何有效以及来源消息；summary 可以写“用户后来更新了地址”，但可能省略时间、否定词或精确措辞。三者分别服务取证、当前决策和压缩阅读，不能互相冒充。',
       'LangGraph 的线程级状态、跨会话 store 和 namespace 提供了一种框架实现参照，CoALA 则从认知架构角度区分 working memory 与长期 semantic、episodic、procedural memory。它们可以帮助理解“当前状态”和“长期存储”承担不同职责，却没有发布本课程的 canonical state schema、supersession 规则或来源映射字段。课程模型因此必须明确标注，并由应用自己的事件和测试来证明。',
     ]),
@@ -20,6 +20,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-langchain-memory',
       'res-context-coala',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-prompt-memory',
     ]),
   }),
   Object.freeze({
@@ -39,6 +41,8 @@ const sections = Object.freeze([
     sourceIds: Object.freeze([
       'res-context-langchain-memory',
       'res-context-coala',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-prompt-memory',
     ]),
   }),
   Object.freeze({
@@ -46,9 +50,9 @@ const sections = Object.freeze([
     title: '把 summary 明确当作有损派生物',
     paragraphs: Object.freeze([
       'Summary 的任务是用较短文本保留连续叙事中对后续有用的部分，因此它必然做选择。否定、例外、时间顺序、精确数字、谁说过什么以及工具是否真正成功，都可能在压缩中丢失。把 summary 标成“有损”不是贬低它，而是防止读者把语言流畅误认成证据完整。摘要应带生成版本、覆盖的 transcript 范围、来源指针和已知遗漏类别，并允许在高风险判断前回取原文。',
-      '安全压缩可按顺序进行：先从 transcript 提取硬约束、当前事实、纠正链、未决承诺、工具失败和不确定项，写入或校验 canonical state；再生成便于阅读的 summary；最后比较压缩前后是否遗漏否定条件、数字、期限和来源。对法律措辞、授权语句或用户纠正等必须逐字核验的内容，应保留原文 span 或结构化字段，而不是只留下转述。',
+      '安全压缩可按顺序进行：先把 canonical event 游标写入 summary checkpoint，再从事件中提取硬约束、当前事实、纠正链、未决承诺、工具失败和不确定项；接着生成便于阅读的 summary；最后比较压缩前后是否遗漏否定条件、数字、期限和来源。对法律措辞、授权语句或用户纠正等必须逐字核验的内容，应保留原文 span 或结构化字段，而不是只留下转述。',
       'OpenAI compaction 是当前产品用于压缩和续接长会话的接口能力，具体语义会随产品版本变化。其 opaque compaction item 不是供应用阅读和编辑的普通 summary，也不能被宣称无损或可逆。应用若需要来源映射、纠正链和审计，仍要维护自己的 transcript 与 canonical state。产品状态可以帮助续接，却不替应用定义事实真值。',
-      '摘要验收不应只用“看起来涵盖主题”作为标准。可以从状态中抽取否定约束、日期、数值、未决项和失败结果，逐项检查摘要是否正确表达；再从摘要里的每个关键结论反向寻找来源，找不到就标为 unsupported，而不是补写一个貌似合理的消息 ID。若同一段历史经两次压缩得到不同结果，应保留版本并比较差异，不让后一版无条件覆盖前一版的审计线索。还应加入反事实样本，例如只改变一个否定词或日期，确认压缩结果与规范状态能够显式反映变化，并把差异写进可复核报告。',
+      'Micro-compaction 与 tool-result elision 可以只替换单条巨大工具结果：事件账本保留 callId、结果哈希、来源 URI、权限和回取指针，活动 transcript 只显示短摘要。它比整段会话重写影响范围小，却仍可能删掉错误码、单位或否定条件；回取失败时必须显式标为 unavailable，不能让模型把摘要补成原文。Summary checkpoint 因而只是带事件游标的可重建派生视图，不是新的事实源。',
     ]),
     keyPoints: Object.freeze([
       'Summary 为降低成本而选择信息，必须按有损派生物治理。',
@@ -60,9 +64,14 @@ const sections = Object.freeze([
       title: '流畅不等于完整',
       body: '摘要读起来越自然，越容易让人忽略它删除了哪些限定词。评审时要问“省略了什么、如何回取”，而不只问“是否通顺”。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-03-compaction-loss', afterParagraph: 3 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-openai-compaction',
       'res-context-langchain-memory',
+      'res-context-primary-feishu-microcompact',
+      'res-context-primary-feishu-prompt-memory',
     ]),
   }),
   Object.freeze({
@@ -82,6 +91,7 @@ const sections = Object.freeze([
       'res-context-langchain-memory',
       'res-context-openai-data',
       'res-context-openai-compaction',
+      'res-context-primary-feishu-microcompact',
     ]),
   }),
   Object.freeze({
@@ -102,9 +112,14 @@ const sections = Object.freeze([
       title: '“上海改杭州”完整链路',
       body: 'Transcript 保留两条原话；state 以杭州为 active、上海为 superseded；summary 描述更改；source mapping 连接两个消息 ID；后续投影只发送杭州。',
     }),
+    visuals: Object.freeze([
+      Object.freeze({ visualId: 'visual-context-03-recoverability-chain', afterParagraph: 2 }),
+    ]),
     sourceIds: Object.freeze([
       'res-context-langchain-memory',
       'res-context-coala',
+      'res-context-primary-javaguide-memory',
+      'res-context-primary-feishu-prompt-memory',
     ]),
   }),
   Object.freeze({
@@ -126,6 +141,9 @@ const sections = Object.freeze([
       'res-context-openai-compaction',
       'res-context-openai-data',
       'res-context-coala',
+      'res-context-primary-feishu-microcompact',
+      'res-context-primary-feishu-prompt-memory',
+      'res-context-primary-javaguide-memory',
     ]),
   }),
 ]);
@@ -159,6 +177,8 @@ const misconceptions = Object.freeze([
 
 export const context03Note = Object.freeze({
   readingMinutes: 39,
+  overviewVisualId: 'visual-context-03-event-state-summary',
+  overviewVisualSectionId: 'three-conversation-representations',
   introduction: '预算有限时，长会话必须压缩；但如果只让模型把历史改写成一段流畅摘要，否定、纠正、来源、工具失败和未决承诺就可能悄悄消失。本章区分原始 transcript、明确标注为课程应用模型的 canonical conversation state 与有损 summary：前者负责取证，中者负责当前决策，后者负责降低阅读成本。我们还会建立 source mapping，用 supersession 表达用户纠正，用 unresolved conflict 保留尚无决胜依据的不一致，并通过一段含偏好修改、工具失败和敏感信息的旅行助理案例完成三份可验收交付物。',
   sections,
   misconceptions,

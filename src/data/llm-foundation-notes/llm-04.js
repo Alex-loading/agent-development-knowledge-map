@@ -71,7 +71,7 @@ export const llm04Note = {
         title: '先算全行权重，再聚合 Value',
         body: '某个匹配分数升高会改变整行 softmax 分配；真实输出来自全部允许位置 Value 的加权和，而不是把分数最高的 token 原样复制过来。',
       },
-      sourceIds: ['res-attention-paper', 'res-rasbt', 'res-3b1b-attention'],
+      sourceIds: ['res-attention-paper', 'res-rasbt', 'res-3b1b-attention', 'res-llm-primary-javaguide-mechanism'],
     },
     {
       id: 'multi-head-attention',
