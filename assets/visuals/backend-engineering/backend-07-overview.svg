@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-07-overview-title visual-backend-07-overview-description">
+  <title id="visual-backend-07-overview-title">生命周期与可观测证据流</title>
+  <desc id="visual-backend-07-overview-description">启动、接流、排空和停止由日志、trace、metric 与评测事件共同解释。 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。</desc>
+  <defs><marker id="visual-backend-07-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">生命周期与可观测证据流</text>
+  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">接流、摘流、排空和停止由日志、trace、metric 与 eval 共同解释。</text>
+  <g data-kind="signal-flow">
+    
+    <g data-node="card-1" data-kind="entry">
+    <rect x="53" y="205" width="260" height="92" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="183" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">STARTING</text>
+  </g>
+<g data-node="card-2" data-kind="stage">
+    <rect x="331" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="461" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">READY</text>
+  </g>
+<g data-node="card-3" data-kind="stage">
+    <rect x="609" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="739" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">DRAINING</text>
+  </g>
+<g data-node="card-4" data-kind="stage">
+    <rect x="887" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="1017" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">STOPPED</text>
+  </g>
+<g data-node="card-5" data-kind="stage">
+    <rect x="53" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="183" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">LOG</text>
+  </g>
+<g data-node="card-6" data-kind="stage">
+    <rect x="331" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="461" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">TRACE</text>
+  </g>
+<g data-node="card-7" data-kind="stage">
+    <rect x="609" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="739" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">METRIC</text>
+  </g>
+<g data-node="card-8" data-kind="outcome">
+    <rect x="887" y="350" width="260" height="92" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1017" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">EVAL</text>
+  </g>
+    <g data-value="1">
+      <rect x="64" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="192" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">MODEL v7</text>
+    </g>
+<g data-value="2">
+      <rect x="336" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="464" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">PROMPT v12</text>
+    </g>
+<g data-value="3">
+      <rect x="608" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="736" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">TOOL v3</text>
+    </g>
+<g data-value="4">
+      <rect x="880" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="1008" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">COST ¥0.18</text>
+    </g>
+  </g>
+  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
+  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">SIGNAL-FLOW · lifecycle-observability-flow</text>
+</svg>

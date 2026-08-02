@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend03Note = deepFreeze({
   readingMinutes: 26,
   introduction: 'AI 请求不是均匀的小工作：prompt 长度、输出长度、工具数量和模型类型都会让服务时间相差几个数量级。只提高并发上限会把等待转移到连接池、内存、供应商配额或 GPU 队列，最终让少量慢请求拖累所有用户。本课用 Little 定律建立排队直觉，再把 deadline、准入控制、公平性和尾延迟组织成一个闭环，目标不是“永不拒绝”，而是在过载时仍能给出可预测、可恢复的结果。',
+  overviewVisualId: 'visual-backend-03-overview',
+  overviewVisualSectionId: 'admission-control',
   sections: [
     {
       id: 'queueing-intuition',
@@ -39,9 +41,11 @@ export const backend03Note = deepFreeze({
         '准入控制回答“当前是否应该开始这项工作”，限流则常按时间窗口控制请求数量，两者相关但不完全相同。AI 服务还要考虑并发 slot、估算 token、模型池、tenant 配额、队列年龄和依赖健康。入口在持久化必要审计后尽早判定，避免已经占用数据库连接或模型配额才发现系统过载。',
         '429 可以告诉调用者当前限额不足，并结合 Retry-After 或响应头提供节奏信息；503 更适合表达服务或依赖暂时不可用。无论使用哪个状态码，拒绝必须便宜、可观察且不制造额外 fan-out。客户端需要指数退避、随机抖动和总重试预算，否则同一批失败请求会在固定间隔同步返回，形成重试风暴。',
         '公平性要求把租户和工作类型纳入准入。单一全局 semaphore 可能让一个大客户或长报告占满 slot，使短交互完全饥饿。可以为租户设置配额、为交互和批处理建立不同池，并使用加权队列；但规则必须可解释且防止身份维度爆炸。优先级不是让高优请求无限插队，也要保留低优工作获得服务的机制。',
+        'Beyond Model 的系统成本视角要求把 concurrency slots、queue age、deadline、provider rate limit、token budget、admission、backpressure 与 load shedding 放入同一个 shared capacity envelope。网关帮助观察路由/限额；AgentFS 的虚拟文件系统用于外置工件，也必须把活跃工作集纳入容量预算。二者都是实现观察而不是通用标准；retry 必须服从同一个 shared capacity envelope，不能另开隐形容量。',
       ],
       keyPoints: ['准入要发生在昂贵资源分配之前', '公平性应覆盖租户、成本和工作类型'],
-      sourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-dagor'],
+      sourceIds: ['res-backend-rfc6585', 'res-backend-openai-rate-limits', 'res-backend-dagor', 'res-backend-primary-javaguide-gateway', 'res-backend-primary-feishu-beyond-model', 'res-backend-primary-feishu-agentfs'],
+      visuals: [{ visualId: 'visual-backend-03-detail', afterParagraph: 1 }],
     },
     {
       id: 'tail-latency',

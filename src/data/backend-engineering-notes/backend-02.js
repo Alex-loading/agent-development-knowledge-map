@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend02Note = deepFreeze({
   readingMinutes: 25,
   introduction: '流式响应不是把完整文本切成小块发送这么简单。连接建立、首字节、增量事件、业务终态、客户端断线和上游取消分别属于不同层次；若没有明确协议，用户看到的“停止”可能只是浏览器不再显示，而服务器仍在消耗模型额度并写入副作用。本课以 SSE、ASGI 和 asyncio 的真实语义为基础，设计同步与流式共享的状态模型，并练习在无法保证远端取消时诚实地记录结果。',
+  overviewVisualId: 'visual-backend-02-overview',
+  overviewVisualSectionId: 'streaming-model',
   sections: [
     {
       id: 'streaming-model',
@@ -17,9 +19,10 @@ export const backend02Note = deepFreeze({
         '同步接口通常等所有工作完成再返回一个响应，优点是简单，缺点是长时间占用连接且用户无法观察中间进度。流式接口允许服务逐步发送事件，让客户端更早获得反馈，但连接成功只说明传输通道可用，不说明任务成功。模型已经生成部分文本后仍可能失败，客户端也可能只收到半个结果，因此业务终态必须显式出现。',
         '推荐用稳定事件封装而不是直接吐出任意 token。事件可以包含 eventId、requestId、runId、sequence、timestamp、type 和 payload，其中业务类型至少区分 created、delta、completed、error、cancelled。created 告知客户端运行身份，delta 追加可展示内容，三个终态则说明运行如何结束。客户端只在收到合法终态时把结果标为完成。',
         '同步与流式不应维护两套互相矛盾的业务逻辑。两者可以调用同一个运行状态机和结果聚合器：同步端等待终态后返回快照，流式端订阅状态转换并发出事件。这样错误码、取消、持久化和审计保持一致，差异只在传输表现；测试也能对同一输入比较同步最终结果与流式增量聚合结果。',
+        'Beyond Model 的工程视角要求三条路径并列验收：同步 JSON 受单次 deadline 约束；SSE 明确 TTFT、event 序号、代理 buffer 与 heartbeat；异步轮询（async polling）暴露 queued/running/terminal。协议必须按顺序处理 disconnect、cancel、partial output 与 resume：模型外状态不能从连接状态推断，部分输出只是一段传输结果，只有持久事件游标或 checkpoint 才支持恢复。',
       ],
       keyPoints: ['连接状态不等于业务运行状态', '同步和流式共享同一个权威状态机'],
-      sourceIds: ['res-backend-whatwg-sse', 'res-backend-openai-streaming'],
+      sourceIds: ['res-backend-whatwg-sse', 'res-backend-openai-streaming', 'res-backend-primary-javaguide-llm-api', 'res-backend-primary-feishu-beyond-model'],
     },
     {
       id: 'sse-wire-format',
@@ -31,6 +34,7 @@ export const backend02Note = deepFreeze({
       ],
       keyPoints: ['遵守 SSE 事件分隔和字段语义', '重连、重放和去重要作为显式产品能力设计'],
       sourceIds: ['res-backend-whatwg-sse', 'res-backend-fastapi-sse'],
+      visuals: [{ visualId: 'visual-backend-02-detail', afterParagraph: 1 }],
     },
     {
       id: 'asgi-disconnect',

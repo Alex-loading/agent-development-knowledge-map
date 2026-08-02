@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend06Note = deepFreeze({
   readingMinutes: 27,
   introduction: '分布式系统最常见的可靠性陷阱，是把“请求重试成功”“消息确认完成”和“业务副作用只发生一次”说成同一件事。网络中断只会让调用方失去结果知识，动作本身可能成功、失败或仍在执行；broker 为避免丢失通常允许重复投递。本课逐层拆开 HTTP、消息、数据库和外部副作用的保证，用持久幂等账本、outbox、状态查询与人工对账，把 unknown outcome 转化为可以收集证据和做出安全决策的流程。',
+  overviewVisualId: 'visual-backend-06-overview',
+  overviewVisualSectionId: 'delivery-semantics',
   sections: [
     {
       id: 'delivery-semantics',
@@ -17,9 +19,11 @@ export const backend06Note = deepFreeze({
         'at-most-once 倾向于不重复但可能丢失，at-least-once 倾向于不丢失但允许重复；所谓 exactly-once 往往只在特定框架、状态存储和操作边界内成立。HTTP 客户端、broker、数据库与邮件或支付系统各自有不同故障点，不能用一个标签覆盖整条链路。',
         '至少一次投递意味着消费者必须把重复视为正常协议情况，并通过幂等或去重保护业务事实。消息的唯一 id、jobId、业务操作键和 attempt 各有用途：messageId 识别交付，业务键识别希望只产生一次的效果，attempt 记录新的执行。若每次重试都生成新的业务键，去重机制就失去意义。',
         'MillWheel 的研究展示在框架控制的持久状态和数据流中构造 exactly-once processing 的方法，但论文结论不能自动覆盖外部 HTTP 和现实副作用。学习重点是将进度、去重和输出提交放入可恢复协议，而不是在架构图上写一个 exactly-once 箭头就省略失败矩阵。',
+        '先按 retryable、ambiguous outcome 与 permanent failure 分类，再决定 backoff、query/reconcile 或终止。Dynamic Workflow、version drifting 与 Tool Truth 共同提示：outbox、inbox、dedupe、lease 和 reconcile 都要记录 model/prompt/tool version 与真实 observation；exactly-once 只能作为端到端 business invariant 被证明，不能当作 queue toggle。',
       ],
       keyPoints: ['投递语义只在明确边界内有意义', '至少一次要求消费者处理重复'],
-      sourceIds: ['res-backend-celery-tasks', 'res-backend-millwheel'],
+      sourceIds: ['res-backend-celery-tasks', 'res-backend-millwheel', 'res-backend-primary-feishu-dynamic-workflow', 'res-backend-primary-feishu-version-drift', 'res-backend-primary-feishu-tool-truth'],
+      visuals: [{ visualId: 'visual-backend-06-detail', afterParagraph: 1 }],
     },
     {
       id: 'idempotency-ledger',

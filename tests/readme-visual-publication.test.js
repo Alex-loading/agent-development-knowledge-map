@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
 import { agentHarnessVisuals } from '../src/data/visuals/agent-harness-visuals.js';
 import { agentMechanismVisuals } from '../src/data/visuals/agent-mechanism-visuals.js';
+import { backendEngineeringVisuals } from '../src/data/visuals/backend-engineering-visuals.js';
 import { contextRagMemoryVisuals } from '../src/data/visuals/context-rag-memory-visuals.js';
 import { knowledgeVisuals } from '../src/data/visuals/index.js';
 import { llmFoundationVisuals } from '../src/data/visuals/llm-foundation-visuals.js';
@@ -19,11 +20,15 @@ test('README derives current per-module visual publication truth from registries
   const agentSvgFiles = (await readdir(
     new URL('../assets/visuals/agent-mechanism/', import.meta.url),
   )).filter((name) => name.endsWith('.svg'));
+  const backendSvgFiles = (await readdir(
+    new URL('../assets/visuals/backend-engineering/', import.meta.url),
+  )).filter((name) => name.endsWith('.svg'));
   const registeredVisuals = [
     ...llmFoundationVisuals,
     ...agentMechanismVisuals,
     ...agentHarnessVisuals,
     ...contextRagMemoryVisuals,
+    ...backendEngineeringVisuals,
   ];
 
   assert.equal(llmFoundationVisuals.length, 40);
@@ -31,6 +36,8 @@ test('README derives current per-module visual publication truth from registries
   assert.equal(agentSvgFiles.length, 16);
   assert.equal(agentHarnessVisuals.length, 24);
   assert.equal(contextRagMemoryVisuals.length, 24);
+  assert.equal(backendEngineeringVisuals.length, 16);
+  assert.equal(backendSvgFiles.length, 16);
   assert.equal(harnessSvgFiles.length, 27);
   assert.equal(
     harnessSvgFiles.length - agentHarnessVisuals.length,
@@ -70,6 +77,13 @@ test('README derives current per-module visual publication truth from registries
       + `[^\\n]*${contextSvgFiles.length} 个 SVG 文件[^\\n]*3 个分步状态`,
     ),
   );
-  assert.match(readme, /AI 后端工程[^。\n]*尚未视觉化/);
+  assert.match(
+    readme,
+    new RegExp(
+      `AI 后端工程[^\\n]*${backendEngineeringVisuals.length} 张主视觉`
+      + `[^\\n]*${backendSvgFiles.length} 个 SVG 文件`,
+    ),
+  );
+  assert.doesNotMatch(readme, /AI 后端工程[^。\n]*尚未视觉化/);
   assert.doesNotMatch(readme, /视觉教学当前只完成 LLM 基础试点/);
 });

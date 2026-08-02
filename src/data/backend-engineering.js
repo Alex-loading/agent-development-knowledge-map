@@ -1,4 +1,11 @@
 import { backendEngineeringNotes } from './backend-engineering-notes.js';
+import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
+import {
+  backendAssessmentConceptTags,
+  backendAssessmentVisualCoverage,
+  backendVisualOutcomes,
+} from './backend-engineering-outcomes.js';
+import { backendEngineeringVisuals } from './visuals/backend-engineering-visuals.js';
 
 const VERIFIED_AT = '2026-07-24';
 const officialBoundary = '证据边界：该资料描述当前规范、产品或框架语义，具体接口与版本仍会变化，项目实现不等于通用规范。';
@@ -86,18 +93,66 @@ const evidenceByResourceId = {
   'res-backend-go-singleflight': { authority: 'official', role: 'core', coverage: ['duplicate function call suppression：同一 key 的并发调用只执行一次，重复调用等待并共享结果'], limitations: '这是 Go x/sync/singleflight 的进程内语义，不等同于分布式锁、跨实例去重、结果持久化或跨故障恢复。', verifiedAt: VERIFIED_AT },
 };
 
-const resources = resourceCatalog.map((resource) => ({
+const PRIMARY_VERIFIED_AT = '2026-07-30';
+
+const primarySpecs = [
+  ['res-backend-primary-javaguide-llm-api', 'primary-javaguide-llm-api-engineering', 'LLM API 工程', '以流式、重试、限流和结构化返回组织 API 教学主干'],
+  ['res-backend-primary-javaguide-structured-output', 'primary-javaguide-structured-output-function-calling', '结构化输出', '以 JSON schema 与 function calling 校准机器可读契约'],
+  ['res-backend-primary-javaguide-evaluation', 'primary-javaguide-llm-evaluation', '评测闭环', '把 golden set、线上灰度和回归事件接入运行观测'],
+  ['res-backend-primary-javaguide-system-design', 'primary-javaguide-system-design-interview', 'AI 系统设计', '组织网关、队列、数据层、部署与故障诊断的系统主线'],
+  ['res-backend-primary-javaguide-gateway', 'primary-javaguide-llm-gateway', 'AI Gateway', '观察多模型路由、fallback、限流和成本控制'],
+  ['res-backend-primary-feishu-dynamic-workflow', 'primary-feishu-dynamic-workflow', 'Dynamic Workflow', '观察动态控制决策、任务重排与可重放运行轨迹'],
+  ['res-backend-primary-feishu-version-drift', 'primary-feishu-agent-version-drifting', 'Version drift', '把模型、Prompt、tool schema 与控制策略版本写入运行证据'],
+  ['res-backend-primary-feishu-tool-truth', 'primary-feishu-tool-truth', 'Tool Truth', '区分工具调用候选、宿主执行与可信 observation'],
+  ['res-backend-primary-feishu-agentfs', 'primary-feishu-virtual-filesystem', 'AgentFS', '观察外置工件、命名空间和可恢复文件状态'],
+  ['res-backend-primary-feishu-beyond-model', 'primary-feishu-beyond-model', '模型外系统', '强调状态、权限、执行、存储与恢复属于模型外部边界'],
+  ['res-backend-primary-feishu-install-md', 'primary-feishu-agent-install-md', 'Install.md', '观察部署前置条件与可验证安装契约'],
+  ['res-backend-primary-feishu-company-brain', 'primary-feishu-company-brain', 'Company Brain', '观察组织知识的摄取、权限、索引与版本边界'],
+];
+
+const primaryResources = primarySpecs.map(([id, canonicalSourceId, stage, learningUse]) => (
+  createPrimaryReferenceBinding({
+    id,
+    canonicalSourceId,
+    stage,
+    difficulty: '进阶',
+    value: `${learningUse}；本课程将其作为实现观察，不把二手叙事当作通用基础设施标准。`,
+    evidence: {
+      authority: 'community',
+      role: 'core',
+      learningUse,
+      coverage: [stage, learningUse],
+      limitations: '一级资料承担课程主干与实现观察；API、数据库、投递、部署、安全和性能主张继续由开放规范、官方文档、原始论文或本地实验独立核验。',
+      verifiedAt: PRIMARY_VERIFIED_AT,
+    },
+  })
+));
+
+const primaryResourceIdsByLesson = Object.freeze({
+  'backend-01': ['res-backend-primary-javaguide-llm-api', 'res-backend-primary-javaguide-structured-output', 'res-backend-primary-feishu-tool-truth'],
+  'backend-02': ['res-backend-primary-javaguide-llm-api', 'res-backend-primary-feishu-beyond-model'],
+  'backend-03': ['res-backend-primary-javaguide-gateway', 'res-backend-primary-feishu-beyond-model', 'res-backend-primary-feishu-agentfs'],
+  'backend-04': ['res-backend-primary-javaguide-system-design', 'res-backend-primary-feishu-dynamic-workflow'],
+  'backend-05': ['res-backend-primary-javaguide-system-design', 'res-backend-primary-feishu-company-brain'],
+  'backend-06': ['res-backend-primary-feishu-dynamic-workflow', 'res-backend-primary-feishu-version-drift', 'res-backend-primary-feishu-tool-truth'],
+  'backend-07': ['res-backend-primary-javaguide-evaluation', 'res-backend-primary-feishu-dynamic-workflow', 'res-backend-primary-feishu-install-md'],
+  'backend-08': ['res-backend-primary-javaguide-system-design', 'res-backend-primary-javaguide-gateway', 'res-backend-primary-feishu-agentfs'],
+});
+
+const resources = [...resourceCatalog.map((resource) => ({
   ...resource,
   evidence: evidenceByResourceId[resource.id],
-}));
+})), ...primaryResources];
 
 function quiz(lessonId, number, prompt, choices, answerIndex, explanation) {
+  const id = `quiz-${lessonId}-${number}`;
   return {
-    id: `quiz-${lessonId}-${number}`,
+    id,
     prompt,
     choices,
     answerIndex,
     explanation,
+    conceptTags: backendAssessmentConceptTags[id],
   };
 }
 
@@ -125,7 +180,7 @@ function lesson({
     objectives,
     concepts,
     explanations,
-    resourceIds,
+    resourceIds: [...resourceIds, ...primaryResourceIdsByLesson[id]],
     exercise,
     quiz: quizzes,
     interviewQuestionIds: [1, 2, 3].map((number) => `iq-${id}-${number}`),
@@ -293,6 +348,7 @@ function interviewSpec(id, lessonId, question, shortAnswer, deepDive, misconcept
     frequency: '高',
     difficulty,
     roles: ['AI 应用', '后端工程'],
+    conceptTags: backendAssessmentConceptTags[id],
   };
 }
 
@@ -442,6 +498,152 @@ const coverageMatrix = {
   ],
 };
 
+const backendVisualOwnershipById = new Map();
+for (const lessonEntry of lessons) {
+  const note = lessonEntry.knowledgeNote;
+  backendVisualOwnershipById.set(note.overviewVisualId, {
+    lessonId: lessonEntry.id,
+    sectionId: note.overviewVisualSectionId,
+    kind: 'overview',
+  });
+  for (const section of note.sections) {
+    for (const placement of section.visuals ?? []) {
+      if (backendVisualOwnershipById.has(placement.visualId)) {
+        throw new Error(`Duplicate Backend visual placement: ${placement.visualId}`);
+      }
+      backendVisualOwnershipById.set(placement.visualId, {
+        lessonId: lessonEntry.id,
+        sectionId: section.id,
+        kind: 'section',
+      });
+    }
+  }
+}
+
+const sourceImpactClaims = [
+  {
+    id: 'tool-call-needs-host-evidence', lessonId: 'backend-01', sectionId: 'service-boundary',
+    text: 'tool call 只是候选；API 边界只有在宿主执行、返回可信 observation 并提交版本化事实后，才拥有执行证据。',
+    sourceIds: ['res-backend-primary-feishu-tool-truth'], semanticKeys: ['api-boundary'],
+    outcomeTags: ['api-boundary'], assessmentIds: ['quiz-backend-01-1', 'iq-backend-01-1'],
+    visualIds: ['visual-backend-01-overview'],
+  },
+  {
+    id: 'stream-modes-share-durable-state', lessonId: 'backend-02', sectionId: 'streaming-model',
+    text: '同步 JSON、SSE 与异步轮询共享权威状态；disconnect、cancel、partial output 与 resume 必须分别取证。',
+    sourceIds: ['res-backend-primary-javaguide-llm-api'], semanticKeys: ['stream-lifecycle'],
+    outcomeTags: ['stream-lifecycle'], assessmentIds: ['quiz-backend-02-1', 'iq-backend-02-1'],
+    visualIds: ['visual-backend-02-overview'],
+  },
+  {
+    id: 'retry-shares-capacity-envelope', lessonId: 'backend-03', sectionId: 'admission-control',
+    text: 'admission、queue、provider、token 与 retry 必须消费同一个 shared capacity envelope，重试不能创造容量。',
+    sourceIds: ['res-backend-primary-javaguide-gateway'], semanticKeys: ['capacity-envelope'],
+    outcomeTags: ['capacity-envelope'], assessmentIds: ['quiz-backend-03-1', 'iq-backend-03-1'],
+    visualIds: ['visual-backend-03-overview'],
+  },
+  {
+    id: 'control-replay-is-not-effect-replay', lessonId: 'backend-04', sectionId: 'job-contract',
+    text: 'replayable control 不等于 external effect：journal 可重放控制决策，外部副作用必须用 effect ledger 对账。',
+    sourceIds: ['res-backend-primary-feishu-dynamic-workflow'], semanticKeys: ['job-state'],
+    outcomeTags: ['job-state'], assessmentIds: ['quiz-backend-04-1', 'iq-backend-04-1'],
+    visualIds: ['visual-backend-04-overview'],
+  },
+  {
+    id: 'cache-sharing-needs-authorization', lessonId: 'backend-05', sectionId: 'source-of-truth',
+    text: 'Company Brain 的索引观察不能替代数据所有权；authorization-aware retrieval 必须先于 safe share。',
+    sourceIds: ['res-backend-primary-feishu-company-brain'], semanticKeys: ['data-ownership'],
+    outcomeTags: ['data-ownership'], assessmentIds: ['quiz-backend-05-1', 'iq-backend-05-1'],
+    visualIds: ['visual-backend-05-overview'],
+  },
+  {
+    id: 'exactly-once-is-business-invariant', lessonId: 'backend-06', sectionId: 'delivery-semantics',
+    text: 'outbox、inbox、dedupe、lease 与 reconcile 共同提供证据；exactly-once 是端到端 business invariant，不是 queue toggle。',
+    sourceIds: ['res-backend-primary-feishu-tool-truth'], semanticKeys: ['exactly-once-boundary'],
+    outcomeTags: ['exactly-once-boundary'], assessmentIds: ['quiz-backend-06-2', 'iq-backend-06-2'],
+    visualIds: ['visual-backend-06-detail'],
+  },
+  {
+    id: 'evaluation-is-operational-evidence', lessonId: 'backend-07', sectionId: 'observability-model',
+    text: 'evaluation event 关联 model、prompt 与 tool version，但逐请求身份不能成为 high-cardinality metric。',
+    sourceIds: ['res-backend-primary-javaguide-evaluation'], semanticKeys: ['observability'],
+    outcomeTags: ['observability'], assessmentIds: ['quiz-backend-07-2', 'iq-backend-07-3'],
+    visualIds: ['visual-backend-07-detail'],
+  },
+  {
+    id: 'deployment-failures-need-separate-diagnosis', lessonId: 'backend-08', sectionId: 'scaling-units',
+    text: '部署诊断必须分别识别 overloaded、slow、wrong 与 unsafe，不能让自动扩容掩盖质量和安全回归。',
+    sourceIds: ['res-backend-primary-javaguide-gateway'], semanticKeys: ['failure-diagnosis'],
+    outcomeTags: ['failure-diagnosis'], assessmentIds: ['quiz-backend-08-1', 'iq-backend-08-1', 'iq-backend-08-3'],
+    visualIds: ['visual-backend-08-detail'],
+  },
+];
+
+const assessmentOutcomes = Object.fromEntries([
+  ...lessons.flatMap((lessonEntry) => lessonEntry.quiz.map((assessment) => [
+    assessment.id, { lessonId: lessonEntry.id, outcomeTags: [...assessment.conceptTags] },
+  ])),
+  ...interviewQuestions.map((assessment) => [
+    assessment.id, { lessonId: assessment.lessonId, outcomeTags: [...assessment.conceptTags] },
+  ]),
+]);
+
+const outcomeRegistry = {
+  assessments: assessmentOutcomes,
+  visuals: backendVisualOutcomes,
+  assessmentVisualCoverage: backendAssessmentVisualCoverage,
+};
+
+export function resolveBackendSourceImpactTarget(targetId) {
+  if (typeof targetId !== 'string' || !targetId.startsWith('claim:')) {
+    throw new TypeError('Backend source-impact target must start with claim:');
+  }
+  const claim = sourceImpactClaims.find(({ id }) => id === targetId.slice(6));
+  if (!claim) throw new RangeError(`Unknown Backend source-impact target: ${targetId}`);
+  const lessonEntry = lessons.find(({ id }) => id === claim.lessonId);
+  const section = lessonEntry?.knowledgeNote.sections.find(({ id }) => id === claim.sectionId);
+  if (!section) throw new RangeError(`Unknown Backend source-impact section: ${claim.sectionId}`);
+  const assessments = claim.assessmentIds.map((id) => {
+    const outcome = outcomeRegistry.assessments[id];
+    if (!outcome) throw new RangeError(`Unknown Backend source-impact assessment: ${id}`);
+    return { id, ...outcome };
+  });
+  const visuals = claim.visualIds.map((id) => {
+    const visual = backendEngineeringVisuals.find((entry) => entry.id === id);
+    const owner = backendVisualOwnershipById.get(id);
+    const outcomeTags = outcomeRegistry.visuals[id];
+    if (!visual || !owner || !outcomeTags) throw new RangeError(`Unknown Backend source-impact visual: ${id}`);
+    if (owner.lessonId !== claim.lessonId) {
+      throw new RangeError(`${id}: source-impact lesson conflicts with note owner`);
+    }
+    return { id, lessonId: owner.lessonId, sectionId: owner.sectionId, placementKind: owner.kind, outcomeTags };
+  });
+  return deepFreeze({
+    type: 'claim', lessonId: claim.lessonId, resourceIds: section.sourceIds,
+    semanticKeys: claim.semanticKeys, value: claim, section,
+    outcomes: { tags: claim.outcomeTags, assessments, visuals },
+  });
+}
+
+const sourceImpactSpecs = [
+  ['impact-backend-01-tool-truth', 'backend-01', 'res-backend-primary-feishu-tool-truth', 'tool-call-needs-host-evidence', 'service-boundary', 'api-boundary', 'corrected', '修正 tool call 等于执行的误区，以候选、宿主执行和 observation 证据闭环。'],
+  ['impact-backend-02-stream-contract', 'backend-02', 'res-backend-primary-javaguide-llm-api', 'stream-modes-share-durable-state', 'streaming-model', 'stream-lifecycle', 'deepened', '把流式 API 深化为同步、SSE、异步恢复共享一个权威状态机。'],
+  ['impact-backend-03-capacity', 'backend-03', 'res-backend-primary-javaguide-gateway', 'retry-shares-capacity-envelope', 'admission-control', 'capacity-envelope', 'deepened', '将重试纳入同一容量 envelope 与预算，避免网关策略制造隐形负载。'],
+  ['impact-backend-04-replay', 'backend-04', 'res-backend-primary-feishu-dynamic-workflow', 'control-replay-is-not-effect-replay', 'job-contract', 'job-state', 'corrected', '区分控制状态的重放与外部副作用，并用账本对账恢复。'],
+  ['impact-backend-05-ownership', 'backend-05', 'res-backend-primary-feishu-company-brain', 'cache-sharing-needs-authorization', 'source-of-truth', 'data-ownership', 'corrected', '将组织知识观察改写为权限先行的索引与缓存共享边界。'],
+  ['impact-backend-06-exactly-once', 'backend-06', 'res-backend-primary-feishu-tool-truth', 'exactly-once-is-business-invariant', 'delivery-semantics', 'exactly-once-boundary', 'corrected', '把 exactly-once 限定为端到端业务不变量，并要求真实执行证据。'],
+  ['impact-backend-07-evaluation', 'backend-07', 'res-backend-primary-javaguide-evaluation', 'evaluation-is-operational-evidence', 'observability-model', 'observability', 'adopted', '将评测事件、版本关联与高基数控制接入运行观测闭环。'],
+  ['impact-backend-08-diagnosis', 'backend-08', 'res-backend-primary-javaguide-gateway', 'deployment-failures-need-separate-diagnosis', 'scaling-units', 'failure-diagnosis', 'deepened', '按过载、延迟、质量与安全分别建立诊断、回滚和验证路径。'],
+];
+
+const sourceImpactAudit = sourceImpactSpecs.map(([
+  decisionId, lessonId, resourceId, claimId, sectionId, semanticKey, contribution, summary,
+]) => ({
+  decisionId, lessonId, resourceId, scope: 'claim', targetType: 'claim',
+  targetId: `claim:${claimId}`, sectionId, semanticKey, contribution, summary,
+  rationale: '一级资料承担课程主干与实现观察；API、数据、投递、部署和安全语义继续由官方资料、原始论文与本地测试核验。',
+}));
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const nested of Object.values(value)) deepFreeze(nested);
@@ -456,4 +658,7 @@ export const backendEngineering = deepFreeze({
   resources,
   interviewQuestions,
   coverageMatrix,
+  sourceImpactClaims,
+  sourceImpactAudit,
+  outcomeRegistry,
 });

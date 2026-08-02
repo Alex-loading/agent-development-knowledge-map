@@ -9,6 +9,8 @@ function deepFreeze(value) {
 export const backend05Note = deepFreeze({
   readingMinutes: 25,
   introduction: 'AI 后端同时需要长期可信的业务事实和极低延迟的临时加速数据，PostgreSQL 与 Redis 因而经常一起出现。真正的风险不是选错产品，而是没有声明谁是权威：缓存命中很快，却可能过期、误命中或被淘汰；数据库事务可靠，却不能原子覆盖 broker 和模型 API。本课从事实所有权、事务边界和缓存失效出发，设计即使 Redis 被清空也能恢复、即使并发请求交错也不会泄露租户数据的存储协议。',
+  overviewVisualId: 'visual-backend-05-overview',
+  overviewVisualSectionId: 'source-of-truth',
   sections: [
     {
       id: 'source-of-truth',
@@ -17,9 +19,10 @@ export const backend05Note = deepFreeze({
         'job 状态、用户权限、计费记录、幂等键和最终报告索引通常需要持久、可审计的权威存储。Redis 适合缓存、短租约、速率计数和可重建派生结果，但 key 可能因 TTL、淘汰、故障切换或运维操作消失。因此设计要求 Redis 非权威、可重建；清空缓存后正确性不应改变，只允许性能暂时下降。',
         '可以为每个实体写一张所有权表：规范字段由哪张 PostgreSQL 表保存，缓存 key 如何从权威版本推导，谁能写入，何时失效，重建成本和允许陈旧窗口是多少。若同一业务字段可以在数据库、Redis 和对象存储分别被修改而没有单一版本来源，任何双写顺序都会留下难以解释的冲突。',
         '读取路径也要说明故障行为。Redis 超时应回源还是快速失败，取决于缓存内容是否只是优化；回源必须有限并受并发保护，否则缓存故障会瞬间把数据库打垮。对不可丢失状态，缓存 miss 绝不能被解释为资源不存在，必须查询权威存储或返回无法确认。',
+        '所有权表同时列出 PostgreSQL、object storage、vector store 与 Redis 的写入者、恢复源和删除语义。Company Brain 是知识摄取与检索的实现观察，不是通用数据库标准；索引必须绑定 tenant、ACL、source version 与 provenance。authorization-aware retrieval 先于 safe share，缓存模型输出不会天然适合跨用户共享。',
       ],
       keyPoints: ['缓存丢失只能影响性能不能改变业务事实', '用所有权表明确写入者、版本和失效规则'],
-      sourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction'],
+      sourceIds: ['res-backend-postgres-transactions', 'res-backend-redis-eviction', 'res-backend-primary-javaguide-system-design', 'res-backend-primary-feishu-company-brain'],
     },
     {
       id: 'transaction-boundary',
@@ -39,9 +42,11 @@ export const backend05Note = deepFreeze({
         '典型 cache-aside 读取先查缓存，miss 后读数据库并回填；写入先提交数据库，再删除或更新缓存。任何顺序都有竞争窗口：写后删前可能读到旧值，删除后另一个读者可能把旧查询结果重新写回。解决方案不是声称“最终一致”就结束，而是根据业务容忍度引入版本 key、短 TTL、事件失效或读取时版本校验。',
         '缓存击穿发生在热门 key 同时过期，大量请求并发回源。Go x/sync/singleflight 在单个进程内抑制同一 key 的重复函数调用：只执行一次，其余并发调用等待并共享结果；它可以与随机 TTL、提前刷新和有界回源并发组合。这个语义不是分布式锁或跨实例去重；若协调跨进程，锁持有者可能暂停，仍需有效性 token 与超时。最重要的是保护权威数据库，不让所有请求无上限回源。',
         '淘汰策略决定内存不足时哪些 key 消失，并不会理解业务重要性。若把任务状态、幂等账本和普通响应缓存混在可淘汰实例，压力升高时恰好可能丢掉恢复所需事实。应按可靠性等级拆实例或至少拆职责，并把 maxmemory、淘汰量、命中率、回源率和 key 年龄作为容量信号。',
+        '工程清单按 cache key version、TTL、invalidation 与 stampede 依次验收：版本隔离语义，TTL 限制陈旧窗口，主动失效传播新事实，singleflight 与随机过期抑制热门 key 同时回源。',
       ],
       keyPoints: ['缓存一致性要分析具体读写竞争窗口', '回源保护和职责隔离防止缓存故障击穿数据库'],
       sourceIds: ['res-backend-redis-eviction', 'res-backend-postgres-transactions', 'res-backend-go-singleflight'],
+      visuals: [{ visualId: 'visual-backend-05-detail', afterParagraph: 1 }],
     },
     {
       id: 'semantic-cache',

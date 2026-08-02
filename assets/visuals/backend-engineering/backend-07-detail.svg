@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-07-detail-title visual-backend-07-detail-description">
+  <title id="visual-backend-07-detail-title">生命周期与可观测证据流：决策与失败路径</title>
+  <desc id="visual-backend-07-detail-description">启动、接流、排空和停止由日志、trace、metric 与评测事件共同解释。 细化图把容易混淆的控制面、事实面和恢复动作拆开，帮助学习者在练习中逐项验证。</desc>
+  <defs><marker id="visual-backend-07-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
+  <rect width="1200" height="675" fill="#081B2A"/>
+  <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
+  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">版本维度与高基数边界</text>
+  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">逐请求身份进入日志/trace；受控版本进入聚合 metric 与评测。</text>
+  <g data-kind="observability">
+    
+    <g data-node="card-1" data-kind="entry">
+    <rect x="178" y="240" width="190" height="104" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
+    <text x="273" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">requestId → TRACE</text>
+  </g>
+<g data-node="card-2" data-kind="stage">
+    <rect x="396" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="491" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">jobId → LOG</text>
+  </g>
+<g data-node="card-3" data-kind="stage">
+    <rect x="614" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="709" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">model v7 → METRIC</text>
+  </g>
+<g data-node="card-4" data-kind="outcome">
+    <rect x="832" y="240" width="190" height="104" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="927" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">prompt v12 → EVAL</text>
+  </g>
+    <g data-value="1">
+      <rect x="64" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="237" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">p95 TTFT 620 ms</text>
+    </g>
+<g data-value="2">
+      <rect x="426" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="599" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">tokens 3.4k</text>
+    </g>
+<g data-value="3">
+      <rect x="788" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
+      <text x="961" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">eval score 0.91</text>
+    </g>
+  </g>
+  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
+  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">OBSERVABILITY · bounded-cardinality-observability</text>
+</svg>
