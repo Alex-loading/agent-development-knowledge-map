@@ -584,6 +584,57 @@ const interviewQuestions = interviewSpecs.map((spec) => ({
   conceptTags: [...agentMechanismAssessmentConceptTags[spec.id]],
 }));
 
+function buildAgentVisualOwnership() {
+  const registeredVisualIds = new Set(agentMechanismVisuals.map(({ id }) => id));
+  const placementsByVisualId = new Map();
+  const addPlacement = (visualId, placement) => {
+    if (!registeredVisualIds.has(visualId)) {
+      throw new Error(`Unknown Agent visual placement: ${visualId}`);
+    }
+    const existing = placementsByVisualId.get(visualId) ?? [];
+    existing.push(Object.freeze(placement));
+    placementsByVisualId.set(visualId, existing);
+  };
+
+  for (const lesson of lessons) {
+    const note = lesson.knowledgeNote;
+    const overviewSection = note.sections.find(({ id }) => id === note.overviewVisualSectionId);
+    if (!overviewSection) {
+      throw new Error(
+        `Unknown Agent overview owner: ${lesson.id}/${note.overviewVisualSectionId}`,
+      );
+    }
+    addPlacement(note.overviewVisualId, {
+      lessonId: lesson.id,
+      sectionId: overviewSection.id,
+      kind: 'overview',
+    });
+    for (const section of note.sections) {
+      for (const placement of section.visuals ?? []) {
+        addPlacement(placement.visualId, {
+          lessonId: lesson.id,
+          sectionId: section.id,
+          kind: 'section',
+        });
+      }
+    }
+  }
+
+  const ownership = new Map();
+  for (const visual of agentMechanismVisuals) {
+    const placements = placementsByVisualId.get(visual.id) ?? [];
+    if (placements.length !== 1) {
+      throw new Error(
+        `${visual.id}: expected exactly one Agent note placement; found ${placements.length}`,
+      );
+    }
+    ownership.set(visual.id, placements[0]);
+  }
+  return ownership;
+}
+
+const agentVisualOwnershipById = buildAgentVisualOwnership();
+
 const sourceImpactClaims = [
   {
     id: 'agent-is-bounded-decision-authority',
@@ -691,11 +742,23 @@ export function resolveAgentSourceImpactTarget(targetId) {
   });
   const visuals = claim.visualIds.map((id) => {
     const visual = agentMechanismVisuals.find((entry) => entry.id === id);
+    const owner = agentVisualOwnershipById.get(id);
     const outcomeTags = outcomeRegistry.visuals[id];
-    if (!visual || !outcomeTags) {
+    if (!visual || !owner || !outcomeTags) {
       throw new RangeError(`Unknown Agent source-impact visual: ${id}`);
     }
-    return { id, lessonId: visual.lessonId, outcomeTags };
+    if (owner.lessonId !== claim.lessonId) {
+      throw new RangeError(
+        `${id}: source-impact lesson ${claim.lessonId} conflicts with note owner ${owner.lessonId}`,
+      );
+    }
+    return {
+      id,
+      lessonId: owner.lessonId,
+      sectionId: owner.sectionId,
+      placementKind: owner.kind,
+      outcomeTags,
+    };
   });
   return deepFreeze({
     type: 'claim',

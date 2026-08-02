@@ -7,6 +7,7 @@ import {
 } from '../src/data/agent-mechanism.js';
 import { getPrimaryReference } from '../src/data/primary-references.js';
 import { agentMechanismVisuals } from '../src/data/visuals/agent-mechanism-visuals.js';
+import { knowledgeVisuals } from '../src/data/visuals/index.js';
 import {
   agentAssessmentTextEvidence,
 } from './fixtures/agent-mechanism-semantic-evidence.js';
@@ -57,6 +58,26 @@ function sourceImpactSectionText(section) {
   return [section.title, ...section.paragraphs, ...section.keyPoints].join(' ');
 }
 
+function realAgentVisualPlacements() {
+  return agentMechanism.lessons.flatMap((lesson) => {
+    const note = lesson.knowledgeNote;
+    return [
+      {
+        visualId: note.overviewVisualId,
+        lessonId: lesson.id,
+        sectionId: note.overviewVisualSectionId,
+        placementKind: 'overview',
+      },
+      ...note.sections.flatMap((section) => (section.visuals ?? []).map((placement) => ({
+        visualId: placement.visualId,
+        lessonId: lesson.id,
+        sectionId: section.id,
+        placementKind: 'section',
+      }))),
+    ];
+  });
+}
+
 function satisfiesSourceImpactContract(decision, resolved, contract) {
   return resolved.lessonId === decision.lessonId
     && resolved.section.id === decision.sectionId
@@ -67,7 +88,12 @@ function satisfiesSourceImpactContract(decision, resolved, contract) {
     && contract.sectionPatterns.some(
       (pattern) => pattern.test(sourceImpactSectionText(resolved.section)),
     )
-    && contract.summaryPatterns.some((pattern) => pattern.test(decision.summary));
+    && contract.summaryPatterns.some((pattern) => pattern.test(decision.summary))
+    && resolved.outcomes.visuals.length === contract.visualIds.length
+    && resolved.outcomes.visuals.every((visual) => (
+      contract.visualIds.includes(visual.id)
+      && visual.lessonId === decision.lessonId
+    ));
 }
 
 function assertContracts(assessments, contracts) {
@@ -198,6 +224,7 @@ test('source impact decisions strictly own independently anchored targets and su
   const approved = new Set(['adopted', 'corrected', 'deepened', 'rejected', 'duplicate']);
   const lessons = new Map(agentMechanism.lessons.map((lesson) => [lesson.id, lesson]));
   const resources = new Map(agentMechanism.resources.map((resource) => [resource.id, resource]));
+  const visualPlacements = realAgentVisualPlacements();
   assert.deepEqual(
     new Set(agentMechanism.sourceImpactAudit.map(({ decisionId }) => decisionId)),
     new Set(Object.keys(agentSourceImpactDecisionEvidence)),
@@ -252,6 +279,23 @@ test('source impact decisions strictly own independently anchored targets and su
       );
     }
     for (const visual of resolved.outcomes.visuals) {
+      const owners = visualPlacements.filter(({ visualId }) => visualId === visual.id);
+      assert.equal(owners.length, 1, `${decision.decisionId}:${visual.id}:unique owner`);
+      assert.deepEqual(
+        {
+          lessonId: visual.lessonId,
+          sectionId: visual.sectionId,
+          placementKind: visual.placementKind,
+        },
+        {
+          lessonId: owners[0].lessonId,
+          sectionId: owners[0].sectionId,
+          placementKind: owners[0].placementKind,
+        },
+        `${decision.decisionId}:${visual.id}:real note placement`,
+      );
+      assert.equal(visual.lessonId, decision.lessonId, `${decision.decisionId}:${visual.id}:lesson`);
+      assert.ok(agentMechanism.lessons.some(({ id }) => id === visual.lessonId));
       assert.ok(
         visual.outcomeTags.some((tag) => contract.outcomeTags.includes(tag)),
         `${decision.decisionId}:${visual.id}`,
@@ -262,6 +306,8 @@ test('source impact decisions strictly own independently anchored targets and su
 });
 
 test('target, summary, real section text, and section ownership mutations all fail', () => {
+  const crossCourseVisual = knowledgeVisuals.find(({ id }) => id.startsWith('visual-llm-'));
+  assert.ok(crossCourseVisual);
   for (const decision of agentMechanism.sourceImpactAudit) {
     const contract = agentSourceImpactDecisionEvidence[decision.decisionId];
     const resolved = resolveAgentSourceImpactTarget(decision.targetId);
@@ -276,6 +322,16 @@ test('target, summary, real section text, and section ownership mutations all fa
     const sectionSourceMutation = {
       ...resolved.section,
       sourceIds: resolved.section.sourceIds.filter((id) => id !== decision.resourceId),
+    };
+    const crossCourseVisualMutation = {
+      ...resolved,
+      outcomes: {
+        ...resolved.outcomes,
+        visuals: [
+          { id: crossCourseVisual.id, lessonId: 'llm-01', outcomeTags: contract.outcomeTags },
+          ...resolved.outcomes.visuals.slice(1),
+        ],
+      },
     };
     assert.equal(satisfiesSourceImpactContract(decision, resolved, contract), true);
     assert.equal(
@@ -309,6 +365,11 @@ test('target, summary, real section text, and section ownership mutations all fa
       ),
       false,
       `${decision.decisionId}: section source mutation`,
+    );
+    assert.equal(
+      satisfiesSourceImpactContract(decision, crossCourseVisualMutation, contract),
+      false,
+      `${decision.decisionId}: cross-course visual mutation`,
     );
   }
 });

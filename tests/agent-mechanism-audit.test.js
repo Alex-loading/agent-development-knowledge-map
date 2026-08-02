@@ -98,5 +98,5 @@ test('Agent reconstruction audit traces every source decision and visual asset e
   }
   assert.match(audit, /第三方图表[^。\n]*拒绝直接复制/);
   assert.match(audit, /官方来源[^。\n]*(?:核验|交叉验证)/);
-  assert.match(audit, /589\s*\/\s*589/);
+  assert.match(audit, /591\s*\/\s*591/);
 });

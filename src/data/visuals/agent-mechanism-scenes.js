@@ -206,7 +206,7 @@ const scenes = [
     [
       edge('guard-act', 'guard', 'act', [[280, 266], [360, 266]], 'READY', [320, 190]),
       edge('act-ledger', 'act', 'ledger', [[580, 266], [820, 266]], 'DEBIT', [700, 230]),
-      edge('act-continue', 'act', 'continue', [[470, 312], [470, 380], [150, 380], [150, 430]], 'MORE WORK', [320, 380]),
+      edge('act-continue', 'act', 'continue', [[580, 300], [700, 300], [700, 520], [150, 520], [150, 502]], 'MORE WORK', [450, 520]),
       edge('guard-stop', 'guard', 'stop', [[130, 312], [130, 350], [370, 350], [370, 430]], 'DONE', [270, 350]),
       edge('guard-blocked', 'guard', 'blocked', [[210, 312], [210, 330], [590, 330], [590, 430]], 'NO PRECONDITION', [470, 330]),
       edge('guard-budget', 'guard', 'budget', [[60, 266], [20, 266], [20, 550], [830, 550], [830, 502]], 'LIMIT HIT', [620, 550]),

@@ -75,8 +75,9 @@
 - 一级资料机制主干补强后的最终完整回归：`npm test`，**581 / 581**，0 fail；8 节正文均显式覆盖任务契约、工具责任链、循环、规划、纠错、上下文与端到端压力矩阵。
 - 本次规格整改的 Agent 聚焦回归：primary reference、source-impact audit、visual semantics 与 geometry 共 **16 / 16**，0 fail。
 - 本次规格整改后的完整回归：`npm test`，**586 / 586**，0 fail、0 skipped。
-- 质量复审整改后的 Agent 完整聚焦回归：primary reference、source-impact audit、visual semantics 与 geometry 共 **19 / 19**，0 fail；其中新增的 audit + geometry + primary 核心门为 **16 / 16**。
-- 质量复审整改后的最终完整回归：`npm test`，**589 / 589**，0 fail、0 skipped。
+- 质量复审整改后的 Agent 完整聚焦回归：primary reference、source-impact audit、visual semantics 与 geometry 共 **21 / 21**，0 fail；其中新增的 audit + geometry + primary 核心门为 **18 / 18**。几何门会扫描全部 production scene，拒绝未声明 junction / bridge 的非端点正交交叉；当前共线重叠与非端点正交交叉均为 **0**。
+- Source-impact 的 9 个 visual outcome 均由真实知识笔记 overview / section placement 建立唯一 `visualId → lessonId` ownership，再与视觉 registry 和 claim lesson 交叉核验；跨课程视觉替换 mutation 必须失败。
+- 质量复审整改后的最终完整回归：`npm test`，**591 / 591**，0 fail、0 skipped。
 - 生成物：Agent 16 份 SVG、一级资料共享产物、Context 27 份 SVG 及其 inventory 的 `--check` 均为 current，全部为非写模式。
 - 类型视觉：`spectrum 1, loop 2, decision 2, state-machine 2, protocol 1, layers 2, planning-graph 1, dag 1, ladder 1, flow 1, control-loop 1, matrix 1`；测试确认 feedback/ReAct 回边、bounded loop 四出口、orchestration fork + join 与 6×4 pressure matrix。
 - 安全与静态校验：16 / 16 SVG 通过 `xmllint`；从 Agent 重构基线计的 13 份变更 JS 通过 `node --check`；strict SVG parser、hostile XML renderer probe、全局 visual ownership 和 asset uniqueness 全部执行。release marker、remote-image hotlink、active/remote SVG reference 和敏感凭据定向扫描均零命中。

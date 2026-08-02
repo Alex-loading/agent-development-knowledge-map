@@ -84,6 +84,43 @@ function collinearOverlap(first, second) {
   return false;
 }
 
+function orthogonalIntersection(first, second) {
+  const horizontal = first[0][1] === first[1][1]
+    ? first
+    : second[0][1] === second[1][1] ? second : null;
+  const vertical = first[0][0] === first[1][0]
+    ? first
+    : second[0][0] === second[1][0] ? second : null;
+  if (!horizontal || !vertical || horizontal === vertical) return null;
+  const x = vertical[0][0];
+  const y = horizontal[0][1];
+  const withinHorizontal = x >= Math.min(horizontal[0][0], horizontal[1][0])
+    && x <= Math.max(horizontal[0][0], horizontal[1][0]);
+  const withinVertical = y >= Math.min(vertical[0][1], vertical[1][1])
+    && y <= Math.max(vertical[0][1], vertical[1][1]);
+  return withinHorizontal && withinVertical ? [x, y] : null;
+}
+
+function samePoint(first, second) {
+  return first[0] === second[0] && first[1] === second[1];
+}
+
+function isAllowedEdgeIntersection(scene, edge, other, point) {
+  const sharedNodeIds = [edge.from, edge.to].filter((id) => (
+    id === other.from || id === other.to
+  ));
+  const isSharedExplicitEndpoint = sharedNodeIds.length > 0
+    && [edge.points[0], edge.points.at(-1)].some((endpoint) => samePoint(endpoint, point))
+    && [other.points[0], other.points.at(-1)].some((endpoint) => samePoint(endpoint, point));
+  const isDeclaredJunction = (scene.junctions ?? []).some(({ x, y }) => (
+    x === point[0] && y === point[1]
+  ));
+  const isDeclaredBridge = (scene.bridges ?? []).some(({ x, y }) => (
+    x === point[0] && y === point[1]
+  ));
+  return isSharedExplicitEndpoint || isDeclaredJunction || isDeclaredBridge;
+}
+
 const reservedTextRegions = [
   { id: 'title', left: 54, right: 1146, top: 65, bottom: 108 },
   { id: 'subtitle', left: 54, right: 1146, top: 116, bottom: 142 },
@@ -274,6 +311,50 @@ test('production edges share endpoints but never reuse collinear segments', () =
             );
           }
         }
+      }
+    }
+  }
+});
+
+test('production edges never cross orthogonally outside shared endpoints or declared junctions', () => {
+  const unexpected = [];
+  for (const visual of agentMechanismVisuals) {
+    const scene = getAgentMechanismScene(visual.id);
+    if (!scene.nodes) continue;
+    for (const [edgeIndex, edge] of scene.edges.entries()) {
+      for (const other of scene.edges.slice(edgeIndex + 1)) {
+        const firstSegments = edge.points.slice(1).map((point, index) => [edge.points[index], point]);
+        const secondSegments = other.points.slice(1)
+          .map((point, index) => [other.points[index], point]);
+        for (const firstSegment of firstSegments) {
+          for (const secondSegment of secondSegments) {
+            const point = orthogonalIntersection(firstSegment, secondSegment);
+            if (!point) continue;
+            if (!isAllowedEdgeIntersection(scene, edge, other, point)) {
+              unexpected.push(`${scene.id}/${edge.id} crosses ${other.id} at ${point.join(',')}`);
+            }
+          }
+        }
+      }
+    }
+  }
+  assert.deepEqual(unexpected, []);
+});
+
+test('bounded loop routes have no hidden edge crossings', () => {
+  const scene = getAgentMechanismScene('visual-agent-04-bounded-loop');
+  const crossingPairs = [
+    ['act-continue', 'guard-stop'],
+    ['act-continue', 'guard-blocked'],
+  ];
+  for (const [firstId, secondId] of crossingPairs) {
+    const first = scene.edges.find(({ id }) => id === firstId);
+    const second = scene.edges.find(({ id }) => id === secondId);
+    for (const firstSegment of first.points.slice(1)
+      .map((point, index) => [first.points[index], point])) {
+      for (const secondSegment of second.points.slice(1)
+        .map((point, index) => [second.points[index], point])) {
+        assert.equal(orthogonalIntersection(firstSegment, secondSegment), null);
       }
     }
   }
