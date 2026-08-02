@@ -14,8 +14,10 @@
 | assessments | 40 |
 | visuals | 16 |
 | scenes | 16 |
-| cards | 86 |
-| edges | 23 |
+| nodes | 100 |
+| edges | 79 |
+| edgeLabels | 75 |
+| values | 52 |
 | svgAssets | 16 |
 
 身份兼容保持 `backend-01`…`backend-08`、37 个 legacy resources、24 道 interview、16 道 quiz 与 `backend-02/03/06` 三个实验。新增 12 个 `res-backend-primary-` binding 全部来自冻结 50-source registry；49 个课程资源均至少被一课和一个真实 section 使用，没有孤立链接。
@@ -68,7 +70,7 @@
 | visual-backend-01-overview | API boundary sequence | original |
 | visual-backend-01-detail | schema/error protocol | original |
 | visual-backend-02-overview | SSE timeline | original |
-| visual-backend-02-detail | transport matrix | original |
+| visual-backend-02-detail | sync/SSE/job contract split | original |
 | visual-backend-03-overview | capacity envelope | original |
 | visual-backend-03-detail | admission decision | original |
 | visual-backend-04-overview | job state machine | original |
@@ -76,31 +78,31 @@
 | visual-backend-05-overview | storage layers | original |
 | visual-backend-05-detail | cache-aside process | original |
 | visual-backend-06-overview | delivery ledger | original |
-| visual-backend-06-detail | failure matrix | original |
+| visual-backend-06-detail | delivery recovery flow | original |
 | visual-backend-07-overview | lifecycle signal flow | original |
 | visual-backend-07-detail | observability boundary | original |
 | visual-backend-08-overview | diagnosis matrix | original |
 | visual-backend-08-detail | deployment topology | original |
 
-Scene 分布为 sequence、protocol、timeline、envelope、decision、state-machine、split、layers、cache、ledger、signal-flow、observability、deployment 各 1，matrix 3；共 16 个唯一 topology、86 cards、23 条正交非零 edge。画布固定 1200×675，正文 card 位于 y=170…510 保留区，标题/副标题在 y≤132，数值 ledger 在 y=535，图注与 topology footer 在 y=610。正文最小字号 14px、图注 15px、副标题 17px、标题 30px；严格几何测试确认 node-node、edge-node、edge-edge overlap/crossing、截断与保留区碰撞均为 0，并检查真实 fixture 字段和 16 个生成物 byte parity。
+Scene 分布为 sequence、protocol、timeline、split、envelope、decision、state-machine、layers、cache、ledger、delivery、signal-flow、observability、deployment 各 1，matrix 2；共 15 种 renderer、16 个唯一 topology、100 个语义 node、79 条正交非零 edge、75 个 edge label 与 52 个值单元。每种 type 都改变实际拓扑和绘制结构，而不是给同一种 card 模板换标题。画布固定 1200×675，标题、副标题、正文 node、edge label、数值、图注与 footer 分别使用独立保留区。正文最小字号 14px、图注 15px、副标题 17px、标题 30px；16 份独立 fixture 逐图验证 type-specific structure、分支、边、标签、状态与数值，mutation oracle 会拒绝 topology、跨模块、结构、分支、边和标签漂移。严格几何测试确认 node-node、text-text、text-node、edge-label-node、edge-node、edge-edge overlap/crossing、截断与保留区碰撞均为 0，并检查 16 个生成物 byte parity。
 
 ## 评分
 
 | rubric | score | evidence |
 | --- | ---: | --- |
 | 内容评分 | 94 / 100 | 8 课完整主线、48 sections、154 段、40 assessment 闭环与来源边界 |
-| 视觉评分 | 56 / 60 | 16 原创图、16 typed scenes、真实 fixture 与严格静态门 |
+| 视觉评分 | 55 / 60 | 16 原创图、15 种 typed renderer、16 份独立 fixture 与严格静态门 |
 | 语义对应 | 10 / 10 | 每课两图并绑定真实 outcome |
 | 认知任务选择 | 10 / 10 | sequence/state-machine/envelope/layer/ledger/matrix 等按问题选择 |
 | 可读性 | 9 / 10 | 固定保留区、最小 14px、无斜线与零长 edge |
 | 可访问性 | 9 / 10 | alt、longDescription、caption、SVG title/desc 齐全 |
 | 来源与许可 | 10 / 10 | sourceIds 可解析，全部原创且无第三方复制 |
-| 集成与回归 | 8 / 10 | shared registry、原子 generator、strict `--check` 与数据回归 |
+| 集成与回归 | 7 / 10 | shared registry、原子 generator、strict `--check`、fixture mutation 与数据回归 |
 
 六个视觉类别最低为 8 / 10，内容超过 85/100、视觉超过 51/60。
 
 ## 验证与限制
 
-已执行 backend primary/data/visual/artifact/audit tests、607 项全量 Node test、JS/MJS syntax、16 SVG xmllint、generator `--check`、marker/hotlink/active/privacy/cache 扫描与 `git diff --check`。hostile title/description/caption 通过 shared static SVG gate；缺失目录测试确认 `--check` 非写入并一次报告全部 16 个 missing artifact。
+已执行 backend primary/data/visual/artifact/audit tests、612 项全量 Node test、JS/MJS syntax、16 SVG xmllint、generator `--check`、marker/hotlink/active/privacy/cache 扫描与 `git diff --check`。hostile title/description/caption 通过 shared static SVG gate；缺失目录测试确认 `--check` 非写入并一次报告全部 16 个 missing artifact。
 
-本地 HTTP smoke 已确认 `/`、`/styles/app.css`、`/src/app.js` 与一张 backend SVG 均返回 200 和正确 MIME。本切片没有声称浏览器验收：浏览器矩阵未执行（browser not executed），留给最终跨模块集成阶段。
+本地 HTTP smoke 已确认 `/`、`/styles/app.css`、`/src/app.js` 与 backend SVG 返回 200 和正确 MIME；关键 API、SSE、状态机、容量、投递、可观测、部署与矩阵图的实际渲染检查已执行（render executed）。跨浏览器矩阵仍留给最终跨模块集成阶段。

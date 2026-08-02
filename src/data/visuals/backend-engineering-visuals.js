@@ -22,6 +22,17 @@ const detailSourceIdsByLesson = {
   'backend-07': ['res-backend-prometheus', 'res-backend-vllm-server', 'res-backend-primary-javaguide-evaluation'],
 };
 
+const detailMetadataByLesson = {
+  'backend-01': ['结构化契约与错误回路', '请求依次经过 schema、能力、执行与用量校验，并把失败收敛到稳定错误信封。'],
+  'backend-02': ['同步、SSE 与后台 Job 三路契约', '三种传输方式共享权威状态，但分别暴露完整响应、增量游标与可恢复任务快照。'],
+  'backend-03': ['准入控制的四个确定出口', '剩余 deadline、队列年龄、租户权重和依赖健康共同决定接受、排队、降级或拒绝。'],
+  'backend-04': ['可重放控制与外部副作用矩阵', 'journal 与 checkpoint 支撑控制面重放；外部 effect 必须依赖证据查询、对账或死信恢复。'],
+  'backend-05': ['版本化 Cache-aside 与击穿保护', '读取校验租户与版本，miss 经 singleflight 有界回源，写入后发布失效。'],
+  'backend-06': ['投递、未知结果与恢复动作', 'relay、consumer 与远端 effect 的故障点具有不同恢复动作，未知结果先查证再重试。'],
+  'backend-07': ['关联身份与高基数边界', '逐请求身份进入日志和 trace，受控版本维度进入 metric 与 evaluation。'],
+  'backend-08': ['无状态 API 与有状态 Worker 发布拓扑', 'API、队列、worker、provider 与区域数据边界独立扩缩，并沿同一证据链诊断。'],
+};
+
 function visual(id, role, title, alt, longDescription, caption, sourceIds, tags) {
   return {
     id,
@@ -47,18 +58,21 @@ function visual(id, role, title, alt, longDescription, caption, sourceIds, tags)
 
 export const backendEngineeringVisuals = deepFreezeVisual(specs.flatMap(([
   lessonId, title, description, sourceIds, caption,
-]) => [
-  visual(
-    `visual-${lessonId}-overview`, 'overview', title,
-    `${title}的工程结构图，展示本课核心组件、状态与数值边界。`,
-    `${description} 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。`,
-    caption, sourceIds, ['mechanism', 'relationship', 'boundary'],
-  ),
-  visual(
-    `visual-${lessonId}-detail`, lessonId === 'backend-08' ? 'decision' : 'process',
-    `${title}：决策与失败路径`,
-    `${title}的细化图，展示关键决策、失败路径和确定恢复出口。`,
-    `${description} 细化图把容易混淆的控制面、事实面和恢复动作拆开，帮助学习者在练习中逐项验证。`,
-    caption, detailSourceIdsByLesson[lessonId] ?? sourceIds, ['relationship', 'failure-mode', 'tradeoff'],
-  ),
-]));
+]) => {
+  const [detailTitle, detailDescription] = detailMetadataByLesson[lessonId];
+  return [
+    visual(
+      `visual-${lessonId}-overview`, 'overview', title,
+      `${title}的工程结构图，展示本课核心组件、状态与数值边界。`,
+      `${description} 图中所有数值来自课程固定 fixture，用于说明关系与边界而非生产默认值。`,
+      caption, sourceIds, ['mechanism', 'relationship', 'boundary'],
+    ),
+    visual(
+      `visual-${lessonId}-detail`, lessonId === 'backend-08' ? 'decision' : 'process',
+      detailTitle,
+      `${detailTitle}的细化图，展示关键决策、失败路径和确定恢复出口。`,
+      `${detailDescription} 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。`,
+      caption, detailSourceIdsByLesson[lessonId] ?? sourceIds, ['relationship', 'failure-mode', 'tradeoff'],
+    ),
+  ];
+}));

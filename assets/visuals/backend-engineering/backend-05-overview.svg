@@ -4,43 +4,62 @@
   <defs><marker id="visual-backend-05-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">权威存储与可重建加速层</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">事务事实、对象、向量索引和缓存承担不同所有权。</text>
-  <g data-kind="layers">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="178" y="240" width="190" height="104" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="273" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">POSTGRESQL</text>
-  </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="396" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="491" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">OBJECT STORAGE</text>
-  </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="614" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="709" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">VECTOR STORE</text>
-  </g>
-<g data-node="card-4" data-kind="outcome">
-    <rect x="832" y="240" width="190" height="104" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="927" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">REDIS</text>
-  </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="192" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">TENANT acme</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">权威存储与可重建加速层</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">事务事实、对象、向量索引与缓存按所有权、恢复源和删除语义分层。</text>
+  <g data-kind="layers"><polyline data-edge="postgres-object" data-from="postgres" data-to="object-storage" data-kind="ownership" points="600,223 600,260" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-overview-arrow)"/>
+<g data-edge-label="postgres-object">
+      <rect x="640" y="229" width="140" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="710" y="248" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">OBJECT POINTER</text>
     </g>
-<g data-value="2">
-      <rect x="336" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="464" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">ACL v9</text>
+<polyline data-edge="postgres-vector" data-from="postgres" data-to="vector-store" data-kind="derive" points="140,199 110,199 110,369 140,369" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-overview-arrow)"/>
+<g data-edge-label="postgres-vector">
+      <rect x="154.5" y="313" width="131" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="220" y="332" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">REBUILD INDEX</text>
     </g>
-<g data-value="3">
-      <rect x="608" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="736" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">CACHE v12</text>
-    </g>
-<g data-value="4">
-      <rect x="880" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="1008" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">TTL 300 s</text>
-    </g>
+<polyline data-edge="postgres-redis" data-from="postgres" data-to="redis" data-kind="derive" points="1060,199 1090,199 1090,454 1060,454" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-05-overview-arrow)"/>
+<g data-edge-label="postgres-redis">
+      <rect x="945.5" y="398" width="109" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="1000" y="417" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">INVALIDATE</text>
+    </g><g data-node="postgres" data-kind="authority">
+    <rect x="140" y="175" width="920" height="48" rx="10" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <rect x="140" y="175" width="12" height="48" rx="6" fill="#74D8F2"/>
+    <text x="170" y="197" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="start">POSTGRESQL</text>
+    <text x="390" y="197" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="start">AUTHORITATIVE · job / ACL / version</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">缓存可以丢失，授权与业务真相不能丢失。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">LAYERS · authoritative-storage-cache-layers</text>
+<g data-node="object-storage" data-kind="durable">
+    <rect x="140" y="260" width="920" height="48" rx="10" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <rect x="140" y="260" width="12" height="48" rx="6" fill="#7CCBDD"/>
+    <text x="170" y="282" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="start">OBJECT STORAGE</text>
+    <text x="390" y="282" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="start">DURABLE OBJECT · source pointer</text>
+  </g>
+<g data-node="vector-store" data-kind="derived">
+    <rect x="140" y="345" width="920" height="48" rx="10" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <rect x="140" y="345" width="12" height="48" rx="6" fill="#9FB7FF"/>
+    <text x="170" y="367" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="start">VECTOR STORE</text>
+    <text x="390" y="367" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="start">REBUILDABLE · tenant + version</text>
+  </g>
+<g data-node="redis" data-kind="cache">
+    <rect x="140" y="430" width="920" height="48" rx="10" fill="#3D315B" stroke="#B8A7F8" stroke-width="2"/>
+    <rect x="140" y="430" width="12" height="48" rx="6" fill="#B8A7F8"/>
+    <text x="170" y="452" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="start">REDIS</text>
+    <text x="390" y="452" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="start">EVICTABLE · TTL + namespace</text>
+  </g></g>
+  <g data-value="tenant">
+    <rect x="64" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="189" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TENANT acme</text>
+  </g>
+<g data-value="acl">
+    <rect x="330" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="455" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">ACL v9</text>
+  </g>
+<g data-value="cache-version">
+    <rect x="596" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="721" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">CACHE v12</text>
+  </g>
+<g data-value="ttl">
+    <rect x="862" y="525" width="274" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="999" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TTL 300 s</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">缓存可以丢失，授权与业务真相不能丢失。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">LAYERS · authoritative-storage</text>
 </svg>

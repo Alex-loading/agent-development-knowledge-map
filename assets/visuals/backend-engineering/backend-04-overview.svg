@@ -4,55 +4,97 @@
   <defs><marker id="visual-backend-04-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">耐久 Job 状态机</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">客户端状态、worker lease、checkpoint 与死信各有证据。</text>
-  <g data-kind="state-machine">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="53" y="205" width="260" height="92" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="183" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">SUBMITTED</text>
-  </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="331" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="461" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">QUEUED</text>
-  </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="609" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="739" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">LEASED</text>
-  </g>
-<g data-node="card-4" data-kind="stage">
-    <rect x="887" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="1017" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">RUNNING</text>
-  </g>
-<g data-node="card-5" data-kind="stage">
-    <rect x="53" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="183" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">SUCCEEDED</text>
-  </g>
-<g data-node="card-6" data-kind="stage">
-    <rect x="331" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="461" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">FAILED</text>
-  </g>
-<g data-node="card-7" data-kind="stage">
-    <rect x="609" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="739" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">CANCELLED</text>
-  </g>
-<g data-node="card-8" data-kind="outcome">
-    <rect x="887" y="350" width="260" height="92" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="1017" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">DLQ</text>
-  </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="237" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">LEASE 30 s</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">耐久 Job 状态机</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">提交、租约、checkpoint、取消与终态都有合法边和版本守卫。</text>
+  <g data-kind="state-machine"><polyline data-edge="submit" data-from="submitted" data-to="queued" data-kind="flow" points="205,221 270,221" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="submit">
+      <rect x="195.5" y="151" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="237" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">persist</text>
     </g>
-<g data-value="2">
-      <rect x="426" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="599" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">CHECKPOINT 68%</text>
+<polyline data-edge="lease" data-from="queued" data-to="leased" data-kind="flow" points="420,221 485,221" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="lease">
+      <rect x="401.5" y="151" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="452" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">lease 30 s</text>
     </g>
-<g data-value="3">
-      <rect x="788" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="961" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">ATTEMPT 2</text>
+<polyline data-edge="start" data-from="leased" data-to="running" data-kind="flow" points="635,221 700,221" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="start">
+      <rect x="634" y="151" width="66" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="667" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">start</text>
     </g>
+<polyline data-edge="succeed" data-from="running" data-to="succeeded" data-kind="terminal" points="850,221 930,221" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="succeed">
+      <rect x="824.5" y="151" width="131" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="890" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">version guard</text>
+    </g>
+<polyline data-edge="fail" data-from="running" data-to="failed" data-kind="terminal" points="775,257 775,405" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="fail">
+      <rect x="784.5" y="318" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="835" y="337" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">permanent</text>
+    </g>
+<polyline data-edge="retry" data-from="failed" data-to="queued" data-kind="retry" points="775,477 775,500 345,500 345,257" fill="none" stroke="#F5CA72" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="retry">
+      <rect x="509.5" y="486" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="560" y="505" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F5CA72" text-anchor="middle">RETRYABLE</text>
+    </g>
+<polyline data-edge="dead-letter" data-from="failed" data-to="dlq" data-kind="terminal" points="700,441 635,441" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="dead-letter">
+      <rect x="616.5" y="371" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="667" y="390" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">PERMANENT</text>
+    </g>
+<polyline data-edge="cancel" data-from="queued" data-to="cancelled" data-kind="terminal" points="345,185 345,160 1120,160 1120,441 1090,441" fill="none" stroke="#F2A6B2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-04-overview-arrow)"/>
+<g data-edge-label="cancel">
+      <rect x="984.5" y="316" width="131" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="1050" y="335" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#F2A6B2" text-anchor="middle">cancel intent</text>
+    </g><g data-node="submitted" data-kind="state">
+    <rect x="55" y="185" width="150" height="72" rx="28" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="130" y="227" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SUBMITTED</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">控制决策可重放，外部副作用必须对账。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">STATE-MACHINE · durable-job-state-machine</text>
+<g data-node="queued" data-kind="state">
+    <rect x="270" y="185" width="150" height="72" rx="28" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="345" y="227" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">QUEUED</text>
+  </g>
+<g data-node="leased" data-kind="state">
+    <rect x="485" y="185" width="150" height="72" rx="28" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="560" y="218" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">LEASED</text>
+<text x="560" y="237" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">LEASE EXPIRED</text>
+  </g>
+<g data-node="running" data-kind="state">
+    <rect x="700" y="185" width="150" height="72" rx="28" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="775" y="227" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">RUNNING</text>
+  </g>
+<g data-node="succeeded" data-kind="terminal">
+    <rect x="930" y="185" width="160" height="72" rx="28" fill="#174B4A" stroke="#8EECE1" stroke-width="4"/>
+    <rect x="937" y="192" width="146" height="58" rx="21" fill="none" stroke="#8EECE1" stroke-width="1"/>
+    <text x="1010" y="227" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SUCCEEDED</text>
+  </g>
+<g data-node="dlq" data-kind="terminal">
+    <rect x="485" y="405" width="150" height="72" rx="28" fill="#174B4A" stroke="#8EECE1" stroke-width="4"/>
+    <rect x="492" y="412" width="136" height="58" rx="21" fill="none" stroke="#8EECE1" stroke-width="1"/>
+    <text x="560" y="447" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">DLQ</text>
+  </g>
+<g data-node="failed" data-kind="terminal">
+    <rect x="700" y="405" width="150" height="72" rx="28" fill="#174B4A" stroke="#8EECE1" stroke-width="4"/>
+    <rect x="707" y="412" width="136" height="58" rx="21" fill="none" stroke="#8EECE1" stroke-width="1"/>
+    <text x="775" y="438" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">FAILED</text>
+<text x="775" y="457" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">RETRY / STOP</text>
+  </g>
+<g data-node="cancelled" data-kind="terminal">
+    <rect x="930" y="405" width="160" height="72" rx="28" fill="#174B4A" stroke="#8EECE1" stroke-width="4"/>
+    <rect x="937" y="412" width="146" height="58" rx="21" fill="none" stroke="#8EECE1" stroke-width="1"/>
+    <text x="1010" y="447" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CANCELLED</text>
+  </g></g>
+  <g data-value="lease-value">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">LEASE 30 s</text>
+  </g>
+<g data-value="checkpoint">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">CHECKPOINT 68%</text>
+  </g>
+<g data-value="attempt">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">ATTEMPT 2</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">控制决策可重放，外部副作用必须对账。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">STATE-MACHINE · durable-job</text>
 </svg>

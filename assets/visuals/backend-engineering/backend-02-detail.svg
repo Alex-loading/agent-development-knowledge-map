@@ -1,50 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-02-detail-title visual-backend-02-detail-description">
-  <title id="visual-backend-02-detail-title">Typed SSE 可恢复生命周期：决策与失败路径</title>
-  <desc id="visual-backend-02-detail-description">同步、流式与异步路径共享状态机，断线、取消和恢复分别取证。 细化图把容易混淆的控制面、事实面和恢复动作拆开，帮助学习者在练习中逐项验证。</desc>
+  <title id="visual-backend-02-detail-title">同步、SSE 与后台 Job 三路契约</title>
+  <desc id="visual-backend-02-detail-description">三种传输方式共享权威状态，但分别暴露完整响应、增量游标与可恢复任务快照。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
   <defs><marker id="visual-backend-02-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">同步、SSE 与异步轮询的选择矩阵</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">持续时间、增量体验与恢复需求共同决定传输方式。</text>
-  <g data-kind="matrix">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="63" y="205" width="346" height="92" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="236" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">SYNC JSON</text>
-  </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="427" y="205" width="346" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="600" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">SSE</text>
-  </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="791" y="205" width="346" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="964" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">ASYNC POLLING</text>
-  </g>
-<g data-node="card-4" data-kind="stage">
-    <rect x="63" y="350" width="346" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="236" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">DEADLINE</text>
-  </g>
-<g data-node="card-5" data-kind="stage">
-    <rect x="427" y="350" width="346" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="600" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">PARTIAL</text>
-  </g>
-<g data-node="card-6" data-kind="outcome">
-    <rect x="791" y="350" width="346" height="92" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="964" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">RESUME</text>
-  </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="237" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">short ≤ 15 s</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">同步、SSE 与后台 Job 的三路契约</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">同一权威状态机投影成完整响应、增量事件或可恢复任务。</text>
+  <g data-kind="split"><rect data-region="lane-1" x="54" y="173" width="1092" height="88" rx="18" fill="#0F3044" stroke="#31556B" stroke-width="1"/>
+<rect data-region="lane-2" x="54" y="288" width="1092" height="88" rx="18" fill="#10283A" stroke="#31556B" stroke-width="1"/>
+<rect data-region="lane-3" x="54" y="403" width="1092" height="88" rx="18" fill="#0F3044" stroke="#31556B" stroke-width="1"/><polyline data-edge="sync-path" data-from="sync-entry" data-to="sync-exit" data-kind="flow" points="260,217 920,217" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-detail-arrow)"/>
+<g data-edge-label="sync-path">
+      <rect x="509" y="184" width="162" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="203" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">WAIT FOR TERMINAL</text>
     </g>
-<g data-value="2">
-      <rect x="426" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="599" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">event cursor 17</text>
+<polyline data-edge="sse-path" data-from="sse-entry" data-to="sse-exit" data-kind="flow" points="260,332 920,332" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-detail-arrow)"/>
+<g data-edge-label="sse-path">
+      <rect x="475" y="299" width="230" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="318" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">STREAM + EXPLICIT TERMINAL</text>
     </g>
-<g data-value="3">
-      <rect x="788" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="961" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">jobId job_42</text>
-    </g>
+<polyline data-edge="job-path" data-from="job-entry" data-to="job-exit" data-kind="flow" points="260,447 920,447" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-02-detail-arrow)"/>
+<g data-edge-label="job-path">
+      <rect x="513" y="414" width="154" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="433" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">PERSIST + RESUME</text>
+    </g><g data-node="sync-entry" data-kind="lane">
+    <rect x="80" y="185" width="180" height="64" rx="14" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <text x="170" y="214" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SYNC JSON</text>
+<text x="170" y="233" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">SHORT · DEADLINE</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">连接进度不是业务完成；恢复需要持久游标。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">MATRIX · transport-mode-decision-matrix</text>
+<g data-node="sync-exit" data-kind="outcome">
+    <rect x="920" y="185" width="180" height="64" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1010" y="214" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">FULL RESULT</text>
+<text x="1010" y="233" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">single response</text>
+  </g>
+<g data-node="sse-entry" data-kind="lane">
+    <rect x="80" y="300" width="180" height="64" rx="14" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <text x="170" y="329" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SSE</text>
+<text x="170" y="348" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">INCREMENTAL</text>
+  </g>
+<g data-node="sse-exit" data-kind="outcome">
+    <rect x="920" y="300" width="180" height="64" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1010" y="329" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CURSOR 17</text>
+<text x="1010" y="348" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">PARTIAL</text>
+  </g>
+<g data-node="job-entry" data-kind="lane">
+    <rect x="80" y="415" width="180" height="64" rx="14" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <text x="170" y="444" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">ASYNC POLLING</text>
+<text x="170" y="463" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">DURABLE · jobId</text>
+  </g>
+<g data-node="job-exit" data-kind="outcome">
+    <rect x="920" y="415" width="180" height="64" rx="14" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="1010" y="444" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">JOB SNAPSHOT</text>
+<text x="1010" y="463" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">RESUME / POLL</text>
+  </g></g>
+  <g data-value="sync-limit">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">short ≤ 15 s</text>
+  </g>
+<g data-value="sse-cursor">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">event cursor 17</text>
+  </g>
+<g data-value="job-id">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">jobId job_42</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">连接进度不是业务完成；恢复需要持久游标。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">SPLIT · transport-mode</text>
 </svg>

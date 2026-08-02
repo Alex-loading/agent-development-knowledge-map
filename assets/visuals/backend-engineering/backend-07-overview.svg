@@ -4,59 +4,94 @@
   <defs><marker id="visual-backend-07-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">生命周期与可观测证据流</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">接流、摘流、排空和停止由日志、trace、metric 与 eval 共同解释。</text>
-  <g data-kind="signal-flow">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="53" y="205" width="260" height="92" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="183" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">STARTING</text>
-  </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="331" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="461" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">READY</text>
-  </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="609" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="739" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">DRAINING</text>
-  </g>
-<g data-node="card-4" data-kind="stage">
-    <rect x="887" y="205" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="1017" y="257" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">STOPPED</text>
-  </g>
-<g data-node="card-5" data-kind="stage">
-    <rect x="53" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="183" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">LOG</text>
-  </g>
-<g data-node="card-6" data-kind="stage">
-    <rect x="331" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="461" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">TRACE</text>
-  </g>
-<g data-node="card-7" data-kind="stage">
-    <rect x="609" y="350" width="260" height="92" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="739" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">METRIC</text>
-  </g>
-<g data-node="card-8" data-kind="outcome">
-    <rect x="887" y="350" width="260" height="92" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="1017" y="402" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">EVAL</text>
-  </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="192" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">MODEL v7</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">生命周期与可观测证据流</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">接流、摘流、排空与停止的事实流向日志、trace、metric 和 eval。</text>
+  <g data-kind="signal-flow"><rect x="54" y="386" width="1092" height="105" rx="18" fill="#0C2E35" stroke="#31556B" stroke-width="1"/><polyline data-edge="starting-ready" data-from="starting" data-to="ready" data-kind="flow" points="240,217 340,217" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="starting-ready">
+      <rect x="248.5" y="151" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="290" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">SERVING</text>
     </g>
-<g data-value="2">
-      <rect x="336" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="464" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">PROMPT v12</text>
+<polyline data-edge="ready-draining" data-from="ready" data-to="draining" data-kind="flow" points="510,217 610,217" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="ready-draining">
+      <rect x="518.5" y="151" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="560" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">SIGTERM</text>
     </g>
-<g data-value="3">
-      <rect x="608" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="736" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">TOOL v3</text>
+<polyline data-edge="draining-stopped" data-from="draining" data-to="stopped" data-kind="flow" points="780,217 880,217" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="draining-stopped">
+      <rect x="773" y="151" width="114" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="830" y="170" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">NOT SERVING</text>
     </g>
-<g data-value="4">
-      <rect x="880" y="535" width="256" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="1008" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">COST ¥0.18</text>
+<polyline data-edge="ready-log" data-from="ready" data-to="log" data-kind="flow" points="365,249 365,330 155,330 155,410" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="ready-log">
+      <rect x="207.5" y="298" width="105" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="260" y="317" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">state fact</text>
     </g>
+<polyline data-edge="ready-trace" data-from="ready" data-to="trace" data-kind="flow" points="405,249 405,410" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="ready-trace">
+      <rect x="419.5" y="316" width="101" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="470" y="335" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">requestId</text>
+    </g>
+<polyline data-edge="ready-metric" data-from="ready" data-to="metric" data-kind="flow" points="445,249 445,350 695,350 695,410" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="ready-metric">
+      <rect x="528.5" y="318" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="570" y="337" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">bounded</text>
+    </g>
+<polyline data-edge="ready-eval" data-from="ready" data-to="eval" data-kind="flow" points="485,185 485,155 1120,155 1120,390 965,390 965,410" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-overview-arrow)"/>
+<g data-edge-label="ready-eval">
+      <rect x="1048.5" y="316" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="1090" y="335" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">quality</text>
+    </g><g data-node="starting" data-kind="state">
+    <rect x="70" y="185" width="170" height="64" rx="26" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="155" y="223" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STARTING</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">SIGNAL-FLOW · lifecycle-observability-flow</text>
+<g data-node="ready" data-kind="state">
+    <rect x="340" y="185" width="170" height="64" rx="26" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="425" y="223" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">READY</text>
+  </g>
+<g data-node="draining" data-kind="state">
+    <rect x="610" y="185" width="170" height="64" rx="26" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
+    <text x="695" y="223" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">DRAINING</text>
+  </g>
+<g data-node="stopped" data-kind="terminal">
+    <rect x="880" y="185" width="170" height="64" rx="26" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="965" y="223" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STOPPED</text>
+  </g>
+<g data-node="log" data-kind="signal">
+    <rect x="70" y="410" width="170" height="64" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="155" y="439" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">LOG</text>
+<text x="155" y="458" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">discrete facts</text>
+  </g>
+<g data-node="trace" data-kind="signal">
+    <rect x="340" y="410" width="170" height="64" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="425" y="439" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">TRACE</text>
+<text x="425" y="458" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">request path</text>
+  </g>
+<g data-node="metric" data-kind="signal">
+    <rect x="610" y="410" width="170" height="64" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="695" y="439" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">METRIC</text>
+<text x="695" y="458" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">bounded labels</text>
+  </g>
+<g data-node="eval" data-kind="signal">
+    <rect x="880" y="410" width="170" height="64" rx="8" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="965" y="439" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">EVAL</text>
+<text x="965" y="458" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">quality event</text>
+  </g></g>
+  <g data-value="signal-model">
+    <rect x="64" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="189" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">MODEL v7</text>
+  </g>
+<g data-value="signal-prompt">
+    <rect x="330" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="455" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">PROMPT v12</text>
+  </g>
+<g data-value="signal-tool">
+    <rect x="596" y="525" width="250" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="721" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">TOOL v3</text>
+  </g>
+<g data-value="signal-cost">
+    <rect x="862" y="525" width="274" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="999" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">COST ¥0.18</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">SIGNAL-FLOW · lifecycle-observability</text>
 </svg>

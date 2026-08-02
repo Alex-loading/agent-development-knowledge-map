@@ -1,42 +1,85 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="visual-backend-07-detail-title visual-backend-07-detail-description">
-  <title id="visual-backend-07-detail-title">生命周期与可观测证据流：决策与失败路径</title>
-  <desc id="visual-backend-07-detail-description">启动、接流、排空和停止由日志、trace、metric 与评测事件共同解释。 细化图把容易混淆的控制面、事实面和恢复动作拆开，帮助学习者在练习中逐项验证。</desc>
+  <title id="visual-backend-07-detail-title">关联身份与高基数边界</title>
+  <desc id="visual-backend-07-detail-description">逐请求身份进入日志和 trace，受控版本维度进入 metric 与 evaluation。 图中状态、数值与边标签来自独立 fixture，用于验证关系而非声明生产默认值。</desc>
   <defs><marker id="visual-backend-07-detail-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">版本维度与高基数边界</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">逐请求身份进入日志/trace；受控版本进入聚合 metric 与评测。</text>
-  <g data-kind="observability">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="178" y="240" width="190" height="104" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="273" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">requestId → TRACE</text>
-  </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="396" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="491" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">jobId → LOG</text>
-  </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="614" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="709" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">model v7 → METRIC</text>
-  </g>
-<g data-node="card-4" data-kind="outcome">
-    <rect x="832" y="240" width="190" height="104" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="927" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">prompt v12 → EVAL</text>
-  </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="237" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">p95 TTFT 620 ms</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">关联身份与高基数边界</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">逐请求身份进入 log/trace；受控版本才进入聚合 metric 与 evaluation。</text>
+  <g data-kind="observability"><rect x="56" y="168" width="1088" height="72" rx="14" fill="#0F3044" stroke="#244A61" stroke-width="1"/>
+<rect x="56" y="248" width="1088" height="72" rx="14" fill="#10283A" stroke="#244A61" stroke-width="1"/>
+<rect x="56" y="328" width="1088" height="72" rx="14" fill="#0F3044" stroke="#244A61" stroke-width="1"/>
+<rect x="56" y="408" width="1088" height="72" rx="14" fill="#10283A" stroke="#244A61" stroke-width="1"/><polyline data-edge="request-to-trace" data-from="request-id" data-to="trace" data-kind="flow" points="330,204 850,204" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-detail-arrow)"/>
+<g data-edge-label="request-to-trace">
+      <rect x="533" y="172" width="114" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="191" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">PER REQUEST</text>
     </g>
-<g data-value="2">
-      <rect x="426" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="599" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">tokens 3.4k</text>
+<polyline data-edge="job-to-log" data-from="job-id" data-to="log" data-kind="flow" points="330,284 850,284" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-detail-arrow)"/>
+<g data-edge-label="job-to-log">
+      <rect x="517.5" y="252" width="145" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="271" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">attempt + state</text>
     </g>
-<g data-value="3">
-      <rect x="788" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="961" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">eval score 0.91</text>
+<polyline data-edge="model-to-metric" data-from="model-version" data-to="metric" data-kind="flow" points="330,364 850,364" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-detail-arrow)"/>
+<g data-edge-label="model-to-metric">
+      <rect x="548.5" y="332" width="83" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="351" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">BOUNDED</text>
     </g>
+<polyline data-edge="prompt-to-eval" data-from="prompt-version" data-to="eval" data-kind="flow" points="330,444 850,444" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-07-detail-arrow)"/>
+<g data-edge-label="prompt-to-eval">
+      <rect x="528.5" y="412" width="123" height="28" rx="14" fill="#0C2638" stroke="#477083" stroke-width="1"/>
+      <text x="590" y="431" data-region="edge-label" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#57D6C7" text-anchor="middle">quality join</text>
+    </g><g data-node="request-id" data-kind="identity">
+    <rect x="80" y="175" width="250" height="58" rx="12" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <text x="205" y="201" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">requestId → TRACE</text>
+<text x="205" y="220" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">HIGH CARDINALITY</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">OBSERVABILITY · bounded-cardinality-observability</text>
+<g data-node="trace" data-kind="channel">
+    <rect x="850" y="175" width="250" height="58" rx="12" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="975" y="201" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">TRACE</text>
+<text x="975" y="220" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">per-request identity</text>
+  </g>
+<g data-node="job-id" data-kind="identity">
+    <rect x="80" y="255" width="250" height="58" rx="12" fill="#183850" stroke="#7CCBDD" stroke-width="2"/>
+    <text x="205" y="281" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">jobId → LOG</text>
+<text x="205" y="300" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">HIGH CARDINALITY</text>
+  </g>
+<g data-node="log" data-kind="channel">
+    <rect x="850" y="255" width="250" height="58" rx="12" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="975" y="281" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">LOG</text>
+<text x="975" y="300" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">structured fact</text>
+  </g>
+<g data-node="model-version" data-kind="version">
+    <rect x="80" y="335" width="250" height="58" rx="12" fill="#443716" stroke="#F5CA72" stroke-width="2"/>
+    <text x="205" y="361" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">model v7 → METRIC</text>
+<text x="205" y="380" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">BOUNDED CARDINALITY</text>
+  </g>
+<g data-node="metric" data-kind="channel">
+    <rect x="850" y="335" width="250" height="58" rx="12" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="975" y="361" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">METRIC</text>
+<text x="975" y="380" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">bounded enum</text>
+  </g>
+<g data-node="prompt-version" data-kind="version">
+    <rect x="80" y="415" width="250" height="58" rx="12" fill="#443716" stroke="#F5CA72" stroke-width="2"/>
+    <text x="205" y="441" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">prompt v12 → EVAL</text>
+<text x="205" y="460" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">BOUNDED CARDINALITY</text>
+  </g>
+<g data-node="eval" data-kind="channel">
+    <rect x="850" y="415" width="250" height="58" rx="12" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
+    <text x="975" y="441" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">EVAL</text>
+<text x="975" y="460" data-region="node-secondary" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="540" fill="#C1D4E0" text-anchor="middle">golden + online</text>
+  </g></g>
+  <g data-value="obs-ttft">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">p95 TTFT 620 ms</text>
+  </g>
+<g data-value="obs-tokens">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">tokens 3.4k</text>
+  </g>
+<g data-value="obs-score">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">eval score 0.91</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">版本用于关联回归，但指标维度必须有界。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">OBSERVABILITY · bounded-cardinality</text>
 </svg>

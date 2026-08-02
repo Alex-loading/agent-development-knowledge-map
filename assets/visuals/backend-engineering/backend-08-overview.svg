@@ -4,39 +4,83 @@
   <defs><marker id="visual-backend-08-overview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#57D6C7"/></marker></defs>
   <rect width="1200" height="675" fill="#081B2A"/>
   <rect x="36" y="36" width="1128" height="603" rx="28" fill="#0D2537" stroke="#244A61" stroke-width="2"/>
-  <text x="64" y="94" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">部署诊断四象限</text>
-  <text x="64" y="132" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">容量、延迟、质量与安全必须用不同信号和回滚动作处理。</text>
-  <g data-kind="matrix">
-    
-    <g data-node="card-1" data-kind="entry">
-    <rect x="178" y="240" width="190" height="104" rx="18" fill="#173B55" stroke="#74D8F2" stroke-width="2"/>
-    <text x="273" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">OVERLOADED</text>
+  <text x="64" y="94" data-region="title" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="760" fill="#F5FBFF" text-anchor="start">部署故障诊断矩阵</text>
+  <text x="64" y="132" data-region="subtitle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500" fill="#B8CBD8" text-anchor="start">容量、延迟、质量与安全使用不同信号、缓解动作和回滚门。</text>
+  <g data-kind="matrix"><g data-node="d-h-class" data-kind="header">
+    <rect x="70" y="175" width="240" height="52" rx="0" fill="#173B55" stroke="#74D8F2" stroke-width="1"/>
+    <text x="190" y="207" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">CLASS</text>
   </g>
-<g data-node="card-2" data-kind="stage">
-    <rect x="396" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="491" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">SLOW</text>
+<g data-node="d-h-signal" data-kind="header">
+    <rect x="310" y="175" width="390" height="52" rx="0" fill="#173B55" stroke="#74D8F2" stroke-width="1"/>
+    <text x="505" y="207" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">PRIMARY SIGNAL</text>
   </g>
-<g data-node="card-3" data-kind="stage">
-    <rect x="614" y="240" width="190" height="104" rx="18" fill="#24375F" stroke="#9FB7FF" stroke-width="2"/>
-    <text x="709" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">WRONG</text>
+<g data-node="d-h-action" data-kind="header">
+    <rect x="700" y="175" width="430" height="52" rx="0" fill="#173B55" stroke="#74D8F2" stroke-width="1"/>
+    <text x="915" y="207" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">FIRST ACTION</text>
   </g>
-<g data-node="card-4" data-kind="outcome">
-    <rect x="832" y="240" width="190" height="104" rx="18" fill="#174B4A" stroke="#8EECE1" stroke-width="2"/>
-    <text x="927" y="298" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750" fill="#F5FBFF" text-anchor="middle">UNSAFE</text>
+<g data-node="d-overloaded-class" data-kind="cell">
+    <rect x="70" y="227" width="240" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="190" y="264" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">OVERLOADED</text>
   </g>
-    <g data-value="1">
-      <rect x="64" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="237" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">CANARY 5%</text>
-    </g>
-<g data-value="2">
-      <rect x="426" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="599" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">ROLLBACK v41</text>
-    </g>
-<g data-value="3">
-      <rect x="788" y="535" width="346" height="38" rx="19" fill="#102C40" stroke="#31556B"/>
-      <text x="961" y="560" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="650" fill="#A7E8C2" text-anchor="middle">REGION cn-east-1</text>
-    </g>
+<g data-node="d-overloaded-signal" data-kind="cell">
+    <rect x="310" y="227" width="390" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="505" y="264" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">queue age / 429</text>
   </g>
-  <text x="64" y="610" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">overloaded、slow、wrong、unsafe 需要不同处置。</text>
-  <text x="1136" y="610" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">MATRIX · deployment-diagnosis-matrix</text>
+<g data-node="d-overloaded-action" data-kind="cell">
+    <rect x="700" y="227" width="430" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="915" y="264" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SHED / SCALE</text>
+  </g>
+<g data-node="d-slow-class" data-kind="cell">
+    <rect x="70" y="289" width="240" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="190" y="326" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">SLOW</text>
+  </g>
+<g data-node="d-slow-signal" data-kind="cell">
+    <rect x="310" y="289" width="390" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="505" y="326" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">TTFT / p99</text>
+  </g>
+<g data-node="d-slow-action" data-kind="cell">
+    <rect x="700" y="289" width="430" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="915" y="326" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">FAILOVER / DEGRADE</text>
+  </g>
+<g data-node="d-wrong-class" data-kind="cell">
+    <rect x="70" y="351" width="240" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="190" y="388" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">WRONG</text>
+  </g>
+<g data-node="d-wrong-signal" data-kind="cell">
+    <rect x="310" y="351" width="390" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="505" y="388" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">eval regression</text>
+  </g>
+<g data-node="d-wrong-action" data-kind="cell">
+    <rect x="700" y="351" width="430" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="915" y="388" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">ROLLBACK PROMPT / MODEL</text>
+  </g>
+<g data-node="d-unsafe-class" data-kind="cell">
+    <rect x="70" y="413" width="240" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="190" y="450" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">UNSAFE</text>
+  </g>
+<g data-node="d-unsafe-signal" data-kind="cell">
+    <rect x="310" y="413" width="390" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="505" y="450" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">policy violation</text>
+  </g>
+<g data-node="d-unsafe-action" data-kind="cell">
+    <rect x="700" y="413" width="430" height="62" rx="6" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="915" y="450" data-region="node-primary" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="760" fill="#F5FBFF" text-anchor="middle">STOP TRAFFIC / ISOLATE</text>
+  </g><polyline data-edge="d-overloaded-link" data-from="d-overloaded-signal" data-to="d-overloaded-action" data-kind="flow" points="700,258 710,258" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-overview-arrow)"/>
+<polyline data-edge="d-slow-link" data-from="d-slow-signal" data-to="d-slow-action" data-kind="flow" points="700,320 710,320" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-overview-arrow)"/>
+<polyline data-edge="d-wrong-link" data-from="d-wrong-signal" data-to="d-wrong-action" data-kind="flow" points="700,382 710,382" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-overview-arrow)"/>
+<polyline data-edge="d-unsafe-link" data-from="d-unsafe-signal" data-to="d-unsafe-action" data-kind="flow" points="700,444 710,444" fill="none" stroke="#57D6C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visual-backend-08-overview-arrow)"/></g>
+  <g data-value="canary">
+    <rect x="64" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="229" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">CANARY 5%</text>
+  </g>
+<g data-value="rollback">
+    <rect x="410" y="525" width="330" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="575" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">ROLLBACK v41</text>
+  </g>
+<g data-value="region">
+    <rect x="756" y="525" width="380" height="40" rx="19" fill="#102C40" stroke="#31556B" stroke-width="1"/>
+    <text x="946" y="551" data-region="value" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="680" fill="#A7E8C2" text-anchor="middle">REGION cn-east-1</text>
+  </g>
+  <text x="64" y="610" data-region="caption" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#91AABA" text-anchor="start">overloaded、slow、wrong、unsafe 需要不同处置。</text>
+  <text x="1136" y="610" data-region="footer" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#66899D" text-anchor="end">MATRIX · deployment-diagnosis</text>
 </svg>
