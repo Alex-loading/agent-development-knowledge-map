@@ -36,16 +36,18 @@ function assertDeepFrozen(value, label, seen = new Set()) {
   }
 }
 
-test('module catalog starts with five active modules and exposes planned dependencies', () => {
+test('module catalog starts with seven active modules and exposes planned dependencies', () => {
   const moduleIds = new Set(modules.map((module) => module.id));
   assert.deepEqual(
-    modules.slice(0, 5).map(({ id, status }) => ({ id, status })),
+    modules.slice(0, 7).map(({ id, status }) => ({ id, status })),
     [
       { id: 'llm-foundation', status: 'active' },
       { id: 'agent-mechanism', status: 'active' },
       { id: 'agent-harness', status: 'active' },
       { id: 'context-rag-memory', status: 'active' },
       { id: 'backend-engineering', status: 'active' },
+      { id: 'evals-observability-security', status: 'active' },
+      { id: 'multi-agent-mcp', status: 'active' },
     ],
   );
   assert.deepEqual(
@@ -65,8 +67,12 @@ test('module catalog starts with five active modules and exposes planned depende
       estimatedHours: 18,
     },
   );
-  assert.equal(modules.slice(5).length, 3);
-  assert.ok(modules.slice(5).every((module) => module.status === 'planned'));
+  assert.deepEqual(modules.find(({ id }) => id === 'evals-observability-security').prerequisites,
+    ['agent-harness', 'context-rag-memory']);
+  assert.deepEqual(modules.find(({ id }) => id === 'multi-agent-mcp').prerequisites,
+    ['backend-engineering', 'evals-observability-security']);
+  assert.equal(modules.slice(7).length, 1);
+  assert.ok(modules.slice(7).every((module) => module.status === 'planned'));
   assert.ok(modules.every((module) => Array.isArray(module.prerequisites)));
   assert.ok(
     modules.every((module) => module.prerequisites.every((id) => moduleIds.has(id))),

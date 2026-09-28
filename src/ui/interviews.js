@@ -4,6 +4,7 @@ import {
   filterOptionValue,
 } from '../core/filters.js';
 import { button, element } from './dom.js';
+import { renderInterviewSupplements } from './interview-supplements.js';
 
 const STATUS_LABELS = {
   unseen: '未掌握',
@@ -162,8 +163,9 @@ export function renderInterviewPractice(root, {
         element('strong', { text: `已掌握 ${mastered} / ${questions.length}` }),
         element('span', { text: `复习队列 ${reviewQueue.size} 题` }),
       ]),
+      renderInterviewSupplements(course, { onOpenLesson }),
       element('fieldset', { className: 'filter-ledger' }, [
-        element('legend', { text: '筛选面试题' }),
+        element('legend', { text: '筛选站内面试题' }),
         element('div', { className: 'filter-ledger__grid' }, fields.map(([key, label, options, labels]) => filterSelect({
           id: `interview-filter-${key}`,
           label,

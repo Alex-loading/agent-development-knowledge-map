@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">Task 状态与查询响应分别读取</title>
+<desc id="desc">当前请求声明可选 Tasks 后，Server 可以返回 flat CreateTaskResult。tasks/get 的 resultType 为 complete，status 仍可能是 working 或 input_required。tasks/update 提交输入，tasks/cancel 的 ack 仅确认意图。completed 可以包含工具错误，failed 表示 JSON-RPC 执行错误。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+<rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+<g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#183d36">
+<text x="44" y="47" font-size="16" font-weight="700" fill="#a06a21">AGENT LEARNER / TASKS 2026-07-28</text>
+<text x="44" y="93" font-size="32" font-weight="700">Task 状态与查询响应分别读取</text>
+<rect x="44" y="147" width="318" height="109" rx="9" fill="#e4ebe3" stroke="#899f91"/>
+<text x="64" y="182" font-size="22" font-weight="700">本次声明 extension</text>
+<text x="64" y="216" font-size="17">io.modelcontextprotocol/tasks</text>
+<text x="64" y="242" font-size="18">Server 可选择返回 task</text>
+<line x1="365" y1="202" x2="414" y2="202" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="419" y="147" width="304" height="109" rx="9" fill="#183d36"/>
+<text x="439" y="181" font-size="21" font-weight="700" fill="#f7f1e5">tools/call</text>
+<text x="439" y="213" font-size="19" fill="#f7f1e5">flat CreateTaskResult</text>
+<text x="439" y="242" font-size="19" fill="#f7f1e5">resultType: task</text>
+<line x1="727" y1="202" x2="784" y2="202" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="789" y="147" width="287" height="109" rx="9" fill="#e4ebe3" stroke="#899f91"/>
+<text x="810" y="181" font-size="22" font-weight="700">tasks/get</text>
+<text x="810" y="213" font-size="19">resultType: complete</text>
+<text x="810" y="242" font-size="19">继续读取 status</text>
+<path d="M 932 257 L 932 281 L 186 281" fill="none" stroke="#183d36" stroke-width="2"/>
+<line x1="186" y1="281" x2="186" y2="306" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="560" y1="281" x2="560" y2="306" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="932" y1="281" x2="932" y2="306" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="310" width="285" height="127" rx="9" fill="#ece4d6"/>
+<text x="64" y="351" font-size="24" font-weight="700">working</text>
+<text x="64" y="388" font-size="20">工作仍在进行</text>
+<text x="64" y="417" font-size="18">后续继续查询</text>
+<rect x="389" y="310" width="342" height="127" rx="9" fill="#ece4d6"/>
+<text x="410" y="351" font-size="24" font-weight="700">input_required</text>
+<text x="410" y="388" font-size="20">tasks/update 提交输入</text>
+<text x="410" y="417" font-size="18">提交后再查询状态</text>
+<rect x="791" y="310" width="285" height="127" rx="9" fill="#e4ebe3"/>
+<text x="811" y="345" font-size="20" font-weight="700">终态</text>
+<text x="811" y="375" font-size="20">completed / failed</text>
+<text x="811" y="408" font-size="20">cancelled</text>
+<rect x="44" y="464" width="465" height="95" rx="9" fill="#e4ebe3"/>
+<text x="64" y="500" font-size="21" font-weight="700">tasks/cancel → ack</text>
+<text x="64" y="536" font-size="19">确认收到意图；继续查询状态</text>
+<rect x="539" y="464" width="537" height="95" rx="9" fill="#ece4d6"/>
+<text x="560" y="500" font-size="20">completed：可含 isError: true</text>
+<text x="560" y="536" font-size="20">failed：JSON-RPC 执行错误</text>
+<line x1="44" y1="586" x2="1076" y2="586" stroke="#a5afa2"/>
+<text x="44" y="622" font-size="20">Tasks 为可选 extension；taskId 每次使用仍需授权，cancel ack 不保证停止。</text>
+</g>
+</svg>

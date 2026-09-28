@@ -3,6 +3,8 @@ import { agentMechanism } from './agent-mechanism.js';
 import { backendEngineering } from './backend-engineering.js';
 import { contextRagMemory } from './context-rag-memory.js';
 import { llmFoundation } from './llm-foundation.js';
+import { evalsObservabilitySecurity } from './evals-observability-security.js';
+import { multiAgentMcp } from './multi-agent-mcp.js';
 
 export const courseRegistry = Object.freeze({
   [llmFoundation.id]: llmFoundation,
@@ -10,6 +12,8 @@ export const courseRegistry = Object.freeze({
   [agentHarness.id]: agentHarness,
   [contextRagMemory.id]: contextRagMemory,
   [backendEngineering.id]: backendEngineering,
+  [evalsObservabilitySecurity.id]: evalsObservabilitySecurity,
+  [multiAgentMcp.id]: multiAgentMcp,
 });
 
 export function getCourse(moduleId, registry = courseRegistry) {

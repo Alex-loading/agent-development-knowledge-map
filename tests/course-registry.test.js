@@ -9,6 +9,8 @@ import { agentMechanism } from '../src/data/agent-mechanism.js';
 import { backendEngineering } from '../src/data/backend-engineering.js';
 import { contextRagMemory } from '../src/data/context-rag-memory.js';
 import { llmFoundation } from '../src/data/llm-foundation.js';
+import { evalsObservabilitySecurity } from '../src/data/evals-observability-security.js';
+import { multiAgentMcp } from '../src/data/multi-agent-mcp.js';
 
 const stableModuleLessonIds = Object.freeze({
   'llm-foundation': Array.from({ length: 8 }, (_, index) => `llm-${String(index + 1).padStart(2, '0')}`),
@@ -16,6 +18,8 @@ const stableModuleLessonIds = Object.freeze({
   'agent-harness': Array.from({ length: 8 }, (_, index) => `harness-${String(index + 1).padStart(2, '0')}`),
   'context-rag-memory': Array.from({ length: 8 }, (_, index) => `context-${String(index + 1).padStart(2, '0')}`),
   'backend-engineering': Array.from({ length: 8 }, (_, index) => `backend-${String(index + 1).padStart(2, '0')}`),
+  'evals-observability-security': Array.from({ length: 8 }, (_, index) => `eval-${String(index + 1).padStart(2, '0')}`),
+  'multi-agent-mcp': Array.from({ length: 8 }, (_, index) => `ma-${String(index + 1).padStart(2, '0')}`),
 });
 
 function assertRegistryIdsAreUnique(selectIds, label) {
@@ -34,13 +38,15 @@ function assertRegistryIdsAreUnique(selectIds, label) {
   }
 }
 
-test('production course registry is immutable and resolves exactly five active courses', () => {
+test('production course registry is immutable and resolves exactly seven active courses', () => {
   const expectedCourses = [
     llmFoundation,
     agentMechanism,
     agentHarness,
     contextRagMemory,
     backendEngineering,
+    evalsObservabilitySecurity,
+    multiAgentMcp,
   ];
   assert.deepEqual(Object.keys(courseRegistry), expectedCourses.map(({ id }) => id));
   assert.equal(Object.isFrozen(courseRegistry), true);
@@ -82,7 +88,7 @@ test('route resolver opens registered dashboards and lessons from the production
   });
 });
 
-test('all forty stable lesson routes resolve without aliases or redirects', () => {
+test('all fifty-six stable lesson routes resolve without aliases or redirects', () => {
   assert.deepEqual(
     Object.fromEntries(Object.entries(courseRegistry).map(([moduleId, course]) => [
       moduleId,

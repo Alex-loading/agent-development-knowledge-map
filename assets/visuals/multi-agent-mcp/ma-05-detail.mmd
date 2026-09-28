@@ -1,0 +1,12 @@
+flowchart TB
+  subgraph modern[2026-07-28 / Modern]
+    discover[server/discover 可选预查] -.-> request[每请求携带 version 与 capabilities]
+    direct[Client 也可直接发送业务请求] --> request
+    discoveryDuty[Server 必须提供 discover]
+  end
+  subgraph legacy[2025-11-25 / Legacy]
+    initialize[initialize] --> initialized[notifications/initialized] --> operation[按协商 revision 通信]
+  end
+  modernError[可识别 Modern 错误] --> fix[修正当前请求]
+  otherStdio[stdio 其他错误或合理超时] --> initialize
+  http[HTTP 400 需要检查 JSON-RPC 正文]

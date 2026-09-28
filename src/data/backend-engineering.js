@@ -1,4 +1,5 @@
 import { backendEngineeringNotes } from './backend-engineering-notes.js';
+import { getInterviewSupplements } from './interview-supplements.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 import {
   backendAssessmentConceptTags,
@@ -652,6 +653,7 @@ function deepFreeze(value) {
 
 export const backendEngineering = deepFreeze({
   id: 'backend-engineering',
+  interviewSupplements: getInterviewSupplements('backend-engineering'),
   title: 'AI 后端工程',
   summary: '把多个客户端与 Agent run 组织成可流式、可异步、可恢复、可观测并能部署扩容的 AI 服务。',
   lessons,

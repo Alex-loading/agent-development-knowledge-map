@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma01-detail-title ma01-detail-desc">
+  <title id="ma01-detail-title">独立调查与顺序工单有不同依赖</title>
+  <desc id="ma01-detail-desc">任务准备后，政策检索 A 与渠道检索 B 分别调查；两份结果进入证据合并，再进入读取状态、确认、创建的后续工单流程。</desc>
+  <defs><marker id="ma01-detail-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">独立调查与顺序工单有不同依赖</text>
+    <text x="44" y="139" fill="#53675c" font-size="20">箭头表示必须取得的前置结果；本图使用原创维修调查案例。</text>
+    <rect x="44" y="266" width="196" height="112" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="66" y="307" fill="#183d36" font-size="24" font-weight="700">准备任务</text>
+    <text x="66" y="348" fill="#183d36" font-size="19">问题与资料版本</text>
+    <path d="M 240 322 L 270 322 L 270 232 L 292 232" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-detail-arrow)"/>
+    <path d="M 270 322 L 270 412 L 292 412" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-detail-arrow)"/>
+    <rect x="304" y="176" width="228" height="112" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="326" y="218" fill="#183d36" font-size="24" font-weight="700">政策检索 A</text>
+    <text x="326" y="260" fill="#183d36" font-size="20">独立只读调查</text>
+    <rect x="304" y="356" width="228" height="112" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="326" y="398" fill="#183d36" font-size="24" font-weight="700">渠道检索 B</text>
+    <text x="326" y="440" fill="#183d36" font-size="20">独立只读调查</text>
+    <path d="M 532 232 L 562 232 L 562 322 L 590 322" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-detail-arrow)"/>
+    <path d="M 532 412 L 562 412 L 562 322" fill="none" stroke="#183d36" stroke-width="3"/>
+    <rect x="602" y="266" width="194" height="112" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="624" y="307" fill="#183d36" font-size="24" font-weight="700">合并证据</text>
+    <text x="624" y="348" fill="#183d36" font-size="19">等待两份结果</text>
+    <path d="M 796 322 L 836 322" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-detail-arrow)"/>
+    <rect x="848" y="266" width="228" height="112" rx="12" fill="#183d36"/>
+    <text x="866" y="307" fill="#ffffff" font-size="23" font-weight="700">后续工单流程</text>
+    <text x="866" y="348" fill="#ffffff" font-size="18">读取状态 → 确认 → 创建</text>
+    <text x="304" y="509" fill="#53675c" font-size="19">可并行的信息调查</text>
+    <text x="848" y="425" fill="#53675c" font-size="19">仍受业务前置条件限制</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="612" fill="#183d36" font-size="21">更多 worker 不能取消输入依赖；共享写入还需明确的执行规则。</text>
+  </g>
+</svg>

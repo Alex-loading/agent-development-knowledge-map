@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph tools[Tools / model-controlled]
+    toolList[tools/list] --> toolCall[tools/call] --> toolResult[可调用能力的执行结果]
+  end
+  subgraph resources[Resources / application-driven]
+    resourceList[resources/list] --> resourceRead[resources/read] --> resourceResult[指定 URI 的内容]
+  end
+  subgraph prompts[Prompts / user-controlled]
+    promptList[prompts/list] --> promptGet[prompts/get] --> promptResult[按参数取得消息模板]
+  end
+  boundary[list 用于发现；使用仍需相应操作和授权]

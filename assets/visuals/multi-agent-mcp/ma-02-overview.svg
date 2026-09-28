@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma02-overview-title ma02-overview-desc">
+  <title id="ma02-overview-title">沿返回路径识别回复责任</title>
+  <desc id="ma02-overview-desc">manager-as-tools 将 specialist 的结果返回 manager 再回复用户。handoff 将分支交给当前 specialist，由它回复并处理下一条用户消息。</desc>
+  <defs><marker id="ma02-overview-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">沿返回路径识别回复责任</text>
+    <text x="44" y="156" fill="#a06a21" font-size="21" font-weight="700">manager-as-tools / 外层责任保留</text>
+    <rect x="44" y="188" width="220" height="106" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="65" y="230" fill="#183d36" font-size="24" font-weight="700">manager 委托</text>
+    <text x="65" y="271" fill="#183d36" font-size="19">选择有边界的工作</text>
+    <path d="M 264 241 L 306 241" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <rect x="316" y="188" width="220" height="106" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="337" y="230" fill="#183d36" font-size="23" font-weight="700">specialist 工作</text>
+    <text x="337" y="271" fill="#183d36" font-size="19">完成后返回结果</text>
+    <path d="M 536 241 L 578 241" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <rect x="588" y="188" width="220" height="106" rx="12" fill="#183d36"/>
+    <text x="609" y="230" fill="#ffffff" font-size="24" font-weight="700">manager 综合</text>
+    <text x="609" y="271" fill="#ffffff" font-size="19">负责最终回复</text>
+    <path d="M 808 241 L 850 241" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <rect x="860" y="188" width="216" height="106" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="881" y="230" fill="#183d36" font-size="24" font-weight="700">用户收到回复</text>
+    <text x="881" y="271" fill="#183d36" font-size="19">综合后的结果</text>
+    <text x="44" y="354" fill="#a06a21" font-size="21" font-weight="700">handoff / 本分支责任转交</text>
+    <rect x="44" y="390" width="228" height="106" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="66" y="432" fill="#183d36" font-size="24" font-weight="700">入口 Agent</text>
+    <text x="66" y="473" fill="#183d36" font-size="19">确定需要转交</text>
+    <path d="M 272 443 L 420 443" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <text x="319" y="428" fill="#53675c" font-size="19">转交</text>
+    <rect x="432" y="390" width="248" height="106" rx="12" fill="#183d36"/>
+    <text x="454" y="432" fill="#ffffff" font-size="23" font-weight="700">当前 specialist</text>
+    <text x="454" y="473" fill="#ffffff" font-size="19">继续处理此分支</text>
+    <path d="M 680 443 L 836 443" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <text x="709" y="428" fill="#53675c" font-size="18">本分支回复</text>
+    <rect x="848" y="390" width="228" height="106" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="872" y="433" fill="#183d36" font-size="24" font-weight="700">用户</text>
+    <text x="872" y="473" fill="#183d36" font-size="19">继续这段对话</text>
+    <path d="M 848 474 L 804 474 L 804 541 L 556 541 L 556 508" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-overview-arrow)"/>
+    <text x="643" y="528" fill="#53675c" font-size="18">下一条消息</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="611" fill="#183d36" font-size="20">LangChain 的 handoff 还包括单 Agent 状态驱动配置；先说明实际实现。</text>
+  </g>
+</svg>

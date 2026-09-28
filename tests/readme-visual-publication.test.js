@@ -8,6 +8,8 @@ import { backendEngineeringVisuals } from '../src/data/visuals/backend-engineeri
 import { contextRagMemoryVisuals } from '../src/data/visuals/context-rag-memory-visuals.js';
 import { knowledgeVisuals } from '../src/data/visuals/index.js';
 import { llmFoundationVisuals } from '../src/data/visuals/llm-foundation-visuals.js';
+import { evalVisuals } from '../src/data/visuals/evals-visuals.js';
+import { multiAgentVisuals } from '../src/data/visuals/multi-agent-visuals.js';
 
 test('README derives current per-module visual publication truth from registries and assets', async () => {
   const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
@@ -29,7 +31,19 @@ test('README derives current per-module visual publication truth from registries
     ...agentHarnessVisuals,
     ...contextRagMemoryVisuals,
     ...backendEngineeringVisuals,
+    ...evalVisuals,
+    ...multiAgentVisuals,
   ];
+  const evalSvgFiles = (await readdir(
+    new URL('../assets/visuals/evals-observability-security/', import.meta.url),
+  )).filter((name) => name.endsWith('.svg'));
+  assert.equal(evalVisuals.length, 16);
+  assert.equal(evalSvgFiles.length, 16);
+  const multiAgentSvgFiles = (await readdir(
+    new URL('../assets/visuals/multi-agent-mcp/', import.meta.url),
+  )).filter((name) => name.endsWith('.svg'));
+  assert.equal(multiAgentVisuals.length, 16);
+  assert.equal(multiAgentSvgFiles.length, 16);
 
   assert.equal(llmFoundationVisuals.length, 40);
   assert.equal(agentMechanismVisuals.length, 16);
@@ -85,5 +99,11 @@ test('README derives current per-module visual publication truth from registries
     ),
   );
   assert.doesNotMatch(readme, /AI 后端工程[^。\n]*尚未视觉化/);
+  assert.match(readme, new RegExp(
+    `评测、可观测与安全[^\\n]*${evalVisuals.length} 张主视觉[^\\n]*${evalSvgFiles.length} 个 SVG 文件`,
+  ));
   assert.doesNotMatch(readme, /视觉教学当前只完成 LLM 基础试点/);
+  assert.match(readme, new RegExp(
+    `多 Agent 与 MCP[^\\n]*${multiAgentVisuals.length} 张主视觉[^\\n]*${multiAgentSvgFiles.length} 个 SVG 文件`,
+  ));
 });

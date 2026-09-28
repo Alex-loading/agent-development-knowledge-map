@@ -5,8 +5,10 @@ import {
 } from '../core/experiments.js';
 import { agentExperimentRenderers } from './agent-experiments.js';
 import { backendExperimentRenderers } from './backend-experiments.js';
+import { evalExperimentRenderers } from './evals-experiments.js';
 import { contextExperimentRenderers } from './context-experiments.js';
 import { harnessExperimentRenderers } from './harness-experiments.js';
+import { multiAgentExperimentRenderers } from './multi-agent-experiments.js';
 import { button, element } from './dom.js';
 
 const BUDGET_DEFAULTS = Object.freeze({
@@ -61,6 +63,8 @@ const experimentRenderers = Object.freeze({
   ...harnessExperimentRenderers,
   ...contextExperimentRenderers,
   ...backendExperimentRenderers,
+  ...evalExperimentRenderers,
+  ...multiAgentExperimentRenderers,
 });
 
 let unavailableExperimentSequence = 0;

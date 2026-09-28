@@ -335,7 +335,14 @@ export function renderKnowledgeVisual(candidate) {
       className: 'knowledge-visual__title',
       text: visual.title,
     }),
-    element('div', { className: 'knowledge-visual__media' }, [
+    element('div', {
+      className: 'knowledge-visual__media',
+      attrs: {
+        role: 'region',
+        'aria-label': `${visual.title}：图形浏览区域`,
+        tabindex: '0',
+      },
+    }, [
       image,
       fallback,
     ]),

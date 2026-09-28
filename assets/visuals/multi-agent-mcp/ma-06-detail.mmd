@@ -1,0 +1,9 @@
+flowchart TB
+  capability[本次声明 io.modelcontextprotocol/tasks] --> create[Server 可选择 flat CreateTaskResult / resultType task]
+  create --> query[tasks/get / resultType complete / 读取 status]
+  query --> working[working / 后续继续查询]
+  query --> input[input_required / tasks/update 提交后再查询]
+  query --> terminal[completed / failed / cancelled]
+  cancel[tasks/cancel] --> ack[ack 确认收到意图 / 继续查询状态]
+  result[completed 可含 isError true；failed 对应 JSON-RPC 执行错误]
+  boundary[Tasks 2026-07-28 可选；每次使用 taskId 仍需授权]

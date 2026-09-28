@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">三类原语各有发现与使用方法</title>
+<desc id="desc">三行依次比较 Tools、Resources、Prompts。list 发现目录后，分别使用 tools/call、resources/read、prompts/get 获得能力执行结果、指定 URI 内容和消息模板。使用操作仍需授权。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+<rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+<g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#183d36">
+<text x="44" y="47" font-size="16" font-weight="700" fill="#a06a21">AGENT LEARNER / MCP PRIMITIVES</text>
+<text x="44" y="93" font-size="32" font-weight="700">三类原语各有发现与使用方法</text>
+<text x="64" y="156" font-size="19" font-weight="700">原语与设计定位</text>
+<text x="289" y="156" font-size="19" font-weight="700">发现目录</text>
+<text x="589" y="156" font-size="19" font-weight="700">具体使用</text>
+<text x="895" y="156" font-size="19" font-weight="700">获得产物</text>
+<rect x="44" y="175" width="1032" height="105" rx="8" fill="#e4ebe3"/>
+<rect x="44" y="297" width="1032" height="105" rx="8" fill="#ece4d6"/>
+<rect x="44" y="419" width="1032" height="105" rx="8" fill="#e4ebe3"/>
+<text x="64" y="213" font-size="24" font-weight="700">Tools</text>
+<text x="64" y="249" font-size="17">model-controlled</text>
+<text x="289" y="234" font-size="22">tools/list</text>
+<text x="589" y="234" font-size="22">tools/call</text>
+<text x="895" y="215" font-size="21">可调用能力</text>
+<text x="895" y="247" font-size="21">的执行结果</text>
+<text x="64" y="335" font-size="24" font-weight="700">Resources</text>
+<text x="64" y="371" font-size="17">application-driven</text>
+<text x="289" y="356" font-size="22">resources/list</text>
+<text x="589" y="356" font-size="22">resources/read</text>
+<text x="895" y="337" font-size="21">指定 URI</text>
+<text x="895" y="369" font-size="21">的内容</text>
+<text x="64" y="457" font-size="24" font-weight="700">Prompts</text>
+<text x="64" y="493" font-size="17">user-controlled</text>
+<text x="289" y="478" font-size="22">prompts/list</text>
+<text x="589" y="478" font-size="22">prompts/get</text>
+<text x="895" y="459" font-size="21">按参数取得</text>
+<text x="895" y="491" font-size="21">消息模板</text>
+<line x1="473" y1="227" x2="563" y2="227" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="776" y1="227" x2="865" y2="227" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="473" y1="349" x2="563" y2="349" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="776" y1="349" x2="865" y2="349" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="473" y1="471" x2="563" y2="471" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="776" y1="471" x2="865" y2="471" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="44" y1="571" x2="1076" y2="571" stroke="#a5afa2"/>
+<text x="44" y="608" font-size="21">list 用于发现；使用仍需相应操作和授权。设计定位没有限定唯一界面。</text>
+</g>
+</svg>

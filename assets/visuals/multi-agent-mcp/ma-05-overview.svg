@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">每个请求携带自己的版本与能力</title>
+<desc id="desc">每条当前版请求的 params._meta 都包含 protocolVersion 和 clientCapabilities。Server 独立检查必需字段、支持版本与所需能力，缺失字段、不支持版本和缺少能力分别对应 -32602、-32022、-32021。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+<rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+<g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#183d36">
+<text x="44" y="47" font-size="16" font-weight="700" fill="#a06a21">AGENT LEARNER / SELF-CONTAINED REQUEST</text>
+<text x="44" y="93" font-size="32" font-weight="700">每个请求携带自己的版本与能力</text>
+<rect x="44" y="159" width="520" height="276" rx="10" fill="#e4ebe3" stroke="#899f91"/>
+<text x="68" y="201" font-size="25" font-weight="700">请求 · params._meta</text>
+<text x="68" y="247" font-size="18">io.modelcontextprotocol/protocolVersion</text>
+<text x="68" y="281" font-size="22" font-weight="700">2026-07-28</text>
+<text x="68" y="329" font-size="18">io.modelcontextprotocol/clientCapabilities</text>
+<text x="68" y="365" font-size="21">能力对象必须存在，允许为空</text>
+<text x="68" y="406" font-size="18">当前请求直接提供协议上下文</text>
+<line x1="567" y1="300" x2="664" y2="300" stroke="#183d36" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="670" y="159" width="406" height="276" rx="10" fill="#183d36"/>
+<text x="697" y="202" font-size="25" font-weight="700" fill="#f7f1e5">Server 独立检查</text>
+<text x="697" y="258" font-size="22" fill="#f7f1e5">1  必需 metadata 是否存在</text>
+<text x="697" y="306" font-size="22" fill="#f7f1e5">2  是否支持声明的 version</text>
+<text x="697" y="354" font-size="22" fill="#f7f1e5">3  本次能力是否满足要求</text>
+<text x="697" y="405" font-size="18" fill="#f7f1e5">完整校验与业务授权另行验证</text>
+<rect x="44" y="474" width="320" height="80" rx="8" fill="#ece4d6"/>
+<text x="65" y="505" font-size="20" font-weight="700">必需 metadata 缺失</text>
+<text x="65" y="537" font-size="22">-32602</text>
+<rect x="390" y="474" width="320" height="80" rx="8" fill="#ece4d6"/>
+<text x="412" y="505" font-size="20" font-weight="700">版本不支持</text>
+<text x="412" y="537" font-size="22">-32022</text>
+<rect x="736" y="474" width="340" height="80" rx="8" fill="#ece4d6"/>
+<text x="758" y="505" font-size="20" font-weight="700">缺少所需能力</text>
+<text x="758" y="537" font-size="22">-32021</text>
+<line x1="44" y1="581" x2="1076" y2="581" stroke="#a5afa2"/>
+<text x="44" y="617" font-size="21">连接历史不能为当前请求补全 version 与 capabilities。</text>
+</g>
+</svg>

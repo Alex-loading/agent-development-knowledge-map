@@ -3,6 +3,7 @@ import { buildKnowledgeNodes, getNextLesson } from '../core/view-models.js';
 import { button, element, externalLink } from './dom.js';
 import { renderExperiment } from './experiments.js';
 import { renderKnowledgeNote } from './knowledge-note.js';
+import { renderInterviewSupplements } from './interview-supplements.js';
 
 const STATUS_LABELS = {
   complete: '已完成',
@@ -257,6 +258,7 @@ export function renderLessonDetail(root, {
       exerciseSection(lesson),
       quizSection(lesson, onQuizResult),
       interviewsSection(course, lesson, onOpenInterviews),
+      renderInterviewSupplements(course, { lessonId: lesson.id }),
       element('section', { className: 'lesson-section completion-sheet', attrs: { 'aria-labelledby': 'completion-title' } }, [
         element('h2', { text: '完成标准', attrs: { id: 'completion-title' } }),
         list(lesson.completionCriteria, 'check-list'),

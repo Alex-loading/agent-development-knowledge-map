@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma02-detail-title ma02-detail-desc">
+  <title id="ma02-detail-title">相同任务，三种调度结果</title>
+  <desc id="ma02-detail-desc">准备 2 后执行检索 A 4 与 B 6，两项结束后汇总 3，再核验 2。一个 worker 总时长 17，两个独立 worker 为 13，共享写入要求串行时为 17，总任务工作量均为 17。</desc>
+  <defs><marker id="ma02-detail-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">相同任务，三种调度结果</text>
+    <text x="44" y="140" fill="#53675c" font-size="20">固定时间单位与依赖；共享写入采用串行规则。</text>
+    <rect x="44" y="233" width="190" height="92" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="66" y="272" fill="#183d36" font-size="24" font-weight="700">prepare 2</text>
+    <text x="66" y="306" fill="#183d36" font-size="19">准备</text>
+    <path d="M 234 279 L 264 279 L 264 222 L 296 222" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-detail-arrow)"/>
+    <path d="M 264 279 L 264 334 L 296 334" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-detail-arrow)"/>
+    <rect x="308" y="182" width="196" height="80" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="334" y="230" fill="#183d36" font-size="25" font-weight="700">检索 A / 4</text>
+    <rect x="308" y="294" width="196" height="80" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="334" y="342" fill="#183d36" font-size="25" font-weight="700">检索 B / 6</text>
+    <path d="M 504 222 L 541 222 L 541 279 L 576 279" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-detail-arrow)"/>
+    <path d="M 504 334 L 541 334 L 541 279" fill="none" stroke="#183d36" stroke-width="3"/>
+    <rect x="588" y="233" width="230" height="92" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="610" y="272" fill="#183d36" font-size="24" font-weight="700">synthesize 3</text>
+    <text x="610" y="306" fill="#183d36" font-size="19">等待 A 与 B，再汇总</text>
+    <path d="M 818 279 L 868 279" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma02-detail-arrow)"/>
+    <rect x="880" y="233" width="196" height="92" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="902" y="272" fill="#183d36" font-size="24" font-weight="700">verify 2</text>
+    <text x="902" y="306" fill="#183d36" font-size="19">核验</text>
+    <rect x="44" y="415" width="328" height="110" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="64" y="453" fill="#183d36" font-size="21" font-weight="700">1 worker</text>
+    <text x="64" y="500" fill="#183d36" font-size="25" font-weight="700">总时长 17</text>
+    <rect x="396" y="415" width="328" height="110" rx="12" fill="#183d36"/>
+    <text x="416" y="453" fill="#ffffff" font-size="21" font-weight="700">2 workers / 独立</text>
+    <text x="416" y="500" fill="#ffffff" font-size="25" font-weight="700">总时长 13</text>
+    <rect x="748" y="415" width="328" height="110" rx="12" fill="#eee0c8" stroke="#bd9f69"/>
+    <text x="768" y="453" fill="#183d36" font-size="21" font-weight="700">2 workers / 共享写入</text>
+    <text x="768" y="500" fill="#183d36" font-size="25" font-weight="700">总时长 17</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="611" fill="#183d36" font-size="20">总任务工作量均为 17；这是时间模型，质量、网络与真实费用需另行验证。</text>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">Host 管理上下文，Client 分别连接 Server</title>
+<desc id="desc">一个企业资料助手 Host 管理完整对话、授权控制和两个 Client。制度 Client 与工单 Client 分别连接对应 Server，箭头表示请求和结果。Host 控制跨服务信息流，连接数量无法证明 Agent 数量。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+<rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+<g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#183d36">
+<text x="44" y="47" font-size="16" font-weight="700" fill="#a06a21">AGENT LEARNER / MCP 2026-07-28</text>
+<text x="44" y="93" font-size="30" font-weight="700">Host 管理上下文，Client 分别连接 Server</text>
+<rect x="44" y="152" width="580" height="385" rx="12" fill="#e4ebe3" stroke="#899f91" stroke-width="2"/>
+<text x="68" y="194" font-size="24" font-weight="700">Host · 企业资料助手</text>
+<rect x="68" y="277" width="240" height="151" rx="9" fill="#183d36"/>
+<text x="88" y="316" fill="#f7f1e5" font-size="22" font-weight="700">完整对话</text>
+<text x="88" y="351" fill="#f7f1e5" font-size="21">上下文与授权控制</text>
+<text x="88" y="394" fill="#f7f1e5" font-size="18">仅交付本次所需信息</text>
+<rect x="348" y="219" width="240" height="114" rx="9" fill="#f7f1e5" stroke="#899f91"/>
+<text x="369" y="264" font-size="23" font-weight="700">制度 Client</text>
+<text x="369" y="299" font-size="18">对应制度 Server</text>
+<rect x="348" y="389" width="240" height="114" rx="9" fill="#f7f1e5" stroke="#899f91"/>
+<text x="369" y="434" font-size="23" font-weight="700">工单 Client</text>
+<text x="369" y="469" font-size="18">对应工单 Server</text>
+<path d="M 308 331 L 328 331 L 328 276 L 346 276" fill="none" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 308 373 L 328 373 L 328 446 L 346 446" fill="none" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="744" y="219" width="332" height="114" rx="9" fill="#ece4d6" stroke="#b29c78"/>
+<text x="769" y="265" font-size="24" font-weight="700">制度 Server</text>
+<text x="769" y="301" font-size="20">提供制度能力与内容</text>
+<rect x="744" y="389" width="332" height="114" rx="9" fill="#ece4d6" stroke="#b29c78"/>
+<text x="769" y="435" font-size="24" font-weight="700">工单 Server</text>
+<text x="769" y="471" font-size="20">提供工单业务能力</text>
+<line x1="591" y1="260" x2="740" y2="260" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="646" y="245" font-size="18">请求</text>
+<line x1="741" y1="307" x2="592" y2="307" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="646" y="294" font-size="18">结果</text>
+<line x1="591" y1="430" x2="740" y2="430" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="646" y="415" font-size="18">请求</text>
+<line x1="741" y1="477" x2="592" y2="477" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="646" y="464" font-size="18">结果</text>
+<line x1="44" y1="571" x2="1076" y2="571" stroke="#a5afa2"/>
+<text x="44" y="608" font-size="21">Host 控制跨服务信息流；连接数量无法证明 Agent 数量。</text>
+</g>
+</svg>

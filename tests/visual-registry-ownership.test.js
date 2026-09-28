@@ -73,7 +73,7 @@ test('every published visual has exactly one evidence-owned placement across cou
   assert.equal(result.placements.length, knowledgeVisuals.length);
 });
 
-test('five-module visual ownership, permission, asset and step-state identities are globally unique', async () => {
+test('seven-module visual ownership, permission, asset and step-state identities are globally unique', async () => {
   const result = await validateKnowledgeVisualOwnership({
     courseRegistry,
     knowledgeVisuals,
@@ -94,6 +94,8 @@ test('five-module visual ownership, permission, asset and step-state identities 
     ['agent-harness', 3],
     ['context-rag-memory', 3],
     ['backend-engineering', 2],
+    ['evals-observability-security', 2],
+    ['multi-agent-mcp', 2],
   ]);
   for (const course of Object.values(courseRegistry)) {
     for (const lesson of course.lessons) {

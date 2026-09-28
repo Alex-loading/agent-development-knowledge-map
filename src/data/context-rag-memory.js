@@ -1,4 +1,5 @@
 import { contextRagMemoryNotes } from './context-rag-memory-notes.js';
+import { getInterviewSupplements } from './interview-supplements.js';
 import { contextRagMemoryTeachingOutcomeRegistry } from './context-rag-memory-outcomes.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
@@ -1082,6 +1083,7 @@ function deepFreeze(value) {
 
 export const contextRagMemory = deepFreeze({
   id: 'context-rag-memory',
+  interviewSupplements: getInterviewSupplements('context-rag-memory'),
   title: '上下文、RAG 与记忆',
   summary: '把会话状态、检索语料与长期记忆投影成来源清楚、预算有界的模型上下文。',
   lessons,

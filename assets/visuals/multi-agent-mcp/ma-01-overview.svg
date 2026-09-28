@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma01-overview-title ma01-overview-desc">
+  <title id="ma01-overview-title">多 Agent 采用判断从基线开始</title>
+  <desc id="ma01-overview-desc">从单 Agent baseline 的具体失败，经过任务依赖与共享状态检查、质量成本比较，形成有适用范围和证据缺口记录的采用决定。</desc>
+  <defs><marker id="ma01-overview-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">多 Agent 采用判断从基线开始</text>
+    <text x="44" y="138" fill="#53675c" font-size="20">先说明新增协作要解决的具体问题，再决定参与者数量。</text>
+    <rect x="44" y="190" width="240" height="302" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="64" y="229" fill="#a06a21" font-size="18" font-weight="700">01 / 比较起点</text>
+    <text x="64" y="281" fill="#183d36" font-size="23" font-weight="700">单 Agent baseline</text>
+    <text x="64" y="340" fill="#183d36" font-size="21">定位具体失败</text>
+    <text x="64" y="383" fill="#183d36" font-size="20">资料、提示、工作范围</text>
+    <text x="64" y="442" fill="#53675c" font-size="18">保留成功条件</text>
+    <path d="M 284 341 L 298 341" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-overview-arrow)"/>
+    <rect x="308" y="190" width="240" height="302" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="328" y="229" fill="#a06a21" font-size="18" font-weight="700">02 / 工作关系</text>
+    <text x="328" y="281" fill="#183d36" font-size="24" font-weight="700">检查任务依赖</text>
+    <text x="328" y="340" fill="#183d36" font-size="21">独立输入与输出</text>
+    <text x="328" y="383" fill="#183d36" font-size="21">前置结果与共享状态</text>
+    <text x="328" y="442" fill="#53675c" font-size="18">说明可并行范围</text>
+    <path d="M 548 341 L 562 341" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-overview-arrow)"/>
+    <rect x="572" y="190" width="240" height="302" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="592" y="229" fill="#a06a21" font-size="18" font-weight="700">03 / 实际比较</text>
+    <text x="592" y="281" fill="#183d36" font-size="24" font-weight="700">质量与成本</text>
+    <text x="592" y="340" fill="#183d36" font-size="21">同任务与可比条件</text>
+    <text x="592" y="383" fill="#183d36" font-size="21">总资源与等待时间</text>
+    <text x="592" y="442" fill="#53675c" font-size="18">完整记录所有参与者</text>
+    <path d="M 812 341 L 826 341" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma01-overview-arrow)"/>
+    <rect x="836" y="190" width="240" height="302" rx="12" fill="#183d36"/>
+    <text x="856" y="229" fill="#e4c995" font-size="18" font-weight="700">04 / 有范围的决定</text>
+    <text x="856" y="281" fill="#ffffff" font-size="24" font-weight="700">形成采用决定</text>
+    <text x="856" y="340" fill="#ffffff" font-size="21">采用或继续试验</text>
+    <text x="856" y="383" fill="#ffffff" font-size="21">保留简单方案</text>
+    <text x="856" y="442" fill="#e4ebe3" font-size="18">写明范围与证据缺口</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="612" fill="#183d36" font-size="21">角色数量本身不构成改进证据；每个选择都应回到任务与结果。</text>
+  </g>
+</svg>

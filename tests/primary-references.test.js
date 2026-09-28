@@ -1661,5 +1661,7 @@ test('claim matrix uses exact enums and resolves every source to a stable course
     }
   }
   assert.deepEqual(usedSourceIds, knownSourceIds);
-  assert.deepEqual(new Set(rows.map(({ moduleId }) => moduleId)), ACTIVE_MODULE_IDS);
+  assert.deepEqual(new Set(rows.map(({ moduleId }) => moduleId)), new Set([
+    'llm-foundation', 'agent-mechanism', 'agent-harness', 'context-rag-memory', 'backend-engineering',
+  ]), '2026-07-30 的来源审计覆盖当时的五个模块');
 });

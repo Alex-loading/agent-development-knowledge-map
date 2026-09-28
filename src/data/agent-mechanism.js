@@ -1,4 +1,5 @@
 import { agentMechanismNotes } from './agent-mechanism-notes.js';
+import { getInterviewSupplements } from './interview-supplements.js';
 import {
   agentMechanismAssessmentConceptTags,
   agentMechanismAssessmentVisualCoverage,
@@ -827,6 +828,7 @@ function deepFreeze(value) {
 
 export const agentMechanism = deepFreeze({
   id: 'agent-mechanism',
+  interviewSupplements: getInterviewSupplements('agent-mechanism'),
   title: 'Agent 机制',
   summary: '从目标、状态、动作、观察到终止条件，理解单 Agent 如何把模型能力组织成可验证的行动闭环。',
   lessons,
