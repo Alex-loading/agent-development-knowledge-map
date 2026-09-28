@@ -1,0 +1,5 @@
+flowchart LR
+  transport[transport] --> transportSignal[HTTP 状态与 response stream] --> transportDecision[检查请求处理；保留业务结果未知]
+  rpc[JSON-RPC] --> rpcSignal[error 与 -32601 或 -32602] --> rpcDecision[核对方法和参数]
+  tool[Tool result] --> toolSignal[result.isError 与内容] --> toolDecision[读取业务反馈与实际产物]
+  scope[读取三层证据；合法响应无法单独证明用户目标完成]

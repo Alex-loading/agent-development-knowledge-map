@@ -1,0 +1,14 @@
+flowchart LR
+  subgraph host[Host 企业资料助手]
+    context[完整对话与授权控制]
+    policyClient[制度 Client]
+    ticketClient[工单 Client]
+    context -->|本次所需上下文| policyClient
+    context -->|本次所需上下文| ticketClient
+  end
+  policyClient -->|请求| policyServer[制度 Server]
+  policyServer -->|结果| policyClient
+  ticketClient -->|请求| ticketServer[工单 Server]
+  ticketServer -->|结果| ticketClient
+  scope[Host 控制跨服务信息流；连接数量无法证明 Agent 数量]
+  context --- scope

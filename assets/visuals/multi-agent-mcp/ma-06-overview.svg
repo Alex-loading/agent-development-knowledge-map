@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">分别读取三层结果，再选择恢复动作</title>
+<desc id="desc">transport 提供 HTTP 状态与 stream 信息，JSON-RPC error 说明方法或参数问题，工具 result 的 isError 表达工具执行问题。需要读取三层证据，合法响应无法单独证明业务成功。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+<rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+<g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#183d36">
+<text x="44" y="47" font-size="16" font-weight="700" fill="#a06a21">AGENT LEARNER / FAILURE EVIDENCE</text>
+<text x="44" y="93" font-size="32" font-weight="700">分别读取三层结果，再选择恢复动作</text>
+<rect x="44" y="145" width="1032" height="54" rx="8" fill="#183d36"/>
+<text x="65" y="180" font-size="21" font-weight="700" fill="#f7f1e5">层级</text>
+<text x="277" y="180" font-size="21" font-weight="700" fill="#f7f1e5">观察信号</text>
+<text x="716" y="180" font-size="21" font-weight="700" fill="#f7f1e5">需要继续判断</text>
+<rect x="44" y="210" width="1032" height="98" rx="8" fill="#e4ebe3"/>
+<text x="65" y="265" font-size="24" font-weight="700">transport</text>
+<text x="277" y="249" font-size="22">HTTP 状态</text>
+<text x="277" y="281" font-size="20">response stream 中断</text>
+<line x1="573" y1="258" x2="682" y2="258" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="716" y="249" font-size="21">检查请求处理</text>
+<text x="716" y="281" font-size="20">业务结果仍可能未知</text>
+<rect x="44" y="325" width="1032" height="98" rx="8" fill="#ece4d6"/>
+<text x="65" y="380" font-size="24" font-weight="700">JSON-RPC</text>
+<text x="277" y="364" font-size="22">error</text>
+<text x="277" y="396" font-size="20">-32601 / -32602 等</text>
+<line x1="573" y1="373" x2="682" y2="373" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="716" y="364" font-size="21">核对 method 与参数</text>
+<text x="716" y="396" font-size="20">依据错误语义修正</text>
+<rect x="44" y="440" width="1032" height="98" rx="8" fill="#e4ebe3"/>
+<text x="65" y="495" font-size="24" font-weight="700">Tool result</text>
+<text x="277" y="479" font-size="22">result.isError</text>
+<text x="277" y="511" font-size="20">工具返回的内容</text>
+<line x1="573" y1="488" x2="682" y2="488" stroke="#183d36" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="716" y="479" font-size="21">读取业务反馈</text>
+<text x="716" y="511" font-size="20">核查实际产物与副作用</text>
+<line x1="44" y1="575" x2="1076" y2="575" stroke="#a5afa2"/>
+<text x="44" y="611" font-size="21">读取三层证据；合法响应无法单独证明用户目标完成。</text>
+</g>
+</svg>

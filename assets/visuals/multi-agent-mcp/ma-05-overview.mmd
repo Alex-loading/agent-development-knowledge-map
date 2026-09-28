@@ -1,0 +1,10 @@
+flowchart LR
+  request[每条请求 params._meta] --> version[io.modelcontextprotocol/protocolVersion]
+  request --> capability[io.modelcontextprotocol/clientCapabilities]
+  version --> server[Server 独立检查本次请求]
+  capability --> server
+  server --> metadataError[必需 metadata 缺失 / -32602]
+  server --> versionError[版本不支持 / -32022]
+  server --> capabilityError[缺少所需能力 / -32021]
+  scope[连接历史不能补全字段；完整校验与业务授权另行验证]
+  server --- scope

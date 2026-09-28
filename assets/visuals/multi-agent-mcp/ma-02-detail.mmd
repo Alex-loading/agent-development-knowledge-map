@@ -1,0 +1,14 @@
+flowchart LR
+  subgraph Dependency[固定任务依赖]
+    P[prepare 2] --> A[检索 A 4]
+    P --> B[检索 B 6]
+    A --> S[synthesize 3]
+    B --> S
+    S --> V[verify 2]
+  end
+  subgraph Config[教学配置与总时长]
+    C1[1 worker] --> T1[17]
+    C2[2 workers 独立] --> T2[13]
+    C3[2 workers 共享写入] --> T3[17]
+  end
+  N[总任务工作量均为 17<br/>共享写入采用串行规则<br/>仅为固定时间模型]

@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph Manager[manager-as-tools]
+    M[manager 委托] --> S[specialist 工作]
+    S --> R[manager 综合]
+    R --> U[用户收到回复]
+  end
+  subgraph Handoff[handoff]
+    T[入口 Agent] -->|转交| A[当前 specialist]
+    A -->|本分支回复| V[用户]
+    V -->|下一条消息| A
+  end

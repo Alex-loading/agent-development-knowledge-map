@@ -50,7 +50,7 @@ export const modules = [
   {
     id: 'evals-observability-security',
     title: '评测、可观测与安全',
-    status: 'planned',
+    status: 'active',
     summary: '用数据集、追踪、分级指标和威胁模型持续验证智能体系统。',
     prerequisites: ['agent-harness', 'context-rag-memory'],
     estimatedHours: 16,
@@ -59,7 +59,7 @@ export const modules = [
   {
     id: 'multi-agent-mcp',
     title: '多 Agent 与 MCP',
-    status: 'planned',
+    status: 'active',
     summary: '学习任务分解、协作拓扑、上下文隔离，以及标准化工具与资源接入。',
     prerequisites: ['backend-engineering', 'evals-observability-security'],
     estimatedHours: 16,

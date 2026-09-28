@@ -1,12 +1,12 @@
 # Agent Learner：Agent 开发知识地图
 
-Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交互式学习站。当前版本已经开放「LLM 基础」「Agent 机制」「Agent Harness」「上下文、RAG 与记忆」与「AI 后端工程」五个完整模块：内容可学习、可练习、可复习、可记录进度，而不是只罗列链接。
+Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交互式学习站。当前版本已经开放「LLM 基础」「Agent 机制」「Agent Harness」「上下文、RAG 与记忆」「AI 后端工程」「评测、可观测与安全」与「多 Agent 与 MCP」七个完整模块，支持学习、练习、复习和进度记录。
 
 页面采用“纸张研究实验室”视觉：暖色纸张底、深绿墨色、朱红索引与赭色批注。当前仓库未提交产品截图；启动本地服务即可查看桌面与移动端布局。
 
 ## 当前状态
 
-当前有五个完整模块：
+当前有七个完整模块：
 
 - **LLM 基础模块已完成**：8 节课程、41 份资源（含完整保留的 28 份既有资源与 13 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖从神经网络、Token、Transformer 到推理、结构化输出与评测安全的基础主线。
 - **Agent 机制模块已完成**：8 节课程、47 份资源（含完整保留的 29 份既有资源与 18 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖单 Agent 的任务契约、工具、循环、规划、恢复、工作上下文与终止设计。
@@ -14,15 +14,19 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 - **上下文、RAG 与记忆模块已完成**：8 节课程、44 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖上下文生命周期、预算分配、会话压缩、语料与索引、混合检索、证据打包和长期记忆治理。
 - **AI 后端工程模块已完成**：8 节课程、49 份资源（含完整保留的 37 份既有资源与 12 份冻结一级资料绑定）、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖 API 契约、流式取消、准入控制、异步队列、权威存储、缓存正确性、幂等投递、服务生命周期、可观测性与部署扩容。
 
-五个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。其余三个目录模块仍未开放，范围见“模块路线图与边界”。
+- **评测、可观测与安全模块已完成**：8 节课程、22 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖成功标准、评分器校准、分组回归、RAG 故障归因、Trace 与采样、提示注入、执行权限、安全回归和发布验证。
 
-**LLM 基础八课以站内知识笔记为主教材；Agent 机制八课以站内知识笔记为主教材；Agent Harness 八课以站内知识笔记为主教材；上下文、RAG 与记忆八课以站内知识笔记为主教材；AI 后端工程八课以站内知识笔记为主教材**：学习者可以直接沿五条八课长文主线建立知识体系，外部学习资料则作为依据、交叉核验和扩展阅读。
+- **多 Agent 与 MCP 模块已完成**：8 节课程、30 份资源、24 道面试题、16 道 quiz 和 3 项交互实验，覆盖任务依赖、编排与控制权、上下文隔离、MCP 原语、每请求版本与能力、传输与恢复、授权和集成验收。
 
-五个模块仍保留原有 `explanations` 作为兼容 fallback；正常课程详情优先渲染经过来源审计的 `knowledgeNote`。
+七个模块都提供课程完成度、quiz 记录、面试掌握度与复习队列的本地进度。求职与项目交付模块仍未开放，范围见“模块路线图与边界”。
 
-**视觉教学已发布五个模块**：LLM 基础八课共接入 40 张主视觉，每课 1 张总览图与 4 张段落视觉；Agent 机制八课共接入 16 张主视觉，对应 16 个 SVG 文件；Agent Harness 八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；上下文、RAG 与记忆八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；AI 后端工程八课共接入 16 张主视觉与 16 个 typed production scenes，对应 16 个 SVG 文件，每课 1 张总览与 1 张段落视觉。五个模块都通过统一 visual registry 解析本地静态资产、证据归属、替代文本、长描述、图注与分步状态。
+LLM 基础八课以站内知识笔记为主教材；Agent 机制八课以站内知识笔记为主教材；Agent Harness 八课以站内知识笔记为主教材；上下文、RAG 与记忆八课以站内知识笔记为主教材；AI 后端工程八课以站内知识笔记为主教材；评测、可观测与安全八课以站内知识笔记为主教材；多 Agent 与 MCP 八课以站内知识笔记为主教材。外部学习资料提供依据、交叉核验和扩展阅读。
 
-全站合计 40 节课、234 份课程资源、120 张主视觉与 18 个分步状态（138 个本地 SVG）。两家指定一级资料冻结为 50 个 canonical source（Feishu Harness 101 为 16 个、JavaGuide AI 为 34 个），再由 81 个全局唯一课程 resource binding 接入五个模块；完整计数、60/30/10 语义贡献分类、概念边界与发布前证据见 [`docs/content-audits/2026-07-30-primary-reference-integration-release.md`](docs/content-audits/2026-07-30-primary-reference-integration-release.md)。
+课程详情渲染经过来源审计的 `knowledgeNote`；`explanations` 用于兼容 fallback。
+
+**七个模块已接入教学图解**：LLM 基础八课共接入 40 张主视觉，每课 1 张总览图与 4 张章节图；Agent 机制八课共接入 16 张主视觉，对应 16 个 SVG 文件；Agent Harness 八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；上下文、RAG 与记忆八课共接入 24 张主视觉，对应 27 个 SVG 文件，其中 3 个分步状态；AI 后端工程八课共接入 16 张主视觉与 16 个 typed production scenes，对应 16 个 SVG 文件；评测、可观测与安全八课共接入 16 张主视觉，对应 16 个 SVG 文件，每课 1 张总览与 1 张章节图；多 Agent 与 MCP 八课共接入 16 张主视觉，对应 16 个 SVG 文件和 16 份 Mermaid 关系图。七个模块通过统一 visual registry 读取本地静态资产、证据归属、替代文本、长描述、图注与分步状态。
+
+全站合计 56 节课、286 份课程资源、168 道站内面试题、21 项交互实验、152 张主视觉与 18 个分步状态（170 个本地 SVG）。前五个模块的两家指定一级资料冻结为 50 个 canonical source，再由 81 个全局唯一课程 resource binding 接入；相关分类与证据见 [`2026-07-30-primary-reference-integration-release.md`](docs/content-audits/2026-07-30-primary-reference-integration-release.md)。第六模块的来源见 [`2026-09-18-evals-observability-security-sources.md`](docs/research/2026-09-18-evals-observability-security-sources.md)；第七模块的来源与版本见 [`2026-09-18-multi-agent-mcp-sources.md`](docs/research/2026-09-18-multi-agent-mcp-sources.md)。
 
 ## 功能导览
 
@@ -35,6 +39,22 @@ Agent Learner 是一个面向 AI / Agent 开发入门与面试复习的中文交
 5. **面试高频**：先自行口述，再展开参考答案；可筛选岗位与掌握状态，并维护复习队列。
 6. **学习进度**：分别汇总课程与面试记录，可通过二次确认重置当前版本的学习进度。
 
+### 外部面试补充
+
+五个模块的「面试高频」页新增 **69 道补充问题、98 条原文引用**，来源为[图灵 AI 大模型面试系列（语雀）](https://www.yuque.com/aaron-wecc3/dhluml/foho2nsutnn37gw3)与[小林面试笔记](https://www.xiaolincoding.com/project/xiaolinnote.html)。题单按关联课程展开，对应课程详情末尾也可直接阅读本课问题、打开原文。
+
+| 模块 | 补充问题 | 原文引用 |
+| --- | ---: | ---: |
+| LLM 基础 | 23 | 29 |
+| Agent 机制 | 10 | 20 |
+| Agent Harness | 7 | 8 |
+| 上下文、RAG 与记忆 | 24 | 36 |
+| AI 后端工程 | 5 | 5 |
+
+问题根据来源考点归纳，同一考点可对照多个原文；根据工程文章整理的练习标为「延伸阅读追问」。外部答案和 PDF 保留在原站，语雀可能要求访问码。原文题单不计入现有 168 道站内题的掌握率与复习队列。多 Agent 与 MCP 的 24 道站内题随第七模块提供。
+
+题单数据位于 `src/data/interview-supplements.js`，记录模块、课程、来源、核对日期与核对范围；增补时应使用具体文章或已核对章节的链接。来源核对范围与分类说明见[本次内容记录](docs/content-audits/2026-09-17-interview-supplements.md)。
+
 LLM 基础的三项概念实验嵌在对应课程内：
 
 - `llm-03`：**Token / 上下文预算台**，演示系统指令、历史、检索与输出如何竞争上下文预算；
@@ -45,7 +65,7 @@ LLM 基础的三项概念实验嵌在对应课程内：
 
 ## 模块切换与路由
 
-使用页头的模块选择器可在五个完整模块之间切换；六个一级视图会沿用当前 `moduleId`，不会把一个模块的临时筛选带到另一个模块。每个模块的 dashboard 与第一课 canonical Hash 路由是：
+使用页头的模块选择器可在七个完整模块之间切换；六个一级视图沿用当前 `moduleId`，临时筛选按模块分别保存。每个模块的 dashboard 与第一课 canonical Hash 路由是：
 
 ```text
 #llm-foundation/dashboard
@@ -58,6 +78,10 @@ LLM 基础的三项概念实验嵌在对应课程内：
 #context-rag-memory/lesson/context-01
 #backend-engineering/dashboard
 #backend-engineering/lesson/backend-01
+#evals-observability-security/dashboard
+#evals-observability-security/lesson/eval-01
+#multi-agent-mcp/dashboard
+#multi-agent-mcp/lesson/ma-01
 ```
 
 模块必须同时在目录中标记为 `active` 并注册到 `courseRegistry` 才能打开；无效模块或课程 ID 会回退到默认模块首页。
@@ -146,6 +170,46 @@ AI 后端工程沿着“定义公共服务边界 → 管理长连接与并发 �
 
 三项实验都是固定规则驱动的确定性教学模拟，不是真实服务、真实网络或真实队列；结果不能外推为生产吞吐、p95 / p99 延迟、broker 投递保证或端到端 exactly-once。流式实验只刻画事件与取消边界，准入实验使用均值窗口而非排队分布，投递账本只证明所示状态机中的决定，不替代真实数据库事务、broker 配置、故障注入和压测。
 
+## 评测、可观测与安全课程地图
+
+八课围绕企业知识助手的发布评审组织：
+
+1. `eval-01` **成功标准、评测集与基线**：定义环境结果、必要约束、开发集合与封存集合。
+2. `eval-02` **评分器、Rubric 与人工校准**：选择代码、模型和人工评分，核验评分误差。
+3. `eval-03` **分组回归、重复试验与发布门槛**：按案例与业务分组比较候选版本，保留未知结果。
+4. `eval-04` **RAG 与 Agent 的分层故障归因**：定位检索、证据使用、执行与评分环境的失败。
+5. `eval-05` **Trace、指标、采样与数据最小化**：关联运行记录，解释采样分母，限制敏感内容采集。
+6. `eval-06` **提示注入、威胁模型与执行边界**：识别不可信内容，逐次核查工具和资源权限。
+7. `eval-07` **安全测试、数据保护与输出校验**：同时检查攻击样本、正常请求和实际副作用。
+8. `eval-08` **离线到线上：发布门槛与事故闭环**：定义灰度停止条件，将事故行动项加入回归验证。
+
+三项交互实验：
+
+- `eval-03` / `eval-release-gate`：**分组回归与发布门槛台**，检查总分相同但长文档退化、样本不足、尚未评分和关键失败。
+- `eval-05` / `eval-trace-sampling`：**追踪采样与证据范围台**，显示同一组六条记录在三种选择规则下的分子和分母。
+- `eval-07` / `eval-safety-regression`：**安全回归与正常对照台**，分别报告检测漏报、正常误拒和越权副作用。
+
+实验使用公开定义的教学数据。重复成功概率采用同一任务独立同分布假设；发布规则仅表达教学条件。GenAI semantic conventions 按 2026-09-18 的 Development 文档注明版本限制。
+
+## 多 Agent 与 MCP 课程地图
+
+1. `ma-01` **多 Agent 适用条件与任务依赖**：依据单 Agent 基线、依赖关系、质量与成本判断协作价值。
+2. `ma-02` **编排、委托与控制权**：明确最终回复责任，计算并发与共享写入的影响。
+3. `ma-03` **上下文隔离与结果验收**：组织任务输入、产物引用、证据和合并责任。
+4. `ma-04` **MCP 角色与 tools、resources、prompts**：说明 Host、Client、Server 及三类原语。
+5. `ma-05` **每请求版本、能力与旧版兼容**：核对 metadata、HTTP 请求头、能力需求与 MRTR。
+6. `ma-06` **传输、错误、取消与可选 Tasks**：区分传输、协议、工具及业务结果，选择恢复动作。
+7. `ma-07` **认证授权与执行边界**：逐项检查身份、委托、资源、token 和具体动作确认。
+8. `ma-08` **多 Agent 与 MCP 集成验收**：汇集协议、业务结果、安全、质量与成本的检查证据。
+
+三项交互实验使用实际纯函数计算：
+
+- `ma-02` / `ma-dependency-scheduling`：**依赖与共享写入调度台**，调整 worker 数量和写入对象，观察执行顺序与完成时长。
+- `ma-05` / `ma-mcp-request`：**MCP 请求字段核对台**，检查 metadata、版本、HTTP 字段与表单能力，展示对应错误码。
+- `ma-07` / `ma-delegated-permissions`：**委托范围与执行权限台**，计算身份、动作、租户、audience、scope 与具体确认的许可交集。
+
+MCP 主线采用 **2026-07-28**；2025-11-25 用于历史兼容说明，Tasks 按同日期的可选 Stable extension 讲解。三个实验只表达公开定义的教学规则，页面没有运行真实 Agent、MCP Server 或 OAuth 服务。课程与图形验收见 [`2026-09-18-multi-agent-mcp.md`](docs/content-audits/2026-09-18-multi-agent-mcp.md)。
+
 ## 模块路线图与边界
 
 已开放的 Agent 机制模块只讲**单 Agent**：目标、状态、工具、loop、规划、恢复、工作上下文和终止。它建立的是机制层心智模型，不把生产运行时、知识检索、评测治理或分布式协作提前塞进同一门课。
@@ -156,13 +220,13 @@ AI 后端工程沿着“定义公共服务边界 → 管理长连接与并发 �
 
 **AI 后端工程**：active（已开放）。范围是多客户端 AI 服务的 API 契约、同步与 SSE、取消传播、并发与 deadline、准入控制、异步 job、队列与 worker、PostgreSQL 权威状态、Redis 缓存、重试幂等、健康检查、可观测性、容器部署与扩容。它承接 Harness 输出并把 run 放入公共服务边界，但不提前覆盖系统化评测安全治理、多 Agent 协作协议或作品集交付。
 
-以下三个模块仍只有目录与依赖元数据：
+**评测、可观测与安全**：active（已开放）。先修课程为 Agent Harness 和上下文、RAG 与记忆。范围包括任务评测、运行证据、安全边界与发布判断。
 
-- **评测、可观测与安全**：planned（规划中），承接离线/在线评测、追踪、风险与安全治理；
-- **多 Agent 与 MCP**：planned（规划中），承接多 Agent 协作、协议与 MCP 生态；
+**多 Agent 与 MCP**：active（已开放）。先修课程为 AI 后端工程和评测、可观测与安全。范围包括协作选择、控制责任、上下文、MCP 接入与兼容、传输恢复、权限和综合验收。
+
+以下一个模块仍只有目录与依赖元数据：
+
 - **求职与项目交付**：planned（规划中），承接作品集、系统设计与面试交付。
-
-因此评测治理、多 Agent / MCP 与求职交付仍属于后续模块；目录卡片不代表课程已开放。
 
 ## 快速开始
 
@@ -173,6 +237,8 @@ cd agent-development-knowledge-map
 npm test
 npm run serve
 ```
+
+数据与计算逻辑可以使用 `npm run test:data` 单独验证。页面交互使用真实浏览器检查；第六模块的静态图形可用 `npm run check:evals-visuals` 核验。
 
 然后打开 [http://localhost:4173](http://localhost:4173)。不要直接双击 `index.html`：浏览器对 `file://` 下的 ES Modules 有额外限制。
 
@@ -208,10 +274,12 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 ```
 
 - `src/data/` 保存模块目录、课程事实和 `src/data/courses.js` 中不可变的 `courseRegistry`；路由只接受“模块元数据为 active 且课程已经注册”的组合。
-- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js`、`src/data/context-rag-memory.js` 与 `src/data/backend-engineering.js` 分别保存五个完整课程的数据，由 `courseRegistry` 统一按 `moduleId` 注册。五个模块的八课长文分别保存在 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/`、`src/data/agent-harness-notes/`、`src/data/context-rag-memory-notes/` 与 `src/data/backend-engineering-notes/`。`src/data/llm-foundation-notes.js` 是 LLM 聚合入口，`src/data/agent-mechanism-notes.js` 是 Agent 聚合入口，`src/data/agent-harness-notes.js` 是 Harness 聚合入口，`src/data/context-rag-memory-notes.js` 是 Context/RAG/Memory 聚合入口，`src/data/backend-engineering-notes.js` 是 AI 后端聚合入口；五者负责精确接线与递归冻结。
-- `src/data/visuals/` 保存共享 visual registry 与视觉数据契约；当前注册 LLM 基础 40 张、Agent 机制 16 张、Agent Harness 24 张、上下文/RAG/记忆 24 张以及 AI 后端工程 16 张主视觉。知识笔记用稳定 `visualId` 声明总览或段落插入位置，registry 统一管理本地资产、来源、许可和可访问描述，通用 UI 不按课程 ID 特判。
+- `src/data/llm-foundation.js`、`src/data/agent-mechanism.js`、`src/data/agent-harness.js`、`src/data/context-rag-memory.js`、`src/data/backend-engineering.js`、`src/data/evals-observability-security.js` 与 `src/data/multi-agent-mcp.js` 保存七个完整课程的数据，由 `courseRegistry` 按 `moduleId` 注册。正文分别位于各模块的 notes 目录，聚合入口负责引用和递归冻结。第七模块使用 `src/data/multi-agent-notes/`、`src/data/multi-agent-lessons/` 和 `src/data/multi-agent-resources.js`，记录正文、考核对应关系、来源版本和核对范围。
+- 正文目录与入口分别为：`src/data/llm-foundation-notes/` 和 `src/data/llm-foundation-notes.js` 聚合入口；`src/data/agent-mechanism-notes/` 和 `src/data/agent-mechanism-notes.js` 聚合入口；`src/data/agent-harness-notes/` 和 `src/data/agent-harness-notes.js` 聚合入口；`src/data/context-rag-memory-notes/` 和 `src/data/context-rag-memory-notes.js` 聚合入口；`src/data/backend-engineering-notes/` 和 `src/data/backend-engineering-notes.js` 聚合入口；`src/data/evals-notes/` 和 `src/data/evals-notes.js` 聚合入口；`src/data/multi-agent-notes/` 和 `src/data/multi-agent-notes.js` 聚合入口。
+- `src/data/visuals/` 保存共享 visual registry 与图形数据定义；当前注册 LLM 基础 40 张、Agent 机制 16 张、Agent Harness 24 张、上下文/RAG/记忆 24 张、AI 后端工程 16 张、评测/可观测/安全 16 张和多 Agent/MCP 16 张主视觉。知识笔记用稳定 `visualId` 声明总览或章节插入位置，registry 管理本地资产、来源、许可和可访问描述。
 - `src/core/` 提供可独立测试的进度、筛选、测验、实验计算与 view-model 纯函数；`src/core/agent-mechanism.js` 是 Agent 三实验的判定源，`src/core/agent-harness.js` 负责 run 状态归约、安全 Resume 决策与队列/背压步进，`src/core/context-rag-memory.js` 负责上下文组装、混合检索/证据打包与记忆生命周期，`src/core/backend-engineering.js` 负责流式生命周期、服务准入和任务投递账本，四者均不查询 DOM。
 - `src/ui/` 使用安全 DOM API 生成六个通用视图和课程实验，不使用 `innerHTML` 或内联事件；`src/ui/agent-experiments.js`、`src/ui/harness-experiments.js`、`src/ui/context-experiments.js` 与 `src/ui/backend-experiments.js` 只负责控件、输入错误、可访问结果和调用对应 core，不复制领域判定。
+- `src/core/multi-agent.js` 提供依赖调度、MCP metadata 和委托权限计算；`src/ui/multi-agent-experiments.js` 提供对应控件、结果说明和焦点恢复。
 - `src/app.js` 负责 hash 路由、跨视图状态、焦点恢复、公告与持久化编排。
 - `src/core/storage.js` 负责结构校验、`localStorage` 与内存回退。
 
@@ -350,7 +418,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 进度写入必须走 `src/core/progress.js` 的不可变操作和 `src/core/storage.js` 的存储接口，不要让 UI 直接修改原对象。
 
-五个完整模块开放后，多模块契约已经落实为以下事实：
+七个完整模块共同遵循以下数据规则：
 
 - lesson、resource、quiz、interview、experiment 五类内容 ID 在各课程内及跨课程全局唯一，扁平进度记录不会因 ID 碰撞串课；
 - 课程与面试进度汇总按当前 course 的真实 ID 集合过滤，其他模块或陈旧记录不计入当前百分比；
@@ -359,7 +427,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 - 临时面试筛选保存在 `interviewFiltersByModule`，以 `moduleId` 隔离；
 - 临时 revealed 展开状态保存在 `revealedInterviewIdsByModule`，以 `moduleId` 隔离。
 
-`ProgressState` 仍是一个专用键内的扁平记录；上述全局 ID、按当前课程过滤与模块级临时 UI 状态共同保证五个已开放模块不会互相污染。
+`ProgressState` 使用一个专用键保存扁平记录；全局 ID、按当前课程过滤和模块级临时 UI 状态使七个模块的进度分别计算。
 
 ## 知识模块从 0 到 1 的复用流程
 
@@ -381,7 +449,7 @@ data（课程事实） -> core（纯逻辑） -> UI（DOM 渲染） -> app（路
 
 ## 知识笔记复用流程
 
-LLM 基础八课建立了第一版模板，Agent 机制完成了首次跨模块复用，Agent Harness 又把来源补强、逐课双审和复杂度浮动扩展到运行时工程主题；上下文、RAG 与记忆进一步验证了从资料补强、证据分级到跨层责任诊断的完整复用，AI 后端工程则把协议、系统论文、运行边界与确定性故障实验纳入同一证据链。五个模块的单课纯数据分别位于 `src/data/llm-foundation-notes/`、`src/data/agent-mechanism-notes/`、`src/data/agent-harness-notes/`、`src/data/context-rag-memory-notes/` 与 `src/data/backend-engineering-notes/`，并由对应聚合入口统一接线；可复用的项目 Skill 位于 `.agents/skills/build-learning-module-notes/`。后续课程或模块可以沿用这套协议与工具，但每次仍必须重新核验目标课程、资源注册表和每一份来源正文，不能把既有模块的证据判断直接复制到新主题。
+七个模块采用按课程分别编写正文、由聚合入口负责引用的结构。第六模块正文位于 `src/data/evals-notes/`，第七模块正文位于 `src/data/multi-agent-notes/`，资料卡片记录版本和使用范围。可复用的项目 Skill 位于 `.agents/skills/build-learning-module-notes/`；每次编写新课程都需要核验课程目标、资源注册表和来源正文。
 
 制作或重做知识笔记时，先调用 `$build-learning-module-notes` Skill，再按以下顺序推进：
 
@@ -443,7 +511,7 @@ find assets/visuals -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
 发布前还应：
 
 - 用 `npm run serve` 启动仓库根目录，确认 `/`、`/styles/app.css`、`/src/app.js` 均返回 HTTP 200；
-- 在约 1440px 与 320px/390px 宽度分别检查五个模块的六个视图、十五项实验、筛选、测验、面试展开/状态/队列、持久化与重置；
+- 在桌面与 320px/390px 宽度检查七个模块的六个视图、二十一项实验、筛选、测验、面试展开、状态、队列、持久化与重置；
 - 仅在明确导航时把焦点移到 `main`，筛选、展开、状态和重置后恢复到有意义的控件或摘要；
 - 保证每个路由一个 `h1`，后续标题层级合理；动态结果使用礼貌 live region；展开控件使用 `aria-expanded` 与 `aria-controls`；
 - 以键盘检查跳过链接、可见焦点、禁用状态和二次确认；核心移动端触控目标约 44px；

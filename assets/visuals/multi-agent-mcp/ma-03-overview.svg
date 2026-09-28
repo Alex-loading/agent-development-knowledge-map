@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma03-overview-title ma03-overview-desc">
+  <title id="ma03-overview-title">上下文从任务需要中选择</title>
+  <desc id="ma03-overview-desc">从任务所需事实、约束和资料版本出发，选择相关历史与状态时间范围，让 worker 在明确的输入配置下工作，再返回来源和未解决项。</desc>
+  <defs><marker id="ma03-overview-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">上下文从任务需要中选择</text>
+    <text x="44" y="139" fill="#53675c" font-size="20">默认新 state、显式历史输入与持久配置，需要按任务说明。</text>
+    <rect x="44" y="194" width="240" height="304" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="64" y="235" fill="#a06a21" font-size="18" font-weight="700">01 / 必要信息</text>
+    <text x="64" y="289" fill="#183d36" font-size="25" font-weight="700">任务需要</text>
+    <text x="64" y="347" fill="#183d36" font-size="21">事实与用户约束</text>
+    <text x="64" y="391" fill="#183d36" font-size="21">来源与资料版本</text>
+    <text x="64" y="448" fill="#53675c" font-size="18">先列需要知道什么</text>
+    <path d="M 284 346 L 298 346" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-overview-arrow)"/>
+    <rect x="308" y="194" width="240" height="304" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="328" y="235" fill="#a06a21" font-size="18" font-weight="700">02 / 信息范围</text>
+    <text x="328" y="289" fill="#183d36" font-size="25" font-weight="700">选择输入</text>
+    <text x="328" y="347" fill="#183d36" font-size="21">相关历史与已知结果</text>
+    <text x="328" y="391" fill="#183d36" font-size="21">状态时效与核验责任</text>
+    <text x="328" y="448" fill="#53675c" font-size="18">避免无关或过期信息</text>
+    <path d="M 548 346 L 562 346" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-overview-arrow)"/>
+    <rect x="572" y="194" width="240" height="304" rx="12" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="592" y="235" fill="#a06a21" font-size="18" font-weight="700">03 / 有边界的工作</text>
+    <text x="592" y="289" fill="#183d36" font-size="25" font-weight="700">worker 工作</text>
+    <text x="592" y="347" fill="#183d36" font-size="21">明确输入与 state</text>
+    <text x="592" y="391" fill="#183d36" font-size="21">按需接收历史</text>
+    <text x="592" y="448" fill="#53675c" font-size="18">不假定自动继承事实</text>
+    <path d="M 812 346 L 826 346" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-overview-arrow)"/>
+    <rect x="836" y="194" width="240" height="304" rx="12" fill="#183d36"/>
+    <text x="856" y="235" fill="#e4c995" font-size="18" font-weight="700">04 / 后续判断</text>
+    <text x="856" y="289" fill="#ffffff" font-size="25" font-weight="700">返回结果</text>
+    <text x="856" y="347" fill="#ffffff" font-size="21">结论与来源</text>
+    <text x="856" y="391" fill="#ffffff" font-size="21">未解决事项</text>
+    <text x="856" y="448" fill="#e4ebe3" font-size="18">供主 Agent 验收</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="611" fill="#183d36" font-size="21">输入范围需要同时满足信息充分与成本要求；执行权限仍需单独检查。</text>
+  </g>
+</svg>

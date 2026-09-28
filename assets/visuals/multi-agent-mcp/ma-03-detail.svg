@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="ma03-detail-title ma03-detail-desc">
+  <title id="ma03-detail-title">完成声明进入证据验收</title>
+  <desc id="ma03-detail-desc">缺少有效引用的 completed 进入 needs-evidence；来源结论冲突进入 conflict 并安排核验；内容与证据满足要求后记录接受理由，进入 accepted。</desc>
+  <defs><marker id="ma03-detail-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#183d36"/></marker></defs>
+  <rect width="1120" height="660" rx="12" fill="#f7f1e5"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <text x="44" y="47" fill="#a06a21" font-size="16" font-weight="700">Agent Learner / 多 Agent 与 MCP</text>
+    <text x="44" y="96" fill="#183d36" font-size="32" font-weight="700">完成声明进入证据验收</text>
+    <text x="44" y="138" fill="#53675c" font-size="20">本地教学状态用于解释接受理由；先检查内容和来源。</text>
+    <text x="64" y="188" fill="#a06a21" font-size="21" font-weight="700">worker 结果</text>
+    <text x="422" y="188" fill="#a06a21" font-size="21" font-weight="700">证据检查</text>
+    <text x="790" y="188" fill="#a06a21" font-size="21" font-weight="700">验收去向</text>
+    <rect x="44" y="209" width="300" height="91" rx="10" fill="#eee0c8" stroke="#bd9f69"/>
+    <text x="64" y="245" fill="#183d36" font-size="22" font-weight="700">completed</text>
+    <text x="64" y="280" fill="#183d36" font-size="20">缺少有效引用</text>
+    <path d="M 344 255 L 382 255" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="394" y="209" width="302" height="91" rx="10" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="418" y="263" fill="#183d36" font-size="23" font-weight="700">有效证据不足</text>
+    <path d="M 696 255 L 752 255" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="764" y="209" width="312" height="91" rx="10" fill="#eee0c8" stroke="#bd9f69"/>
+    <text x="788" y="245" fill="#183d36" font-size="23" font-weight="700">needs-evidence</text>
+    <text x="788" y="280" fill="#183d36" font-size="20">补充来源</text>
+    <rect x="44" y="324" width="300" height="91" rx="10" fill="#eee0c8" stroke="#bd9f69"/>
+    <text x="64" y="378" fill="#183d36" font-size="23" font-weight="700">来源结论冲突</text>
+    <path d="M 344 370 L 382 370" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="394" y="324" width="302" height="91" rx="10" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="418" y="378" fill="#183d36" font-size="23" font-weight="700">检查版本与范围</text>
+    <path d="M 696 370 L 752 370" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="764" y="324" width="312" height="91" rx="10" fill="#eee0c8" stroke="#bd9f69"/>
+    <text x="788" y="361" fill="#183d36" font-size="23" font-weight="700">conflict</text>
+    <text x="788" y="396" fill="#183d36" font-size="20">安排核验</text>
+    <rect x="44" y="439" width="300" height="91" rx="10" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="64" y="476" fill="#183d36" font-size="23" font-weight="700">内容和证据</text>
+    <text x="64" y="511" fill="#183d36" font-size="20">均满足要求</text>
+    <path d="M 344 485 L 382 485" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="394" y="439" width="302" height="91" rx="10" fill="#e4ebe3" stroke="#a5afa2"/>
+    <text x="418" y="493" fill="#183d36" font-size="23" font-weight="700">记录接受理由</text>
+    <path d="M 696 485 L 752 485" fill="none" stroke="#183d36" stroke-width="3" marker-end="url(#ma03-detail-arrow)"/>
+    <rect x="764" y="439" width="312" height="91" rx="10" fill="#183d36"/>
+    <text x="788" y="476" fill="#ffffff" font-size="23" font-weight="700">accepted</text>
+    <text x="788" y="511" fill="#ffffff" font-size="20">进入最终建议</text>
+    <line x1="44" y1="574" x2="1076" y2="574" stroke="#a5afa2"/>
+    <text x="44" y="611" fill="#183d36" font-size="21">完成状态与业务接受分开记录；未解决项需要证据、动作和责任人。</text>
+  </g>
+</svg>

@@ -1,4 +1,5 @@
 import { agentHarnessNotes } from './agent-harness-notes.js';
+import { getInterviewSupplements } from './interview-supplements.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-23';
@@ -974,6 +975,7 @@ function deepFreeze(value) {
 
 export const agentHarness = deepFreeze({
   id: 'agent-harness',
+  interviewSupplements: getInterviewSupplements('agent-harness'),
   title: 'Agent Harness',
   summary: '把 Agent loop 放进可约束、可暂停、可恢复并能安全处理副作用的宿主执行系统。',
   lessons,

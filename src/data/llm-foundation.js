@@ -1,4 +1,5 @@
 import { llmFoundationNotes } from './llm-foundation-notes.js';
+import { getInterviewSupplements } from './interview-supplements.js';
 import { createPrimaryReferenceBinding } from './primary-reference-bindings.js';
 
 const VERIFIED_AT = '2026-07-15';
@@ -1216,6 +1217,7 @@ const deepFreeze = (value) => {
 
 export const llmFoundation = deepFreeze({
   id: 'llm-foundation',
+  interviewSupplements: getInterviewSupplements('llm-foundation'),
   title: 'LLM 基础',
   summary: '面向 Agent 与 AI 应用开发者的第一阶段课程：先理解模型，再学会把概率能力装进可验证系统。',
   lessons,

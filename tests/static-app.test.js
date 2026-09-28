@@ -681,13 +681,13 @@ test('release guide documents operation, architecture, privacy and the extension
   assert.match(readme, /`platform`[^\n]{0,30}(?:可选|推导|派生)/);
 });
 
-test('release guide records all five active modules as knowledge-note textbooks', async () => {
+test('release guide records all registered modules as knowledge-note textbooks', async () => {
   const readme = await read('README.md');
   const status = markdownSection(readme, '当前状态');
   const architecture = markdownSection(readme, '架构与数据流');
   const primaryTextbookStatement = markdownParagraphContaining(status, '主教材');
 
-  for (const title of ['LLM 基础', 'Agent 机制', 'Agent Harness', '上下文、RAG 与记忆', 'AI 后端工程']) {
+  for (const { title } of Object.values(courseRegistry)) {
     assert.match(
       primaryTextbookStatement,
       new RegExp(`${escapeRegExp(title)}[^\\n]{0,50}(?:八|8)课[^\\n]{0,50}(?:站内)?知识笔记[^\\n]{0,40}主教材`),
@@ -712,6 +712,8 @@ test('release guide records all five active modules as knowledge-note textbooks'
   assert.ok(architecture.includes('`src/data/context-rag-memory-notes/`'));
   assert.match(architecture, /`src\/data\/context-rag-memory-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
   assert.ok(architecture.includes('`src/data/backend-engineering-notes/`'));
+  assert.ok(architecture.includes('`src/data/evals-notes/`'));
+  assert.match(architecture, /`src\/data\/evals-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
   assert.match(architecture, /`src\/data\/backend-engineering-notes\.js`[^\n]{0,30}(?:聚合|汇总)入口/);
 });
 

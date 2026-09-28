@@ -1,0 +1,9 @@
+flowchart TD
+  U[身份有效且用户允许动作] --> I[全部必需条件求交]
+  D[委托包含动作] --> I
+  R[资源租户符合范围] --> I
+  A[HTTP audience 正确且 scope 包含动作；stdio 不适用] --> I
+  C[export 确认绑定资源与动作] --> I
+  I --> Y[全部满足：允许]
+  I --> N[任一失败：拒绝并保留各层原因]
+  X[示例：用户 read/export，委托 read] --> D

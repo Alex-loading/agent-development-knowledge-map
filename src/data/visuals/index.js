@@ -4,6 +4,8 @@ import { agentHarnessVisuals } from './agent-harness-visuals.js';
 import { contextRagMemoryVisuals } from './context-rag-memory-visuals.js';
 import { llmFoundationVisuals } from './llm-foundation-visuals.js';
 import { backendEngineeringVisuals } from './backend-engineering-visuals.js';
+import { evalVisuals } from './evals-visuals.js';
+import { multiAgentVisuals } from './multi-agent-visuals.js';
 
 export const knowledgeVisuals = deepFreezeVisual([
   ...llmFoundationVisuals,
@@ -11,6 +13,8 @@ export const knowledgeVisuals = deepFreezeVisual([
   ...agentHarnessVisuals,
   ...contextRagMemoryVisuals,
   ...backendEngineeringVisuals,
+  ...evalVisuals,
+  ...multiAgentVisuals,
 ]);
 
 const visualsById = Object.create(null);

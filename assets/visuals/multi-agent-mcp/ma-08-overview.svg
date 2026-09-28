@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+  <title id="title">四组证据组成验收包</title>
+  <desc id="desc">用户任务与成功条件分别引出协作、协议、权限、质量成本四组证据。各组结果共同进入验收包，记录证据、结论和未覆盖范围。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#315c52"/></marker></defs>
+  <rect width="1120" height="660" rx="20" fill="#f5f3eb"/>
+  <text x="40" y="61" font-family="sans-serif" font-size="32" font-weight="700" fill="#193c35">四组证据组成验收包</text>
+  <text x="40" y="103" font-family="sans-serif" font-size="21" fill="#52665f">每组回答一个独立问题；缺少关键证据时，明确记录检查范围</text>
+  <rect x="335" y="143" width="450" height="70" rx="14" fill="#244f45"/>
+  <text x="560" y="187" font-family="sans-serif" text-anchor="middle" font-size="24" font-weight="700" fill="#ffffff">用户任务与成功条件</text>
+  <g fill="none" stroke="#315c52" stroke-width="2.5">
+    <path d="M560 213 V249"/>
+    <path d="M155 249 H965"/>
+    <path d="M155 249 V284" marker-end="url(#arrow)"/>
+    <path d="M425 249 V284" marker-end="url(#arrow)"/>
+    <path d="M695 249 V284" marker-end="url(#arrow)"/>
+    <path d="M965 249 V284" marker-end="url(#arrow)"/>
+  </g>
+  <g fill="#fffdf6" stroke="#9aafa4" stroke-width="2">
+    <rect x="40" y="292" width="230" height="148" rx="14"/>
+    <rect x="310" y="292" width="230" height="148" rx="14"/>
+    <rect x="580" y="292" width="230" height="148" rx="14"/>
+    <rect x="850" y="292" width="230" height="148" rx="14"/>
+  </g>
+  <g font-family="sans-serif" text-anchor="middle" fill="#193c35">
+    <text x="155" y="333" font-size="24" font-weight="700">协作</text>
+    <text x="155" y="377" font-size="21">任务分工</text>
+    <text x="155" y="412" font-size="21">证据与结果合并</text>
+    <text x="425" y="333" font-size="24" font-weight="700">协议</text>
+    <text x="425" y="377" font-size="21">版本与 transport</text>
+    <text x="425" y="412" font-size="21">请求与错误记录</text>
+    <text x="695" y="333" font-size="24" font-weight="700">权限</text>
+    <text x="695" y="377" font-size="21">正常允许案例</text>
+    <text x="695" y="412" font-size="21">拒绝与隔离案例</text>
+    <text x="965" y="333" font-size="24" font-weight="700">质量成本</text>
+    <text x="965" y="377" font-size="21">最终业务产物</text>
+    <text x="965" y="412" font-size="21">全部投入与耗时</text>
+  </g>
+  <g fill="none" stroke="#315c52" stroke-width="2.5">
+    <path d="M155 440 V476 H965 V440"/>
+    <path d="M425 440 V476"/>
+    <path d="M695 440 V476"/>
+    <path d="M560 476 V511" marker-end="url(#arrow)"/>
+  </g>
+  <rect x="235" y="519" width="650" height="76" rx="14" fill="#e0ebda" stroke="#7e9b7d" stroke-width="2"/>
+  <text x="560" y="566" font-family="sans-serif" text-anchor="middle" font-size="24" font-weight="700" fill="#193c35">验收包：实际证据 · 判断 · 未覆盖范围</text>
+  <text x="560" y="635" font-family="sans-serif" text-anchor="middle" font-size="19" fill="#52665f">课程原创组织模板；真实项目按自身场景定义接受条件</text>
+</svg>

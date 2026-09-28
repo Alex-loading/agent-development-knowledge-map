@@ -25,16 +25,21 @@ const acceptedContributions = new Set([
   'duplicate',
 ]);
 
-test('freezes the exact five-module, forty-lesson public identity contract', () => {
-  assert.deepEqual(Object.keys(courseRegistry), Object.keys(expectedModuleLessons));
+// 此审计保留 2026-07-30 前五个模块的来源迁移范围。
+// 全站 ID 和路由由 course-registry.test.js 检查，新课程另行验证来源与覆盖。
+const migratedCourses = Object.fromEntries(Object.keys(expectedModuleLessons)
+  .map((id) => [id, courseRegistry[id]]));
+
+test('preserves the five-module, forty-lesson primary-reference migration snapshot', () => {
+  assert.deepEqual(Object.keys(migratedCourses), Object.keys(expectedModuleLessons));
   assert.deepEqual(
-    Object.fromEntries(Object.entries(courseRegistry).map(([moduleId, course]) => [
+    Object.fromEntries(Object.entries(migratedCourses).map(([moduleId, course]) => [
       moduleId,
       course.lessons.map(({ id }) => id),
     ])),
     expectedModuleLessons,
   );
-  assert.equal(Object.values(courseRegistry).flatMap(({ lessons }) => lessons).length, 40);
+  assert.equal(Object.values(migratedCourses).flatMap(({ lessons }) => lessons).length, 40);
 });
 
 test('resolves every globally unique resource and every canonical primary binding', () => {
@@ -51,8 +56,8 @@ test('resolves every globally unique resource and every canonical primary bindin
   }
 });
 
-test('requires primary narrative, independent verification and section evidence in all forty lessons', () => {
-  for (const course of Object.values(courseRegistry)) {
+test('requires primary narrative, independent verification and section evidence in all forty migrated lessons', () => {
+  for (const course of Object.values(migratedCourses)) {
     const resourcesById = new Map(course.resources.map((resource) => [resource.id, resource]));
     for (const lesson of course.lessons) {
       const lessonResources = lesson.resourceIds.map((id) => resourcesById.get(id));
@@ -88,8 +93,8 @@ test('requires primary narrative, independent verification and section evidence 
   }
 });
 
-test('requires supported contribution decisions for every lesson', () => {
-  for (const course of Object.values(courseRegistry)) {
+test('requires supported contribution decisions for every migrated lesson', () => {
+  for (const course of Object.values(migratedCourses)) {
     const lessonIds = new Set(course.lessons.map(({ id }) => id));
     const resourcesById = new Map(course.resources.map((resource) => [resource.id, resource]));
     const auditedLessons = new Set();
