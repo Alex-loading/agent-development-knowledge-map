@@ -1,8 +1,8 @@
-.git/
-.vercel/
-.work/
-.worktrees/
-.research-cache/
-.superpowers/
-**/node_modules/
+.git
+.vercel
+.work
+.worktrees
+.research-cache
+.superpowers
+**/node_modules
 .DS_Store
